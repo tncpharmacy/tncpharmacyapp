@@ -17,8 +17,8 @@ const SiteHeader = () => {
   const { list: categories } = useAppSelector((state) => state.category);
   const { list: subcategories } = useAppSelector((state) => state.subcategory);
 
-  console.log("categories", categories);
-  console.log("subcategories", subcategories);
+  // console.log("categories", categories);
+  // console.log("subcategories", subcategories);
   useEffect(() => {
     dispatch(getCategories());
     dispatch(getSubcategories());

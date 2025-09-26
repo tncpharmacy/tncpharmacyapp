@@ -1,3 +1,5 @@
+"use client";
+
 import LogoutButton from "@/app/components/Logout/LogoutButton";
 import { useAppSelector } from "@/lib/hooks";
 import Link from "next/link";
