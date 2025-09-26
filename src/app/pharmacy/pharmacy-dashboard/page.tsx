@@ -208,7 +208,7 @@ export default function PharmacyDashboard() {
                       <tr>
                         <td>
                           <img
-                            src="images/medicine-img.jpg"
+                            src="/images/medicine-img.jpg"
                             alt=""
                             style={{
                               width: "40px",
@@ -224,7 +224,7 @@ export default function PharmacyDashboard() {
                       <tr>
                         <td>
                           <img
-                            src="images/medicine-img.jpg"
+                            src="/images/medicine-img.jpg"
                             alt=""
                             style={{
                               width: "40px",
@@ -240,7 +240,7 @@ export default function PharmacyDashboard() {
                       <tr>
                         <td>
                           <img
-                            src="images/medicine-img.jpg"
+                            src="/images/medicine-img.jpg"
                             alt=""
                             style={{
                               width: "40px",
@@ -256,7 +256,7 @@ export default function PharmacyDashboard() {
                       <tr>
                         <td>
                           <img
-                            src="images/medicine-img.jpg"
+                            src="/images/medicine-img.jpg"
                             alt=""
                             style={{
                               width: "40px",
@@ -272,7 +272,7 @@ export default function PharmacyDashboard() {
                       <tr>
                         <td>
                           <img
-                            src="images/medicine-img.jpg"
+                            src="/images/medicine-img.jpg"
                             alt=""
                             style={{
                               width: "40px",
@@ -306,7 +306,7 @@ export default function PharmacyDashboard() {
                       <tr>
                         <td>
                           <img
-                            src="images/medicine-img.jpg"
+                            src="/images/medicine-img.jpg"
                             alt=""
                             style={{
                               width: "40px",
@@ -322,7 +322,7 @@ export default function PharmacyDashboard() {
                       <tr>
                         <td>
                           <img
-                            src="images/medicine-img.jpg"
+                            src="/images/medicine-img.jpg"
                             alt=""
                             style={{
                               width: "40px",
@@ -338,7 +338,7 @@ export default function PharmacyDashboard() {
                       <tr>
                         <td>
                           <img
-                            src="images/medicine-img.jpg"
+                            src="/images/medicine-img.jpg"
                             alt=""
                             style={{
                               width: "40px",
@@ -354,7 +354,7 @@ export default function PharmacyDashboard() {
                       <tr>
                         <td>
                           <img
-                            src="images/medicine-img.jpg"
+                            src="/images/medicine-img.jpg"
                             alt=""
                             style={{
                               width: "40px",
@@ -370,7 +370,7 @@ export default function PharmacyDashboard() {
                       <tr>
                         <td>
                           <img
-                            src="images/medicine-img.jpg"
+                            src="/images/medicine-img.jpg"
                             alt=""
                             style={{
                               width: "40px",

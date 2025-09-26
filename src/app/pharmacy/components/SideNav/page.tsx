@@ -28,6 +28,11 @@ export default function SideNav() {
           </Link>
         </li>
         <li>
+          <Link href="/pharmacy/pharmacist" className="link">
+            <i className="bi bi-capsule"></i> Pharmacist
+          </Link>
+        </li>
+        <li>
           <Link href="/medicine" className="link">
             <i className="bi bi-capsule"></i> Medicine
           </Link>
@@ -72,6 +77,9 @@ export default function SideNav() {
           </div>
           {openMenu === "settings" && (
             <ul className="submenu">
+              <li>
+                <Link href="/view-profile">Profile</Link>
+              </li>
               <li>
                 <Link href="#">Reset Password</Link>
               </li>

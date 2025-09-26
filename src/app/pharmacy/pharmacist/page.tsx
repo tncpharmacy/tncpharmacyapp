@@ -1,0 +1,350 @@
+"use client";
+
+import { useEffect, useRef, useState } from "react";
+import { Button, Modal } from "react-bootstrap";
+import "../css/style.css";
+import SideNav from "@/app/pharmacy/components/SideNav/page";
+import Header from "@/app/pharmacy/components/Header/page";
+import { useAppDispatch, useAppSelector } from "@/lib/hooks";
+import {
+  fetchPharmacist,
+  togglePharmacistStatus,
+} from "@/lib/features/pharmacistByPharmacySlice/pharmacistByPharmacySlice";
+import type { Pharmacist, PharmaciesResponse } from "@/types/pharmacist";
+import { useRouter } from "next/navigation";
+import { formatDateTime, formatDateOnly } from "@/utils/dateFormatter";
+import InfiniteScroll from "@/app/components/InfiniteScroll/InfiniteScroll";
+import Link from "next/link";
+import TableLoader from "@/app/components/TableLoader/TableLoader";
+import Input from "@/app/components/Input/Input";
+
+export default function Pharmacist() {
+  const dispatch = useAppDispatch();
+  const router = useRouter();
+  const { list, loading } = useAppSelector(
+    (state) => state.pharmacistByPharmacy
+  );
+
+  // Infinite scroll state
+  const [visibleCount, setVisibleCount] = useState(10);
+  const [loadings, setLoadings] = useState(false);
+
+  // Modal state
+  const [showModal, setShowModal] = useState(false);
+  const [selectedPharmacy, setSelectedPharmacy] = useState<Pharmacist | null>(
+    null
+  );
+
+  // filtered records by search box
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filteredData, setFilteredData] = useState<Pharmacist[]>([]);
+
+  //status
+  const [status, setStatus] = useState<string>("");
+
+  // filtered records by search box + status filter
+  useEffect(() => {
+    let data: Pharmacist[] = list || [];
+
+    if (searchTerm) {
+      const lower = searchTerm.toLowerCase().trim();
+
+      data = data.filter((item: Pharmacist) => {
+        return Object.keys(item).some((key) => {
+          const value = String(item[key as keyof Pharmacist] ?? "")
+            .toLowerCase()
+            .trim();
+
+          if (key === "gender") {
+            // gender exact match hona chahiye
+            return value === lower;
+          }
+
+          // baaki fields substring match
+          return value.includes(lower);
+        });
+      });
+    }
+
+    if (status) {
+      data = data.filter((item: Pharmacist) => item.status === status);
+    }
+
+    setFilteredData(data);
+  }, [searchTerm, status, list]);
+
+  // Fetch all pharmacies once
+  useEffect(() => {
+    dispatch(fetchPharmacist());
+  }, [dispatch]);
+
+  //infinte scroll records
+  const loadMore = () => {
+    if (loadings || visibleCount >= list.length) return;
+    setLoadings(true);
+    setTimeout(() => {
+      setVisibleCount((prev) => prev + 5);
+      setLoadings(false);
+    }, 3000); // spinner for 3 sec
+  };
+
+  const handleDelete = (id: number) => {
+    if (confirm("Are you sure you want to change status of this pharmacy?")) {
+      dispatch(togglePharmacistStatus(id));
+    }
+  };
+
+  const handleView = (pharmacist: Pharmacist) => {
+    setSelectedPharmacy(pharmacist);
+    setShowModal(true);
+  };
+
+  const handleEdit = (id: number) => {
+    const encodedId = encodeURIComponent(btoa(String(id)));
+    router.push(`/pharmacy/update-pharmacist/${encodedId}`);
+  };
+
+  return (
+    <>
+      <Header />
+      <div className="body_wrap">
+        <SideNav />
+        <div className="body_right">
+          <InfiniteScroll
+            loadMore={loadMore}
+            hasMore={visibleCount < filteredData.length}
+            className="body_content"
+          >
+            <div className="pageTitle">
+              <i className="bi bi-shop-window"></i> Pharmacist List
+            </div>
+            <div className="main_content">
+              <div className="col-sm-12">
+                <div className="row">
+                  <div className="col-md-4">
+                    <div className="txt_col">
+                      <span className="lbl1">Search</span>
+                      <input
+                        type="text"
+                        placeholder="Search..."
+                        className="txt1 rounded"
+                        value={searchTerm}
+                        onChange={(e) => {
+                          console.log("Search input:", e.target.value); // check karega kya aa raha hai
+                          setSearchTerm(e.target.value);
+                        }}
+                      />
+                    </div>
+                  </div>
+                  <Input
+                    label="Status"
+                    name="status"
+                    type="select"
+                    value={status}
+                    options={[
+                      { label: "Active", value: "Active" },
+                      { label: "Inactive", value: "Inactive" },
+                    ]}
+                    onChange={(event) => setStatus(event.target.value)}
+                  />
+                  <div className="col-md-4 text-end">
+                    <div className="txt_col">
+                      <Link
+                        href={"/pharmacy/add-pharmacist"}
+                        className="btn-style2 me-2"
+                      >
+                        <i className="bi bi-plus"></i> Add Pharmacist
+                      </Link>
+                      <button className="btn-style1">
+                        <i className="bi bi-download"></i> Export Statement
+                      </button>
+                    </div>
+                  </div>
+                </div>
+                {/* Table */}
+                <div className="scroll_table">
+                  <table className="table cust_table1">
+                    <thead className="fw-bold text-dark">
+                      <tr>
+                        <th className="fw-bold">Sr. No.</th>
+                        <th className="fw-bold">Pharmacy Name</th>
+                        <th className="fw-bold">Contact Person</th>
+                        <th className="fw-bold">Email ID</th>
+                        <th className="fw-bold">Mobile</th>
+                        <th className="fw-bold">Gender</th>
+                        <th className="fw-bold">Date Of Birth</th>
+                        <th className="fw-bold">Aadhar Number</th>
+                        <th className="fw-bold">License No.</th>
+                        <th className="fw-bold">License Validity</th>
+                        <th className="fw-bold">Status</th>
+                        <th className="fw-bold">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filteredData
+                        .slice(0, visibleCount)
+                        .map((p: Pharmacist, index) => (
+                          <tr key={p.id}>
+                            <td>{index + 1}</td>
+                            <td>{p.pharmacy_id ?? "-"}</td>
+                            <td>{p.user_name ?? "-"}</td>
+                            <td>{p.email_id ?? "-"}</td>
+                            <td>{p.login_id ?? "-"}</td>
+                            <td>{p.gender ?? "-"}</td>
+                            <td>{p.date_of_birth ?? "-"}</td>
+                            <td>{p.aadhar_number ?? "-"}</td>
+                            <td>{p.license_number ?? "-"}</td>
+                            <td>{p.license_valid_upto ?? "-"}</td>
+                            <td>
+                              <span
+                                onClick={() => handleDelete(p.id)}
+                                className={`status ${
+                                  p.status === "Active"
+                                    ? "status-active"
+                                    : "status-inactive"
+                                } cursor-pointer`}
+                                title="Click to change status"
+                              >
+                                {p.status === "Active" ? "Active" : "Inactive"}
+                              </span>
+                            </td>
+                            <td>
+                              <button
+                                className="btn btn-light btn-sm me-2"
+                                onClick={() => handleEdit(p.id)}
+                              >
+                                <i className="bi bi-pencil"></i>
+                              </button>
+                              <button
+                                className="btn btn-light btn-sm"
+                                onClick={() => handleView(p)}
+                              >
+                                <i className="bi bi-eye-fill"></i>
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      {/* Spinner row */}
+                      {loadings && (
+                        <TableLoader colSpan={9} text="Loading more..." />
+                      )}
+
+                      {/* No more records */}
+                      {!loadings && visibleCount >= list.length && (
+                        <tr>
+                          <td
+                            colSpan={9}
+                            className="text-center py-2 text-muted fw-bold fs-6"
+                          >
+                            No more records
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </InfiniteScroll>
+        </div>
+      </div>
+
+      {/* View Modal */}
+      <Modal show={showModal} onHide={() => setShowModal(false)} centered>
+        <Modal.Header closeButton>
+          <Modal.Title>Pharmacy Details</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          {selectedPharmacy ? (
+            (() => {
+              const { date: createdDate, time: createdTime } = formatDateTime(
+                selectedPharmacy?.created_on
+              );
+              const { date: updatedDate, time: updatedTime } = formatDateTime(
+                selectedPharmacy?.updated_on
+              );
+
+              return (
+                <div>
+                  <p>
+                    <strong>Pharmacy Id:</strong> {selectedPharmacy.pharmacy_id}
+                  </p>
+                  {/* <p>
+                    <strong>Pharmacy Name:</strong>{" "}
+                    {selectedPharmacy.user_name ?? "-"}
+                  </p> */}
+                  <p>
+                    <strong>Contact Person:</strong>{" "}
+                    {selectedPharmacy.user_name ?? "-"}
+                  </p>
+                  <p>
+                    <strong>Gender:</strong> {selectedPharmacy.gender}
+                  </p>
+                  <p>
+                    <strong>License No.:</strong>{" "}
+                    {selectedPharmacy.license_number}
+                  </p>
+                  <p>
+                    <strong>License Validity:</strong>{" "}
+                    {formatDateOnly(selectedPharmacy.license_valid_upto)}
+                  </p>
+                  <p>
+                    <strong>Email:</strong> {selectedPharmacy.email_id}
+                  </p>
+                  <p>
+                    <strong>Contact:</strong> {selectedPharmacy.login_id ?? "-"}
+                  </p>
+                  <p>
+                    <strong>Aadhar Number:</strong>{" "}
+                    {selectedPharmacy.aadhar_number}
+                  </p>
+                  <p>
+                    <strong>Created On:</strong> {createdDate} at {createdTime}
+                  </p>
+                  <p>
+                    <strong>Updated On:</strong> {updatedDate} at {updatedTime}
+                  </p>
+                  <p>
+                    <strong>Status:</strong> {selectedPharmacy.status}
+                  </p>
+                  <hr />
+                  <h5>Documents:</h5>
+                  <div
+                    style={{ display: "flex", gap: "15px", flexWrap: "wrap" }}
+                  >
+                    {selectedPharmacy.documents &&
+                    selectedPharmacy.documents.length > 0 ? (
+                      selectedPharmacy.documents.map((doc) => (
+                        <img
+                          key={doc.id}
+                          src={`http://68.183.174.17:8081${doc.document}`}
+                          alt="Pharmacy Document"
+                          style={{
+                            width: "150px",
+                            height: "150px",
+                            objectFit: "cover",
+                            border: "1px solid #ccc",
+                            borderRadius: "8px",
+                          }}
+                        />
+                      ))
+                    ) : (
+                      <p>No documents uploaded.</p>
+                    )}
+                  </div>
+                </div>
+              );
+            })()
+          ) : (
+            <p>No details found.</p>
+          )}
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowModal(false)}>
+            Close
+          </Button>
+        </Modal.Footer>
+      </Modal>
+    </>
+  );
+}

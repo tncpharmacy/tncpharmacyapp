@@ -1,0 +1,347 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900');
+
+@import url('https://fonts.googleapis.com/css2?family=Merienda:wght@600&display=swap');
+
+.logo {
+    display: inline-flex;
+    text-decoration: none;
+    align-items: center;
+    height: 100%;
+}
+
+.logo img {
+    margin-right: 1px;
+    height: 60px;
+}
+
+
+header {
+    box-shadow: 0px 2px 3px 0px rgb(0 0 0 / 1%);
+    /* position: fixed;*/
+    top: 0;
+    z-index: 1;
+    width: 100%;
+    background: #ffffff;
+    transition: top 0.2s;
+    z-index: 111;
+    position: relative;
+}
+
+.header_wrap {
+    display: flex;
+    align-items: center;
+    gap: 80px;
+}
+
+.user_right {
+    align-items: center;
+    display: inline-flex;
+    float: right;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    gap: 25px;
+}
+
+.user_right li {
+    list-style: none;
+}
+
+.user_right li a {
+    display: block;
+    text-decoration: none;
+}
+
+span.user_p {
+    color: #123a64;
+    display: inline-flex;
+    flex-direction: column;
+    font-size: 13px;
+    font-weight: 400;
+    text-align: center;
+}
+
+span.user_p i {
+    position: relative;
+    width: 22px;
+    margin: 0 auto;
+}
+
+.btn1 {
+    border: 1px solid #dddddd;
+    padding: 5px 15px !important;
+    font-size: 13px !important;
+    min-width: 90px;
+    text-align: center;
+
+}
+
+span.user_p i .user_icon {
+    width: 22px;
+    height: 22px;
+    display: block;
+    margin: 0 auto;
+}
+
+span.user_p i .count {
+    background: #f26365;
+    border-radius: 30px;
+    color: #fff;
+    display: inline-block;
+    font-size: 11px;
+    font-style: normal;
+    height: 15px;
+    line-height: 10px;
+    min-width: 15px;
+    padding: 2px;
+    position: absolute;
+    right: -10px;
+    top: -2px;
+}
+
+.dropdown-user {
+    display: inline-block;
+    position: relative;
+}
+
+.dropdown-user .dropdownbtn {
+    cursor: default;
+    padding: 8px 0;
+}
+
+.dropdown-user-content {
+    background-color: #fff;
+    box-shadow: 0 8px 16px 0 #0003;
+    display: none;
+    left: 50%;
+    min-width: 260px;
+    padding: 20px;
+    position: absolute;
+    transform: translate(-50%);
+    z-index: 1;
+}
+
+.dropdown-user-content:before {
+    background: #0a5cc0;
+    content: "";
+    height: 4px;
+    left: 50%;
+    position: absolute;
+    top: -3px;
+    transform: translate(-50%);
+    width: 60px;
+}
+
+.dropdown-user:hover .dropdown-user-content {
+    display: block;
+}
+
+.dropdown-user .dropdown-user-content p {
+    font-size: 13px;
+}
+
+.dropdown-user .dropdown-user-content a {
+    color: #444;
+    display: block;
+    font-size: 14px;
+    font-weight: 500;
+    padding: 8px 0;
+}
+
+.dropdown-user .dropdown-user-content a:hover {
+    color: #ff6b00;
+}
+
+.search_query {
+    align-items: center;
+    box-sizing: border-box;
+    display: flex;
+    float: left;
+    height: 80px;
+    line-height: 0;
+    padding: 0;
+    width: 100%;
+    position: relative;
+}
+
+.query_search_btn {
+    border-right: none;
+    color: #a3a3a3;
+    line-height: 38px;
+    text-align: center;
+    width: 50px;
+    position: absolute;
+    left: 2px;
+    height: 38px;
+}
+
+.search_query input[type=text] {
+    background: transparent;
+    box-sizing: initial;
+    display: inline-block;
+    height: 40px;
+}
+
+.search_query input[type=text] {
+    border: 1px solid #b5cfea;
+    border-radius: 8px;
+    box-shadow: none;
+    color: #696e79;
+    font-size: 13px;
+    margin: 0;
+    outline: 0;
+    padding: 0 55px;
+    width: 100%;
+    letter-spacing: 0.5px;
+}
+
+.search_query input[type=text]::placeholder {
+    color: #c6c6c6;
+    font-style: italic;
+}
+
+.search_query input[type=text]:hover {
+    border-color: #999999;
+}
+
+.menu_header {
+    background: #264b8c;
+    box-shadow: 1px 1px 3px 0px rgb(0 0 0 / 20%);
+    position: relative;
+}
+
+.main_menu {
+    margin: 0;
+    padding: 0;
+    display: inline-block;
+    width: 100%;
+}
+
+.main_menu li {
+    display: inline-block;
+}
+
+.main_menu li a {
+    color: #ffffff;
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 400;
+    padding: 10px 12px;
+    display: inline-block;
+    letter-spacing: 0.5px;
+    position: relative;
+    transition: all .3s ease;
+    z-index: 1;
+}
+
+.main_menu li a i {
+    color: #bbbaba;
+    font-size: 11px;
+    vertical-align: 0px;
+    margin-left: 3px;
+}
+
+.logo_icon {
+    display: none;
+    position: absolute;
+    left: 20px;
+    top: 50%;
+    transform: translate(0, -50%);
+    transition: all 0.3s;
+}
+
+.logo_icon img {
+    width: 35px;
+    filter: brightness(0) invert(1);
+}
+
+.main_menu li a:hover {
+    color: #082c4b;
+}
+
+.main_menu li a::after {
+    content: "";
+    position: absolute;
+    width: 100%;
+    border-radius: 4px;
+    top: 4px;
+    left: 0;
+    transform-origin: right;
+    transform: scaleX(0);
+    transition: all .3s ease;
+}
+
+.main_menu li a:hover::after {
+    transform-origin: left;
+    transform: scaleX(1);
+    background: #e7f7ff;
+    height: 32px;
+    z-index: -1;
+    padding: 0 2px;
+}
+
+/* Hide the megamenu by default */
+.megamenu-panel {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    background-color: #fff;
+    box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.2);
+    z-index: 1000;
+    width: 700px;
+}
+
+/* Show the megamenu when the parent <li> is hovered */
+li:hover .megamenu-panel {
+    display: block;
+}
+
+
+/* Optional: Add styling for the hover effect and positioning */
+li {
+    position: relative;
+    /* Required for absolute positioning of the megamenu */
+}
+
+.megamenu-lists {
+    padding: 10px;
+}
+
+.megamenu-list li a {
+    display: block;
+    padding: 8px 12px;
+    text-decoration: none;
+    color: #333;
+}
+
+.megamenu-list li a:hover {
+    color: #222222;
+}
+
+.btn1.m-2 {
+    border: 1px solid;
+    color: #111111;
+    font-size: 13px;
+    padding: 5px 15px;
+}
+
+ul.megamenu-list {
+    margin: 0;
+    padding: 0;
+}
+
+.btn_uoload {
+    background: transparent;
+    color: #ffffff;
+    font-size: 12px;
+    line-height: 12px;
+    height: 100%;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    border: 0;
+}
+.btn_uoload span {
+   text-align: end;;
+}

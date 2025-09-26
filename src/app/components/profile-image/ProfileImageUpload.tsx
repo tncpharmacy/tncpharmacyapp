@@ -1,45 +1,73 @@
-import React, { useState } from "react";
+"use client";
 
-export default function ProfileImageUpload() {
-  const [preview, setPreview] = useState<string | null>(null);
+import React, { useState, useEffect } from "react";
+
+interface ProfileImageUploadProps {
+  initialImage?: string; // backend path ya full URL
+  size?: number;
+  onChange?: (file: File | null) => void;
+  placeholder?: string;
+  className?: string;
+  name?: string;
+  label?: string;
+}
+
+export default function ProfileImageUpload({
+  initialImage,
+  size = 120,
+  onChange,
+  placeholder = "https://cdn-icons-png.flaticon.com/512/847/847969.png",
+  className = "",
+  name = "profile_pic",
+  label = "Select Profile Image",
+}: ProfileImageUploadProps) {
+  const [preview, setPreview] = useState<string>(placeholder);
+
+  useEffect(() => {
+    if (initialImage) {
+      setPreview(
+        initialImage.startsWith("http")
+          ? initialImage
+          : `http://68.183.174.17:8081${initialImage}`
+      );
+    }
+  }, [initialImage]);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
+    const file = e.target.files?.[0] || null;
     if (file) {
       const reader = new FileReader();
-      reader.onloadend = () => {
-        setPreview(reader.result as string);
-      };
+      reader.onloadend = () => setPreview(reader.result as string);
       reader.readAsDataURL(file);
     }
+    if (onChange) onChange(file);
   };
 
   return (
-    <div className="text-center">
+    <div className={`text-center ${className}`}>
       <div
         style={{
           position: "relative",
-          width: "120px",
-          height: "120px",
+          width: size,
+          height: size,
           margin: "0 auto",
         }}
       >
-        <label htmlFor="profile-pic" style={{ cursor: "pointer" }}>
+        <label htmlFor={name} style={{ cursor: "pointer" }}>
           <img
-            src={
-              preview || "https://cdn-icons-png.flaticon.com/512/847/847969.png"
-            }
-            alt="Profile Preview"
+            src={preview}
+            alt={label}
             style={{
-              width: "120px",
-              height: "120px",
+              width: size,
+              height: size,
               borderRadius: "50%",
               objectFit: "cover",
               border: "2px solid #ddd",
             }}
           />
           <input
-            id="profile-pic"
+            id={name}
+            name={name}
             type="file"
             accept="image/*"
             style={{ display: "none" }}
@@ -47,9 +75,7 @@ export default function ProfileImageUpload() {
           />
         </label>
       </div>
-      <p className="mt-2 text-muted" style={{ fontSize: "0.9rem" }}>
-        Select Profile Image
-      </p>
+      <p className="mt-2 text-muted text-sm">{label}</p>
     </div>
   );
 }

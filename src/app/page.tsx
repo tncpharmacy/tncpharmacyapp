@@ -1,12 +1,11 @@
 import Image from "next/image";
 import styles from "./page.module.css";
-import LoginForm from "./login/page";
+import HomePage from "./user/home/page";
 
 export default function Home() {
   return (
     <>
-      <LoginForm />
+      <HomePage />
     </>
   );
 }
-

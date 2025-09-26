@@ -1,15 +1,28 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  images: {
+    domains: ["68.183.174.17"], // yahan tera image server IP ya domain
+  },
   async rewrites() {
     return [
+      // Backend API rewrites
+      {
+        source: "/api/:path*",
+        destination: `${process.env.NEXT_PUBLIC_API_BASE_URL}/:path*`,
+      },
+      // Admin dashboard routes
       {
         source: "/admin-dashboard",
         destination: "/admin/admin-dashboard",
       },
       {
         source: "/add-pharmacy",
-        destination: "/admin/add-pharmacy",
+        destination: "/admin/pharmacy/add",
+      },
+      {
+        source: "/update-pharmacy/:id",
+        destination: "/admin/pharmacy/add/:id",
       },
       {
         source: "/pharmacy",
@@ -17,7 +30,11 @@ const nextConfig: NextConfig = {
       },
       {
         source: "/add-pharmacist",
-        destination: "/admin/add-pharmacist",
+        destination: "/admin/pharmacist/add",
+      },
+      {
+        source: "/update-pharmacist/:id",
+        destination: "/admin/pharmacist/add/:id",
       },
       {
         source: "/pharmacist",
@@ -87,6 +104,27 @@ const nextConfig: NextConfig = {
         source: "/profile",
         destination: "/doctor/doctor-profile",
       },
+      // Pharmacy routes
+      {
+        source: "/pharmacy/add-pharmacist",
+        destination: "/pharmacy/pharmacist/add",
+      },
+      {
+        source: "/pharmacy/update-pharmacist/:id",
+        destination: "/pharmacy/pharmacist/add/:id",
+      },
+      {
+        source: "/pharmacy/pharmacist",
+        destination: "/pharmacy/pharmacist",
+      },
+      {
+        source: "/view-profile",
+        destination: "/pharmacy/pharmacy-profile/view-profile",
+      },
+      {
+        source: "/update-profile",
+        destination: "/pharmacy/pharmacy-profile/update-profile",
+      },
       {
         source: "/pharmacy-dashboard",
         destination: "/pharmacy/pharmacy-dashboard",
@@ -134,6 +172,16 @@ const nextConfig: NextConfig = {
       {
         source: "/add-medicine",
         destination: "/pharmacy/medicine/add-medicine",
+      },
+
+      // Pharmacist Routes
+      {
+        source: "/pharmacist/view-profile",
+        destination: "/pharmacist/pharmacist-profile/view-profile",
+      },
+      {
+        source: "/pharmacist/update-profile",
+        destination: "/pharmacist/pharmacist-profile/update-profile",
       },
     ];
   },

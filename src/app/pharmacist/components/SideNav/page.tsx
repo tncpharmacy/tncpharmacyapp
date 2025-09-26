@@ -67,7 +67,7 @@ export default function SideNav() {
           {openMenu === "settings" && (
             <ul className="submenu">
               <li>
-                <Link href="#">Pharmacist Profile </Link>
+                <Link href="/pharmacist/view-profile">Profile </Link>
               </li>
               <li>
                 <Link href="#">Reset Password</Link>

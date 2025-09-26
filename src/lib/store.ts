@@ -1,9 +1,29 @@
 import { configureStore } from "@reduxjs/toolkit";
-import doctorReducer from "./features/doctor/doctorSlice";
+import authReducer from "@/lib/features/authSlice/authSlice";
+import pharmacyReducer from "@/lib/features/pharmacySlice/pharmacySlice";
+import stateReducer from "@/lib/features/stateSlice/stateSlice";
+import pharmacistReducer from "@/lib/features/pharmacistSlice/pharmacistSlice";
+import pharmacyListReducer from "@/lib/features/pharmacyListSlice/pharmacyListSlice";
+import pharmacySelfReducer from "@/lib/features/pharmacySelfSlice/pharmacySelfSlice";
+import pharmacistSelfReducer from "@/lib/features/pharmacistSelfSlice/pharmacistSelfSlice";
+import pharmacistByPharmacySlice from "@/lib/features/pharmacistByPharmacySlice/pharmacistByPharmacySlice";
+import categoryReducer from "@/lib/features/categorySlice/categorySlice";
+import subcategoryReducer from "@/lib/features/subCategorySlice/subCategorySlice";
+import clinicReducer from "@/lib/features/clinicSlice/clinicSlice";
 
 export const store = configureStore({
   reducer: {
-    doctor: doctorReducer,
+    auth: authReducer,
+    pharmacy: pharmacyReducer,
+    states: stateReducer,
+    pharmacist: pharmacistReducer,
+    pharmacyList: pharmacyListReducer,
+    selfPharmacy: pharmacySelfReducer,
+    selfPharmacist: pharmacistSelfReducer,
+    pharmacistByPharmacy: pharmacistByPharmacySlice,
+    category: categoryReducer,
+    subcategory: subcategoryReducer,
+    clinic: clinicReducer,
   },
 });
 

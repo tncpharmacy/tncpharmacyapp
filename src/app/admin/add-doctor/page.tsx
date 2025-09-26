@@ -8,6 +8,7 @@ import SideNav from "../components/SideNav/page";
 import Header from "../components/Header/page";
 import { useRouter } from "next/navigation";
 import ProfileImageUpload from "@/app/components/profile-image/ProfileImageUpload";
+import Input from "@/app/components/Input/Input";
 
 type Student = {
   id: number;
@@ -44,17 +45,15 @@ export default function AddDoctor() {
             <div className="main_content">
               <div className="col-sm-12">
                 <div className="row">
-                  <div className="col-md-4">
-                    <div className="txt_col">
-                      <span className="lbl1">Doctor Name</span>
-                      <input
-                        type="text"
-                        className="txt1"
-                        id=""
-                        placeholder="Enter Doctor name"
-                      />
-                    </div>
-                  </div>
+                  <Input
+                    label="Doctor Name"
+                    name="doctorName"
+                    // value={doctorName}
+                    placeholder="Enter Doctor name"
+                    //onChange={(e) => setDoctorName(e.target.value)}
+                    required
+                    // error={error}
+                  />
                   <div className="col-md-4">
                     <div className="txt_col">
                       <span className="lbl1">Gender</span>

@@ -1,6 +1,18 @@
+import LogoutButton from "@/app/components/Logout/LogoutButton";
+import { useAppSelector } from "@/lib/hooks";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 
 export default function Header() {
+  const { user, accessToken } = useAppSelector((state) => state.auth);
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!accessToken) {
+      router.push("/");
+    }
+  }, [accessToken, router]);
   return (
     <div className="header">
       <div className="container-fluid">
@@ -22,9 +34,7 @@ export default function Header() {
                 <div className="user_dropdown-content">
                   <div className="p-2 bg-white text-center">
                     {/* <a className="btn_action" href="#"><i className="bi bi-box-arrow-left"></i>&nbsp;Logout</a> */}
-                    <Link href={"/"} className="btn_action">
-                      <i className="bi bi-box-arrow-left"></i>&nbsp;Logout
-                    </Link>
+                    <LogoutButton />
                   </div>
                 </div>
               </div>
