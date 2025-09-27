@@ -12,8 +12,6 @@ export default function SideNav() {
 
   return (
     <div className="side_menu">
-
-
       <ul className="side_menu-list">
         <li>
           <Link href="/admin-dashboard" className="link">
@@ -57,7 +55,11 @@ export default function SideNav() {
             <i className="bi bi-capsule"></i> Medicine
           </Link>
         </li>
-
+        <li>
+          <Link href="/clinic" className="link">
+            <i className="bi bi-person-plus"></i> Clinic
+          </Link>
+        </li>
         <li>
           <Link href="/doctors" className="link">
             <i className="bi bi-person-plus"></i> Doctors
@@ -95,6 +97,12 @@ export default function SideNav() {
           {openMenu === "product" && (
             <ul className="submenu">
               <li>
+                <Link href="/category">Category</Link>
+              </li>
+              <li>
+                <Link href="/sub-category">Sub Category</Link>
+              </li>
+              <li>
                 <Link href="/categories">Medicine Category</Link>
               </li>
               <li>
@@ -128,7 +136,6 @@ export default function SideNav() {
             </ul>
           )}
         </li>
-
       </ul>
     </div>
   );

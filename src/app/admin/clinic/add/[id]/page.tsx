@@ -1,7 +1,7 @@
-import PharmacistForm from "@/app/components/Form/PharmacistForm";
+import ClinicForm from "@/app/components/Form/ClinicForm";
 import { IdPageProps } from "./types";
 
-export default function EditPharmacist({ params }: IdPageProps) {
+export default function EditClinic({ params }: IdPageProps) {
   let decodedId: number;
 
   try {
@@ -19,5 +19,5 @@ export default function EditPharmacist({ params }: IdPageProps) {
     }
   }
 
-  return <PharmacistForm id={decodedId} />;
+  return <ClinicForm id={decodedId} />;
 }

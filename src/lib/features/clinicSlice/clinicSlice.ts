@@ -16,8 +16,8 @@ const initialState: ClinicState = {
 
 // Fetch all clinics
 export const fetchClinics = createAsyncThunk("clinics/fetchAll", async () => {
-  const res = await clinicApi.getClinics();
-  return res.data;
+  const res = await clinicApi.getClinics(); // yahan pe already array milega
+  return res;
 });
 
 // Add clinic

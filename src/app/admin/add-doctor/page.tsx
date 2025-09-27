@@ -9,23 +9,60 @@ import Header from "../components/Header/page";
 import { useRouter } from "next/navigation";
 import ProfileImageUpload from "@/app/components/profile-image/ProfileImageUpload";
 import Input from "@/app/components/Input/Input";
-
-type Student = {
-  id: number;
-  studentId: string;
-  studentName: string;
-  gender: string;
-  dob: string;
-  mobile: string;
-  email: string;
-  bloodGroup: string;
-  className: string;
-  courseName: string;
-  status: number;
-};
+import MultiSelect from "@/app/components/MultiSelectDropdown/MultiSelectDropdown";
 
 export default function AddDoctor() {
   const router = useRouter();
+  const [selectedItems, setSelectedItems] = useState<string[]>([]);
+  const [selectedQualification, setSelectedQualification] = useState<string[]>(
+    []
+  );
+  const [formData, setFormData] = useState<string>("");
+
+  const doctorOptions = [
+    {
+      label: "MBBS – Bachelor of Medicine, Bachelor of Surgery",
+      value: "MBBS",
+    },
+    { label: "BDS – Bachelor of Dental Surgery", value: "BDS" },
+    {
+      label: "BAMS – Bachelor of Ayurvedic Medicine and Surgery",
+      value: "BAMS",
+    },
+    {
+      label: "BHMS – Bachelor of Homeopathic Medicine and Surgery",
+      value: "BHMS",
+    },
+    { label: "BUMS – Bachelor of Unani Medicine and Surgery", value: "BUMS" },
+    {
+      label: "BNYS – Bachelor of Naturopathy and Yogic Sciences",
+      value: "BNYS",
+    },
+    { label: "BSMS – Bachelor of Siddha Medicine and Surgery", value: "BSMS" },
+  ];
+
+  const clinicOptions = [
+    {
+      label: "Ruchi Clinic",
+      value: "Ruchi Clinic",
+    },
+    { label: "Tender Palm", value: "Tender Palm" },
+    {
+      label: "Shree Dev Clinic",
+      value: "Shree Dev Clinic",
+    },
+    {
+      label: "Jai Gurudev Clinic",
+      value: "Jai Gurudev Clinic",
+    },
+    { label: "IIG Clinic", value: "IIG Clinic" },
+    {
+      label: "AMS Clinic",
+      value: "AMS Clinic",
+    },
+    { label: "BHYM Clinic", value: "BHYM Clinic" },
+  ];
+
   return (
     <>
       <Header />
@@ -50,18 +87,20 @@ export default function AddDoctor() {
                     name="doctorName"
                     // value={doctorName}
                     placeholder="Enter Doctor name"
-                    //onChange={(e) => setDoctorName(e.target.value)}
+                    onChange={(e) => setFormData(e.target.value)}
                     required
                     // error={error}
                   />
                   <div className="col-md-4">
                     <div className="txt_col">
-                      <span className="lbl1">Gender</span>
-                      <select className="txt1">
-                        <option>-Select-</option>
-                        <option>Male</option>
-                        <option>Female</option>
-                      </select>
+                      <span className="lbl1">Clinic</span>
+                      <MultiSelect
+                        options={clinicOptions}
+                        selected={selectedQualification}
+                        onChange={setSelectedQualification}
+                        placeholder="--Select--"
+                        itemName="Clinic"
+                      />
                     </div>
                   </div>
                   <div className="col-md-4">
@@ -78,29 +117,58 @@ export default function AddDoctor() {
                   <div className="clearfix"></div>
                   <div className="col-md-4">
                     <div className="txt_col">
-                      <span className="lbl1">Qualification</span>
+                      <span className="lbl1">Gender</span>
                       <select className="txt1">
-                        <option>--Select--</option>
-                        <option>
-                          MBBS – Bachelor of Medicine, Bachelor of Surgery
-                        </option>
-                        <option>BDS – Bachelor of Dental Surgery</option>
-                        <option>
-                          BAMS – Bachelor of Ayurvedic Medicine and Surgery
-                        </option>
-                        <option>
-                          BHMS – Bachelor of Homeopathic Medicine and Surgery
-                        </option>
-                        <option>
-                          BUMS – Bachelor of Unani Medicine and Surgery
-                        </option>
-                        <option>
-                          BNYS – Bachelor of Naturopathy and Yogic Sciences
-                        </option>
-                        <option>
-                          BSMS – Bachelor of Siddha Medicine and Surgery
-                        </option>
+                        <option>-Select-</option>
+                        <option>Male</option>
+                        <option>Female</option>
                       </select>
+                    </div>
+                  </div>
+                  <div className="col-md-4">
+                    <div className="txt_col">
+                      <span className="lbl1">Mobile No</span>
+                      <input
+                        type="text"
+                        className="txt1"
+                        id=""
+                        placeholder="Enter contact number"
+                      />
+                    </div>
+                  </div>
+                  <div className="col-md-4">
+                    <div className="txt_col">
+                      <span className="lbl1">Email Id.</span>
+                      <input
+                        type="text"
+                        className="txt1"
+                        id=""
+                        placeholder="Enter email address"
+                      />
+                    </div>
+                  </div>
+                  <div className="clearfix"></div>
+                  <div className="col-md-4">
+                    <div className="txt_col">
+                      <span className="lbl1">Whatsapp No</span>
+                      <input
+                        type="text"
+                        className="txt1"
+                        id=""
+                        placeholder="Enter contact number"
+                      />
+                    </div>
+                  </div>
+                  <div className="col-md-4">
+                    <div className="txt_col">
+                      <span className="lbl1">Qualification</span>
+                      <MultiSelect
+                        options={doctorOptions}
+                        selected={selectedItems}
+                        onChange={setSelectedItems}
+                        placeholder="--Select--"
+                        itemName="Qualification"
+                      />
                     </div>
                   </div>
                   <div className="col-md-4">
@@ -115,6 +183,8 @@ export default function AddDoctor() {
                       </select>
                     </div>
                   </div>
+                  <div className="clearfix"></div>
+                  <div className="clearfix"></div>
                   <div className="col-md-4">
                     <div className="txt_col">
                       <span className="lbl1">Experiance (Year)</span>
@@ -126,7 +196,6 @@ export default function AddDoctor() {
                       />
                     </div>
                   </div>
-                  <div className="clearfix"></div>
                   <div className="col-md-4">
                     <div className="txt_col">
                       <span className="lbl1">Registration (Licence) No.</span>
@@ -171,48 +240,14 @@ export default function AddDoctor() {
                       />
                     </div>
                   </div>
-                  <div className="col-md-8">
+                  <div className="col-md-4">
                     <div className="txt_col">
-                      <span className="lbl1">Document Upload</span>
+                      <span className="lbl1">Doctor Address</span>
                       <input
-                        type="file"
+                        type="text"
                         className="txt1"
                         id=""
                         placeholder="Enter Registration Expiry Date"
-                      />
-                    </div>
-                  </div>
-                  <div className="clearfix"></div>
-                  <div className="col-md-4">
-                    <div className="txt_col">
-                      <span className="lbl1">Mobile No</span>
-                      <input
-                        type="text"
-                        className="txt1"
-                        id=""
-                        placeholder="Enter contact number"
-                      />
-                    </div>
-                  </div>
-                  <div className="col-md-4">
-                    <div className="txt_col">
-                      <span className="lbl1">Whatsapp No</span>
-                      <input
-                        type="text"
-                        className="txt1"
-                        id=""
-                        placeholder="Enter contact number"
-                      />
-                    </div>
-                  </div>
-                  <div className="col-md-4">
-                    <div className="txt_col">
-                      <span className="lbl1">Email Id.</span>
-                      <input
-                        type="text"
-                        className="txt1"
-                        id=""
-                        placeholder="Enter email address"
                       />
                     </div>
                   </div>
@@ -264,13 +299,23 @@ export default function AddDoctor() {
                       <textarea
                         className="txt1 h-50"
                         id=""
-                        rows={6}
+                        rows={10}
                         placeholder="Enter professional summary"
                       ></textarea>
                     </div>
                   </div>
                   <div className="clearfix"></div>
-
+                  <div className="col-md-12">
+                    <div className="txt_col">
+                      <span className="lbl1">Document Upload</span>
+                      <input
+                        type="file"
+                        className="txt1"
+                        id=""
+                        placeholder="Enter Registration Expiry Date"
+                      />
+                    </div>
+                  </div>
                   <div className="col-md-4">
                     <button className="btn-style2">Submit</button>
                   </div>

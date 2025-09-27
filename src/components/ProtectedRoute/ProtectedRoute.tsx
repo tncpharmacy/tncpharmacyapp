@@ -4,7 +4,6 @@ import { useSelector } from "react-redux";
 import { RootState } from "@/lib/store";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { getAccessToken } from "@/lib/auth/auth";
 
 export default function ProtectedRoute({
   children,

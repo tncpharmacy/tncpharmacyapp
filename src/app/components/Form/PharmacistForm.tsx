@@ -50,7 +50,7 @@ export default function PharmacistForm({ id }: Props) {
     login_id: "",
     uploadedFiles: [],
     documents: [],
-    profile_pic: "",
+    profile_pic: null,
   });
 
   const [loading, setLoading] = useState(false);

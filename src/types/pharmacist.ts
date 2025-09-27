@@ -1,8 +1,3 @@
-interface Document {
-  id: number;
-  document: string;
-}
-
 export interface Pharmacist {
   id: number;
   pharmacy_id: number;

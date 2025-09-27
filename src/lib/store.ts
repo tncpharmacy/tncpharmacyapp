@@ -23,7 +23,7 @@ export const store = configureStore({
     pharmacistByPharmacy: pharmacistByPharmacySlice,
     category: categoryReducer,
     subcategory: subcategoryReducer,
-    clinic: clinicReducer,
+    clinicList: clinicReducer,
   },
 });
 

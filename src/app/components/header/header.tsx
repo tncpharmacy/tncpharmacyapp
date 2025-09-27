@@ -8,6 +8,7 @@ import { useRouter } from "next/navigation";
 import { loginUser } from "@/lib/features/authSlice/authSlice";
 import { getCategories } from "@/lib/features/categorySlice/categorySlice";
 import { getSubcategories } from "@/lib/features/subCategorySlice/subCategorySlice";
+import { Category } from "@/types/category";
 
 const SiteHeader = () => {
   const dispatch = useAppDispatch();
@@ -42,6 +43,14 @@ const SiteHeader = () => {
     if (!restoreComplete) return;
     if (user) redirectUser(user.user_type);
   }, [restoreComplete, user]);
+
+  const [shuffledCategories, setShuffledCategories] = useState<Category[]>([]);
+
+  useEffect(() => {
+    // Har refresh pe categories random ho jayengi
+    const shuffled = [...categories].sort(() => Math.random() - 0.5);
+    setShuffledCategories(shuffled);
+  }, [categories]);
 
   const redirectUser = (userType: number) => {
     switch (userType) {
@@ -98,7 +107,7 @@ const SiteHeader = () => {
                         src="/images/icons/icon-profile.svg"
                       />
                     </i>
-                    Accout
+                    Account
                   </span>
                   <div className="dropdown-user-content">
                     <div className="">
@@ -133,7 +142,7 @@ const SiteHeader = () => {
                                     Login here
                                   </span>
                                   <div className="row_login">
-                                    <span className="lbllogin">Email ID</span>
+                                    <span className="lbllogin">Login ID</span>
                                     <input
                                       type="text"
                                       className="txtlogin"
@@ -193,7 +202,7 @@ const SiteHeader = () => {
                   </div>
                 </div>
               </li>
-              <li>
+              {/* <li>
                 <a href="my-wishlist.html">
                   <span className="user_p">
                     <i>
@@ -206,7 +215,7 @@ const SiteHeader = () => {
                     Wishlist
                   </span>
                 </a>
-              </li>
+              </li> */}
               <li>
                 <a href="cart.html">
                   <span className="user_p">
@@ -231,72 +240,68 @@ const SiteHeader = () => {
           <ul className="main_menu">
             <li>
               <a href="#">
-                All Medicine <i className="bi bi-grid-fill"></i>
+                All  Medicine <i className="bi bi-grid-fill"></i>
               </a>
             </li>
 
-            {/* Medicines को छोड़कर बाकी categories show कर रहे हैं */}
-            {categories
-              .filter((cat) => cat.category_name !== "Medicines")
-              .map((cat) => (
-                <li key={cat.id} className="relative group">
-                  {/* Main Category */}
-                  <a href="#">{cat.category_name}</a>
+            {shuffledCategories.slice(0, 5).map((cat) => (
+              <li key={cat.id} className="relative group">
+                <a
+                  href="#"
+                  className=""
+                >
+                  {cat.category_name}
+                </a>
 
-                  {/* Subcategories Dropdown */}
-                  <div className="megamenu-panel absolute left-0 top-full hidden group-hover:block bg-white shadow-lg z-50">
-                    <div className="megamenu-lists">
-                      <ul className="megamenu-list flex flex-col gap-1 px-4 py-2">
-                        {subcategories
-                          .filter(
-                            (sub) => String(sub.category_id) === String(cat.id)
-                          )
-                          .map((sub) => (
-                            <li
-                              key={sub.id}
-                              className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
-                            >
-                              {sub.sub_category_name}
-                            </li>
-                          ))}
+                {/* Subcategories */}
+                <div className="megamenu-panel">
+                  <ul className="megamenu-list">
+                    {subcategories
+                      .filter(
+                        (sub) => String(sub.category_id) === String(cat.id)
+                      )
+                      .map((sub) => (
+                        <li key={sub.id}>
+                          <a className="" href="#">
+                            {sub.sub_category_name}
+                          </a>
+                        </li>
+                      ))}
+                    {subcategories.filter(
+                      (sub) => String(sub.category_id) === String(cat.id)
+                    ).length === 0 && (
+                        <p className="">
+                          No Subcategories
+                        </p>
+                      )}
+                  </ul>
+                </div>
+              </li>
+            ))}
 
-                        {/* जब कोई subcategory नहीं होगी */}
-                        {subcategories.filter(
-                          (sub) => String(sub.category_id) === String(cat.id)
-                        ).length === 0 && (
-                          <li className="px-4 py-2 text-gray-500">
-                            No Subcategories
-                          </li>
-                        )}
-                      </ul>
-
-                      <a href="#" className="btn1 m-2">
-                        View All Product
-                      </a>
+            {/* More Menu */}
+            {shuffledCategories.length > 5 && (
+              <li className="relative group">
+                <a
+                  href="#"
+                  className="px-4 hover:text-blue-600 font-medium transition-colors"
+                >
+                  More
+                </a>
+                <div className="megamenu-panel absolute left-0 top-full hidden group-hover:block bg-white shadow-lg z-50 w-60">
+                  {shuffledCategories.slice(5).map((cat) => (
+                    <div
+                      key={cat.id}
+                      className="p-2 hover:bg-blue-50 cursor-pointer"
+                    >
+                      {cat.category_name}
                     </div>
-                  </div>
-                </li>
-              ))}
+                  ))}
+                </div>
+              </li>
+            )}
 
-            {/* बाकी static items */}
-            {/* <li>
-              <a href="#">Personal Care</a>
-            </li>
-            <li>
-              <a href="#">Women Care</a>
-            </li>
-            <li>
-              <a href="#">Baby Care</a>
-            </li>
-            <li>
-              <a href="#">Sports Nutritional</a>
-            </li>
-            <li>
-              <a href="#">Ayurveda</a>
-            </li>
-            <li>
-              <a href="#">Health Devices</a>
-            </li> */}
+
             <li className="float-end">
               <button className="btn_uoload">
                 <span>

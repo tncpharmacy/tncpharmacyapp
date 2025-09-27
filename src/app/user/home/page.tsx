@@ -105,7 +105,7 @@ export default function HomePage() {
 
       <section className="pd_section">
         <div className="container">
-          <h2 className="section_title">Health Devices</h2>
+          <h2 className="section_title">Vitamins & Nutritions</h2>
           <div className="row">
             <div className="col">
               <div className="pd_box">
@@ -188,7 +188,7 @@ export default function HomePage() {
 
       <section className="brand_section">
         <div className="container">
-          <h2 className="section_title">Health Devices</h2>
+          <h2 className="section_title">Shop by Brands</h2>
           <div className="brand_list">
             <div className="brand_item">
               <img src="images/brand/cipla.png" alt="" />

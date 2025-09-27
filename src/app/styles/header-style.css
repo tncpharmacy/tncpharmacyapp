@@ -215,6 +215,7 @@ span.user_p i .count {
     padding: 0;
     display: inline-block;
     width: 100%;
+    position: relative;
 }
 
 .main_menu li {
@@ -285,11 +286,11 @@ span.user_p i .count {
     display: none;
     position: absolute;
     top: 100%;
-    left: 0;
+    left: 125px;
     background-color: #fff;
     box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.2);
     z-index: 1000;
-    width: 700px;
+    width: 750px;
 }
 
 /* Show the megamenu when the parent <li> is hovered */
@@ -298,13 +299,8 @@ li:hover .megamenu-panel {
 }
 
 
-/* Optional: Add styling for the hover effect and positioning */
-li {
-    position: relative;
-    /* Required for absolute positioning of the megamenu */
-}
 
-.megamenu-lists {
+.megamenu-list {
     padding: 10px;
 }
 
@@ -328,9 +324,31 @@ li {
 
 ul.megamenu-list {
     margin: 0;
-    padding: 0;
+    padding: 10px;
+    column-count: 3;
+        background: linear-gradient(
+        to right,
+        #ffffff 0%, #ffffff 33.33%,
+        #f4f8ff 33.33%, #f4f8ff 66.66%,
+        #ffffff 66.66%, #ffffff 100%
+    );
 }
-
+ul.megamenu-list li {
+    display: block;
+}
+ul.megamenu-list li a{
+    display: inline-block;
+    padding: 6px 12px;
+    text-decoration: none;
+    color: #444444;
+    font-size: 13px;
+}
+ul.megamenu-list li a:hover{
+    color: #082c4b;
+}
+ul.megamenu-list li a:hover::after{
+    display: none;
+}
 .btn_uoload {
     background: transparent;
     color: #ffffff;

@@ -2,7 +2,7 @@
 export interface Category {
   id: number;
   category_name: string;
-  description: string | null;
+  description?: string;
   status: string;
   created_on: string;
   updated_on: string;

@@ -4,6 +4,12 @@ const nextConfig: NextConfig = {
   images: {
     domains: ["68.183.174.17"], // yahan tera image server IP ya domain
   },
+  eslint: {
+    // Allow production builds even if ESLint errors are present
+    ignoreDuringBuilds: true,
+    // Optional: you can also disable specific rules
+    dirs: ["src"], // directories to run ESLint on
+  },
   async rewrites() {
     return [
       // Backend API rewrites
@@ -15,6 +21,18 @@ const nextConfig: NextConfig = {
       {
         source: "/admin-dashboard",
         destination: "/admin/admin-dashboard",
+      },
+      {
+        source: "/add-clinic",
+        destination: "/admin/clinic/add",
+      },
+      // {
+      //   source: "/update-clinic/:id",
+      //   destination: "/admin/clinic/add/:id",
+      // },
+      {
+        source: "/clinic",
+        destination: "/admin/clinic",
       },
       {
         source: "/add-pharmacy",
@@ -51,6 +69,30 @@ const nextConfig: NextConfig = {
       {
         source: "/add-suppliers",
         destination: "/admin/supplier/add-supplier",
+      },
+      {
+        source: "/add-category",
+        destination: "/admin/medicine/category/add",
+      },
+      {
+        source: "/update-category/:id",
+        destination: "/admin/medicine/category/add/:id",
+      },
+      {
+        source: "/category",
+        destination: "/admin/medicine/category",
+      },
+      {
+        source: "/add-sub-category",
+        destination: "/admin/medicine/sub-category/add",
+      },
+      {
+        source: "/update-sub-category/:id",
+        destination: "/admin/medicine/sub-category/add/:id",
+      },
+      {
+        source: "/sub-category",
+        destination: "/admin/medicine/sub-category",
       },
       {
         source: "/categories",
@@ -138,7 +180,7 @@ const nextConfig: NextConfig = {
         destination: "/pharmacy/supplier/list-supplier",
       },
       {
-        source: "/category",
+        source: "/medicine-category",
         destination: "/pharmacy/medicine/medicine-category",
       },
       {

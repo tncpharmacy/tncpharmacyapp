@@ -2,11 +2,11 @@
 export interface SubCategory {
   id: number;
   sub_category_name: string;
-  description: string | null;
+  description?: string;
   status: string;
   created_on: string;
   updated_on: string;
-  category_id: number;
+  category_id: string;
   created_by: string | null;
   updated_by: string | null;
   category_name: string;
