@@ -56,13 +56,15 @@ export const updateCategoryApi = async (
   id: number,
   data: UpdateCategoryDTO
 ): Promise<Category> => {
-  const res = await axiosInstance.put<CategoryResponse>(
+  const res = await axiosInstance.patch<CategoryResponse>(
     ENDPOINTS.CATEGORY.UPDATE(id),
     data
   );
 
-  // backend ke response se single Category object return kar rahe hain
-  // agar backend ek array me data bhejta hai to [0] use karo
+  if (!res.data.data || res.data.data.length === 0) {
+    throw new Error("No category returned from backend");
+  }
+
   return res.data.data[0];
 };
 

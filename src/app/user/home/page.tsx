@@ -1,106 +1,181 @@
-'use client';
-import Link from "next/link";
+"use client";
+
 import "../css/site-style.css";
 import SiteHeader from "@/app/components/header/header";
-
+import { Carousel, Collapse, Toast, ToastContainer } from "react-bootstrap";
+import { useEffect, useState } from "react";
+import Slider from "react-slick";
+import "slick-carousel/slick/slick.css";
+import "slick-carousel/slick/slick-theme.css";
 
 export default function HomePage() {
+  const [show, setShow] = useState(false);
+  const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      setShow(true);
+    }, 2000);
+
+    return () => clearTimeout(timeout);
+  }, []);
+
+  const settings = {
+    dots: true,
+    infinite: true,
+    speed: 500,
+    slidesToShow: 5,
+    slidesToScroll: 1,
+    autoplay: true,
+  };
 
   return (
     <>
-
       <SiteHeader />
-
-
-      <div id="carouselExampleAutoplaying" className="carousel slide" data-bs-ride="carousel">
-        <div className="carousel-inner">
-          <div className="carousel-item active">
-            <img src="images/main-banner-1.png" className="d-block w-100" alt="..." />
+      <Carousel
+        fade
+        controls={true}
+        indicators={true}
+        interval={3000}
+        pause={false}
+      >
+        <Carousel.Item>
+          <img
+            src="images/main-banner-1.jpg"
+            className="d-block w-100"
+            alt="..."
+          />
+          <div className="hero-banner">
+            <div className="container">
+              <div className="mySlides fadeInLeft">
+                <h2 className="title">
+                  Happiness is the Highest form of Health
+                </h2>
+                <span className="subtitle">#StayHealthy</span>
+              </div>
+            </div>
           </div>
-          <div className="carousel-item">
-            <img src="images/main-banner-1.png" className="d-block w-100" alt="..." />
+        </Carousel.Item>
+        <Carousel.Item>
+          <img
+            src="images/main-banner-2.jpg"
+            className="d-block w-100"
+            alt="..."
+          />
+          <div className="hero-banner">
+            <div className="container">
+              <div className="mySlides fadeInLeft">
+                <h2 className="title">
+                  Move with grace, health finds its place
+                </h2>
+                <span className="subtitle">#StayHealthy</span>
+              </div>
+            </div>
           </div>
-          <div className="carousel-item">
-            <img src="images/main-banner-1.png" className="d-block w-100" alt="..." />
+        </Carousel.Item>
+        <Carousel.Item>
+          <img
+            src="images/main-banner-3.jpg"
+            className="d-block w-100"
+            alt="..."
+          />
+          <div className="hero-banner">
+            <div className="container">
+              <div className="mySlides fadeInLeft">
+                <h2 className="title">Health is the Foundation of Happiness</h2>
+                <span className="subtitle">#StayHealthy</span>
+              </div>
+            </div>
           </div>
-        </div>
-        <button className="carousel-control-prev" type="button" data-bs-target="#carouselExampleAutoplaying" data-bs-slide="prev">
-          <span className="carousel-control-prev-icon" aria-hidden="true"></span>
-          <span className="visually-hidden">Previous</span>
-        </button>
-        <button className="carousel-control-next" type="button" data-bs-target="#carouselExampleAutoplaying" data-bs-slide="next">
-          <span className="carousel-control-next-icon" aria-hidden="true"></span>
-          <span className="visually-hidden">Next</span>
-        </button>
-      </div>
-
-
-
-
-
+        </Carousel.Item>
+      </Carousel>
 
       <section className="category_sec">
         <div className="container">
           <h2 className="section_title">Browse by Health Conditions</h2>
-          <div className="row">
-            <div className="col">
-              <div className="category_item">
-                <div className="category_img bg-1">
-                  <img src="images/icons/icon-diabetes-care.svg" />
-                </div>
-                <div>
-                  <h2 className="category_title">Diabetes Care</h2>
-                  <span className="category_link">View Now</span>
-                </div>
-              </div>
-            </div>
-            <div className="col">
-              <div className="category_item">
-                <div className="category_img bg-2">
-                  <img src="images/icons/icon-cardiac-care.svg" />
-                </div>
-                <div>
-                  <h2 className="category_title">Cardiac Care</h2>
-                  <span className="category_link">View Now</span>
+          <div className="slider-container">
+            <Slider {...settings}>
+              <div>
+                <div className="category_item">
+                  <div className="category_img bg-1">
+                    <img src="images/icons/icon-diabetes-care.svg" />
+                  </div>
+                  <div>
+                    <h2 className="category_title">Diabetes Care</h2>
+                    <span className="category_link">
+                      View Now<i className="bi bi-arrow-right-short"></i>
+                    </span>
+                  </div>
                 </div>
               </div>
-            </div>
-            <div className="col">
-              <div className="category_item">
-                <div className="category_img bg-3">
-                  <img src="images/icons/icon-stomach-care.svg" />
-                </div>
-                <div>
-                  <h2 className="category_title">Stomach Care</h2>
-                  <span className="category_link">View Now</span>
-                </div>
-              </div>
-            </div>
-            <div className="col">
-              <div className="category_item">
-                <div className="category_img bg-4">
-                  <img src="images/icons/icon-liver-care.svg" />
-                </div>
-                <div>
-                  <h2 className="category_title">Liver Care</h2>
-                  <span className="category_link">View Now</span>
+              <div>
+                <div className="category_item">
+                  <div className="category_img bg-2">
+                    <img src="images/icons/icon-cardiac-care.svg" />
+                  </div>
+                  <div>
+                    <h2 className="category_title">Cardiac Care</h2>
+                    <span className="category_link">
+                      View Now<i className="bi bi-arrow-right-short"></i>
+                    </span>
+                  </div>
                 </div>
               </div>
-            </div>
-            <div className="col">
-              <div className="category_item">
-                <div className="category_img bg-5">
-                  <img src="images/icons/icon-oral-care.svg" />
-                </div>
-                <div>
-                  <h2 className="category_title">Oral Care</h2>
-                  <span className="category_link">View Now</span>
+              <div>
+                <div className="category_item">
+                  <div className="category_img bg-3">
+                    <img src="images/icons/icon-stomach-care.svg" />
+                  </div>
+                  <div>
+                    <h2 className="category_title">Stomach Care</h2>
+                    <span className="category_link">
+                      View Now<i className="bi bi-arrow-right-short"></i>
+                    </span>
+                  </div>
                 </div>
               </div>
-            </div>
+              <div>
+                <div className="category_item">
+                  <div className="category_img bg-4">
+                    <img src="images/icons/icon-liver-care.svg" />
+                  </div>
+                  <div>
+                    <h2 className="category_title">Liver Care</h2>
+                    <span className="category_link">
+                      View Now<i className="bi bi-arrow-right-short"></i>
+                    </span>
+                  </div>
+                </div>
+              </div>
+              <div>
+                <div className="category_item">
+                  <div className="category_img bg-5">
+                    <img src="images/icons/icon-oral-care.svg" />
+                  </div>
+                  <div>
+                    <h2 className="category_title">Oral Care</h2>
+                    <span className="category_link">
+                      View Now<i className="bi bi-arrow-right-short"></i>
+                    </span>
+                  </div>
+                </div>
+              </div>
+              <div>
+                <div className="category_item">
+                  <div className="category_img bg-1">
+                    <img src="images/icons/icon-diabetes-care.svg" />
+                  </div>
+                  <div>
+                    <h2 className="category_title">Diabetes Care</h2>
+                    <span className="category_link">
+                      View Now<i className="bi bi-arrow-right-short"></i>
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </Slider>
           </div>
         </div>
-
       </section>
 
       <section className="pd_section">
@@ -113,10 +188,14 @@ export default function HomePage() {
                   <img src="images/products/pd-img-1.jpg" />
                 </div>
                 <div className="pd_content">
-                  <h3 className="pd_title">B-Protin Mango - Bottle of 500g Powder</h3>
+                  <h3 className="pd_title">
+                    B-Protin Mango - Bottle of 500g Powder
+                  </h3>
                   <div className="pd_price">
                     <span className="new_price">₹418</span>
-                    <span className="old_price"><del>MRP ₹460</del>9% off</span>
+                    <span className="old_price">
+                      <del>MRP ₹460</del>9% off
+                    </span>
                   </div>
                   <button className="btn-1">ADD</button>
                 </div>
@@ -131,7 +210,9 @@ export default function HomePage() {
                   <h3 className="pd_title">Centrum Joint & Mobility Capsule</h3>
                   <div className="pd_price">
                     <span className="new_price">₹418</span>
-                    <span className="old_price"><del>MRP ₹460</del>9% off</span>
+                    <span className="old_price">
+                      <del>MRP ₹460</del>9% off
+                    </span>
                   </div>
                   <button className="btn-1">ADD</button>
                 </div>
@@ -143,10 +224,15 @@ export default function HomePage() {
                   <img src="images/products/pd-img-3.jpg" />
                 </div>
                 <div className="pd_content">
-                  <h3 className="pd_title">Revital H for Woman with Multi- vitamins, Calcium, Zinc & Natu.</h3>
+                  <h3 className="pd_title">
+                    Revital H for Woman with Multi- vitamins, Calcium, Zinc &
+                    Natu.
+                  </h3>
                   <div className="pd_price">
                     <span className="new_price">₹418</span>
-                    <span className="old_price"><del>MRP ₹460</del>9% off</span>
+                    <span className="old_price">
+                      <del>MRP ₹460</del>9% off
+                    </span>
                   </div>
                   <button className="btn-1">ADD</button>
                 </div>
@@ -158,10 +244,14 @@ export default function HomePage() {
                   <img src="images/products/pd-img-4.jpg" />
                 </div>
                 <div className="pd_content">
-                  <h3 className="pd_title">Protinex Diabetes Care (Creamy Vanilla Flavor, 400gm, Jar)</h3>
+                  <h3 className="pd_title">
+                    Protinex Diabetes Care (Creamy Vanilla Flavor, 400gm, Jar)
+                  </h3>
                   <div className="pd_price">
                     <span className="new_price">₹418</span>
-                    <span className="old_price"><del>MRP ₹460</del>9% off</span>
+                    <span className="old_price">
+                      <del>MRP ₹460</del>9% off
+                    </span>
                   </div>
                   <button className="btn-1">ADD</button>
                 </div>
@@ -173,10 +263,14 @@ export default function HomePage() {
                   <img src="images/products/pd-img-5.jpg" />
                 </div>
                 <div className="pd_content">
-                  <h3 className="pd_title">Neurobion Forte Vitamin B-Complex Tablets - B Vitamins</h3>
+                  <h3 className="pd_title">
+                    Neurobion Forte Vitamin B-Complex Tablets - B Vitamins
+                  </h3>
                   <div className="pd_price">
                     <span className="new_price">₹418</span>
-                    <span className="old_price"><del>MRP ₹460</del>9% off</span>
+                    <span className="old_price">
+                      <del>MRP ₹460</del>9% off
+                    </span>
                   </div>
                   <button className="btn-1">ADD</button>
                 </div>
@@ -250,7 +344,6 @@ export default function HomePage() {
         </div>
       </section>
 
-
       <section className="pd_section">
         <div className="container">
           <h2 className="section_title">Health Devices</h2>
@@ -261,10 +354,15 @@ export default function HomePage() {
                   <img src="images/products/pd-img-6.jpg" />
                 </div>
                 <div className="pd_content">
-                  <h3 className="pd_title">Omron HEM 7120 Fully Automatic Digital Blood Pressure Monitor</h3>
+                  <h3 className="pd_title">
+                    Omron HEM 7120 Fully Automatic Digital Blood Pressure
+                    Monitor
+                  </h3>
                   <div className="pd_price">
                     <span className="new_price">₹418</span>
-                    <span className="old_price"><del>MRP ₹460</del>9% off</span>
+                    <span className="old_price">
+                      <del>MRP ₹460</del>9% off
+                    </span>
                   </div>
                   <button className="btn-1">ADD</button>
                 </div>
@@ -276,10 +374,14 @@ export default function HomePage() {
                   <img src="images/products/pd-img-7.jpg" />
                 </div>
                 <div className="pd_content">
-                  <h3 className="pd_title">Dr. Morepen BG-03 Gluco One Glucometer Combo, 50 Strips</h3>
+                  <h3 className="pd_title">
+                    Dr. Morepen BG-03 Gluco One Glucometer Combo, 50 Strips
+                  </h3>
                   <div className="pd_price">
                     <span className="new_price">₹418</span>
-                    <span className="old_price"><del>MRP ₹460</del>9% off</span>
+                    <span className="old_price">
+                      <del>MRP ₹460</del>9% off
+                    </span>
                   </div>
                   <button className="btn-1">ADD</button>
                 </div>
@@ -291,10 +393,14 @@ export default function HomePage() {
                   <img src="images/products/pd-img-8.jpg" />
                 </div>
                 <div className="pd_content">
-                  <h3 className="pd_title">Hansaplast Soft Cotton Crepe Bandage For Pain Relief</h3>
+                  <h3 className="pd_title">
+                    Hansaplast Soft Cotton Crepe Bandage For Pain Relief
+                  </h3>
                   <div className="pd_price">
                     <span className="new_price">₹418</span>
-                    <span className="old_price"><del>MRP ₹460</del>9% off</span>
+                    <span className="old_price">
+                      <del>MRP ₹460</del>9% off
+                    </span>
                   </div>
                   <button className="btn-1">ADD</button>
                 </div>
@@ -306,10 +412,14 @@ export default function HomePage() {
                   <img src="images/products/pd-img-9.jpg" />
                 </div>
                 <div className="pd_content">
-                  <h3 className="pd_title">DR VAKU Swadesi Non-Contact Infrared Digital Temperature Gun</h3>
+                  <h3 className="pd_title">
+                    DR VAKU Swadesi Non-Contact Infrared Digital Temperature Gun
+                  </h3>
                   <div className="pd_price">
                     <span className="new_price">₹418</span>
-                    <span className="old_price"><del>MRP ₹460</del>9% off</span>
+                    <span className="old_price">
+                      <del>MRP ₹460</del>9% off
+                    </span>
                   </div>
                   <button className="btn-1">ADD</button>
                 </div>
@@ -321,10 +431,15 @@ export default function HomePage() {
                   <img src="images/products/pd-img-10.jpg" />
                 </div>
                 <div className="pd_content">
-                  <h3 className="pd_title">PharmEasy Digital Flexible Tip Thermometer for Fever, Fast ...</h3>
+                  <h3 className="pd_title">
+                    PharmEasy Digital Flexible Tip Thermometer for Fever, Fast
+                    ...
+                  </h3>
                   <div className="pd_price">
                     <span className="new_price">₹418</span>
-                    <span className="old_price"><del>MRP ₹460</del>9% off</span>
+                    <span className="old_price">
+                      <del>MRP ₹460</del>9% off
+                    </span>
                   </div>
                   <button className="btn-1">ADD</button>
                 </div>
@@ -344,7 +459,9 @@ export default function HomePage() {
                   <span className="t1">- Upto 25% Off</span>
                   <h2 className="t2">100% Pure Hand Sanitizer</h2>
                   <div>
-                    <button className="btn-2">Shop Now <i className="bi bi-chevron-right"></i></button>
+                    <button className="btn-2">
+                      Shop Now <i className="bi bi-chevron-right"></i>
+                    </button>
                   </div>
                 </div>
               </div>
@@ -356,7 +473,9 @@ export default function HomePage() {
                   <span className="t1">- Upto 25% Off</span>
                   <h2 className="t2">100% Pure Hand Sanitizer</h2>
                   <div>
-                    <button className="btn-2">Shop Now <i className="bi bi-chevron-right"></i></button>
+                    <button className="btn-2">
+                      Shop Now <i className="bi bi-chevron-right"></i>
+                    </button>
                   </div>
                 </div>
               </div>
@@ -368,7 +487,9 @@ export default function HomePage() {
                   <span className="t1">- Upto 25% Off</span>
                   <h2 className="t2">100% Pure Hand Sanitizer</h2>
                   <div>
-                    <button className="btn-2">Shop Now <i className="bi bi-chevron-right"></i></button>
+                    <button className="btn-2">
+                      Shop Now <i className="bi bi-chevron-right"></i>
+                    </button>
                   </div>
                 </div>
               </div>
@@ -387,10 +508,14 @@ export default function HomePage() {
                   <img src="images/products/pd-img-11.jpg" />
                 </div>
                 <div className="pd_content">
-                  <h3 className="pd_title">Dabur Chyawanprakash Sugar free powder</h3>
+                  <h3 className="pd_title">
+                    Dabur Chyawanprakash Sugar free powder
+                  </h3>
                   <div className="pd_price">
                     <span className="new_price">₹418</span>
-                    <span className="old_price"><del>MRP ₹460</del>9% off</span>
+                    <span className="old_price">
+                      <del>MRP ₹460</del>9% off
+                    </span>
                   </div>
                   <button className="btn-1">ADD</button>
                 </div>
@@ -402,10 +527,15 @@ export default function HomePage() {
                   <img src="images/products/pd-img-12.jpg" />
                 </div>
                 <div className="pd_content">
-                  <h3 className="pd_title">Dabur Jamun Neem Karela Juice 1L | Helps Control Blood Sugar...</h3>
+                  <h3 className="pd_title">
+                    Dabur Jamun Neem Karela Juice 1L | Helps Control Blood
+                    Sugar...
+                  </h3>
                   <div className="pd_price">
                     <span className="new_price">₹418</span>
-                    <span className="old_price"><del>MRP ₹460</del>9% off</span>
+                    <span className="old_price">
+                      <del>MRP ₹460</del>9% off
+                    </span>
                   </div>
                   <button className="btn-1">ADD</button>
                 </div>
@@ -417,10 +547,15 @@ export default function HomePage() {
                   <img src="images/products/pd-img-13.jpg" />
                 </div>
                 <div className="pd_content">
-                  <h3 className="pd_title">Himalaya Ashwagandha General Wellness Tablets | Stress Relief..</h3>
+                  <h3 className="pd_title">
+                    Himalaya Ashwagandha General Wellness Tablets | Stress
+                    Relief..
+                  </h3>
                   <div className="pd_price">
                     <span className="new_price">₹418</span>
-                    <span className="old_price"><del>MRP ₹460</del>9% off</span>
+                    <span className="old_price">
+                      <del>MRP ₹460</del>9% off
+                    </span>
                   </div>
                   <button className="btn-1">ADD</button>
                 </div>
@@ -432,10 +567,14 @@ export default function HomePage() {
                   <img src="images/products/pd-img-14.jpg" />
                 </div>
                 <div className="pd_content">
-                  <h3 className="pd_title">Divya Madhunashni Vati Extra Power - 60 g (120 Tablets)</h3>
+                  <h3 className="pd_title">
+                    Divya Madhunashni Vati Extra Power - 60 g (120 Tablets)
+                  </h3>
                   <div className="pd_price">
                     <span className="new_price">₹418</span>
-                    <span className="old_price"><del>MRP ₹460</del>9% off</span>
+                    <span className="old_price">
+                      <del>MRP ₹460</del>9% off
+                    </span>
                   </div>
                   <button className="btn-1">ADD</button>
                 </div>
@@ -447,10 +586,14 @@ export default function HomePage() {
                   <img src="images/products/pd-img-15.jpg" />
                 </div>
                 <div className="pd_content">
-                  <h3 className="pd_title">Baidyanath Asli Ayurved Maha  Bhringraj Hair Oil - 200 ml </h3>
+                  <h3 className="pd_title">
+                    Baidyanath Asli Ayurved Maha Bhringraj Hair Oil - 200 ml{" "}
+                  </h3>
                   <div className="pd_price">
                     <span className="new_price">₹418</span>
-                    <span className="old_price"><del>MRP ₹460</del>9% off</span>
+                    <span className="old_price">
+                      <del>MRP ₹460</del>9% off
+                    </span>
                   </div>
                   <button className="btn-1">ADD</button>
                 </div>
@@ -462,10 +605,9 @@ export default function HomePage() {
 
       <section className="adv-full">
         <div className="container">
-          <img src="images/adv-banner-4.png" className="w-100" alt="" />
+          <img src="images/adv-banner-4.jpg" className="w-100" alt="" />
         </div>
       </section>
-
 
       <section className="why_section">
         <div className="container">
@@ -518,59 +660,147 @@ export default function HomePage() {
         </div>
       </section>
 
-
-
-
-
-
-
+      <ToastContainer
+        className="position-fixed bottom-0 end-0"
+        style={{ zIndex: 1060 }}
+      >
+        <Toast
+          className={`toast-app ${open ? "no-animation" : ""}`}
+          onClose={() => {
+            setShow(false);
+            setOpen(false);
+          }}
+          show={show}
+          autohide={false}
+        >
+          <Collapse in={open}>
+            <div id="qr-collapse" style={{ marginBottom: "-30px" }}>
+              <div className="mob">
+                <button
+                  type="button"
+                  className="btn-close position-absolute top-0 end-0 m-1"
+                  style={{ fontSize: "12px" }}
+                  onClick={() => setOpen(!open)}
+                  aria-label="Close"
+                />
+                <img src="images/logo.png" className="clogo" alt="logo" />
+                <img
+                  src="images/qr-code-whatsapp.svg"
+                  className="w-100"
+                  alt="QR code to upload via WhatsApp"
+                />
+                <span className="hint">Scan to Upload</span>
+              </div>
+            </div>
+          </Collapse>
+          <img
+            src="images/upload-on-whatsapp.svg"
+            className="toastimg"
+            alt="QR code"
+            onClick={() => setOpen(!open)}
+            aria-controls="qr-collapse"
+            aria-expanded={open}
+          />
+        </Toast>
+      </ToastContainer>
 
       <footer>
         <div className="container">
-          <div className="row aos-init aos-animate" data-aos="fade-up" data-aos-duration="1000" data-aos-delay="0">
+          <div
+            className="row aos-init aos-animate"
+            data-aos="fade-up"
+            data-aos-duration="1000"
+            data-aos-delay="0"
+          >
             <div className="col-sm-9">
               <div className="row">
                 <div className="col-sm-3">
                   <h5 className="ftr_title">About TnC Pharmacy</h5>
                   <ul className="ftr_link">
-                    <li><a href="#">About us</a></li>
-                    <li><a href="#">Contact Us</a></li>
-                    <li><a href="#">Our Stores</a></li>
-                    <li><a href="#">Careers</a></li>
-                    <li><a href="#">News & Media</a></li>
-                    <li><a href="#">Our Blogs</a></li>
-                    <li><a href="#">FAQ’s</a></li>
+                    <li>
+                      <a href="#">About us</a>
+                    </li>
+                    <li>
+                      <a href="#">Contact Us</a>
+                    </li>
+                    <li>
+                      <a href="#">Our Stores</a>
+                    </li>
+                    <li>
+                      <a href="#">Careers</a>
+                    </li>
+                    <li>
+                      <a href="#">News & Media</a>
+                    </li>
+                    <li>
+                      <a href="#">Our Blogs</a>
+                    </li>
+                    <li>
+                      <a href="#">FAQ’s</a>
+                    </li>
                   </ul>
                 </div>
                 <div className="col-sm-3">
                   <h5 className="ftr_title">Our Policies</h5>
                   <ul className="ftr_link">
-                    <li><a href="#">Returns & Refunds</a></li>
-                    <li><a href="#">Shipping Terms</a></li>
-                    <li><a href="#">Privacy Policy</a></li>
-                    <li><a href="#">Terms and Conditions</a></li>
-                    <li><a href="#">Editorial Policy</a></li>
+                    <li>
+                      <a href="#">Returns & Refunds</a>
+                    </li>
+                    <li>
+                      <a href="#">Shipping Terms</a>
+                    </li>
+                    <li>
+                      <a href="#">Privacy Policy</a>
+                    </li>
+                    <li>
+                      <a href="#">Terms and Conditions</a>
+                    </li>
+                    <li>
+                      <a href="#">Editorial Policy</a>
+                    </li>
                   </ul>
                 </div>
                 <div className="col-sm-3">
                   <h5 className="ftr_title">Product Categories</h5>
                   <ul className="ftr_link">
-                    <li><a href="#">Medicines</a></li>
-                    <li><a href="#">Personal Care</a></li>
-                    <li><a href="#">Women Care</a></li>
-                    <li><a href="#">Baby Care</a></li>
-                    <li><a href="#">Sports Nutritional</a></li>
-                    <li><a href="#">Ayurveda</a></li>
-                    <li><a href="#">Health Devices</a></li>
+                    <li>
+                      <a href="#">Medicines</a>
+                    </li>
+                    <li>
+                      <a href="#">Personal Care</a>
+                    </li>
+                    <li>
+                      <a href="#">Women Care</a>
+                    </li>
+                    <li>
+                      <a href="#">Baby Care</a>
+                    </li>
+                    <li>
+                      <a href="#">Sports Nutritional</a>
+                    </li>
+                    <li>
+                      <a href="#">Ayurveda</a>
+                    </li>
+                    <li>
+                      <a href="#">Health Devices</a>
+                    </li>
                   </ul>
                 </div>
                 <div className="col-sm-3">
                   <h5 className="ftr_title">Additional Links</h5>
                   <ul className="ftr_link">
-                    <li><a href="#">Order Medicines</a></li>
-                    <li><a href="#">Online Doctor Consultation</a></li>
-                    <li><a href="#">All Doctors List</a></li>
-                    <li><a href="#">Login/Register</a></li>
+                    <li>
+                      <a href="#">Order Medicines</a>
+                    </li>
+                    <li>
+                      <a href="#">Online Doctor Consultation</a>
+                    </li>
+                    <li>
+                      <a href="#">All Doctors List</a>
+                    </li>
+                    <li>
+                      <a href="#">Login/Register</a>
+                    </li>
                   </ul>
                 </div>
               </div>
@@ -594,11 +824,11 @@ export default function HomePage() {
                 </li>
                 <li>
                   <span>
-                    <b className="fw-semibold">Address</b><br /> TnC Pharmacy, Ganga Shopping Complex,
-                    Sector 29, Noida, U.P.  - 201303
+                    <b className="fw-semibold">Address</b>
+                    <br /> TnC Pharmacy, Ganga Shopping Complex, Sector 29,
+                    Noida, U.P.  - 201303
                   </span>
                 </li>
-
               </ul>
             </div>
           </div>
@@ -610,26 +840,40 @@ export default function HomePage() {
                 <h5 className="ftr_title">We are social</h5>
                 <ul className="ftr_sociallink">
                   <li>
-                    <a href="#"><i className="bi bi-facebook"></i></a>
+                    <a href="#">
+                      <i className="bi bi-facebook"></i>
+                    </a>
                   </li>
                   <li>
-                    <a href="#"><i className="bi bi-twitter-x"></i></a>
+                    <a href="#">
+                      <i className="bi bi-twitter-x"></i>
+                    </a>
                   </li>
                   <li>
-                    <a href="#"><i className="bi bi-instagram"></i></a>
+                    <a href="#">
+                      <i className="bi bi-instagram"></i>
+                    </a>
                   </li>
                   <li>
-                    <a href="#"><i className="bi bi-youtube"></i></a>
+                    <a href="#">
+                      <i className="bi bi-youtube"></i>
+                    </a>
                   </li>
                   <li>
-                    <a href="#"><i className="bi bi-linkedin"></i></a>
+                    <a href="#">
+                      <i className="bi bi-linkedin"></i>
+                    </a>
                   </li>
                 </ul>
               </div>
               <div className="col-sm-6 text-end">
                 <div>
                   <h5 className="ftr_title">Payment Accept</h5>
-                  <img src="images/payment-option.png" alt="" className="ftr_payment" />
+                  <img
+                    src="images/payment-option.png"
+                    alt=""
+                    className="ftr_payment"
+                  />
                 </div>
               </div>
             </div>
@@ -647,10 +891,43 @@ export default function HomePage() {
             </div>
           </div>
         </div>
-
+        <div className="toast-container position-fixed bottom-0 start-0">
+          <div
+            id="liveToast"
+            className="toast toast-app"
+            role="alert"
+            aria-live="assertive"
+            aria-atomic="true"
+            data-bs-autohide="false"
+          >
+            <div className="collapse show" id="mobile-qrcode">
+              <div className="mob">
+                <button
+                  type="button"
+                  className="btn-close"
+                  data-bs-dismiss="toast"
+                  aria-label="Close"
+                ></button>
+                <img src="/Content/Images/logo.svg" className="clogo" alt="" />
+                <img
+                  src="/Content/Images/qr-code.jpg"
+                  className="w-100"
+                  alt=""
+                />
+                <span className="hint">Scan to Download App</span>
+              </div>
+            </div>
+            <img
+              src="/Content/Images/download-app.svg"
+              className="toastimg"
+              alt="download app"
+              data-bs-toggle="collapse"
+              data-bs-target="#mobile-qrcode"
+              aria-expanded="true"
+            />
+          </div>
+        </div>
       </footer>
     </>
-
-
   );
 }

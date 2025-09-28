@@ -39,41 +39,42 @@ export const getCategories = createAsyncThunk<
 // ✅ Create category
 export const createCategory = createAsyncThunk<
   Category,
-  { category_name: string }, // correct field
+  {
+    category_name: string;
+    description?: string;
+    status?: "Active" | "Inactive";
+  }, // ✅ status strict
   { rejectValue: string }
 >("category/create", async (data, { rejectWithValue }) => {
   try {
-    // createCategoryApi directly Category return karta hai
-    const newCategory = await createCategoryApi(data);
-
-    // ✅ directly return the created Category
+    const newCategory = await createCategoryApi(data); // ✅ ab type match
     return newCategory;
   } catch (err: unknown) {
-    if (err instanceof Error) {
-      return rejectWithValue(err.message);
-    }
+    if (err instanceof Error) return rejectWithValue(err.message);
     return rejectWithValue("Failed to create category");
   }
 });
 
 // ✅ Update category
 export const updateCategory = createAsyncThunk<
-  Category, // return type of the thunk
-  { id: number; category_name: string }, // argument type
-  { rejectValue: string } // reject value type
+  Category,
+  {
+    id: number;
+    category_name: string;
+    description?: string;
+    status?: "Active" | "Inactive";
+  }, // 👈 more fields allowed
+  { rejectValue: string }
 >("category/update", async (data, { rejectWithValue }) => {
   try {
-    // updateCategoryApi ab directly Category return karta hai
     const updatedCategory = await updateCategoryApi(data.id, {
       category_name: data.category_name,
+      description: data.description,
+      status: data.status,
     });
-
-    // ✅ directly return updated Category
     return updatedCategory;
   } catch (err: unknown) {
-    if (err instanceof Error) {
-      return rejectWithValue(err.message);
-    }
+    if (err instanceof Error) return rejectWithValue(err.message);
     return rejectWithValue("Failed to update category");
   }
 });
@@ -135,14 +136,15 @@ const categorySlice = createSlice({
       .addCase(
         updateCategory.fulfilled,
         (state, action: PayloadAction<Category>) => {
+          if (!action.payload) return; // safeguard
+
           const index = state.list.findIndex(
             (cat) => cat.id === action.payload.id
           );
-          if (index !== -1) {
-            state.list[index] = action.payload;
-          }
+          if (index !== -1) state.list[index] = action.payload;
         }
       )
+
       .addCase(updateCategory.rejected, (state, action) => {
         state.error = action.payload ?? "Failed to update category";
       });

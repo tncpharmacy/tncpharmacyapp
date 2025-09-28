@@ -32,7 +32,7 @@ export default function ProtectedRoute({
   // ✅ redirect if redux says not authenticated
   useEffect(() => {
     if (ready && restoreComplete && !isAuthenticated) {
-      router.push("/login");
+      router.push("/");
     }
   }, [ready, restoreComplete, isAuthenticated, router]);
 

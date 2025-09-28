@@ -3,10 +3,11 @@ import LogoutButton from "@/app/components/Logout/LogoutButton";
 import { useAppSelector } from "@/lib/hooks";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
-import Link from "next/link";
+import ProfileMenu from "@/app/components/ProfileMenu/ProfileMenu";
+import HeaderProfilePic from "@/app/components/HeaderProfilePic/HeaderProfilePic";
 
 export default function Header() {
-  const { user, accessToken } = useAppSelector((state) => state.auth);
+  const { accessToken } = useAppSelector((state) => state.auth);
   const router = useRouter();
 
   useEffect(() => {
@@ -14,6 +15,7 @@ export default function Header() {
       router.push("/");
     }
   }, [accessToken, router]);
+
   return (
     <div className="header">
       <div className="container-fluid">
@@ -26,7 +28,7 @@ export default function Header() {
           <div className="col-sm-6 text-right">
             <div className="header-right">
               <div className="user_info">
-                Hi: <b>Super Admin</b>
+                <HeaderProfilePic />
               </div>
               <div className="user_dropdown">
                 <span className="dropbtn">
@@ -34,9 +36,9 @@ export default function Header() {
                 </span>
                 <div className="user_dropdown-content">
                   <div className="p-2 bg-white text-center">
-                    {/* <a className="btn_action" href="#"><i className="bi bi-box-arrow-left"></i>&nbsp;Logout</a> */}
-                    <LogoutButton />
+                    <ProfileMenu />
                   </div>
+                  <LogoutButton />
                 </div>
               </div>
             </div>

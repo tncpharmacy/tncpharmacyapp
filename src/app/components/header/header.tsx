@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from "react";
 import "../../styles/header-style.css";
 import "../../styles/style-login.css";
-import { Modal } from "react-bootstrap";
+import { Modal, OverlayTrigger, Tooltip } from "react-bootstrap";
 import { useAppDispatch, useAppSelector } from "@/lib/hooks";
 import { useRouter } from "next/navigation";
 import { loginUser } from "@/lib/features/authSlice/authSlice";
@@ -24,6 +24,8 @@ const SiteHeader = () => {
     dispatch(getCategories());
     dispatch(getSubcategories());
   }, [dispatch]);
+
+
 
   const [login_id, setLoginId] = useState("");
   const [password, setPassword] = useState("");
@@ -146,7 +148,7 @@ const SiteHeader = () => {
                                     <input
                                       type="text"
                                       className="txtlogin"
-                                      placeholder="Enter EmailID"
+                                      placeholder="Enter Login Id"
                                       value={login_id}
                                       maxLength={10}
                                       onChange={(e) =>
@@ -226,7 +228,7 @@ const SiteHeader = () => {
                       />
                       <span className="count">0</span>
                     </i>
-                    Cart
+                    Health Bag
                   </span>
                 </a>
               </li>
@@ -244,59 +246,53 @@ const SiteHeader = () => {
               </a>
             </li>
 
-            {shuffledCategories.slice(0, 5).map((cat) => (
-              <li key={cat.id} className="relative group">
-                <a
-                  href="#"
-                  className=""
-                >
-                  {cat.category_name}
-                </a>
+            {shuffledCategories.slice(0, 5).map((cat) => {
+              const filteredSubcategories = subcategories.filter(
+                (sub) => String(sub.category_id) === String(cat.id)
+              );
 
-                {/* Subcategories */}
-                <div className="megamenu-panel">
-                  <ul className="megamenu-list">
-                    {subcategories
-                      .filter(
-                        (sub) => String(sub.category_id) === String(cat.id)
-                      )
-                      .map((sub) => (
-                        <li key={sub.id}>
-                          <a className="" href="#">
-                            {sub.sub_category_name}
-                          </a>
-                        </li>
-                      ))}
-                    {subcategories.filter(
-                      (sub) => String(sub.category_id) === String(cat.id)
-                    ).length === 0 && (
-                        <p className="">
-                          No Subcategories
-                        </p>
-                      )}
-                  </ul>
-                </div>
-              </li>
-            ))}
+              return (
+                <li key={cat.id}                >
+                  <a href="#">
+                    {cat.category_name}
+                  </a>
+
+                  {/* Subcategories */}
+                  <div className="megamenu-panel">
+                    {filteredSubcategories.length > 0 ? (
+                      <ul className="megamenu-list">
+                        {filteredSubcategories.map((sub) => (
+                          <li key={sub.id}>
+                            <a href="#">{sub.sub_category_name}</a>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <ul className="no-subcategories">
+                        <li>No Subcategories</li>
+                      </ul>
+                    )}
+
+                  </div>
+                </li>
+              );
+            })}
+
 
             {/* More Menu */}
             {shuffledCategories.length > 5 && (
-              <li className="relative group">
-                <a
-                  href="#"
-                  className="px-4 hover:text-blue-600 font-medium transition-colors"
-                >
+              <li className="position-relative">
+                <a href="#" className="">
                   More
                 </a>
-                <div className="megamenu-panel absolute left-0 top-full hidden group-hover:block bg-white shadow-lg z-50 w-60">
-                  {shuffledCategories.slice(5).map((cat) => (
-                    <div
-                      key={cat.id}
-                      className="p-2 hover:bg-blue-50 cursor-pointer"
-                    >
-                      {cat.category_name}
-                    </div>
-                  ))}
+                <div className="megamenu-panel2">
+                  <ul className="megamenu-list">
+                    {shuffledCategories.slice(5).map((cat) => (
+                      <li key={cat.id} className="">
+                        <a href="#">{cat.category_name}</a>
+                      </li>
+                    ))}
+                  </ul>
                 </div>
               </li>
             )}
@@ -314,6 +310,7 @@ const SiteHeader = () => {
                   alt="Upload"
                 />
               </button>
+              
             </li>
           </ul>
         </div>

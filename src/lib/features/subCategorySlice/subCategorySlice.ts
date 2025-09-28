@@ -46,11 +46,11 @@ export const createSubcategory = createAsyncThunk<
   { rejectValue: string }
 >("subcategory/create", async (data, { rejectWithValue }) => {
   try {
-    const res = await createSubcategoryApi(data);
-    return res;
+    const newCategory = await createSubcategoryApi(data); // ✅ ab type match
+    return newCategory;
   } catch (err: unknown) {
     if (err instanceof Error) return rejectWithValue(err.message);
-    return rejectWithValue("Failed to create subcategory");
+    return rejectWithValue("Failed to create category");
   }
 });
 
@@ -67,11 +67,16 @@ export const updateSubcategory = createAsyncThunk<
   { rejectValue: string }
 >("subcategory/update", async (data, { rejectWithValue }) => {
   try {
-    const res = await updateSubcategoryApi(data.id, data);
-    return res;
+    const updatedCategory = await updateSubcategoryApi(data.id, {
+      category_id: data.category_id,
+      sub_category_name: data.sub_category_name,
+      description: data.description,
+      status: data.status,
+    });
+    return updatedCategory;
   } catch (err: unknown) {
     if (err instanceof Error) return rejectWithValue(err.message);
-    return rejectWithValue("Failed to update subcategory");
+    return rejectWithValue("Failed to update category");
   }
 });
 

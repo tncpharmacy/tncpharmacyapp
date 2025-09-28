@@ -1,35 +1,32 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useState } from "react";
-import { Button, Modal } from "react-bootstrap";
 import "../../css/admin-style.css";
 import SideNav from "@/app/admin/components/SideNav/page";
 import Header from "@/app/admin/components/Header/page";
 import { useRouter } from "next/navigation";
 import { useAppDispatch, useAppSelector } from "@/lib/hooks";
-import { SubCategory } from "@/types/subCategory";
+import { SubCategory, CreateSubCategoryDTO } from "@/types/subCategory";
 import InfiniteScroll from "@/app/components/InfiniteScroll/InfiniteScroll";
 import {
+  createSubcategory,
   deleteSubcategory,
   getSubcategories,
+  updateSubcategory,
 } from "@/lib/features/subCategorySlice/subCategorySlice";
+import toast from "react-hot-toast";
+import { getCategories } from "@/lib/features/categorySlice/categorySlice";
 
 export default function AddSubCategory() {
   const dispatch = useAppDispatch();
-  const router = useRouter();
   // redux se categories uthana
   const { list: subcategories } = useAppSelector((state) => state.subcategory);
+
+  const { list: categories } = useAppSelector((state) => state.category);
 
   // Infinite scroll state
   const [visibleCount, setVisibleCount] = useState(10);
   const [loadings, setLoadings] = useState(false);
-
-  // Modal state
-  const [showModal, setShowModal] = useState(false);
-  const [selectedCategory, setSelectedCategory] = useState<SubCategory | null>(
-    null
-  );
 
   // filtered records by search box
   const [searchTerm, setSearchTerm] = useState("");
@@ -37,31 +34,31 @@ export default function AddSubCategory() {
     useState<SubCategory[]>(subcategories);
 
   //status
-  const [records, setRecords] = useState<SubCategory[]>([]);
   const [status, setStatus] = useState<string>("");
 
   const [formData, setFormData] = useState<Partial<SubCategory>>({
     id: 0,
-    category_id: "",
+    category_id: 0,
     category_name: "",
     sub_category_name: "",
     description: "",
-    status: "",
+    status: "Active",
   });
 
   // filtered records by search box + status filter
   useEffect(() => {
-    let data = subcategories || [];
+    let data = subcategories ? [...subcategories] : [];
 
     // 🔹 Search filter
     if (searchTerm) {
       const lower = searchTerm.toLowerCase();
       data = data.filter((item: SubCategory) =>
-        (Object.keys(item) as (keyof SubCategory)[]).some((key) =>
-          String(item[key] ?? "")
-            .toLowerCase()
-            .includes(lower)
-        )
+        (Object.keys(item) as (keyof SubCategory)[]).some((key) => {
+          const value = item[key];
+          return (
+            typeof value === "string" && value.toLowerCase().includes(lower)
+          );
+        })
       );
     }
 
@@ -70,12 +67,16 @@ export default function AddSubCategory() {
       data = data.filter((item: SubCategory) => item.status === status);
     }
 
+    // 🔹 Ascending order by id
+    data = data.sort((a, b) => a.id - b.id);
+
     setFilteredData(data);
-  }, [searchTerm, status, subcategories.length]); // ✅ only length (primitive)
+  }, [searchTerm, status, subcategories]);
 
   // Fetch all pharmacies once
   useEffect(() => {
     dispatch(getSubcategories());
+    dispatch(getCategories());
   }, [dispatch]);
 
   //infinte scroll records
@@ -94,14 +95,76 @@ export default function AddSubCategory() {
     }
   };
 
-  const handleView = (category: SubCategory) => {
-    setSelectedCategory(category);
-    setShowModal(true);
-  };
+  // const handleView = (category: SubCategory) => {
+  //   setSelectedCategory(category);
+  //   setShowModal(true);
+  // };
 
   const handleEdit = (id: number) => {
-    const encodedId = encodeURIComponent(btoa(String(id)));
-    router.push(`/update-sub-category/${encodedId}`);
+    const subCategory = subcategories.find((item) => item.id === id);
+    if (subCategory) {
+      setFormData({
+        id: subCategory.id,
+        category_id: subCategory.category_id,
+        sub_category_name: subCategory.sub_category_name,
+        description: subCategory.description,
+        status: subCategory.status,
+      });
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    try {
+      const formDataToAppend: CreateSubCategoryDTO = {
+        category_id: formData.category_id || 0,
+        sub_category_name: formData.sub_category_name || "",
+        description: formData.description || "",
+        status: "Active",
+      };
+
+      // console.log("Sending payload:", formDataToAppend);
+
+      if (formData.id && formData.id > 0) {
+        // ✅ UPDATE
+        const updatedSub = await dispatch(
+          updateSubcategory({ id: formData.id, ...formDataToAppend })
+        ).unwrap();
+
+        toast.success("Sub Category updated successfully!");
+
+        // 🔹 Update filteredData in-place, preserve order
+        setFilteredData((prev) => {
+          const newData = [...prev];
+          const index = newData.findIndex((item) => item.id === updatedSub.id);
+          if (index !== -1) newData[index] = updatedSub; // ✅ item apni original jagah rahe
+          return newData;
+        });
+      } else {
+        // ✅ CREATE
+        const newSub = await dispatch(
+          createSubcategory(formDataToAppend)
+        ).unwrap();
+        toast.success("Sub Category Created successfully!");
+
+        // 🔹 Add new item at top or bottom
+        setFilteredData((prev) => [newSub, ...prev]);
+      }
+      // ✅ Refresh list after create/update
+      dispatch(getSubcategories());
+      setVisibleCount(10);
+      // Reset form
+      setFormData({
+        id: 0,
+        category_name: "",
+        description: "",
+        status: "Active",
+      });
+    } catch (err) {
+      console.error("Error in handleSubmit:", err);
+      alert("Something went wrong!");
+    }
   };
 
   const handleChange = (
@@ -161,41 +224,38 @@ export default function AddSubCategory() {
                         </tr>
                       </thead>
                       <tbody>
-                        {filteredData.slice(0, visibleCount).map((p) => (
-                          <tr key={p.id}>
-                            <td>{p.id}</td>
-                            <td>{p.category_name ?? "-"}</td>
-                            <td>{p.sub_category_name ?? "-"}</td>
-                            <td>{p.description ?? "-"}</td>
-                            <td>
-                              <span
-                                onClick={() => handleDelete(p.id)}
-                                className={`status ${
-                                  p.status === "Active"
-                                    ? "status-active"
-                                    : "status-inactive"
-                                } cursor-pointer`}
-                                title="Click to change status"
-                              >
-                                {p.status === "Active" ? "Active" : "Inactive"}
-                              </span>
-                            </td>
-                            <td>
-                              <button
-                                className="btn btn-light btn-sm me-2"
-                                onClick={() => handleEdit(p.id)}
-                              >
-                                <i className="bi bi-pencil"></i>
-                              </button>
-                              <button
-                                className="btn btn-light btn-sm"
-                                onClick={() => handleView(p)}
-                              >
-                                <i className="bi bi-eye-fill"></i>
-                              </button>
-                            </td>
-                          </tr>
-                        ))}
+                        {filteredData
+                          .slice(0, visibleCount)
+                          .sort((a, b) => a.id - b.id) // ascending order by id
+                          .map((p) => (
+                            <tr key={p.id}>
+                              <td>{p.id}</td>
+                              <td>{p.category_name ?? "-"}</td>
+                              <td>{p.sub_category_name ?? "-"}</td>
+                              <td>{p.description ?? "-"}</td>
+                              <td>
+                                <span
+                                  onClick={() => handleDelete(p.id)}
+                                  className={`status ${
+                                    p.status === "Active"
+                                      ? "status-active"
+                                      : "status-inactive"
+                                  } cursor-pointer`}
+                                  title="Click to change status"
+                                >
+                                  {p.status}
+                                </span>
+                              </td>
+                              <td>
+                                <button
+                                  className="btn btn-light btn-sm me-2"
+                                  onClick={() => handleEdit(p.id)}
+                                >
+                                  <i className="bi bi-pencil"></i>
+                                </button>
+                              </td>
+                            </tr>
+                          ))}
                       </tbody>
                     </table>
                   </div>
@@ -206,50 +266,61 @@ export default function AddSubCategory() {
                   <div className="card p-3 shadow-sm">
                     <h5>Add Sub Category</h5>
                     <hr className="w-100" />
-                    <div className="row">
-                      <div className="col-md-12">
-                        <div className="txt_col">
-                          <span className="lbl1">Category</span>
-                          <input
-                            type="text"
-                            className="txt1"
-                            name="category_id"
-                            value={formData.category_id}
-                            onChange={handleChange}
-                          />
+                    <form onSubmit={handleSubmit}>
+                      <div className="row">
+                        <div className="col-md-12">
+                          <div className="txt_col">
+                            <span className="lbl1">Category</span>
+                            <select
+                              className="txt1"
+                              name="category_id"
+                              value={formData.category_id ?? ""}
+                              onChange={handleChange}
+                              required
+                            >
+                              <option value="">Select Category</option>
+                              {categories.map((cat) => (
+                                <option key={cat.id} value={cat.id}>
+                                  {cat.category_name}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                        </div>
+                        <div className="col-md-12">
+                          <div className="txt_col">
+                            <span className="lbl1">Sub Category</span>
+                            <input
+                              type="text"
+                              className="txt1"
+                              name="sub_category_name"
+                              value={formData.sub_category_name || ""}
+                              onChange={handleChange}
+                              required
+                            />
+                          </div>
+                        </div>
+                        <div className="col-md-12">
+                          <div className="txt_col">
+                            <span className="lbl1">Description</span>
+                            <textarea
+                              className="txt1 h-50"
+                              name="description"
+                              value={formData.description || ""}
+                              onChange={(e) =>
+                                setFormData({
+                                  ...formData,
+                                  description: e.target.value,
+                                })
+                              }
+                              required
+                            ></textarea>
+                          </div>
                         </div>
                       </div>
-                      <div className="col-md-12">
-                        <div className="txt_col">
-                          <span className="lbl1">Sub Category</span>
-                          <input
-                            type="text"
-                            className="txt1"
-                            name="sub_category_name"
-                            value={formData.sub_category_name}
-                            onChange={handleChange}
-                          />
-                        </div>
-                      </div>
-                      <div className="col-md-12">
-                        <div className="txt_col">
-                          <span className="lbl1">Description</span>
-                          <textarea
-                            className="txt1 h-50"
-                            name="description"
-                            value={formData.description}
-                            onChange={(e) =>
-                              setFormData({
-                                ...formData,
-                                description: e.target.value,
-                              })
-                            }
-                          ></textarea>
-                        </div>
-                      </div>
-                    </div>
 
-                    <button className="btn btn-primary">Submit</button>
+                      <button className="btn btn-primary">Submit</button>
+                    </form>
                   </div>
                 </div>
               </div>

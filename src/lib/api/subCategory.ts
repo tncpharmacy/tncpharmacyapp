@@ -53,7 +53,7 @@ export const updateSubcategoryApi = async (
   id: number,
   data: UpdateSubCategoryDTO
 ): Promise<SubCategory> => {
-  const res = await axiosInstance.put<SubCategory>(
+  const res = await axiosInstance.patch<SubCategory>(
     ENDPOINTS.SUBCATEGORY.UPDATE(id),
     data
   );

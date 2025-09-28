@@ -1,3 +1,5 @@
+import LogoutButton from "@/app/components/Logout/LogoutButton";
+import ProfileMenu from "@/app/components/ProfileMenu/ProfileMenu";
 import Link from "next/link";
 
 export default function Header() {
@@ -21,10 +23,8 @@ export default function Header() {
                 </span>
                 <div className="user_dropdown-content">
                   <div className="p-2 bg-white text-center">
-                    {/* <a className="btn_action" href="#"><i className="bi bi-box-arrow-left"></i>&nbsp;Logout</a> */}
-                    <Link href={"/"} className="btn_action">
-                      <i className="bi bi-box-arrow-left"></i>&nbsp;Logout
-                    </Link>
+                    <ProfileMenu />
+                    <LogoutButton />
                   </div>
                 </div>
               </div>

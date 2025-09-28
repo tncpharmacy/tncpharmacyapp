@@ -21,6 +21,8 @@ export interface User {
   is_active: boolean;
   is_staff: boolean;
   user_type: number;
+  pharmacy_id_code: string;
+  pharmacy_name: string;
   parent_id_pharmacy: number;
   parent_id_pharmacist: number;
   email_id: string;
@@ -31,6 +33,7 @@ export interface User {
   license_valid_upto: string;
   pharmacy_id: number;
   user_id: number;
+  role_name: string;
   // optional fields
   last_login?: string | null;
   created_by?: string | null;

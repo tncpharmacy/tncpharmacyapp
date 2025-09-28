@@ -1,6 +1,8 @@
 "use client";
 
+import HeaderProfilePic from "@/app/components/HeaderProfilePic/HeaderProfilePic";
 import LogoutButton from "@/app/components/Logout/LogoutButton";
+import ProfileMenu from "@/app/components/ProfileMenu/ProfileMenu";
 import { useAppSelector } from "@/lib/hooks";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -27,7 +29,7 @@ export default function Header() {
           <div className="col-sm-6 text-right">
             <div className="header-right">
               <div className="user_info">
-                Hi: <b>Pharmacist</b>
+                <HeaderProfilePic />
               </div>
               <div className="user_dropdown">
                 <span className="dropbtn">
@@ -35,9 +37,9 @@ export default function Header() {
                 </span>
                 <div className="user_dropdown-content">
                   <div className="p-2 bg-white text-center">
-                    {/* <a className="btn_action" href="#"><i className="bi bi-box-arrow-left"></i>&nbsp;Logout</a> */}
-                    <LogoutButton />
+                    <ProfileMenu />
                   </div>
+                  <LogoutButton />
                 </div>
               </div>
             </div>

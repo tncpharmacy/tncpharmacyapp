@@ -10,12 +10,29 @@ export default function LogoutButton() {
 
   const handleLogout = () => {
     dispatch(logout());
-    router.push("/home");
+    router.push("/");
   };
 
   return (
-    <button className="btn_action" onClick={handleLogout}>
-      <i className="bi bi-box-arrow-left"></i>&nbsp; Logout
+    <button
+      onClick={handleLogout}
+      style={{
+        width: "100%", // full width
+        padding: "10px 16px", // thoda padding
+        backgroundColor: "#274346ff", // red background (custom)
+        color: "#FFFFFF", // white text
+        border: "none",
+        fontWeight: "500",
+        fontSize: "14px",
+        cursor: "pointer",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: "6px",
+      }}
+    >
+      <i className="bi bi-box-arrow-left"></i>
+      Logout
     </button>
   );
 }

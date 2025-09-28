@@ -1,24 +1,22 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useState } from "react";
-import { Button, Modal } from "react-bootstrap";
 import "../../css/admin-style.css";
 import SideNav from "@/app/admin/components/SideNav/page";
 import Header from "@/app/admin/components/Header/page";
-import { useRouter } from "next/navigation";
 import { useAppDispatch, useAppSelector } from "@/lib/hooks";
 import {
+  createCategory,
   deleteCategory,
   getCategories,
+  updateCategory,
 } from "@/lib/features/categorySlice/categorySlice";
-import { Category } from "@/types/category";
+import { Category, CreateCategoryDTO } from "@/types/category";
 import InfiniteScroll from "@/app/components/InfiniteScroll/InfiniteScroll";
-import Input from "@/app/components/Input/Input";
+import toast from "react-hot-toast";
 
 export default function AddCategory() {
   const dispatch = useAppDispatch();
-  const router = useRouter();
   // redux se categories uthana
   const { list: categories } = useAppSelector((state) => state.category);
 
@@ -26,50 +24,42 @@ export default function AddCategory() {
   const [visibleCount, setVisibleCount] = useState(10);
   const [loadings, setLoadings] = useState(false);
 
-  // Modal state
-  const [showModal, setShowModal] = useState(false);
-  const [selectedPharmacy, setSelectedPharmacy] = useState<Category | null>(
-    null
-  );
-
   // filtered records by search box
   const [searchTerm, setSearchTerm] = useState("");
   const [filteredData, setFilteredData] = useState<Category[]>(categories);
 
   //status
-  const [records, setRecords] = useState<Category[]>([]);
   const [status, setStatus] = useState<string>("");
 
   const [formData, setFormData] = useState<Partial<Category>>({
     id: 0,
     category_name: "",
     description: "",
-    status: "",
+    status: "Active",
   });
 
   // filtered records by search box + status filter
   useEffect(() => {
-    let data = categories || [];
-
-    // 🔹 Search filter
+    let data = categories ? [...categories] : [];
     if (searchTerm) {
       const lower = searchTerm.toLowerCase();
       data = data.filter((item: Category) =>
-        (Object.keys(item) as (keyof Category)[]).some((key) =>
-          String(item[key] ?? "")
-            .toLowerCase()
-            .includes(lower)
-        )
+        (Object.keys(item) as (keyof Category)[]).some((key) => {
+          const value = item[key];
+          return (
+            typeof value === "string" && value.toLowerCase().includes(lower)
+          );
+        })
       );
     }
-
     // 🔹 Status filter
     if (status) {
       data = data.filter((item: Category) => item.status === status);
     }
-
+    // 🔹 Ascending order by id
+    data = data.sort((a, b) => a.id - b.id);
     setFilteredData(data);
-  }, [searchTerm, status, categories.length]); // ✅ only length (primitive)
+  }, [searchTerm, status, categories]); // ✅ use entire array, not just length
 
   // Fetch all pharmacies once
   useEffect(() => {
@@ -92,14 +82,65 @@ export default function AddCategory() {
     }
   };
 
-  const handleView = (pharmacy: Category) => {
-    setSelectedPharmacy(pharmacy);
-    setShowModal(true);
-  };
+  // const handleView = (pharmacy: Category) => {
+  //   setSelectedPharmacy(pharmacy);
+  //   setShowModal(true);
+  // };
 
   const handleEdit = (id: number) => {
-    const encodedId = encodeURIComponent(btoa(String(id)));
-    router.push(`/update-category/${encodedId}`);
+    // list me se category dhoondo
+    const category = categories.find((item) => item.id === id);
+    if (category) {
+      setFormData({
+        id: category.id,
+        category_name: category.category_name,
+        description: category.description,
+        status: category.status,
+      });
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    try {
+      const formDataToAppend: CreateCategoryDTO = {
+        category_name: formData.category_name || "",
+        description: formData.description || "",
+        status: "Active",
+      };
+
+      console.log("Sending payload:", formDataToAppend);
+
+      if (formData.id && formData.id > 0) {
+        // ✅ Update only
+        await dispatch(
+          updateCategory({
+            id: formData.id,
+            ...formDataToAppend,
+          })
+        ).unwrap();
+        toast.success("Category updated successfully!");
+      } else {
+        // ✅ Create only
+        await dispatch(createCategory(formDataToAppend)).unwrap();
+        toast.success("Category Created successfully!");
+      }
+
+      // ✅ Refresh list after create/update
+      dispatch(getCategories());
+      setVisibleCount(10);
+      // Reset form
+      setFormData({
+        id: 0,
+        category_name: "",
+        description: "",
+        status: "Active",
+      });
+    } catch (err) {
+      console.error("Error in handleSubmit:", err);
+      alert("Something went wrong!");
+    }
   };
 
   const handleChange = (
@@ -191,12 +232,12 @@ export default function AddCategory() {
                                 >
                                   <i className="bi bi-pencil"></i>
                                 </button>
-                                <button
+                                {/* <button
                                   className="btn btn-light btn-sm"
                                   onClick={() => handleView(p)}
                                 >
                                   <i className="bi bi-eye-fill"></i>
-                                </button>
+                                </button> */}
                               </td>
                             </tr>
                           ))}
@@ -211,38 +252,42 @@ export default function AddCategory() {
                   <div className="card p-3 shadow-sm">
                     <h5>Add Category</h5>
                     <hr className="w-100" />
-                    <div className="row">
-                      <div className="col-md-12">
-                        <div className="txt_col">
-                          <span className="lbl1">Category</span>
-                          <input
-                            type="text"
-                            className="txt1"
-                            name="category_name"
-                            value={formData.category_name}
-                            onChange={handleChange}
-                          />
+                    <form onSubmit={handleSubmit}>
+                      <div className="row">
+                        <div className="col-md-12">
+                          <div className="txt_col">
+                            <span className="lbl1">Category</span>
+                            <input
+                              type="text"
+                              className="txt1"
+                              name="category_name"
+                              value={formData.category_name || ""}
+                              onChange={handleChange}
+                              required
+                            />
+                          </div>
+                        </div>
+                        <div className="col-md-12">
+                          <div className="txt_col">
+                            <span className="lbl1">Description</span>
+                            <textarea
+                              className="txt1 h-50"
+                              name="description"
+                              value={formData.description || ""}
+                              onChange={(e) =>
+                                setFormData({
+                                  ...formData,
+                                  description: e.target.value,
+                                })
+                              }
+                              required
+                            ></textarea>
+                          </div>
                         </div>
                       </div>
-                      <div className="col-md-12">
-                        <div className="txt_col">
-                          <span className="lbl1">Description</span>
-                          <textarea
-                            className="txt1 h-50"
-                            name="description"
-                            value={formData.description}
-                            onChange={(e) =>
-                              setFormData({
-                                ...formData,
-                                description: e.target.value,
-                              })
-                            }
-                          ></textarea>
-                        </div>
-                      </div>
-                    </div>
 
-                    <button className="btn btn-primary">Submit</button>
+                      <button className="btn btn-primary">Submit</button>
+                    </form>
                   </div>
                 </div>
               </div>
