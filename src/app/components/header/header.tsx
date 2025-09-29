@@ -95,9 +95,9 @@ const SiteHeader = () => {
       <div className="mid_header">
         <div className="container">
           <div className="header_wrap">
-            <a href="#" className="logo">
+            <Link href="/" className="logo">
               <img src="/images/logo.png" alt="" />
-            </a>
+            </Link>
 
             <div className="search_query">
               <a className="query_search_btn" href="javascript:void(0)">
