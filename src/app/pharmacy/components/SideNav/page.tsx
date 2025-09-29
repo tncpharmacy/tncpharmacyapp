@@ -43,7 +43,7 @@ export default function SideNav() {
             <i className="bi bi-truck"></i> Supplier
           </Link>
         </li>
-        <li>
+        {/* <li>
           <div onClick={() => toggleMenu("product")} className="link arrow">
             <i className="bi bi-capsule-pill"></i> Product Master
           </div>
@@ -69,7 +69,7 @@ export default function SideNav() {
               </li>
             </ul>
           )}
-        </li>
+        </li> */}
 
         <li>
           <div onClick={() => toggleMenu("settings")} className="link arrow">

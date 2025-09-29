@@ -43,18 +43,11 @@ export default function AddDoctor() {
 
   const clinicOptions = [
     {
-      label: "Ruchi Clinic",
-      value: "Ruchi Clinic",
+      label: "Primacare Superspeciality Hospitals",
+      value: "Primacare Superspeciality Hospitals",
     },
-    { label: "Tender Palm", value: "Tender Palm" },
-    {
-      label: "Shree Dev Clinic",
-      value: "Shree Dev Clinic",
-    },
-    {
-      label: "Jai Gurudev Clinic",
-      value: "Jai Gurudev Clinic",
-    },
+    { label: "Renacare Dialysis Center", value: "Renacare Dialysis Center" },
+
     { label: "IIG Clinic", value: "IIG Clinic" },
     {
       label: "AMS Clinic",

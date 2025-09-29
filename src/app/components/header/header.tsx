@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import "../../styles/header-style.css";
 import "../../styles/style-login.css";
 import { Modal, OverlayTrigger, Tooltip } from "react-bootstrap";
@@ -9,23 +9,33 @@ import { loginUser } from "@/lib/features/authSlice/authSlice";
 import { getCategories } from "@/lib/features/categorySlice/categorySlice";
 import { getSubcategories } from "@/lib/features/subCategorySlice/subCategorySlice";
 import { Category } from "@/types/category";
+import Link from "next/link";
 
 const SiteHeader = () => {
   const dispatch = useAppDispatch();
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
   const { user, loading, error, restoreComplete } = useAppSelector(
     (state) => state.auth
   );
   const { list: categories } = useAppSelector((state) => state.category);
   const { list: subcategories } = useAppSelector((state) => state.subcategory);
 
+  const handleButtonClick = () => {
+    fileInputRef.current?.click(); // 🔹 File chooser dialog open karega
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      console.log("Selected file:", e.target.files[0]);
+      // yaha tu apna upload logic dal sakta hai
+    }
+  };
   // console.log("categories", categories);
   // console.log("subcategories", subcategories);
   useEffect(() => {
     dispatch(getCategories());
     dispatch(getSubcategories());
   }, [dispatch]);
-
-
 
   const [login_id, setLoginId] = useState("");
   const [password, setPassword] = useState("");
@@ -241,9 +251,9 @@ const SiteHeader = () => {
         <div className="container">
           <ul className="main_menu">
             <li>
-              <a href="#">
-                All  Medicine <i className="bi bi-grid-fill"></i>
-              </a>
+              <Link href="/all-medicine" className="link">
+                All Medicine <i className="bi bi-grid-fill"></i>
+              </Link>
             </li>
 
             {shuffledCategories.slice(0, 5).map((cat) => {
@@ -252,10 +262,8 @@ const SiteHeader = () => {
               );
 
               return (
-                <li key={cat.id}                >
-                  <a href="#">
-                    {cat.category_name}
-                  </a>
+                <li key={cat.id}>
+                  <a href="#">{cat.category_name}</a>
 
                   {/* Subcategories */}
                   <div className="megamenu-panel">
@@ -272,12 +280,10 @@ const SiteHeader = () => {
                         <li>No Subcategories</li>
                       </ul>
                     )}
-
                   </div>
                 </li>
               );
             })}
-
 
             {/* More Menu */}
             {shuffledCategories.length > 5 && (
@@ -297,9 +303,8 @@ const SiteHeader = () => {
               </li>
             )}
 
-
             <li className="float-end">
-              <button className="btn_uoload">
+              <button className="btn_uoload" onClick={handleButtonClick}>
                 <span>
                   Upload
                   <br /> Prescription
@@ -310,7 +315,13 @@ const SiteHeader = () => {
                   alt="Upload"
                 />
               </button>
-              
+              {/* Hidden file input */}
+              <input
+                type="file"
+                ref={fileInputRef}
+                style={{ display: "none" }}
+                onChange={handleFileChange}
+              />
             </li>
           </ul>
         </div>

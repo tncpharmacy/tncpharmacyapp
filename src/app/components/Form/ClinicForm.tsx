@@ -221,7 +221,7 @@ export default function ClinicForm({ id }: Props) {
           <div className="body_content">
             <div className="pageTitle">
               <i className="bi bi-shop-window me-2"></i>
-              {id ? "Update Clinic" : "Add New Clinic"}
+              {id ? "Update Hospital/Clinic" : "Add New Hospital/Clinic"}
               <button
                 onClick={() => router.push("/clinic")}
                 className="btn-style2 float-end pe-4 ps-4"
@@ -233,7 +233,7 @@ export default function ClinicForm({ id }: Props) {
               {/* <p>Generated Password: {password}</p> */}
               <form onSubmit={handleSubmit} className="row g-3">
                 <Input
-                  label="Clinic Name"
+                  label="Hospital/Clinic Name"
                   type="text"
                   name="clinicName"
                   value={formData.clinicName}
@@ -241,15 +241,7 @@ export default function ClinicForm({ id }: Props) {
                   required
                 />
                 <Input
-                  type="text"
-                  label="Owner Name"
-                  name="user_name"
-                  value={formData.user_name}
-                  onChange={handleChange}
-                  required
-                />
-                <Input
-                  label="Clinic Type"
+                  label="Hospital/Clinic Type"
                   type="select"
                   name="clinic_type"
                   value={formData.clinic_type}
@@ -260,6 +252,22 @@ export default function ClinicForm({ id }: Props) {
                     { value: "Multi-specialty", label: "Multi-specialty" },
                     { value: "Diagnostic center", label: "Diagnostic center" },
                   ]}
+                />
+                <Input
+                  type="text"
+                  label="Number Of Doctors"
+                  name="number_of_doctors"
+                  value={formData.number_of_doctors}
+                  onChange={handleChange}
+                  required
+                />
+                <Input
+                  type="text"
+                  label="Owner Name"
+                  name="user_name"
+                  value={formData.user_name}
+                  onChange={handleChange}
+                  required
                 />
                 <Input
                   label="Email"
@@ -282,14 +290,6 @@ export default function ClinicForm({ id }: Props) {
                   label="Address"
                   name="address"
                   value={formData.address}
-                  onChange={handleChange}
-                  required
-                />
-                <Input
-                  type="text"
-                  label="District"
-                  name="district"
-                  value={formData.district}
                   onChange={handleChange}
                   required
                 />
@@ -326,7 +326,7 @@ export default function ClinicForm({ id }: Props) {
                     { value: "Ortho", label: "Ortho" },
                   ]}
                 /> */}
-                <div className="col-md-4">
+                {/* <div className="col-md-4">
                   <div className="txt_col">
                     <span className="lbl1">Departments / Specialties</span>
                     <MultiSelect
@@ -340,20 +340,12 @@ export default function ClinicForm({ id }: Props) {
                 </div>
                 <Input
                   type="text"
-                  label="Number Of Doctors"
-                  name="number_of_doctors"
-                  value={formData.number_of_doctors}
-                  onChange={handleChange}
-                  required
-                />
-                <Input
-                  type="text"
                   label="Number of Staff"
                   name="number_of_staff"
                   value={formData.number_of_staff}
                   onChange={handleChange}
                   required
-                />
+                /> */}
                 <Input
                   type="text"
                   label="GST Number"

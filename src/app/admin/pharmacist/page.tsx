@@ -17,11 +17,13 @@ import InfiniteScroll from "@/app/components/InfiniteScroll/InfiniteScroll";
 import Link from "next/link";
 import TableLoader from "@/app/components/TableLoader/TableLoader";
 import Input from "@/app/components/Input/Input";
+import { fetchPharmacy } from "@/lib/features/pharmacySlice/pharmacySlice";
 
 export default function Pharmacist() {
   const dispatch = useAppDispatch();
   const router = useRouter();
   const { list, loading } = useAppSelector((state) => state.pharmacist);
+  const { list: pharmacyData } = useAppSelector((state) => state.pharmacy);
 
   // Infinite scroll state
   const [visibleCount, setVisibleCount] = useState(10);
@@ -74,6 +76,7 @@ export default function Pharmacist() {
   // Fetch all pharmacies once
   useEffect(() => {
     dispatch(fetchPharmacist());
+    dispatch(fetchPharmacy());
   }, [dispatch]);
 
   //infinte scroll records
@@ -181,47 +184,54 @@ export default function Pharmacist() {
                     <tbody>
                       {filteredData
                         .slice(0, visibleCount)
-                        .map((p: Pharmacist, index) => (
-                          <tr key={p.id}>
-                            <td>{index + 1}</td>
-                            <td>{p.pharmacy_id ?? "-"}</td>
-                            <td>{p.user_name ?? "-"}</td>
-                            <td>{p.email_id ?? "-"}</td>
-                            <td>{p.login_id ?? "-"}</td>
-                            <td>{p.gender ?? "-"}</td>
-                            <td>{p.date_of_birth ?? "-"}</td>
-                            <td>{p.aadhar_number ?? "-"}</td>
-                            <td>{p.license_number ?? "-"}</td>
-                            <td>{p.license_valid_upto ?? "-"}</td>
-                            <td>
-                              <span
-                                onClick={() => handleDelete(p.id)}
-                                className={`status ${
-                                  p.status === "Active"
-                                    ? "status-active"
-                                    : "status-inactive"
-                                } cursor-pointer`}
-                                title="Click to change status"
-                              >
-                                {p.status === "Active" ? "Active" : "Inactive"}
-                              </span>
-                            </td>
-                            <td>
-                              <button
-                                className="btn btn-light btn-sm me-2"
-                                onClick={() => handleEdit(p.id)}
-                              >
-                                <i className="bi bi-pencil"></i>
-                              </button>
-                              <button
-                                className="btn btn-light btn-sm"
-                                onClick={() => handleView(p)}
-                              >
-                                <i className="bi bi-eye-fill"></i>
-                              </button>
-                            </td>
-                          </tr>
-                        ))}
+                        .map((p: Pharmacist, index) => {
+                          const pharmacy = pharmacyData.find(
+                            (ph) => ph.id === p.pharmacy_id
+                          );
+                          return (
+                            <tr key={p.id}>
+                              <td>{index + 1}</td>
+                              <td>{pharmacy ? pharmacy.pharmacy_name : "-"}</td>
+                              <td>{p.user_name ?? "-"}</td>
+                              <td>{p.email_id ?? "-"}</td>
+                              <td>{p.login_id ?? "-"}</td>
+                              <td>{p.gender ?? "-"}</td>
+                              <td>{p.date_of_birth ?? "-"}</td>
+                              <td>{p.aadhar_number ?? "-"}</td>
+                              <td>{p.license_number ?? "-"}</td>
+                              <td>{p.license_valid_upto ?? "-"}</td>
+                              <td>
+                                <span
+                                  onClick={() => handleDelete(p.id)}
+                                  className={`status ${
+                                    p.status === "Active"
+                                      ? "status-active"
+                                      : "status-inactive"
+                                  } cursor-pointer`}
+                                  title="Click to change status"
+                                >
+                                  {p.status === "Active"
+                                    ? "Active"
+                                    : "Inactive"}
+                                </span>
+                              </td>
+                              <td>
+                                <button
+                                  className="btn btn-light btn-sm me-2"
+                                  onClick={() => handleEdit(p.id)}
+                                >
+                                  <i className="bi bi-pencil"></i>
+                                </button>
+                                <button
+                                  className="btn btn-light btn-sm"
+                                  onClick={() => handleView(p)}
+                                >
+                                  <i className="bi bi-eye-fill"></i>
+                                </button>
+                              </td>
+                            </tr>
+                          );
+                        })}
                       {/* Spinner row */}
                       {loadings && (
                         <TableLoader colSpan={9} text="Loading more..." />

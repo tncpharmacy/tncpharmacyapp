@@ -340,11 +340,11 @@ li:hover .megamenu-panel2 {
     display: block;
     padding: 10px 12px;
     text-decoration: none;
-    color: #333;
+    color: #111111;
 }
 
 .megamenu-list li a:hover {
-    color: #222222;
+    color: #ff7b00;
 }
 
 .btn1.m-2 {
@@ -372,14 +372,13 @@ ul.megamenu-list li a {
     display: inline-block;
     padding: 6px 12px;
     text-decoration: none;
-    color: #082c4b;
+    color: #333333;
     font-size: 13px;
     font-weight: 400;
-    opacity: 0.7;
 }
 
 ul.megamenu-list li a:hover {
-    opacity: 1;
+     color: #ff7b00;
 }
 
 ul.megamenu-list li a:hover::after {

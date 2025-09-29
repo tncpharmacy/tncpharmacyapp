@@ -57,7 +57,7 @@ export default function SideNav() {
         </li>
         <li>
           <Link href="/clinic" className="link">
-            <i className="bi bi-person-plus"></i> Clinic
+            <i className="bi bi-person-plus"></i> Hospital/Clinic
           </Link>
         </li>
         <li>

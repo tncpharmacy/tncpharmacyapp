@@ -109,7 +109,7 @@ export default function Pharmacy() {
             className="body_content"
           >
             <div className="pageTitle">
-              <i className="bi bi-shop-window"></i> Clinic List
+              <i className="bi bi-shop-window"></i> Hospital/Clinic List
             </div>
             <div className="main_content">
               <div className="col-sm-12">
@@ -121,7 +121,7 @@ export default function Pharmacy() {
                         type="text"
                         className="txt1 rounded" // Bootstrap
                         // className="border px-3 py-2 w-full rounded-md" // Tailwind
-                        placeholder="Search clinic..."
+                        placeholder="Search Hospital/Clinic..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                       />
@@ -141,7 +141,7 @@ export default function Pharmacy() {
                   <div className="col-md-4 text-end">
                     <div className="txt_col">
                       <Link href={"/add-clinic"} className="btn-style2 me-2">
-                        <i className="bi bi-plus"></i> Add Clinic
+                        <i className="bi bi-plus"></i> Add Hospital/Clinic
                       </Link>
                       <button className="btn-style1">
                         <i className="bi bi-download"></i> Export Statement
@@ -154,7 +154,7 @@ export default function Pharmacy() {
                   <table className="table cust_table1">
                     <thead className="fw-bold text-dark">
                       <tr>
-                        <th className="fw-bold">Clinic Id</th>
+                        <th className="fw-bold">Clinic Code</th>
                         <th className="fw-bold">Clinic Name</th>
                         <th className="fw-bold">Owner Name</th>
                         {/* <th className="fw-bold">License No.</th>
@@ -169,7 +169,7 @@ export default function Pharmacy() {
                     <tbody>
                       {filteredData.slice(0, visibleCount).map((p) => (
                         <tr key={p.id}>
-                          <td>{p.id}</td>
+                          <td>{"TNCLN00" + p.id}</td>
                           <td>{p.clinicName ?? "-"}</td>
                           <td>{p.user_name ?? "-"}</td>
                           {/* <td>{p.license_number}</td>
