@@ -131,15 +131,18 @@ export default function ClinicForm({ id }: Props) {
     const formDataToSend = new FormData();
 
     // string / number fields
-    formDataToSend.append("clinicName", formData.clinicName);
-    formDataToSend.append("user_name", formData.user_name);
-    formDataToSend.append("gst_number", formData.gst_number);
-    formDataToSend.append("license_number", formData.license_number);
-    formDataToSend.append("license_valid_upto", formData.license_valid_upto);
-    formDataToSend.append("email_id", formData.email_id);
+    formDataToSend.append("clinicName", formData.clinicName || "");
+    formDataToSend.append("user_name", formData.user_name || "");
+    formDataToSend.append("gst_number", formData.gst_number || "");
+    formDataToSend.append("license_number", formData.license_number || "");
+    formDataToSend.append(
+      "license_valid_upto",
+      formData.license_valid_upto || ""
+    );
+    formDataToSend.append("email_id", formData.email_id || "");
     formDataToSend.append("login_id", formData.login_id ?? "");
-    formDataToSend.append("address", formData.address);
-    formDataToSend.append("district", formData.district);
+    formDataToSend.append("address", formData.address || "");
+    formDataToSend.append("district", formData.district || "");
     formDataToSend.append(
       "department_specialties",
       formData.department_specialties
