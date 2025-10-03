@@ -103,22 +103,19 @@ export default function SideNav() {
                 <Link href="/sub-category">Sub Category</Link>
               </li>
               <li>
-                <Link href="/categories">Medicine Category</Link>
+                <Link href="/unit">Unit</Link>
               </li>
               <li>
-                <Link href="/brands">Medicine Brand</Link>
+                <Link href="/generic">Generic</Link>
               </li>
               <li>
-                <Link href="/units">Medicine Unit</Link>
+                <Link href="/manufacturer">Manufacturer</Link>
               </li>
               <li>
-                <Link href="/manufacturers">Medicine Manufacturer</Link>
+                <Link href="/variant">Variant</Link>
               </li>
               <li>
-                <Link href="/variants">Medicine Variant</Link>
-              </li>
-              <li>
-                <Link href="/strengths">Medicine Strength</Link>
+                <Link href="/strength">Strength</Link>
               </li>
             </ul>
           )}

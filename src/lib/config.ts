@@ -54,6 +54,7 @@ export const ENDPOINTS = {
     CREATE: "/masterapp/category/create/",
     UPDATE: (id: number) => `/masterapp/category/${id}/`,
     GET_ALL: "/masterapp/category/",
+    GET_ALL_LIST: "/masterapp/category/list/",
     GET_BY_ID: (id: number) => `/masterapp/category/${id}/`,
     DELETE: (id: number) => `/masterapp/category/${id}/`,
   },
@@ -63,7 +64,38 @@ export const ENDPOINTS = {
     CREATE: "/masterapp/subcategory/create/",
     UPDATE: (id: number) => `/masterapp/subcategory/${id}/`,
     GET_ALL: "/masterapp/subcategory/",
+    GET_ALL_LIST: "/masterapp/subcategory/list/",
     GET_BY_ID: (id: number) => `/masterapp/subcategory/${id}/`,
     DELETE: (id: number) => `/masterapp/subcategory/${id}/`,
+  },
+
+  // manufacturer for home page
+  MANUFACTURER: {
+    //CREATE: "/masterapp/subcategory/create/",
+    //UPDATE: (id: number) => `/masterapp/subcategory/${id}/`,
+    GET_ALL: "/masterapp/manufacturer/",
+    GET_ALL_LIST: "/masterapp/manufacturer/list/",
+    GET_BY_ID: (id: number) => `/masterapp/manufacturer/${id}/`,
+    // DELETE: (id: number) => `masterapp/manufacturer/${id}/`,
+  },
+
+  // generic for home page
+  GENERIC: {
+    //CREATE: "/masterapp/subcategory/create/",
+    //UPDATE: (id: number) => `/masterapp/subcategory/${id}/`,
+    GET_ALL: "/masterapp/generic/",
+    GET_ALL_LIST: "/masterapp/generic/list/",
+    GET_BY_ID: (id: number) => `/masterapp/generic/${id}/`,
+    // DELETE: (id: number) => `masterapp/generic/${id}/`,
+  },
+
+  // unit for home page
+  UNIT: {
+    //CREATE: "/masterapp/subcategory/create/",
+    //UPDATE: (id: number) => `/masterapp/subcategory/${id}/`,
+    GET_ALL: "/masterapp/unit/",
+    GET_ALL_LIST: "/masterapp/unit/list/",
+    GET_BY_ID: (id: number) => `/masterapp/unit/${id}/`,
+    //DELETE: (id: number) => `masterapp/unit/${id}/`,
   },
 };

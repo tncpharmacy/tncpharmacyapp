@@ -4,6 +4,7 @@ import {
   createCategoryApi,
   updateCategoryApi,
   deleteCategoryApi,
+  fetchCategoriesAllList,
 } from "@/lib/api/category";
 import { Category } from "@/types/category";
 
@@ -27,6 +28,23 @@ export const getCategories = createAsyncThunk<
 >("category/getAll", async (_, { rejectWithValue }) => {
   try {
     const res = await fetchCategories();
+    return res.data as Category[];
+  } catch (err: unknown) {
+    if (err instanceof Error) {
+      return rejectWithValue(err.message);
+    }
+    return rejectWithValue("Failed to fetch categories");
+  }
+});
+
+// ✅ Get all categories List
+export const getCategoriesList = createAsyncThunk<
+  Category[],
+  void,
+  { rejectValue: string }
+>("category/getAllList", async (_, { rejectWithValue }) => {
+  try {
+    const res = await fetchCategoriesAllList();
     return res.data as Category[];
   } catch (err: unknown) {
     if (err instanceof Error) {
@@ -115,6 +133,24 @@ const categorySlice = createSlice({
         }
       )
       .addCase(getCategories.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload ?? "Failed to fetch categories";
+      });
+
+    // Get All List
+    builder
+      .addCase(getCategoriesList.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(
+        getCategoriesList.fulfilled,
+        (state, action: PayloadAction<Category[]>) => {
+          state.loading = false;
+          state.list = action.payload;
+        }
+      )
+      .addCase(getCategoriesList.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload ?? "Failed to fetch categories";
       });

@@ -14,6 +14,16 @@ export const fetchCategories = async (): Promise<CategoryResponse> => {
 };
 
 // =========================
+// GET ALL CATEGORIES List
+// =========================
+export const fetchCategoriesAllList = async (): Promise<CategoryResponse> => {
+  const res = await axiosInstance.get<CategoryResponse>(
+    ENDPOINTS.CATEGORY.GET_ALL_LIST
+  );
+  return res.data;
+};
+
+// =========================
 // GET CATEGORY BY ID
 // =========================
 export const fetchCategoryById = async (id: number): Promise<Category> => {

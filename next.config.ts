@@ -12,6 +12,11 @@ const nextConfig: NextConfig = {
   },
   async rewrites() {
     return [
+      //User routes
+      {
+        source: "/product-details",
+        destination: "/user/product-details",
+      },
       {
         source: "/all-medicine",
         destination: "/user/all-medicine/all-medicine",
@@ -75,28 +80,24 @@ const nextConfig: NextConfig = {
         destination: "/admin/supplier/add-supplier",
       },
       {
-        source: "/add-category",
-        destination: "/admin/medicine/category/add",
-      },
-      {
-        source: "/update-category/:id",
-        destination: "/admin/medicine/category/add/:id",
-      },
-      {
         source: "/category",
         destination: "/admin/medicine/category",
       },
       {
-        source: "/add-sub-category",
-        destination: "/admin/medicine/sub-category/add",
-      },
-      {
-        source: "/update-sub-category/:id",
-        destination: "/admin/medicine/sub-category/add/:id",
-      },
-      {
         source: "/sub-category",
         destination: "/admin/medicine/sub-category",
+      },
+      {
+        source: "/unit",
+        destination: "/admin/medicine/unit",
+      },
+      {
+        source: "/generic",
+        destination: "/admin/medicine/generic",
+      },
+      {
+        source: "/manufacturer",
+        destination: "/admin/medicine/manufacturer",
       },
       {
         source: "/categories",

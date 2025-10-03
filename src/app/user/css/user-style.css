@@ -163,10 +163,10 @@ body {
 }
 
 .body_wrap {
-    display: flex;
-    height: calc(100vh - 70px);
-    position: relative;
-    z-index: 0;
+    flex: 1;
+  display: flex;
+  min-height: 0; /* inner scroll ke liye zaruri */
+  overflow: hidden; /* double scroll hata de */
 }
 
 .body_wrap.active .side_menu {
@@ -203,7 +203,10 @@ body {
 }
 
 .body_right {
-    width: calc(100% - 250px);
+     flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 0; /* important for inner scroll to work */
 }
 
 .body_wrap.active .body_right {
@@ -326,10 +329,9 @@ body {
 }
 
 .body_content {
-    height: calc(100vh - 70px);
-    overflow: auto;
+   flex: 1; /* expand to remaining space */
+    overflow: auto; /* only this scrolls */
     padding: 15px;
-    width: 100%;
 }
 
 .pageTitle {
@@ -695,7 +697,7 @@ body {
     background-color: #00f138;
 }
 
-.status-inactive {
+.status-deactive {
     background-color: #ff0000;
 }
 
@@ -712,4 +714,33 @@ body {
     .header .logo img {
         height: 50px;
     }
+}
+
+html, body {
+  height: 100%;
+  margin: 0;
+  overflow-x: hidden; /* horizontal scroll hata de */
+    overflow-y: auto;   /* vertical scroll ek hi jagah */
+}
+
+.page-wrapper {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.body_wrap {
+display: flex;
+    flex: 1; /* fill available space */
+    min-height: 0; /* important for flex scroll */
+    overflow: hidden; /* prevent double scroll */
+}
+.footer {
+  height: 100%; /* apna footer height */
+  background: #f0f0f0;
+}
+.page-wrapper {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
 }

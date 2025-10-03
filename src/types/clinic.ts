@@ -1,13 +1,21 @@
 export interface Clinic {
   id: number;
   clinicName: string;
-  address: string;
-  status: string;
-  created_on: string;
-  updated_on: string;
-  created_by: string;
+  numberDoctor: number | null;
+  address: string | null;
+  email_id: string | null;
+  pincode: string | null;
+  gst_number: string | null;
+  license_number: string | null;
+  license_valid_upto: string | null; // ISO string from DB
+  status: "Active" | "Inactive"; // Enum style
+  created_on: string; // ISO string
+  updated_on: string; // ISO string
+  clinic_type: string | null;
+  state: string | null;
+  created_by: string | null;
   updated_by: string | null;
-  last_login: string | null;
+  last_login: string | null; // ISO string
   is_superuser: boolean;
   user_name: string;
   login_id: string;
@@ -29,7 +37,7 @@ export interface ClinicAdd {
   id: number;
   clinic_id_code: string;
   user_name: string;
-  clinicName: string;
+  clinicName?: string;
   clinic_type: string;
   license_number: string;
   license_valid_upto: string; // agar Date use karna hai to Date bhi rakh sakte ho

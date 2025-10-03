@@ -27,6 +27,15 @@ export const fetchSubcategories = async (): Promise<SubCategoryResponse> => {
   return res.data;
 };
 
+// GET ALL List
+export const fetchSubcategoriesAllList =
+  async (): Promise<SubCategoryResponse> => {
+    const res = await axiosInstance.get<SubCategoryResponse>(
+      ENDPOINTS.SUBCATEGORY.GET_ALL_LIST
+    );
+    return res.data;
+  };
+
 // GET BY ID
 export const fetchSubcategoryById = async (
   id: number

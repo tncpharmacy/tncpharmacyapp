@@ -45,6 +45,24 @@ export default function AddSubCategory() {
     status: "Active",
   });
 
+  // Reset Your From
+  const handleReset = () => {
+    setFormData({
+      id: 0,
+      category_id: 0,
+      category_name: "",
+      sub_category_name: "",
+      description: "",
+      status: "Active",
+    });
+  };
+
+  // Fetch all pharmacies once
+  useEffect(() => {
+    dispatch(getSubcategories());
+    dispatch(getCategories());
+  }, [dispatch]);
+
   // filtered records by search box + status filter
   useEffect(() => {
     let data = subcategories ? [...subcategories] : [];
@@ -61,23 +79,48 @@ export default function AddSubCategory() {
         })
       );
     }
-
-    // 🔹 Status filter
-    if (status) {
-      data = data.filter((item: SubCategory) => item.status === status);
-    }
-
     // 🔹 Ascending order by id
     data = data.sort((a, b) => a.id - b.id);
 
     setFilteredData(data);
-  }, [searchTerm, status, subcategories]);
+  }, [searchTerm, subcategories]);
 
-  // Fetch all pharmacies once
-  useEffect(() => {
-    dispatch(getSubcategories());
-    dispatch(getCategories());
-  }, [dispatch]);
+  const handleToggleStatus = async (id: number) => {
+    // Find category in the filteredData (latest UI state)
+    const subcategory = filteredData.find((c) => c.id === id);
+    if (!subcategory) return;
+
+    const newStatus = subcategory.status === "Active" ? "Inactive" : "Active";
+
+    try {
+      // Optimistic UI update
+      setFilteredData((prev) =>
+        prev.map((c) => (c.id === id ? { ...c, status: newStatus } : c))
+      );
+
+      // Update backend
+      await dispatch(
+        updateSubcategory({
+          id,
+          sub_category_name: subcategory.sub_category_name,
+          description: subcategory.description,
+          status: newStatus,
+        })
+      ).unwrap();
+
+      toast.success(`Status updated to ${newStatus}`);
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to update status");
+
+      // Revert UI if backend fails
+      setFilteredData((prev) =>
+        prev.map((c) =>
+          c.id === id ? { ...c, status: subcategory.status } : c
+        )
+      );
+    }
+  };
 
   //infinte scroll records
   const loadMore = () => {
@@ -87,12 +130,6 @@ export default function AddSubCategory() {
       setVisibleCount((prev) => prev + 5);
       setLoadings(false);
     }, 3000); // spinner for 3 sec
-  };
-
-  const handleDelete = (id: number) => {
-    if (confirm("Are you sure you want to change status of this pharmacy?")) {
-      dispatch(deleteSubcategory(id));
-    }
   };
 
   // const handleView = (category: SubCategory) => {
@@ -235,7 +272,7 @@ export default function AddSubCategory() {
                               <td>{p.description ?? "-"}</td>
                               <td>
                                 <span
-                                  onClick={() => handleDelete(p.id)}
+                                  onClick={() => handleToggleStatus(p.id)}
                                   className={`status ${
                                     p.status === "Active"
                                       ? "status-active"
@@ -318,8 +355,18 @@ export default function AddSubCategory() {
                           </div>
                         </div>
                       </div>
-
-                      <button className="btn btn-primary">Submit</button>
+                      <div className="d-flex justify-content-between mt-3">
+                        <button className="btn btn-primary text-left">
+                          Submit
+                        </button>
+                        <button
+                          className="btn btn-primary text-right"
+                          type="button"
+                          onClick={handleReset}
+                        >
+                          Clear
+                        </button>
+                      </div>
                     </form>
                   </div>
                 </div>

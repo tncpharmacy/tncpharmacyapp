@@ -9,6 +9,7 @@ import { useAppDispatch, useAppSelector } from "@/lib/hooks";
 import {
   fetchClinics,
   deleteClinic,
+  updateClinic,
 } from "@/lib/features/clinicSlice/clinicSlice";
 import type { ClinicAdd, Clinic } from "@/types/clinic";
 import { useRouter } from "next/navigation";
@@ -17,6 +18,7 @@ import InfiniteScroll from "@/app/components/InfiniteScroll/InfiniteScroll";
 import Link from "next/link";
 import TableLoader from "@/app/components/TableLoader/TableLoader";
 import Input from "@/app/components/Input/Input";
+import toast from "react-hot-toast";
 
 export default function Pharmacy() {
   const dispatch = useAppDispatch();
@@ -42,6 +44,11 @@ export default function Pharmacy() {
   const [records, setRecords] = useState<ClinicAdd[]>([]);
   const [status, setStatus] = useState<string>("");
 
+  // Fetch all pharmacies once
+  useEffect(() => {
+    dispatch(fetchClinics());
+  }, [dispatch]);
+
   // filtered records by search box + status filter
   useEffect(() => {
     let data = clinics || [];
@@ -66,10 +73,45 @@ export default function Pharmacy() {
     setFilteredData(data);
   }, [searchTerm, status, clinics.length]); // ✅ only length (primitive)
 
-  // Fetch all pharmacies once
-  useEffect(() => {
-    dispatch(fetchClinics());
-  }, [dispatch]);
+  const handleToggleStatus = async (id: number) => {
+    // Find category in the filteredData (latest UI state)
+    const toggleRecords = filteredData.find((c) => c.id === id);
+    if (!toggleRecords) return;
+
+    const newStatus = toggleRecords.status === "Active" ? "Inactive" : "Active";
+
+    try {
+      // Optimistic UI update
+      setFilteredData((prev) =>
+        prev.map((c) => (c.id === id ? { ...c, status: newStatus } : c))
+      );
+
+      // Update backend
+      await dispatch(
+        updateClinic({
+          id,
+          clinic: {
+            clinicName: toggleRecords.clinicName,
+            user_name: toggleRecords.user_name,
+            login_id: toggleRecords.login_id,
+            address: toggleRecords.address,
+            status: newStatus,
+          },
+        })
+      ).unwrap();
+      toast.success(`Status updated to ${newStatus}`);
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to update status");
+
+      // Revert UI if backend fails
+      setFilteredData((prev) =>
+        prev.map((c) =>
+          c.id === id ? { ...c, status: toggleRecords.status } : c
+        )
+      );
+    }
+  };
 
   //infinte scroll records
   const loadMore = () => {
@@ -79,12 +121,6 @@ export default function Pharmacy() {
       setVisibleCount((prev) => prev + 5);
       setLoadings(false);
     }, 3000); // spinner for 3 sec
-  };
-
-  const handleDelete = (id: number) => {
-    if (confirm("Are you sure you want to change status of this pharmacy?")) {
-      dispatch(deleteClinic(id));
-    }
   };
 
   const handleView = (pharmacy: Clinic | ClinicAdd) => {
@@ -179,7 +215,7 @@ export default function Pharmacy() {
                           <td>{p.address ?? "-"}</td>
                           <td>
                             <span
-                              onClick={() => handleDelete(p.id)}
+                              onClick={() => handleToggleStatus(p.id)}
                               className={`status ${
                                 p.status === "Active"
                                   ? "status-active"

@@ -1,7 +1,7 @@
 "use client";
 
 import "../css/site-style.css";
-import SiteHeader from "@/app/components/header/header";
+import SiteHeader from "@/app/user/components/header/header";
 import { Carousel, Collapse, Toast, ToastContainer } from "react-bootstrap";
 import { useEffect, useState } from "react";
 import Slider from "react-slick";

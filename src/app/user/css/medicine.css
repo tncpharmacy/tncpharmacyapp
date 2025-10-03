@@ -1,0 +1,149 @@
+/* Container grid */
+.medicine-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+}
+
+@media (min-width: 640px) {
+  .medicine-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .medicine-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* Card */
+.medicine-card {
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+  background: #fff;
+  transition: all 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  padding: 12px;
+}
+
+.medicine-card:hover {
+  box-shadow: 0 5px 12px rgba(0, 0, 0, 0.1);
+}
+
+.medicine-content {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 100%;
+}
+
+/* Top Section → image left, details right */
+.medicine-top {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  position: relative;
+}
+
+.medicine-img {
+  flex-shrink: 0;
+  width: 64px;
+  height: 64px;
+  background: #f3f4f6;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #9ca3af;
+  font-size: 12px;
+}
+
+.medicine-details {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Badge top-right corner */
+.medicine-badge {
+  position: absolute;
+  top: 0;
+  right: 0;
+  background: #fef3c7;
+  color: #92400e;
+  font-size: 11px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+/* Text details compact */
+.medicine-name {
+  font-size: 15px;
+  font-weight: 600;
+  color: #1f2937;
+  margin-bottom: 2px;
+}
+
+.medicine-text {
+  font-size: 13px;
+  color: #4b5563;
+  margin-top: 1px;
+  line-height: 1.2;
+}
+
+.medicine-salt {
+  font-size: 12px;
+  color: #6b7280;
+  margin-top: 1px;
+  line-height: 1.2;
+}
+
+/* Bottom Section */
+.medicine-bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 8px;
+}
+
+.medicine-mrp {
+  font-size: 14px;
+  font-weight: bold;
+  color: #1f2937;
+}
+
+.medicine-btn {
+  background: #ef4444;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 5px 10px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.medicine-btn:hover {
+  background: #dc2626;
+}
+
+.medicine-na {
+  color: #9ca3af;
+  font-weight: 600;
+  font-size: 12px;
+}
+
+.my-box {
+  overflow: auto; /* ya scroll */
+  scrollbar-width: none;   /* Firefox */
+  -ms-overflow-style: none; /* IE/Edge */
+}
+
+.my-box::-webkit-scrollbar {
+  display: none; /* Chrome, Safari */
+}

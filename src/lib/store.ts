@@ -10,6 +10,9 @@ import pharmacistByPharmacySlice from "@/lib/features/pharmacistByPharmacySlice/
 import categoryReducer from "@/lib/features/categorySlice/categorySlice";
 import subcategoryReducer from "@/lib/features/subCategorySlice/subCategorySlice";
 import clinicReducer from "@/lib/features/clinicSlice/clinicSlice";
+import unitReducer from "@/lib/features/unitSlice/unitSlice";
+import genericReducer from "@/lib/features/genericSlice/genericSlice";
+import manufacturerReducer from "@/lib/features/manufacturerSlice/manufacturerSlice";
 
 export const store = configureStore({
   reducer: {
@@ -24,6 +27,9 @@ export const store = configureStore({
     category: categoryReducer,
     subcategory: subcategoryReducer,
     clinicList: clinicReducer,
+    unit: unitReducer,
+    generic: genericReducer,
+    manufacturer: manufacturerReducer,
   },
 });
 

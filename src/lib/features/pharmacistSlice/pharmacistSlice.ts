@@ -56,7 +56,7 @@ export const togglePharmacistStatus = createAsyncThunk<
 
 // // ✅ Add pharmacy thunk
 export const addPharmacist = createAsyncThunk(
-  "pharmacy/add",
+  "pharmacist/add",
   async (data: Partial<Pharmacist>, { rejectWithValue }) => {
     try {
       return await createPharmacistApi(data);
@@ -71,7 +71,7 @@ export const addPharmacist = createAsyncThunk(
 
 // ✅ Update pharmacy thunk
 export const editPharmacist = createAsyncThunk(
-  "pharmacy/edit",
+  "pharmacist/edit",
   async (
     { id, data }: { id: number; data: Partial<Pharmacist> },
     { rejectWithValue }

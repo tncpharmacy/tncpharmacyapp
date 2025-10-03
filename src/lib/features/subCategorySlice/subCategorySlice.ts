@@ -4,6 +4,7 @@ import {
   createSubcategoryApi,
   updateSubcategoryApi,
   deleteSubcategoryApi,
+  fetchSubcategoriesAllList,
 } from "@/lib/api/subCategory";
 import { SubCategory, SubCategoryResponse } from "@/types/subCategory";
 
@@ -27,6 +28,21 @@ export const getSubcategories = createAsyncThunk<
 >("subcategory/getAll", async (_, { rejectWithValue }) => {
   try {
     const res: SubCategoryResponse = await fetchSubcategories();
+    return res.data;
+  } catch (err: unknown) {
+    if (err instanceof Error) return rejectWithValue(err.message);
+    return rejectWithValue("Failed to fetch subcategories");
+  }
+});
+
+// GET ALL
+export const getSubcategoriesList = createAsyncThunk<
+  SubCategory[],
+  void,
+  { rejectValue: string }
+>("subcategory/getAllList", async (_, { rejectWithValue }) => {
+  try {
+    const res: SubCategoryResponse = await fetchSubcategoriesAllList();
     return res.data;
   } catch (err: unknown) {
     if (err instanceof Error) return rejectWithValue(err.message);
@@ -114,6 +130,24 @@ const subcategorySlice = createSlice({
         }
       )
       .addCase(getSubcategories.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload ?? "Failed to fetch subcategories";
+      });
+
+    // GET All List
+    builder
+      .addCase(getSubcategoriesList.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(
+        getSubcategoriesList.fulfilled,
+        (state, action: PayloadAction<SubCategory[]>) => {
+          state.loading = false;
+          state.list = action.payload;
+        }
+      )
+      .addCase(getSubcategoriesList.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload ?? "Failed to fetch subcategories";
       });

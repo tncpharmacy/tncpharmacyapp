@@ -1,12 +1,12 @@
 "use client";
 import React, { useEffect, useRef, useState } from "react";
-import "../../styles/header-style.css";
-import "../../styles/style-login.css";
+import "../../css/header-style.css";
+import "../../../styles/style-login.css";
 import { Modal, OverlayTrigger, Tooltip } from "react-bootstrap";
 import { useAppDispatch, useAppSelector } from "@/lib/hooks";
 import { useRouter } from "next/navigation";
 import { loginUser } from "@/lib/features/authSlice/authSlice";
-import { getCategories } from "@/lib/features/categorySlice/categorySlice";
+import { getCategoriesList } from "@/lib/features/categorySlice/categorySlice";
 import { getSubcategories } from "@/lib/features/subCategorySlice/subCategorySlice";
 import { Category } from "@/types/category";
 import Link from "next/link";
@@ -33,7 +33,7 @@ const SiteHeader = () => {
   // console.log("categories", categories);
   // console.log("subcategories", subcategories);
   useEffect(() => {
-    dispatch(getCategories());
+    dispatch(getCategoriesList());
     dispatch(getSubcategories());
   }, [dispatch]);
 

@@ -8,6 +8,7 @@ import Header from "../components/Header/page";
 import { useAppDispatch, useAppSelector } from "@/lib/hooks";
 import {
   fetchPharmacist,
+  editPharmacist,
   togglePharmacistStatus,
 } from "@/lib/features/pharmacistSlice/pharmacistSlice";
 import type { Pharmacist, PharmaciesResponse } from "@/types/pharmacist";
@@ -18,6 +19,7 @@ import Link from "next/link";
 import TableLoader from "@/app/components/TableLoader/TableLoader";
 import Input from "@/app/components/Input/Input";
 import { fetchPharmacy } from "@/lib/features/pharmacySlice/pharmacySlice";
+import toast from "react-hot-toast";
 
 export default function Pharmacist() {
   const dispatch = useAppDispatch();
@@ -34,13 +36,17 @@ export default function Pharmacist() {
   const [selectedPharmacy, setSelectedPharmacy] = useState<Pharmacist | null>(
     null
   );
-
   // filtered records by search box
   const [searchTerm, setSearchTerm] = useState("");
   const [filteredData, setFilteredData] = useState<Pharmacist[]>([]);
-
   //status
   const [status, setStatus] = useState<string>("");
+
+  // Fetch all pharmacies once
+  useEffect(() => {
+    dispatch(fetchPharmacist());
+    dispatch(fetchPharmacy());
+  }, [dispatch]);
 
   // filtered records by search box + status filter
   useEffect(() => {
@@ -73,11 +79,50 @@ export default function Pharmacist() {
     setFilteredData(data);
   }, [searchTerm, status, list]);
 
-  // Fetch all pharmacies once
-  useEffect(() => {
-    dispatch(fetchPharmacist());
-    dispatch(fetchPharmacy());
-  }, [dispatch]);
+  const handleToggleStatus = async (id: number) => {
+    // Find category in the filteredData (latest UI state)
+    const toggleRecords = filteredData.find((c) => c.id === id);
+    if (!toggleRecords) return;
+
+    const newStatus = toggleRecords.status === "Active" ? "Inactive" : "Active";
+
+    try {
+      // Optimistic UI update
+      setFilteredData((prev) =>
+        prev.map((c) => (c.id === id ? { ...c, status: newStatus } : c))
+      );
+
+      // Update backend
+      await dispatch(
+        editPharmacist({
+          id,
+          data: {
+            pharmacy_id: toggleRecords.pharmacy_id,
+            user_name: toggleRecords.user_name,
+            email_id: toggleRecords.email_id,
+            gender: toggleRecords.gender,
+            login_id: toggleRecords.login_id,
+            date_of_birth: toggleRecords.date_of_birth,
+            aadhar_number: toggleRecords.aadhar_number,
+            license_number: toggleRecords.license_number,
+            license_valid_upto: toggleRecords.license_valid_upto,
+            status: newStatus,
+          },
+        })
+      ).unwrap();
+      toast.success(`Status updated to ${newStatus}`);
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to update status");
+
+      // Revert UI if backend fails
+      setFilteredData((prev) =>
+        prev.map((c) =>
+          c.id === id ? { ...c, status: toggleRecords.status } : c
+        )
+      );
+    }
+  };
 
   //infinte scroll records
   const loadMore = () => {
@@ -87,12 +132,6 @@ export default function Pharmacist() {
       setVisibleCount((prev) => prev + 5);
       setLoadings(false);
     }, 3000); // spinner for 3 sec
-  };
-
-  const handleDelete = (id: number) => {
-    if (confirm("Are you sure you want to change status of this pharmacy?")) {
-      dispatch(togglePharmacistStatus(id));
-    }
   };
 
   const handleView = (pharmacist: Pharmacist) => {
@@ -202,7 +241,7 @@ export default function Pharmacist() {
                               <td>{p.license_valid_upto ?? "-"}</td>
                               <td>
                                 <span
-                                  onClick={() => handleDelete(p.id)}
+                                  onClick={() => handleToggleStatus(p.id)}
                                   className={`status ${
                                     p.status === "Active"
                                       ? "status-active"

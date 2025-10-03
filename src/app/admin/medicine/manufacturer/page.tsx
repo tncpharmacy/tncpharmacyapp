@@ -6,19 +6,20 @@ import SideNav from "@/app/admin/components/SideNav/page";
 import Header from "@/app/admin/components/Header/page";
 import { useAppDispatch, useAppSelector } from "@/lib/hooks";
 import {
-  createCategory,
-  deleteCategory,
-  getCategories,
-  updateCategory,
-} from "@/lib/features/categorySlice/categorySlice";
-import { Category, CreateCategoryDTO } from "@/types/category";
+  getManufacturers,
+  getManufacturersAllList,
+  // createManufacturer,
+  // deleteManufacturer,
+  // updateManufacturer,
+} from "@/lib/features/manufacturerSlice/manufacturerSlice";
+import { Manufacturer, CreateManufacturerDTO } from "@/types/manufacturer";
 import InfiniteScroll from "@/app/components/InfiniteScroll/InfiniteScroll";
 import toast from "react-hot-toast";
 
-export default function AddCategory() {
+export default function AddManufacturer() {
   const dispatch = useAppDispatch();
-  // redux se categories uthana
-  const { list: categories } = useAppSelector((state) => state.category);
+  // redux se MgetManufacturers uthana
+  const { list: manufacturers } = useAppSelector((state) => state.manufacturer);
 
   // Infinite scroll state
   const [visibleCount, setVisibleCount] = useState(10);
@@ -26,41 +27,39 @@ export default function AddCategory() {
 
   // filtered records by search box
   const [searchTerm, setSearchTerm] = useState("");
-  const [filteredData, setFilteredData] = useState<Category[]>(categories);
+  const [filteredData, setFilteredData] =
+    useState<Manufacturer[]>(manufacturers);
 
   //status
   const [status, setStatus] = useState<string>("");
 
-  const [formData, setFormData] = useState<Partial<Category>>({
-    id: 0,
-    category_name: "",
-    description: "",
+  const [formData, setFormData] = useState<Partial<Manufacturer>>({
+    id_manufacturer: 0,
+    manufacturer_name: "",
     status: "Active",
   });
 
   // Reset Your From
   const handleReset = () => {
     setFormData({
-      id: 0,
-      category_name: "",
-      description: "",
+      id_manufacturer: 0,
+      manufacturer_name: "",
       status: "Active",
     });
   };
 
   // Fetch all pharmacies once
   useEffect(() => {
-    dispatch(getCategories());
+    dispatch(getManufacturers());
   }, [dispatch]);
 
   // filtered records by search box + status filter
   useEffect(() => {
-    let data = categories ? [...categories] : [];
-
+    let data = manufacturers ? [...manufacturers] : [];
     if (searchTerm) {
       const lower = searchTerm.toLowerCase();
-      data = data.filter((item: Category) =>
-        (Object.keys(item) as (keyof Category)[]).some((key) => {
+      data = data.filter((item: Manufacturer) =>
+        (Object.keys(item) as (keyof Manufacturer)[]).some((key) => {
           const value = item[key];
           return (
             typeof value === "string" && value.toLowerCase().includes(lower)
@@ -68,51 +67,53 @@ export default function AddCategory() {
         })
       );
     }
-
     // 🔹 Ascending order by id
-    data = data.sort((a, b) => a.id - b.id);
+    data = data.sort((a, b) => a.id_manufacturer - b.id_manufacturer);
+    setFilteredData(data);
+  }, [searchTerm, manufacturers]); // ✅ use entire array, not just length
 
-    setFilteredData(data); // Only overwrite from categories + search
-  }, [searchTerm, categories]); // ✅ Remove `status` from dependencies
+  // const handleToggleStatus = async (id: number) => {
+  //   // Find category in the filteredData (latest UI state)
+  //   const category = filteredData.find((c) => c.id === id);
+  //   if (!category) return;
 
-  const handleToggleStatus = async (id: number) => {
-    // Find category in the filteredData (latest UI state)
-    const category = filteredData.find((c) => c.id === id);
-    if (!category) return;
+  //   const newStatus = category.status === "Active" ? "Inactive" : "Active";
 
-    const newStatus = category.status === "Active" ? "Inactive" : "Active";
+  //   try {
+  //     // Optimistic UI update
+  //     setFilteredData((prev) =>
+  //       prev.map((c) =>
+  //         c.id_manufacturer === id ? { ...c, status: newStatus } : c
+  //       )
+  //     );
 
-    try {
-      // Optimistic UI update
-      setFilteredData((prev) =>
-        prev.map((c) => (c.id === id ? { ...c, status: newStatus } : c))
-      );
+  //     // Update backend
+  //     await dispatch(
+  //       updateManufacture({
+  //         id,
+  //         manufacturer_name: category.manufacturer_name,
+  //         status: newStatus,
+  //       })
+  //     ).unwrap();
 
-      // Update backend
-      await dispatch(
-        updateCategory({
-          id,
-          category_name: category.category_name,
-          description: category.description,
-          status: newStatus,
-        })
-      ).unwrap();
+  //     toast.success(`Status updated to ${newStatus}`);
+  //   } catch (err) {
+  //     console.error(err);
+  //     toast.error("Failed to update status");
 
-      toast.success(`Status updated to ${newStatus}`);
-    } catch (err) {
-      console.error(err);
-      toast.error("Failed to update status");
-
-      // Revert UI if backend fails
-      setFilteredData((prev) =>
-        prev.map((c) => (c.id === id ? { ...c, status: category.status } : c))
-      );
-    }
-  };
+  //     // Revert UI if backend fails
+  //     setFilteredData((prev) =>
+  //       prev.map((c) =>
+  //         c.id_manufacturer === id ? { ...c, status: category.status } : c
+  //       )
+  //     );
+  //   }
+  // };
 
   //infinte scroll records
+
   const loadMore = () => {
-    if (loadings || visibleCount >= categories.length) return;
+    if (loadings || visibleCount >= manufacturers.length) return;
     setLoadings(true);
     setTimeout(() => {
       setVisibleCount((prev) => prev + 5);
@@ -120,65 +121,60 @@ export default function AddCategory() {
     }, 3000); // spinner for 3 sec
   };
 
-  // const handleView = (pharmacy: Category) => {
-  //   setSelectedPharmacy(pharmacy);
-  //   setShowModal(true);
-  // };
-
   const handleEdit = (id: number) => {
-    const category = categories.find((item) => item.id === id);
-    if (category) {
+    const Manufacturer = manufacturers.find(
+      (item) => item.id_manufacturer === id
+    );
+    if (Manufacturer) {
       setFormData({
-        id: category.id,
-        category_name: category.category_name,
-        description: category.description,
-        status: category.status,
+        id_manufacturer: Manufacturer.id_manufacturer,
+        manufacturer_name: Manufacturer.manufacturer_name,
+        status: Manufacturer.status,
       });
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  // const handleSubmit = async (e: React.FormEvent) => {
+  //   e.preventDefault();
 
-    try {
-      const formDataToAppend: CreateCategoryDTO = {
-        category_name: formData.category_name || "",
-        description: formData.description || "",
-        status: "Active",
-      };
+  //   try {
+  //     const formDataToAppend: CreateManufacturerDTO = {
+  //       Manufacturer_name: formData.Manufacturer_name || "",
+  //       status: "Active",
+  //     };
 
-      console.log("Sending payload:", formDataToAppend);
+  //     console.log("Sending payload:", formDataToAppend);
 
-      if (formData.id && formData.id > 0) {
-        // ✅ Update only
-        await dispatch(
-          updateCategory({
-            id: formData.id,
-            ...formDataToAppend,
-          })
-        ).unwrap();
-        toast.success("Category updated successfully!");
-      } else {
-        // ✅ Create only
-        await dispatch(createCategory(formDataToAppend)).unwrap();
-        toast.success("Category Created successfully!");
-      }
+  //     if (formData.id_manufacturer && formData.id_manufacturer > 0) {
+  //       // ✅ Update only
+  //       await dispatch(
+  //         updateManufacturer({
+  //           id: formData.id,
+  //           ...formDataToAppend,
+  //         })
+  //       ).unwrap();
+  //       toast.success("Manufacturer updated successfully!");
+  //     } else {
+  //       // ✅ Create only
+  //       await dispatch(createManufacturer(formDataToAppend)).unwrap();
+  //       toast.success("Manufacturer Created successfully!");
+  //     }
 
-      // ✅ Refresh list after create/update
-      dispatch(getCategories());
-      setVisibleCount(10);
-      // Reset form
-      setFormData({
-        id: 0,
-        category_name: "",
-        description: "",
-        status: "Active",
-      });
-    } catch (err) {
-      console.error("Error in handleSubmit:", err);
-      alert("Something went wrong!");
-    }
-  };
+  //     // ✅ Refresh list after create/update
+  //     dispatch(getManufacturers());
+  //     setVisibleCount(10);
+  //     // Reset form
+  //     setFormData({
+  //       id_manufacturer: 0,
+  //       Manufacturer_name: "",
+  //       description: "",
+  //       status: "Active",
+  //     });
+  //   } catch (err) {
+  //     console.error("Error in handleSubmit:", err);
+  //     alert("Something went wrong!");
+  //   }
+  // };
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
@@ -209,7 +205,7 @@ export default function AddCategory() {
                   <div className="d-flex justify-content-between align-items-center mb-3">
                     {/* Left side - Title */}
                     <h5 className="mb-0">
-                      <i className="bi bi-card-list"></i> Category List
+                      <i className="bi bi-card-list"></i> Manufacturer List
                     </h5>
 
                     {/* Right side - Search */}
@@ -217,7 +213,7 @@ export default function AddCategory() {
                       <input
                         type="text"
                         className="form-control"
-                        placeholder="Search category..."
+                        placeholder="Search Manufacturer..."
                         style={{ width: "550px" }}
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
@@ -230,7 +226,7 @@ export default function AddCategory() {
                       <thead>
                         <tr>
                           <th>Id</th>
-                          <th className="flex justify-start">Category</th>
+                          <th className="flex justify-start">Manufacturer</th>
                           {/* <th>Description</th> */}
                           <th>Status</th>
                           <th>Action</th>
@@ -238,15 +234,15 @@ export default function AddCategory() {
                       </thead>
                       <tbody>
                         {filteredData.slice(0, visibleCount).map((p, index) => (
-                          <tr key={p.id ?? index}>
-                            <td>{p.id}</td>
+                          <tr key={p.id_manufacturer ?? index}>
+                            <td>{p.id_manufacturer}</td>
                             <td className="display-flex justify-start">
-                              {p.category_name ?? "-"}
+                              {p.manufacturer_name ?? "-"}
                             </td>
                             {/* <td>{p.description ?? "-"}</td> */}
                             <td>
                               <span
-                                onClick={() => handleToggleStatus(p.id)}
+                                //onClick={() => handleToggleStatus(p.id_manufacturer)}
                                 className={`status ${
                                   p.status === "Active"
                                     ? "status-active"
@@ -254,13 +250,13 @@ export default function AddCategory() {
                                 } cursor-pointer`}
                                 title="Click to change status"
                               >
-                                {p.status}
+                                {p.status === "Active" ? "Active" : "Inactive"}
                               </span>
                             </td>
                             <td>
                               <button
                                 className="btn btn-light btn-sm me-2"
-                                onClick={() => handleEdit(p.id)}
+                                onClick={() => handleEdit(p.id_manufacturer)}
                               >
                                 <i className="bi bi-pencil"></i>
                               </button>
@@ -281,38 +277,23 @@ export default function AddCategory() {
                 {/* Right Side - Form */}
                 <div className="col-sm-4">
                   <div className="card p-3 shadow-sm">
-                    <h5>Add Category</h5>
+                    <h5>Add Manufacturer</h5>
                     <hr className="w-100" />
-                    <form onSubmit={handleSubmit}>
+                    <form
+                    // onSubmit={handleSubmit}
+                    >
                       <div className="row">
                         <div className="col-md-12">
                           <div className="txt_col">
-                            <span className="lbl1">Category</span>
+                            <span className="lbl1">Manufacturer</span>
                             <input
                               type="text"
                               className="txt1"
-                              name="category_name"
-                              value={formData.category_name || ""}
+                              name="Manufacturer_name"
+                              value={formData.manufacturer_name || ""}
                               onChange={handleChange}
                               required
                             />
-                          </div>
-                        </div>
-                        <div className="col-md-12">
-                          <div className="txt_col">
-                            <span className="lbl1">Description</span>
-                            <textarea
-                              className="txt1 h-50"
-                              name="description"
-                              value={formData.description || ""}
-                              onChange={(e) =>
-                                setFormData({
-                                  ...formData,
-                                  description: e.target.value,
-                                })
-                              }
-                              required
-                            ></textarea>
                           </div>
                         </div>
                       </div>
