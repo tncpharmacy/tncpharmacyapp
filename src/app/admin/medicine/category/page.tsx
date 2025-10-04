@@ -225,26 +225,24 @@ export default function AddCategory() {
                     </div>
                   </div>
 
-                  <div className="scroll_table mt-4 w-full flex justify-start">
-                    <table className="table cust_table1 text-left border">
+                  <div className="scroll_table mt-4 w-full">
+                    <table className="table cust_table1">
                       <thead>
                         <tr>
-                          <th>Id</th>
-                          <th className="flex justify-start">Category</th>
-                          {/* <th>Description</th> */}
-                          <th>Status</th>
-                          <th>Action</th>
+                          <th className="text-start">Id</th>
+                          <th className="text-start">Category</th>
+                          <th className="text-start">Status</th>
+                          <th className="text-start">Action</th>
                         </tr>
                       </thead>
                       <tbody>
                         {filteredData.slice(0, visibleCount).map((p, index) => (
                           <tr key={p.id ?? index}>
-                            <td>{p.id}</td>
-                            <td className="display-flex justify-start">
+                            <td className="text-start">{p.id}</td>
+                            <td className="text-start">
                               {p.category_name ?? "-"}
                             </td>
-                            {/* <td>{p.description ?? "-"}</td> */}
-                            <td>
+                            <td className="text-start">
                               <span
                                 onClick={() => handleToggleStatus(p.id)}
                                 className={`status ${
@@ -252,24 +250,17 @@ export default function AddCategory() {
                                     ? "status-active"
                                     : "status-inactive"
                                 } cursor-pointer`}
-                                title="Click to change status"
                               >
                                 {p.status}
                               </span>
                             </td>
-                            <td>
+                            <td className="text-start">
                               <button
                                 className="btn btn-light btn-sm me-2"
                                 onClick={() => handleEdit(p.id)}
                               >
                                 <i className="bi bi-pencil"></i>
                               </button>
-                              {/* <button
-                                  className="btn btn-light btn-sm"
-                                  onClick={() => handleView(p)}
-                                >
-                                  <i className="bi bi-eye-fill"></i>
-                                </button> */}
                             </td>
                           </tr>
                         ))}

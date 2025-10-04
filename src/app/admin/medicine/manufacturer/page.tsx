@@ -221,26 +221,26 @@ export default function AddManufacturer() {
                     </div>
                   </div>
 
-                  <div className="scroll_table mt-4 w-full flex justify-start">
-                    <table className="table cust_table1 text-left border">
+                  <div className="scroll_table mt-4 w-full">
+                    <table className="table cust_table1">
                       <thead>
                         <tr>
-                          <th>Id</th>
-                          <th className="flex justify-start">Manufacturer</th>
-                          {/* <th>Description</th> */}
-                          <th>Status</th>
-                          <th>Action</th>
+                          <th className="text-start">Id</th>
+                          <th className="text-start">Manufacturer</th>
+                          {/* <th className="text-start">Description</th> */}
+                          <th className="text-start">Status</th>
+                          <th className="text-start">Action</th>
                         </tr>
                       </thead>
                       <tbody>
                         {filteredData.slice(0, visibleCount).map((p, index) => (
                           <tr key={p.id_manufacturer ?? index}>
-                            <td>{p.id_manufacturer}</td>
-                            <td className="display-flex justify-start">
+                            <td className="text-start">{p.id_manufacturer}</td>
+                            <td className="text-start">
                               {p.manufacturer_name ?? "-"}
                             </td>
-                            {/* <td>{p.description ?? "-"}</td> */}
-                            <td>
+                            {/* <td className="text-start">{p.description ?? "-"}</td> */}
+                            <td className="text-start">
                               <span
                                 //onClick={() => handleToggleStatus(p.id_manufacturer)}
                                 className={`status ${
@@ -253,19 +253,13 @@ export default function AddManufacturer() {
                                 {p.status === "Active" ? "Active" : "Inactive"}
                               </span>
                             </td>
-                            <td>
+                            <td className="text-start">
                               <button
                                 className="btn btn-light btn-sm me-2"
                                 onClick={() => handleEdit(p.id_manufacturer)}
                               >
                                 <i className="bi bi-pencil"></i>
                               </button>
-                              {/* <button
-                                  className="btn btn-light btn-sm"
-                                  onClick={() => handleView(p)}
-                                >
-                                  <i className="bi bi-eye-fill"></i>
-                                </button> */}
                             </td>
                           </tr>
                         ))}

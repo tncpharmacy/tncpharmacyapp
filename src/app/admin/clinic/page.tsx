@@ -186,34 +186,34 @@ export default function Pharmacy() {
                   </div>
                 </div>
                 {/* Table */}
-                <div className="scroll_table">
+                <div className="scroll_table mt-4 w-full">
                   <table className="table cust_table1">
                     <thead className="fw-bold text-dark">
                       <tr>
-                        <th className="fw-bold">Clinic Code</th>
-                        <th className="fw-bold">Clinic Name</th>
-                        <th className="fw-bold">Owner Name</th>
-                        {/* <th className="fw-bold">License No.</th>
-                        <th className="fw-bold">License Validity</th> */}
-                        {/* <th className="fw-bold">Email ID</th> */}
-                        <th className="fw-bold">Contact No</th>
-                        <th className="fw-bold">Address</th>
-                        <th className="fw-bold">Status</th>
-                        <th className="fw-bold">Action</th>
+                        <th className="fw-bold text-start">Clinic Code</th>
+                        <th className="fw-bold text-start">Clinic Name</th>
+                        <th className="fw-bold text-start">Owner Name</th>
+                        {/* <th className="fw-bold text-start">License No.</th>
+                        <th className="fw-bold text-start">License Validity</th> */}
+                        {/* <th className="fw-bold text-start">Email ID</th> */}
+                        <th className="fw-bold text-start">Contact No</th>
+                        <th className="fw-bold text-start">Address</th>
+                        <th className="fw-bold text-start">Status</th>
+                        <th className="fw-bold text-start">Action</th>
                       </tr>
                     </thead>
                     <tbody>
                       {filteredData.slice(0, visibleCount).map((p) => (
                         <tr key={p.id}>
-                          <td>{"TNCLN00" + p.id}</td>
-                          <td>{p.clinicName ?? "-"}</td>
-                          <td>{p.user_name ?? "-"}</td>
-                          {/* <td>{p.license_number}</td>
-                          <td>{p.license_valid_upto}</td> */}
-                          {/* <td>{p.email_id}</td> */}
-                          <td>{p.login_id ?? "-"}</td>
-                          <td>{p.address ?? "-"}</td>
-                          <td>
+                          <td className="text-start">{"TNCLN00" + p.id}</td>
+                          <td className="text-start">{p.clinicName ?? "-"}</td>
+                          <td className="text-start">{p.user_name ?? "-"}</td>
+                          {/* <td className="text-start">{p.license_number}</td>
+                          <td className="text-start">{p.license_valid_upto}</td> */}
+                          {/* <td className="text-start">{p.email_id}</td> */}
+                          <td className="text-start">{p.login_id ?? "-"}</td>
+                          <td className="text-start">{p.address ?? "-"}</td>
+                          <td className="text-start">
                             <span
                               onClick={() => handleToggleStatus(p.id)}
                               className={`status ${
@@ -226,7 +226,7 @@ export default function Pharmacy() {
                               {p.status === "Active" ? "Active" : "Inactive"}
                             </span>
                           </td>
-                          <td>
+                          <td className="text-start">
                             <button
                               className="btn btn-light btn-sm me-2"
                               // onClick={() => handleEdit(p.id)}

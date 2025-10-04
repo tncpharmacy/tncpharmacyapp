@@ -248,16 +248,15 @@ export default function AddSubCategory() {
                     </div>
                   </div>
 
-                  <div className="scroll_table mt-4">
+                  <div className="scroll_table mt-4 w-full">
                     <table className="table cust_table1">
                       <thead>
                         <tr>
-                          <th>Id</th>
-                          <th>Category</th>
-                          <th>Sub Category</th>
-                          <th>Description</th>
-                          <th>Status</th>
-                          <th>Action</th>
+                          <th className="text-start">Id</th>
+                          <th className="text-start">Category</th>
+                          <th className="text-start">Sub Category</th>
+                          <th className="text-start">Status</th>
+                          <th className="text-start">Action</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -266,11 +265,14 @@ export default function AddSubCategory() {
                           .sort((a, b) => a.id - b.id) // ascending order by id
                           .map((p) => (
                             <tr key={p.id}>
-                              <td>{p.id}</td>
-                              <td>{p.category_name ?? "-"}</td>
-                              <td>{p.sub_category_name ?? "-"}</td>
-                              <td>{p.description ?? "-"}</td>
-                              <td>
+                              <td className="text-start">{p.id}</td>
+                              <td className="text-start">
+                                {p.category_name ?? "-"}
+                              </td>
+                              <td className="text-start">
+                                {p.sub_category_name ?? "-"}
+                              </td>
+                              <td className="text-start">
                                 <span
                                   onClick={() => handleToggleStatus(p.id)}
                                   className={`status ${
@@ -283,7 +285,7 @@ export default function AddSubCategory() {
                                   {p.status}
                                 </span>
                               </td>
-                              <td>
+                              <td className="text-start">
                                 <button
                                   className="btn btn-light btn-sm me-2"
                                   onClick={() => handleEdit(p.id)}
