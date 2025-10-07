@@ -1,8 +1,8 @@
 "use client";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import "../../css/header-style.css";
 import "../../../styles/style-login.css";
-import { Modal, OverlayTrigger, Tooltip } from "react-bootstrap";
+import { Modal } from "react-bootstrap";
 import { useAppDispatch, useAppSelector } from "@/lib/hooks";
 import { useRouter } from "next/navigation";
 import { loginUser } from "@/lib/features/authSlice/authSlice";
@@ -10,83 +10,36 @@ import { getCategoriesList } from "@/lib/features/categorySlice/categorySlice";
 import { getSubcategories } from "@/lib/features/subCategorySlice/subCategorySlice";
 import { Category } from "@/types/category";
 import Link from "next/link";
+import PrescriptionUploadModal from "@/app/user/components/PrescriptionUploadModal/PrescriptionUploadModal";
+import Image from "next/image";
+import Login from "@/app/admin-login/page";
+import BuyerLoginModal from "@/app/buyer-login/page";
 
 const SiteHeader = () => {
   const dispatch = useAppDispatch();
-  const fileInputRef = useRef<HTMLInputElement | null>(null);
-  const { user, loading, error, restoreComplete } = useAppSelector(
-    (state) => state.auth
-  );
+  const [showLogin, setShowLogin] = useState(false);
+  const [showBuyerLogin, setShowBuyerLogin] = useState(false);
   const { list: categories } = useAppSelector((state) => state.category);
   const { list: subcategories } = useAppSelector((state) => state.subcategory);
+  const [showModal, setShowModal] = useState(false);
 
-  const handleButtonClick = () => {
-    fileInputRef.current?.click(); // 🔹 File chooser dialog open karega
-  };
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      console.log("Selected file:", e.target.files[0]);
-      // yaha tu apna upload logic dal sakta hai
-    }
-  };
-  // console.log("categories", categories);
-  // console.log("subcategories", subcategories);
   useEffect(() => {
     dispatch(getCategoriesList());
     dispatch(getSubcategories());
   }, [dispatch]);
 
-  const [login_id, setLoginId] = useState("");
-  const [password, setPassword] = useState("");
-  const router = useRouter();
   const [show, setShow] = useState(false);
-  //const [error, setError] = useState<string | null>(null);
-
-  const handleClose = () => setShow(false);
-  const handleShow = () => setShow(true);
 
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => setMounted(true), []);
 
-  // ✅ redirect after login / restore
-  useEffect(() => {
-    if (!restoreComplete) return;
-    if (user) redirectUser(user.user_type);
-  }, [restoreComplete, user]);
-
   const [shuffledCategories, setShuffledCategories] = useState<Category[]>([]);
 
   useEffect(() => {
-    // Har refresh pe categories random ho jayengi
     const shuffled = [...categories].sort(() => Math.random() - 0.5);
     setShuffledCategories(shuffled);
   }, [categories]);
-
-  const redirectUser = (userType: number) => {
-    switch (userType) {
-      case 1:
-        router.push("/admin-dashboard");
-        break;
-      case 2:
-      case 3:
-        router.push("/doctor/doctor-dashboard");
-        break;
-      case 4:
-        router.push("/pharmacy/pharmacy-dashboard");
-        break;
-      case 5:
-        router.push("/pharmacist/pharmacist-dashboard");
-        break;
-    }
-  };
-
-  const handleLogin = async () => {
-    const res = await dispatch(loginUser({ login_id, password }));
-    if (loginUser.fulfilled.match(res))
-      redirectUser(res.payload.user.user_type);
-  };
 
   if (!mounted) return null;
 
@@ -129,73 +82,27 @@ const SiteHeader = () => {
                         To access account &amp; manage orders
                       </p>
                       <div className="d-flex">
-                        <button className="btn1 me-2" onClick={handleShow}>
-                          Login
-                        </button>
-                        <Modal
-                          size="lg"
-                          show={show}
-                          onHide={handleClose}
-                          centered
-                          className="loginmodal"
+                        <button
+                          className="btn1 me-2"
+                          onClick={() => setShowLogin(true)}
                         >
-                          <Modal.Body className="p-0">
-                            <div className="row">
-                              <div className="col-md-5 pe-0 d-none d-md-block">
-                                <img
-                                  src="../images/login-banner-1.jpg"
-                                  className="w-100"
-                                  alt="Login Banner"
-                                />
-                              </div>
-                              <div className="col-md-7 ps-md-0 d-flex align-items-center">
-                                <div className="login_form">
-                                  <span className="login_title">
-                                    Login here
-                                  </span>
-                                  <div className="row_login">
-                                    <span className="lbllogin">Login ID</span>
-                                    <input
-                                      type="text"
-                                      className="txtlogin"
-                                      placeholder="Enter Login Id"
-                                      value={login_id}
-                                      maxLength={10}
-                                      onChange={(e) =>
-                                        setLoginId(e.target.value)
-                                      }
-                                    />
-                                  </div>
-                                  <div className="row_login">
-                                    <span className="lbllogin">Password</span>
-                                    <input
-                                      type="password"
-                                      className="txtlogin"
-                                      placeholder="Enter Password"
-                                      value={password}
-                                      onChange={(e) =>
-                                        setPassword(e.target.value)
-                                      }
-                                    />
-                                  </div>
-                                  <button
-                                    onClick={handleLogin}
-                                    disabled={loading}
-                                    className="btnlogin"
-                                  >
-                                    {loading ? "Logging in..." : "Login"}
-                                  </button>
-                                  {error && (
-                                    <p style={{ color: "red" }}>{error}</p>
-                                  )}
-                                </div>
-                              </div>
-                            </div>
-                          </Modal.Body>
-                        </Modal>
-                        <a href="register.html" className="btn1">
-                          SignUp
-                        </a>
+                          Admin Login
+                        </button>
+                        {/* Modal Component */}
+                        <Login
+                          show={showLogin}
+                          handleClose={() => setShowLogin(false)}
+                        />
+                        <button
+                          className="btn1"
+                          onClick={() => setShowBuyerLogin(true)}
+                        >
+                          Buyer Login
+                        </button>
+                        <BuyerLoginModal
+                          show={showBuyerLogin}
+                          handleClose={() => setShowBuyerLogin(false)}
+                        />
                       </div>
                     </div>
                     <div className="d-none">
@@ -304,23 +211,22 @@ const SiteHeader = () => {
             )}
 
             <li className="float-end">
-              <button className="btn_uoload" onClick={handleButtonClick}>
+              <button className="btn_uoload" onClick={() => setShowModal(true)}>
                 <span>
                   Upload
                   <br /> Prescription
                 </span>
-                <img
+                <Image
                   src="/images/icons/icon-upload.svg"
-                  width={"20px"}
+                  width={20}
+                  height={20}
                   alt="Upload"
                 />
               </button>
-              {/* Hidden file input */}
-              <input
-                type="file"
-                ref={fileInputRef}
-                style={{ display: "none" }}
-                onChange={handleFileChange}
+              {/* Modal*/}
+              <PrescriptionUploadModal
+                show={showModal}
+                handleClose={() => setShowModal(false)}
               />
             </li>
           </ul>

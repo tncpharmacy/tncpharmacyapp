@@ -49,15 +49,24 @@ export default function SideNav() {
             <i className="bi bi-cart-plus-fill"></i> Order
           </Link>
         </li>
-
         <li>
-          <Link href="/medicines" className="link">
-            <i className="bi bi-capsule"></i> Medicine
-          </Link>
+          <div onClick={() => toggleMenu("product")} className="link arrow">
+            <i className="bi bi-capsule"></i> Product Master
+          </div>
+          {openMenu === "product" && (
+            <ul className="submenu">
+              <li>
+                <Link href="/medicine">Medicine Details</Link>
+              </li>
+              <li>
+                <Link href="/other-product">Other Product Details</Link>
+              </li>
+            </ul>
+          )}
         </li>
         <li>
           <Link href="/clinic" className="link">
-            <i className="bi bi-person-plus"></i> Hospital/Clinic
+            <i className="bi bi-person-plus"></i> Hospital & Clinic
           </Link>
         </li>
         <li>
@@ -91,10 +100,10 @@ export default function SideNav() {
         </li>
 
         <li>
-          <div onClick={() => toggleMenu("product")} className="link arrow">
-            <i className="bi bi-capsule-pill"></i> Product Master
+          <div onClick={() => toggleMenu("admins")} className="link arrow">
+            <i className="bi bi-capsule-pill"></i> Admin Master
           </div>
-          {openMenu === "product" && (
+          {openMenu === "admins" && (
             <ul className="submenu">
               <li>
                 <Link href="/category">Category</Link>

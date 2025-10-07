@@ -229,7 +229,10 @@ export default function AddCategory() {
                     <table className="table cust_table1">
                       <thead>
                         <tr>
-                          <th className="text-start">Id</th>
+                          <th
+                            className="text-start"
+                            style={{ width: "100px" }}
+                          ></th>
                           <th className="text-start">Category</th>
                           <th className="text-start">Status</th>
                           <th className="text-start">Action</th>
@@ -238,7 +241,7 @@ export default function AddCategory() {
                       <tbody>
                         {filteredData.slice(0, visibleCount).map((p, index) => (
                           <tr key={p.id ?? index}>
-                            <td className="text-start">{p.id}</td>
+                            <td className="text-start"></td>
                             <td className="text-start">
                               {p.category_name ?? "-"}
                             </td>

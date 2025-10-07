@@ -474,7 +474,7 @@ body {
     padding: 10px 15px;
     font-size: 14px;
     border-radius: 1px;
-    height: 44px;
+    height: auto;
 }
 
 .txt_col .txt1::placeholder {

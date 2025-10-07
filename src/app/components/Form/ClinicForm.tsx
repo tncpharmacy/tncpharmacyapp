@@ -258,7 +258,7 @@ export default function ClinicForm({ id }: Props) {
                 />
                 <Input
                   type="text"
-                  label="Number Of Doctors"
+                  label="Total Number Of Doctors"
                   name="number_of_doctors"
                   value={formData.number_of_doctors}
                   onChange={handleChange}
@@ -386,7 +386,7 @@ export default function ClinicForm({ id }: Props) {
                   onChange={handleChange}
                 /> */}
                 <InputFile
-                  label="Upload Documents (License PDF/Image, Certificate, etc.)"
+                  label="Upload Documents Picture"
                   name="documents"
                   multiple
                   accept="image/*,.pdf"

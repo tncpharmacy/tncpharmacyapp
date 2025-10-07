@@ -80,6 +80,30 @@ const nextConfig: NextConfig = {
         destination: "/admin/supplier/add-supplier",
       },
       {
+        source: "/add-medicine",
+        destination: "/admin/medicine/medicine-item/add",
+      },
+      // {
+      //   source: "/update-medicine",
+      //   destination: "/admin/medicine/medicine-item/add/:id",
+      // },
+      {
+        source: "/medicine",
+        destination: "/admin/medicine/medicine-item",
+      },
+      {
+        source: "/add-other-product",
+        destination: "/admin/medicine/other-item/add",
+      },
+      // {
+      //   source: "/update-other-product",
+      //   destination: "/admin/medicine/other-item/add/:id",
+      // },
+      {
+        source: "/other-product",
+        destination: "/admin/medicine/other-item",
+      },
+      {
         source: "/category",
         destination: "/admin/medicine/category",
       },
@@ -126,14 +150,6 @@ const nextConfig: NextConfig = {
       {
         source: "/orders",
         destination: "/admin/order/order-list",
-      },
-      {
-        source: "/medicines",
-        destination: "/admin/medicine/medicine-list",
-      },
-      {
-        source: "/add-medicines",
-        destination: "/admin/medicine/add-medicine",
       },
       {
         source: "/supplier",
