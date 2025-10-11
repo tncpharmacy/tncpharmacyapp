@@ -38,7 +38,7 @@ export default function HealthBag() {
     {
       name: "Accu-Chek Active Blood Glucometer Kit (Box of 10 Test strips Free) | Blood Glucose Monitors",
       pack: "Packet of 1 kit",
-      img: "/images/products/glucometer.png",
+      img: "/images/products/gluco-meter.png",
       price: 921,
       mrp: 1124,
       discount: 18,
