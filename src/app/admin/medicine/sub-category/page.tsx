@@ -15,7 +15,7 @@ import {
   updateSubcategory,
 } from "@/lib/features/subCategorySlice/subCategorySlice";
 import toast from "react-hot-toast";
-import { getCategories } from "@/lib/features/categorySlice/categorySlice";
+import { getCategoriesList } from "@/lib/features/categorySlice/categorySlice";
 
 export default function AddSubCategory() {
   const dispatch = useAppDispatch();
@@ -60,7 +60,7 @@ export default function AddSubCategory() {
   // Fetch all pharmacies once
   useEffect(() => {
     dispatch(getSubcategories());
-    dispatch(getCategories());
+    dispatch(getCategoriesList());
   }, [dispatch]);
 
   // filtered records by search box + status filter

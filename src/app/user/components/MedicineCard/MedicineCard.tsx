@@ -1,5 +1,6 @@
 import React from "react";
 import "../../css/medicine.css";
+import Image from "next/image";
 
 type Props = {
   name: string;
@@ -30,14 +31,30 @@ export default function MedicineCard({
         {/* Top section */}
         <div className="medicine-top">
           {/* Placeholder for Image */}
-          <div className="medicine-img">Img</div>
+          <div className="medicine-img">
+            <Image
+              src={"/images/tnc-default-small.png"}
+              alt=""
+              width={40}
+              height={40}
+            />
+          </div>
 
           {/* Medicine Details */}
           <div className="medicine-details">
             <div className="medicine-header">
               <h3 className="medicine-name">{name}</h3>
               {prescription && (
-                <span className="medicine-badge">Prescription Required</span>
+                <div className="relative medicine-badge">
+                  <Image
+                    src="/images/RX-small.png"
+                    alt="Prescription Required"
+                    title="Prescription Required"
+                    height={25}
+                    width={30}
+                    className="absolute top-0 right-0 cursor-pointer"
+                  />
+                </div>
               )}
             </div>
             {pack && <p className="medicine-text">{pack}</p>}

@@ -1,4 +1,3 @@
-// api/category.ts
 import axiosInstance from "@/lib/axios";
 import { ENDPOINTS } from "@/lib/config";
 import { Category, CategoryResponse } from "@/types/category";

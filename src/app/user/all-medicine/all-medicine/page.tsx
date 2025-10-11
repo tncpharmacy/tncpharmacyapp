@@ -5,6 +5,7 @@ import "../../css/user-style.css";
 import SiteHeader from "@/app/user/components/header/header";
 import MedicineList from "../../components/MedicineCard/MedicineList";
 import FilterSidebar from "../../components/FilterSideBar/FilterSideBar";
+import { Image } from "react-bootstrap";
 
 export default function AllMedicine() {
   return (
@@ -13,15 +14,15 @@ export default function AllMedicine() {
         <SiteHeader />
 
         <div className="body_wrap">
-          <FilterSidebar />
+          {/* <FilterSidebar /> */}
           <div className="body_right">
             <div className="body_content">
               <div className="pageTitle">
-                <i className="bi bi-capsule"></i> Medicine
+                <Image src={"/images/favicon.png"} alt="" /> Medicine
               </div>
-              <Link href={"/product-details"}>
-                <MedicineList />
-              </Link>
+              {/* <Link href={"#"}> */}
+              <MedicineList />
+              {/* </Link> */}
             </div>
           </div>
         </div>

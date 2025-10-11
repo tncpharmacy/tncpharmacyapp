@@ -21,6 +21,18 @@ const nextConfig: NextConfig = {
         source: "/all-medicine",
         destination: "/user/all-medicine/all-medicine",
       },
+      {
+        source: "/health-bag",
+        destination: "/user/health-bag",
+      },
+      {
+        source: "/address",
+        destination: "/user/address",
+      },
+      // {
+      //   source: "/address",
+      //   destination: "/user/address/add",
+      // },
       // Backend API rewrites
       {
         source: "/api/:path*",
@@ -201,8 +213,12 @@ const nextConfig: NextConfig = {
         destination: "/pharmacy/supplier/list-supplier",
       },
       {
-        source: "/medicine-category",
-        destination: "/pharmacy/medicine/medicine-category",
+        source: "/pharmacy/export",
+        destination: "/pharmacy/purchase-invoice/export",
+      },
+      {
+        source: "/pharmacy/import",
+        destination: "/pharmacy/purchase-invoice/import",
       },
       {
         source: "/variant",

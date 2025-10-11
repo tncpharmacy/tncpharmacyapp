@@ -1,6 +1,6 @@
 "use client";
 
-import { SetStateAction, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 
 export default function SideNav() {
@@ -33,44 +33,32 @@ export default function SideNav() {
           </Link>
         </li>
         <li>
-          <Link href="/medicine" className="link">
-            <i className="bi bi-capsule"></i> Medicine
-          </Link>
+          <div
+            onClick={() => toggleMenu("purchase-invoice")}
+            className="link arrow"
+          >
+            <i className="bi bi-receipt-cutoff"></i> Purchase Invoice
+          </div>
+          {openMenu === "purchase-invoice" && (
+            <ul className="submenu">
+              <li>
+                <Link href="/pharmacy/import">
+                  <i className="bi bi-box-arrow-in-up"></i> Import
+                </Link>
+              </li>
+              <li>
+                <Link href="/pharmacy/export">
+                  <i className="bi bi-box-arrow-down"></i> Export
+                </Link>
+              </li>
+            </ul>
+          )}
         </li>
-
         <li>
           <Link href="/supplier" className="link">
             <i className="bi bi-truck"></i> Supplier
           </Link>
         </li>
-        {/* <li>
-          <div onClick={() => toggleMenu("product")} className="link arrow">
-            <i className="bi bi-capsule-pill"></i> Product Master
-          </div>
-          {openMenu === "product" && (
-            <ul className="submenu">
-              <li>
-                <Link href="/category">Medicine Category</Link>
-              </li>
-              <li>
-                <Link href="/brand">Medicine Brand</Link>
-              </li>
-              <li>
-                <Link href="/unit">Medicine Unit</Link>
-              </li>
-              <li>
-                <Link href="/manufacturer">Medicine Manufacturer</Link>
-              </li>
-              <li>
-                <Link href="/variant">Medicine Variant</Link>
-              </li>
-              <li>
-                <Link href="/strength">Medicine Strength</Link>
-              </li>
-            </ul>
-          )}
-        </li> */}
-
         <li>
           <div onClick={() => toggleMenu("settings")} className="link arrow">
             <i className="bi bi-gear-wide-connected"></i> Settings

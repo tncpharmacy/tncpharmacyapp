@@ -11,6 +11,7 @@ export interface DecodedToken {
   jti: string;
   user_id: string;
   id: number;
+  pharmacy_name?: string;
   last_login: string;
   is_superuser: boolean;
   user_name: string;

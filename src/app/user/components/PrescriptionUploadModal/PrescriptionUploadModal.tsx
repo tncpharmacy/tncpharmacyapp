@@ -1,6 +1,7 @@
 "use client";
 import { useState, useRef, useEffect } from "react";
 import Image from "next/image";
+import "../../css/header-style.css";
 
 interface Props {
   show: boolean;
@@ -41,7 +42,7 @@ export default function PrescriptionUploadModal({ show, handleClose }: Props) {
         tabIndex={-1}
       >
         <div className="modal-dialog modal-dialog-centered">
-          <div className="modal-content rounded-4 shadow-lg border-0">
+          <div className="modal-content rounded-4 shadow-lg border-0 modal-bg-image">
             <div className="modal-header">
               <h5 className="modal-title fw-semibold">Upload Prescription</h5>
               <button

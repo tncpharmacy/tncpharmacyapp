@@ -10,12 +10,14 @@ import { SubCategory, SubCategoryResponse } from "@/types/subCategory";
 
 interface SubCategoryState {
   list: SubCategory[];
+  listAll: SubCategory[];
   loading: boolean;
   error: string | null;
 }
 
 const initialState: SubCategoryState = {
   list: [],
+  listAll: [],
   loading: false,
   error: null,
 };
@@ -144,7 +146,7 @@ const subcategorySlice = createSlice({
         getSubcategoriesList.fulfilled,
         (state, action: PayloadAction<SubCategory[]>) => {
           state.loading = false;
-          state.list = action.payload;
+          state.listAll = action.payload;
         }
       )
       .addCase(getSubcategoriesList.rejected, (state, action) => {

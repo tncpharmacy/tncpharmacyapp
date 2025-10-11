@@ -13,6 +13,7 @@ import clinicReducer from "@/lib/features/clinicSlice/clinicSlice";
 import unitReducer from "@/lib/features/unitSlice/unitSlice";
 import genericReducer from "@/lib/features/genericSlice/genericSlice";
 import manufacturerReducer from "@/lib/features/manufacturerSlice/manufacturerSlice";
+import medicineReducer from "@/lib/features/medicineSlice/medicineSlice";
 
 export const store = configureStore({
   reducer: {
@@ -30,6 +31,7 @@ export const store = configureStore({
     unit: unitReducer,
     generic: genericReducer,
     manufacturer: manufacturerReducer,
+    medicine: medicineReducer,
   },
 });
 

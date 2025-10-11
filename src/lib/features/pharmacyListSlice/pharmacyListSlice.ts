@@ -1,5 +1,3 @@
-// src/lib/features/pharmacyListSlice/pharmacyListSlice.ts
-
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import { fetchPharmacyListApi } from "@/lib/api/pharmacy";
 

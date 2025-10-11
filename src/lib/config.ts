@@ -98,4 +98,16 @@ export const ENDPOINTS = {
     GET_BY_ID: (id: number) => `/masterapp/unit/${id}/`,
     //DELETE: (id: number) => `masterapp/unit/${id}/`,
   },
+
+  // buyer
+  BUYER: {
+    CREATE: "/buyer/register/",
+    DELETE: (id: number) => `buyer/create/${id}/`,
+    LOGIN: "/buyer/create/",
+  },
+
+  // medicines
+  MEDICINES: {
+    GET_ALL_LIST: "/medicine/list/",
+  },
 };

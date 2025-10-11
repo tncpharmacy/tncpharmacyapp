@@ -364,33 +364,29 @@ export default function OtherMedicineForm({ id }: Props) {
                   }
                   required
                 />
-                <div className="row">
-                  <div className="col-md-8">
-                    <MultiSelectDropdown
-                      label="Categories"
-                      options={categories.map((c) => ({
-                        label: c.category_name,
-                        value: Number(c.id),
-                      }))}
-                      selected={selectedCategories}
-                      onChange={setSelectedCategories}
-                      maxSelect={3}
-                    />
-                  </div>
-                  <CustomSelectInput
-                    label="Doses Form"
-                    name="manufacturer"
-                    value={formData.manufacturer || ""}
-                    options={manufactureOptions}
-                    onChange={(e) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        sub_category: e.toString(),
-                      }))
-                    }
-                    required
-                  />
-                </div>
+                <MultiSelectDropdown
+                  label="Categories"
+                  options={categories.map((c) => ({
+                    label: c.category_name,
+                    value: Number(c.id),
+                  }))}
+                  selected={selectedCategories}
+                  onChange={setSelectedCategories}
+                  maxSelect={3}
+                />
+                <CustomSelectInput
+                  label="Doses Form"
+                  name="manufacturer"
+                  value={formData.manufacturer || ""}
+                  options={manufactureOptions}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      sub_category: e.toString(),
+                    }))
+                  }
+                  required
+                />
 
                 <div
                   style={{ display: "flex", gap: "2rem", marginTop: "1rem" }}
@@ -450,35 +446,6 @@ export default function OtherMedicineForm({ id }: Props) {
                     </div>
                   ))}
                 </div>
-
-                {/* <CustomSelectInput
-                  label="Category"
-                  name="category"
-                  value={formData.category || ""}
-                  options={categoryOptions}
-                  onChange={(e) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      category: e.toString(),
-                      sub_category: "",
-                    }))
-                  }
-                  required
-                />
-                <CustomSelectInput
-                  label="Sub Category"
-                  name="sub_category"
-                  value={formData.sub_category || ""}
-                  options={subCategoryOptions}
-                  onChange={(e) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      sub_category: e.toString(),
-                    }))
-                  }
-                  required
-                /> */}
-
                 <RichTextEditor
                   label="Product Introduction"
                   name="product_introduction"

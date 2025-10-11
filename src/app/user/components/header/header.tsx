@@ -136,7 +136,7 @@ const SiteHeader = () => {
                 </a>
               </li> */}
               <li>
-                <a href="cart.html">
+                <Link href="/health-bag">
                   <span className="user_p">
                     <i>
                       <img
@@ -147,7 +147,7 @@ const SiteHeader = () => {
                     </i>
                     Health Bag
                   </span>
-                </a>
+                </Link>
               </li>
             </ul>
           </div>
@@ -163,34 +163,37 @@ const SiteHeader = () => {
               </Link>
             </li>
 
-            {shuffledCategories.slice(0, 5).map((cat) => {
-              const filteredSubcategories = subcategories.filter(
-                (sub) => String(sub.category_id) === String(cat.id)
-              );
+            {shuffledCategories
+              .slice(0, 5)
+              .filter((cat) => cat.category_name !== "Medicines")
+              .map((cat) => {
+                const filteredSubcategories = subcategories.filter(
+                  (sub) => String(sub.category_id) === String(cat.id)
+                );
 
-              return (
-                <li key={cat.id}>
-                  <a href="#">{cat.category_name}</a>
+                return (
+                  <li key={cat.id}>
+                    <a href="#">{cat.category_name}</a>
 
-                  {/* Subcategories */}
-                  <div className="megamenu-panel">
-                    {filteredSubcategories.length > 0 ? (
-                      <ul className="megamenu-list">
-                        {filteredSubcategories.map((sub) => (
-                          <li key={sub.id}>
-                            <a href="#">{sub.sub_category_name}</a>
-                          </li>
-                        ))}
-                      </ul>
-                    ) : (
-                      <ul className="no-subcategories">
-                        <li>No Subcategories</li>
-                      </ul>
-                    )}
-                  </div>
-                </li>
-              );
-            })}
+                    {/* Subcategories */}
+                    <div className="megamenu-panel">
+                      {filteredSubcategories.length > 0 ? (
+                        <ul className="megamenu-list">
+                          {filteredSubcategories.map((sub) => (
+                            <li key={sub.id}>
+                              <a href="#">{sub.sub_category_name}</a>
+                            </li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <ul className="no-subcategories">
+                          <li>No Subcategories</li>
+                        </ul>
+                      )}
+                    </div>
+                  </li>
+                );
+              })}
 
             {/* More Menu */}
             {shuffledCategories.length > 5 && (
@@ -200,11 +203,14 @@ const SiteHeader = () => {
                 </a>
                 <div className="megamenu-panel2">
                   <ul className="megamenu-list">
-                    {shuffledCategories.slice(5).map((cat) => (
-                      <li key={cat.id} className="">
-                        <a href="#">{cat.category_name}</a>
-                      </li>
-                    ))}
+                    {shuffledCategories
+                      .slice(5)
+                      .filter((cat) => cat.category_name !== "Medicines")
+                      .map((cat) => (
+                        <li key={cat.id} className="">
+                          <a href="#">{cat.category_name}</a>
+                        </li>
+                      ))}
                   </ul>
                 </div>
               </li>

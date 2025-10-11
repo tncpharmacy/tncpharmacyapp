@@ -564,3 +564,26 @@ footer .border-top {
 .category_sec .slick-slide {
     padding: 0 10px;
 }
+
+/* Custom 5-column grid for large screens */
+@media (min-width: 992px) {
+  .col-lg-5th {
+    flex: 0 0 auto;
+    width: 20%; /* 100 / 5 = 20% each */
+  }
+}
+
+/* Custom white bold outline button */
+.btn-outline-primary.text-white-bold {
+  color: #fff !important;
+  font-weight: 600 !important;
+  border-color: #0d6efd !important;
+  transition: all 0.3s ease;
+}
+
+/* Hover effect */
+.btn-outline-primary.text-white-bold:hover {
+  background-color: #0d6efd !important;
+  color: #fff !important;
+  box-shadow: 0 0 10px rgba(13, 110, 253, 0.5);
+}
