@@ -61,9 +61,10 @@ export default function PurchaseInvoiceExport() {
   // ✅ Export Function
   const handleExportToExcel = () => {
     const exportData = selectedMedicines.map((item) => ({
-      Particulars: item.medicine_name ?? "-",
-      Packing: item.pack_size ?? "-",
-      Company: item.manufacturer_name ?? "-",
+      Id: item.id ?? "-",
+      Product: item.medicine_name ?? "-",
+      "Pack Size": item.pack_size ?? "-",
+      Manufacture: item.manufacturer_name ?? "-",
       QTY: "",
       Batch: "",
       "Expiry Date": "",
