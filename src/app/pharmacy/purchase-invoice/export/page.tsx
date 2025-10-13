@@ -19,9 +19,8 @@ export default function PurchaseInvoiceExport() {
 
   const [visibleCount, setVisibleCount] = useState(10);
   const [loadings, setLoadings] = useState(false);
-
-  // Selected medicines (from dropdown)
   const [selectedMedicines, setSelectedMedicines] = useState<Medicine[]>([]);
+  const [selectAll, setSelectAll] = useState(false);
 
   useEffect(() => {
     dispatch(getMedicinesList());
@@ -36,14 +35,12 @@ export default function PurchaseInvoiceExport() {
     }, 3000);
   };
 
-  // ✅ Handle selection from dropdown (multi-select)
+  // ✅ Dropdown se select hua
   const handleSelectMedicine = (
     selected: { label: string; value: number }[]
   ) => {
     const selectedIds = selected.map((s) => s.value);
     const newSelected = getMedicine.filter((m) => selectedIds.includes(m.id));
-
-    // ✅ Merge without duplication
     setSelectedMedicines((prev) => {
       const merged = [...prev];
       newSelected.forEach((m) => {
@@ -53,28 +50,76 @@ export default function PurchaseInvoiceExport() {
     });
   };
 
-  // ✅ Handle checkbox toggle
+  // ✅ Individual toggle from left side
+  const handleLeftCheckbox = (medicine: Medicine, checked: boolean) => {
+    setSelectedMedicines((prev) => {
+      if (checked) {
+        // Add if not already selected
+        if (!prev.some((x) => x.id === medicine.id)) {
+          return [...prev, medicine];
+        }
+        return prev;
+      } else {
+        // Remove if unchecked
+        const updated = prev.filter((m) => m.id !== medicine.id);
+        // Agar koi bhi uncheck hua to SelectAll false kar do
+        setSelectAll(false);
+        return updated;
+      }
+    });
+  };
+
+  // ✅ Select All toggle
+  const handleSelectAll = (checked: boolean) => {
+    setSelectAll(checked);
+    if (checked) {
+      // Select entire medicine list (not just visible)
+      setSelectedMedicines(getMedicine);
+    } else {
+      // Deselect all
+      setSelectedMedicines([]);
+    }
+  };
+
+  // ✅ Right side checkbox (unselect from right)
   const toggleCheckbox = (id: number) => {
-    setSelectedMedicines((prev) => prev.filter((m) => m.id !== id));
+    setSelectedMedicines((prev) => {
+      const updated = prev.filter((m) => m.id !== id);
+      // Agar koi bhi unselect hua manually to selectAll false
+      setSelectAll(false);
+      return updated;
+    });
   };
 
   // ✅ Export Function
   const handleExportToExcel = () => {
-    const exportData = selectedMedicines.map((item) => ({
-      Id: item.id ?? "-",
-      Product: item.medicine_name ?? "-",
-      "Pack Size": item.pack_size ?? "-",
-      Manufacture: item.manufacturer_name ?? "-",
-      QTY: "",
-      Batch: "",
-      "Expiry Date": "",
-      MRP: "",
-      "Discount (%)": "",
-      "Purchase Rate": "",
-      Amount: "",
-    }));
+    const exportData = [...selectedMedicines]
+      .sort((a, b) =>
+        a.medicine_name.localeCompare(b.medicine_name, undefined, {
+          sensitivity: "base",
+        })
+      )
+      .map((item) => ({
+        Id: item.id ?? "-",
+        Product: item.medicine_name ?? "-",
+        "Pack Size": item.pack_size ?? "-",
+        Manufacture: item.manufacturer_name ?? "-",
+        QTY: "",
+        Batch: "",
+        "Expiry Date": "",
+        MRP: "",
+        "Discount (%)": "",
+        "Purchase Rate": "",
+        Amount: "",
+      }));
     exportToExcel(exportData, "Selected_Medicines", "Medicines");
   };
+
+  useEffect(() => {
+    if (getMedicine.length > 0) {
+      setSelectAll(selectedMedicines.length === getMedicine.length);
+    }
+  }, [selectedMedicines, getMedicine]);
 
   return (
     <>
@@ -103,7 +148,7 @@ export default function PurchaseInvoiceExport() {
                           value: m.id,
                         }))}
                         onChange={handleSelectMedicine}
-                        hideSelectedText // ✅ custom prop to hide selected text
+                        hideSelectedText
                       />
                     </div>
                   </div>
@@ -121,30 +166,68 @@ export default function PurchaseInvoiceExport() {
                 <div className="row mt-4">
                   {/* LEFT SIDE - ALL RECORDS */}
                   <div className="col-md-6">
-                    <h6 className="fw-bold mb-2">All Product</h6>
+                    <h6 className="fw-bold mb-2">All Products</h6>
                     <div className="scroll_table">
                       <table className="table cust_table1">
                         <thead>
                           <tr>
-                            <th className="fw-bold text-start">ID</th>
+                            <th className="fw-bold text-center">
+                              <input
+                                type="checkbox"
+                                checked={selectAll}
+                                onChange={(e) =>
+                                  handleSelectAll(e.target.checked)
+                                }
+                                title="Select All Product"
+                              />{" "}
+                              {/* Select All */}
+                            </th>
+                            {/* <th className="fw-bold text-start">ID</th> */}
                             <th className="fw-bold text-start">Product</th>
                             <th className="fw-bold text-start">Pack Size</th>
                             <th className="fw-bold text-start">Manufacture</th>
                           </tr>
                         </thead>
                         <tbody>
-                          {getMedicine.slice(0, visibleCount).map((m) => (
-                            <tr key={m.id}>
-                              <td className="text-start">{m.id}</td>
-                              <td className="text-start">{m.medicine_name}</td>
-                              <td className="text-start">{m.pack_size}</td>
-                              <td className="text-start">
-                                {m.manufacturer_name}
-                              </td>
-                            </tr>
-                          ))}
+                          {[...getMedicine]
+                            .sort((a, b) =>
+                              a.medicine_name.localeCompare(
+                                b.medicine_name,
+                                undefined,
+                                {
+                                  sensitivity: "base",
+                                }
+                              )
+                            )
+                            .slice(0, visibleCount)
+                            .map((m) => {
+                              const isChecked = selectedMedicines.some(
+                                (x) => x.id === m.id
+                              );
+                              return (
+                                <tr key={m.id}>
+                                  <td className="text-center">
+                                    <input
+                                      type="checkbox"
+                                      checked={isChecked}
+                                      onChange={(e) =>
+                                        handleLeftCheckbox(m, e.target.checked)
+                                      }
+                                    />
+                                  </td>
+                                  {/* <td className="text-start">{m.id}</td> */}
+                                  <td className="text-start">
+                                    {m.medicine_name}
+                                  </td>
+                                  <td className="text-start">{m.pack_size}</td>
+                                  <td className="text-start">
+                                    {m.manufacturer_name}
+                                  </td>
+                                </tr>
+                              );
+                            })}
                           {loadings && (
-                            <TableLoader colSpan={4} text="Loading more..." />
+                            <TableLoader colSpan={5} text="Loading more..." />
                           )}
                         </tbody>
                       </table>
@@ -154,15 +237,17 @@ export default function PurchaseInvoiceExport() {
                   {/* RIGHT SIDE - SELECTED RECORDS */}
                   <div className="col-md-6">
                     <h6 className="fw-bold mb-2">
-                      {selectedMedicines.length > 0 ? "Selected Products" : ""}
+                      {selectedMedicines.length > 0
+                        ? "Selected Products"
+                        : "No Selection"}
                     </h6>
                     {selectedMedicines.length > 0 ? (
                       <div className="scroll_table">
                         <table className="table cust_table1">
                           <thead>
                             <tr>
-                              <th className="fw-bold text-start">Select</th>
-                              <th className="fw-bold text-start">ID</th>
+                              <th className="fw-bold text-center">Select</th>
+                              {/* <th className="fw-bold text-start">ID</th> */}
                               <th className="fw-bold text-start">Product</th>
                               <th className="fw-bold text-start">Pack Size</th>
                               <th className="fw-bold text-start">
@@ -171,31 +256,41 @@ export default function PurchaseInvoiceExport() {
                             </tr>
                           </thead>
                           <tbody>
-                            {selectedMedicines.map((m) => (
-                              <tr key={m.id}>
-                                <td className="text-start">
-                                  <input
-                                    type="checkbox"
-                                    checked
-                                    onChange={() => toggleCheckbox(m.id)}
-                                  />
-                                </td>
-                                <td className="text-start">{m.id}</td>
-                                <td className="text-start">
-                                  {m.medicine_name}
-                                </td>
-                                <td className="text-start">{m.pack_size}</td>
-                                <td className="text-start">
-                                  {m.manufacturer_name}
-                                </td>
-                              </tr>
-                            ))}
+                            {[...selectedMedicines]
+                              .sort((a, b) =>
+                                a.medicine_name.localeCompare(
+                                  b.medicine_name,
+                                  undefined,
+                                  {
+                                    sensitivity: "base",
+                                  }
+                                )
+                              )
+                              .map((m) => (
+                                <tr key={m.id}>
+                                  <td className="text-center">
+                                    <input
+                                      type="checkbox"
+                                      checked
+                                      onChange={() => toggleCheckbox(m.id)}
+                                    />
+                                  </td>
+                                  {/* <td className="text-start">{m.id}</td> */}
+                                  <td className="text-start">
+                                    {m.medicine_name}
+                                  </td>
+                                  <td className="text-start">{m.pack_size}</td>
+                                  <td className="text-start">
+                                    {m.manufacturer_name}
+                                  </td>
+                                </tr>
+                              ))}
                           </tbody>
                         </table>
                       </div>
                     ) : (
                       <div className="text-center text-muted mt-3">
-                        Please select medicines from dropdown.
+                        Please select products from left list or dropdown.
                       </div>
                     )}
                   </div>

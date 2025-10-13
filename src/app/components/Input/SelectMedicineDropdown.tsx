@@ -1,6 +1,6 @@
 "use client";
 
-import Select from "react-select";
+import Select, { GroupBase, Props as SelectProps } from "react-select";
 import { Medicine } from "@/types/medicine";
 import { useId } from "react";
 
@@ -18,6 +18,11 @@ interface SelectMedicineDropdownProps {
   hideSelectedText?: boolean;
 }
 
+interface CustomSelectProps
+  extends SelectProps<OptionType, true, GroupBase<OptionType>> {
+  selectedIds?: Set<number>;
+}
+
 export default function SelectMedicineDropdown({
   medicines,
   selected,
@@ -28,14 +33,20 @@ export default function SelectMedicineDropdown({
 }: SelectMedicineDropdownProps) {
   const id = useId();
 
-  const options: OptionType[] = medicines.map((m) => ({
-    label: m.medicine_name,
-    value: m.id,
-  }));
+  // ✅ Convert to options + sort alphabetically (case insensitive)
+  const options: OptionType[] = medicines
+    .map((m) => ({
+      label: m.medicine_name,
+      value: m.id,
+    }))
+    .sort((a, b) =>
+      a.label.localeCompare(b.label, undefined, { sensitivity: "base" })
+    );
+
+  const selectedIds = new Set(selected.map((s) => s.value));
 
   return (
     <div className="custom-input-group position-relative">
-      {/* Floating Label */}
       <label
         htmlFor={id}
         className="floating-label fw-semibold text-dark small"
@@ -53,8 +64,7 @@ export default function SelectMedicineDropdown({
         {label}
       </label>
 
-      {/* React Select */}
-      <Select
+      <Select<OptionType, true, GroupBase<OptionType>>
         inputId={id}
         isMulti
         options={options}
@@ -63,6 +73,7 @@ export default function SelectMedicineDropdown({
         placeholder={placeholder}
         isSearchable
         classNamePrefix="select"
+        {...({ selectedIds } as CustomSelectProps)}
         styles={{
           control: (base, state) => ({
             ...base,
@@ -74,37 +85,28 @@ export default function SelectMedicineDropdown({
             minHeight: "42px",
             "&:hover": { borderColor: "#0d6efd" },
           }),
-          multiValue: (base) => ({
-            ...base,
-            backgroundColor: "#f1f3f5",
-            borderRadius: "20px",
-            padding: "2px 6px",
-            border: "1px solid #dee2e6",
-            marginRight: "4px",
-          }),
-          multiValueLabel: (base) => ({
-            ...base,
-            color: "#212529",
-            fontWeight: 500,
-            paddingLeft: "5px",
-            paddingRight: "2px",
-          }),
-          multiValueRemove: (base) => ({
-            ...base,
-            color: "#6c757d",
-            fontSize: "14px",
-            borderRadius: "50%",
-            padding: "2px 4px",
-            ":hover": {
-              backgroundColor: "#dc3545",
-              color: "#fff",
-            },
-          }),
-          placeholder: (base) => ({
-            ...base,
-            color: "#adb5bd",
-            fontWeight: 500,
-          }),
+
+          option: (base, { data, isFocused, selectProps }) => {
+            const props = selectProps as CustomSelectProps;
+            const isSelected = props.selectedIds?.has(
+              (data as OptionType).value
+            );
+
+            return {
+              ...base,
+              backgroundColor: isSelected
+                ? "#d7e6feff"
+                : isFocused
+                ? "#e7f1ff"
+                : "#fff",
+              color: isSelected ? "#212529" : "#212529",
+              fontWeight: isSelected ? 600 : 400,
+              cursor: "pointer",
+              ":active": {
+                backgroundColor: isSelected ? "#0b5ed7" : "#dbe9ff",
+              },
+            };
+          },
         }}
       />
     </div>

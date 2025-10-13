@@ -44,6 +44,14 @@ const nextConfig: NextConfig = {
         destination: "/admin/admin-dashboard",
       },
       {
+        source: "/export",
+        destination: "/admin/purchase-invoice/export",
+      },
+      {
+        source: "/import",
+        destination: "/admin/purchase-invoice/import",
+      },
+      {
         source: "/add-clinic",
         destination: "/admin/clinic/add",
       },
@@ -261,6 +269,14 @@ const nextConfig: NextConfig = {
       {
         source: "/pharmacist/update-profile",
         destination: "/pharmacist/pharmacist-profile/update-profile",
+      },
+      {
+        source: "/pharmacist/export",
+        destination: "/pharmacist/purchase-invoice/export",
+      },
+      {
+        source: "/pharmacist/import",
+        destination: "/pharmacist/purchase-invoice/import",
       },
     ];
   },

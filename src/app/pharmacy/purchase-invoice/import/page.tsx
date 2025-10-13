@@ -16,10 +16,9 @@ import { getUser } from "@/lib/auth/auth";
 export default function PurchaseInvoiceImport() {
   const dispatch = useAppDispatch();
   const userPharmacy = getUser();
-  const pharmacyName = userPharmacy?.pharmacy_name || "";
-  const pharmacyId = userPharmacy?.id || 0;
+  const pharmacy_name = userPharmacy?.pharmacy_name || "";
+  const pharmacy_id = userPharmacy?.id || 0;
   const { medicines: getMedicine } = useAppSelector((state) => state.medicine);
-  const { list } = useAppSelector((state) => state.pharmacyList);
   // Infinite scroll state
   const [visibleCount, setVisibleCount] = useState(10);
   const [loadings, setLoadings] = useState(false);
@@ -36,8 +35,8 @@ export default function PurchaseInvoiceImport() {
   const [selectedMedicines] = useState<{ label: string; value: number }[]>([]);
 
   const [formData, setFormData] = useState<Partial<Product>>({
-    id: 0,
-    pharmacy: userPharmacy?.pharmacy_name || "",
+    id: pharmacy_id,
+    pharmacy: pharmacy_name,
     supplier: "",
     medicine_name: "",
     pack_size: "",
@@ -128,20 +127,6 @@ export default function PurchaseInvoiceImport() {
                 <form onSubmit={handleSubmit}>
                   <div className="row gy-3">
                     {/* 🔹 Row 1 */}
-                    <Input
-                      label="Pharmacy"
-                      type="text"
-                      name="pharmacy"
-                      value={formData.pharmacy || ""}
-                      onChange={(e) =>
-                        setFormData((prev) => ({
-                          ...prev,
-                          pharmacy: e.target.value,
-                        }))
-                      }
-                      readOnly
-                      //required
-                    />
                     <SelectInput
                       label="Supplier"
                       name="supplier"
@@ -174,7 +159,6 @@ export default function PurchaseInvoiceImport() {
                       }
                       // required
                     />
-                    {/* 🔹 Row 2 */}
                     <Input
                       label="Invoice Number"
                       type="text"
@@ -188,6 +172,7 @@ export default function PurchaseInvoiceImport() {
                       }
                       //required
                     />
+                    {/* 🔹 Row 2 */}
                     {/* Hidden file input */}
                     <input
                       type="file"
@@ -196,7 +181,7 @@ export default function PurchaseInvoiceImport() {
                       onChange={handleExcelUpload}
                       style={{ display: "none" }}
                     />
-                    <div className="col-md-4 d-flex align-items-end">
+                    <div className="col-md-6 d-flex align-items-end">
                       <div className="txt_col w-100 text-end">
                         <button
                           type="button"
@@ -208,7 +193,7 @@ export default function PurchaseInvoiceImport() {
                       </div>
                     </div>
 
-                    <div className="col-md-4 d-flex align-items-end">
+                    <div className="col-md-6 d-flex align-items-end">
                       <div className="txt_col w-100 text-end">
                         <button
                           className="btn-style1 w-100"

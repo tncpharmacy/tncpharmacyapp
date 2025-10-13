@@ -18,36 +18,32 @@ export default function SideNav() {
             <i className="bi bi-activity"></i> Dashboard
           </Link>
         </li>
-
-        {/* <li className={`${openMenu === "order" ? "active" : ""}`}>
-          <div onClick={() => toggleMenu("order")} className="link arrow">
-            <i className="bi bi-cart-plus-fill"></i> Order
-          </div>
-
-          {openMenu === "order" && (
-            <ul className="submenu">
-              <li><Link href="#">New Order</Link></li>
-              <li><Link href="#">Order Shipped</Link></li>
-              <li><Link href="#">Return Request</Link></li>
-            </ul>
-          )}
-        </li>
-<hr />
-        <li>
-          <div onClick={() => toggleMenu("medicine")} className="link arrow">
-            <i className="bi bi-capsule-pill"></i> Medicine
-          </div>
-          {openMenu === "medicine" && (
-            <ul className="submenu">
-              <li><Link href="#">Medicine Stocks</Link></li>
-              <li><Link href="#">Add Medicine</Link></li>
-            </ul>
-          )}
-        </li> */}
         <li>
           <Link href="/orders" className="link">
             <i className="bi bi-cart-plus-fill"></i> Order
           </Link>
+        </li>
+        <li>
+          <div
+            onClick={() => toggleMenu("purchase-invoice")}
+            className="link arrow"
+          >
+            <i className="bi bi-receipt-cutoff"></i> Purchase Invoice
+          </div>
+          {openMenu === "purchase-invoice" && (
+            <ul className="submenu">
+              <li>
+                <Link href="/import">
+                  <i className="bi bi-box-arrow-in-up"></i> Import
+                </Link>
+              </li>
+              <li>
+                <Link href="/export">
+                  <i className="bi bi-box-arrow-down"></i> Export
+                </Link>
+              </li>
+            </ul>
+          )}
         </li>
         <li>
           <div onClick={() => toggleMenu("product")} className="link arrow">

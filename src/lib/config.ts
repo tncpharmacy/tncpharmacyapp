@@ -101,9 +101,9 @@ export const ENDPOINTS = {
 
   // buyer
   BUYER: {
+    LOGIN: "/buyer/validate/",
     CREATE: "/buyer/register/",
-    DELETE: (id: number) => `buyer/create/${id}/`,
-    LOGIN: "/buyer/create/",
+    DELETE: (id: number) => `/buyer/create/${id}/`,
   },
 
   // medicines
