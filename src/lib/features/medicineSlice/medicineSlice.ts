@@ -1,9 +1,25 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import { fetchMedicinesAllList } from "@/lib/api/medicine";
-import { Medicine, MedicineResponse } from "@/types/medicine";
+import {
+  fetchGroupCare,
+  fetchMedicinesAllList,
+  fetchMenuMedicinesById,
+  fetchMenuMedicinesByOtherId,
+  fetchMenuMedicinesList,
+  fetchMenuOtherMedicinesByCategory,
+  fetchProductAllList,
+  fetchProductByGenericId,
+} from "@/lib/api/medicine";
+import {
+  CareGroup,
+  CareGroupResponse,
+  Medicine,
+  MedicineResponse,
+} from "@/types/medicine";
 
 interface MedicineState {
   medicines: Medicine[];
+  groupCare: CareGroup[];
+  genericAlternatives: Medicine[];
   count: number;
   loading: boolean;
   error: string | null;
@@ -11,12 +27,14 @@ interface MedicineState {
 
 const initialState: MedicineState = {
   medicines: [],
+  groupCare: [],
+  genericAlternatives: [],
   count: 0,
   loading: false,
   error: null,
 };
 
-// ✅ Get all medicines List
+// ✅ Get all medicines menu List
 export const getMedicinesList = createAsyncThunk<
   MedicineResponse, // ✅ returning full object
   void,
@@ -33,12 +51,137 @@ export const getMedicinesList = createAsyncThunk<
   }
 });
 
+// ✅ Get all medicines menu by id
+export const getMedicinesMenuById = createAsyncThunk<
+  MedicineResponse, // return type
+  number, // argument type — yeh id hoga
+  { rejectValue: string }
+>("medicine/getById", async (id, { rejectWithValue }) => {
+  try {
+    const res: MedicineResponse = await fetchMenuMedicinesById(id);
+    return res;
+  } catch (err: unknown) {
+    if (err instanceof Error) {
+      return rejectWithValue(err.message);
+    }
+    return rejectWithValue("Failed to fetch medicines");
+  }
+});
+
+// ✅ Get medicines by Other category ID
+export const getMedicinesByCategoryId = createAsyncThunk<
+  MedicineResponse,
+  number,
+  { rejectValue: string }
+>(
+  "medicine/getByCategory", // Action type string
+  async (categoryId, { rejectWithValue }) => {
+    try {
+      const res: MedicineResponse = await fetchMenuOtherMedicinesByCategory(
+        categoryId
+      );
+      return res;
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        return rejectWithValue(err.message);
+      }
+      return rejectWithValue("Failed to fetch category medicines");
+    }
+  }
+);
+
+// ✅ Get all medicines menu by other id
+export const getMedicinesMenuByOtherId = createAsyncThunk<
+  MedicineResponse,
+  number,
+  { rejectValue: string }
+>("medicine/getByOtherId", async (id, { rejectWithValue }) => {
+  try {
+    const res: MedicineResponse = await fetchMenuMedicinesByOtherId(id);
+    return res;
+  } catch (err: unknown) {
+    if (err instanceof Error) {
+      return rejectWithValue(err.message);
+    }
+    return rejectWithValue("Failed to fetch medicines");
+  }
+});
+
+// ✅ Get all menu medicines List
+export const getMenuMedicinesList = createAsyncThunk<
+  MedicineResponse, // ✅ returning full object
+  void,
+  { rejectValue: string }
+>("medicine/getMenuMedicineList", async (_, { rejectWithValue }) => {
+  try {
+    const res: MedicineResponse = await fetchMenuMedicinesList();
+    return res; // ✅ return full response (includes success, count, data)
+  } catch (err: unknown) {
+    if (err instanceof Error) {
+      return rejectWithValue(err.message);
+    }
+    return rejectWithValue("Failed to fetch medicines");
+  }
+});
+
+// ✅ Get all product List
+export const getProductList = createAsyncThunk<
+  MedicineResponse, // ✅ returning full object
+  void,
+  { rejectValue: string }
+>("medicine/getAllProductList", async (_, { rejectWithValue }) => {
+  try {
+    const res: MedicineResponse = await fetchProductAllList();
+    return res; // ✅ return full response (includes success, count, data)
+  } catch (err: unknown) {
+    if (err instanceof Error) {
+      return rejectWithValue(err.message);
+    }
+    return rejectWithValue("Failed to fetch medicines");
+  }
+});
+
+// ✅ Get all product by id
+export const getProductByGenericId = createAsyncThunk<
+  MedicineResponse,
+  number,
+  { rejectValue: string }
+>("medicine/getByProductId", async (id, { rejectWithValue }) => {
+  try {
+    const res: MedicineResponse = await fetchProductByGenericId(id);
+    return res;
+  } catch (err: unknown) {
+    if (err instanceof Error) {
+      return rejectWithValue(err.message);
+    }
+    return rejectWithValue("Failed to fetch medicines");
+  }
+});
+
+// ✅ Get group care
+export const getGroupCare = createAsyncThunk<
+  CareGroupResponse, // ✅ returning full object
+  void,
+  { rejectValue: string }
+>("medicine/getGroupCare", async (_, { rejectWithValue }) => {
+  try {
+    const res: CareGroupResponse = await fetchGroupCare();
+    return res; // ✅ return full response (includes success, count, data)
+  } catch (err: unknown) {
+    if (err instanceof Error) {
+      return rejectWithValue(err.message);
+    }
+    return rejectWithValue("Failed to fetch medicines");
+  }
+});
+
 const medicineSlice = createSlice({
   name: "medicine",
   initialState,
   reducers: {},
   extraReducers: (builder) => {
     builder
+      // fetch medicine list
       .addCase(getMedicinesList.pending, (state) => {
         state.loading = true;
       })
@@ -49,6 +192,104 @@ const medicineSlice = createSlice({
         state.error = null;
       })
       .addCase(getMedicinesList.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload || "Something went wrong";
+      })
+      // fetch menu medicine list
+      .addCase(getMenuMedicinesList.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(getMenuMedicinesList.fulfilled, (state, action) => {
+        state.loading = false;
+        state.medicines = action.payload.data;
+        state.count = action.payload.count;
+        state.error = null;
+      })
+      .addCase(getMenuMedicinesList.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload || "Something went wrong";
+      })
+      // fetch menu medicine by id
+      .addCase(getMedicinesMenuById.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(getMedicinesMenuById.fulfilled, (state, action) => {
+        state.loading = false;
+        state.medicines = action.payload.data;
+        state.count = action.payload.count;
+        state.error = null;
+      })
+      .addCase(getMedicinesMenuById.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload || "Something went wrong";
+      })
+      // fetch menu medicine by other id
+      .addCase(getMedicinesMenuByOtherId.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(getMedicinesMenuByOtherId.fulfilled, (state, action) => {
+        state.loading = false;
+        state.medicines = action.payload.data;
+        state.count = action.payload.count;
+        state.error = null;
+      })
+      .addCase(getMedicinesMenuByOtherId.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload || "Something went wrong";
+      })
+      // ✅ Get Medicines By Other Category
+      .addCase(getMedicinesByCategoryId.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(getMedicinesByCategoryId.fulfilled, (state, action) => {
+        state.loading = false;
+        state.medicines = action.payload.data;
+        state.error = null;
+      })
+      .addCase(getMedicinesByCategoryId.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload || "Failed to fetch medicines by category";
+      })
+      // fetch product list
+      .addCase(getProductList.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(getProductList.fulfilled, (state, action) => {
+        state.loading = false;
+        state.medicines = action.payload.data;
+        state.count = action.payload.count;
+        state.error = null;
+      })
+      .addCase(getProductList.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload || "Something went wrong";
+      })
+      // fetch product by id
+      .addCase(getProductByGenericId.pending, (state) => {
+        state.loading = true;
+        state.genericAlternatives = [];
+      })
+      .addCase(getProductByGenericId.fulfilled, (state, action) => {
+        state.loading = false;
+        state.genericAlternatives = action.payload.data;
+        state.count = action.payload.count;
+        state.error = null;
+      })
+      .addCase(getProductByGenericId.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload || "Something went wrong";
+      })
+      // fetch group care
+      .addCase(getGroupCare.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(getGroupCare.fulfilled, (state, action) => {
+        state.loading = false;
+        state.groupCare = action.payload.data;
+        state.error = null;
+      })
+      .addCase(getGroupCare.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload || "Something went wrong";
       });

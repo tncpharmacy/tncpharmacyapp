@@ -18,7 +18,7 @@ export default function SideNav() {
 
       <ul className="side_menu-list">
         <li>
-          <Link href="/pharmacy-dashboard" className="link">
+          <Link href="/pharmacist-dashboard" className="link">
             <i className="bi bi-activity"></i> Dashboard
           </Link>
         </li>
@@ -56,12 +56,17 @@ export default function SideNav() {
             </ul>
           )}
         </li>
+        <li className={`${openMenu === "Retail-Counter" ? "active" : ""}`}>
+          <Link href="/pharmacist/retail-counter" className="link">
+            <i className="bi bi-receipt-cutoff"></i> Retail Counter
+          </Link>
+        </li>
         <li className={`${openMenu === "Stock-Management" ? "active" : ""}`}>
           <div onClick={() => toggleMenu("Stock-Management")} className="link">
             <i className="bi bi-box"></i> Stock
           </div>
         </li>
-        <li
+        {/* <li
           className={`${openMenu === "Prescription-Handling" ? "active" : ""}`}
         >
           <div
@@ -75,10 +80,10 @@ export default function SideNav() {
           <div onClick={() => toggleMenu("Billing-Sales")} className="link">
             <i className="bi bi-file-earmark-text"></i> Billing & Sales
           </div>
-        </li>
+        </li> */}
         <li className={`${openMenu === "Purchase-Supplier" ? "active" : ""}`}>
           <div onClick={() => toggleMenu("Purchase-Supplier")} className="link">
-            <i className="bi bi-basket"></i> Purchase & Supplier
+            <i className="bi bi-basket"></i> Supplier
           </div>
         </li>
 

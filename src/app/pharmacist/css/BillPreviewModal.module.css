@@ -1,0 +1,100 @@
+.modalContentWrapper {
+  position: relative;
+  background-color: #fdfdfd;
+  border-radius: 10px;
+  box-shadow: 0 0 10px rgba(0,0,0,0.1);
+  padding: 20px;
+  overflow: hidden;
+}
+
+.modalContentWrapper::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 150%;
+  height: 150%;
+  background: url("/images/logo-v.png") center/contain no-repeat;
+  opacity: 0.05;
+  transform: translate(-50%, -50%) rotate(-30deg);
+  z-index: 0;
+}
+
+.modalContentWrapper > * {
+  position: relative;
+  z-index: 1;
+}
+
+.billHeader {
+  border-bottom: 2px solid #007bff;
+  padding-bottom: 10px;
+}
+
+.customerInfo {
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  background: #f8f9fa;
+  padding: 10px 15px;
+  margin-bottom: 15px;
+}
+
+.borderDashed {
+  border-top: 1px dashed #999;
+}
+
+.printHide table {
+  display: table !important;
+}
+
+/* Cards hidden on screen */
+.printOnly {
+  display: none !important;
+}
+
+/* Print styles */
+@media print {
+  /* Table hidden on print */
+  .printHide table {
+    display: none !important;
+  }
+
+  /* Cards visible on print */
+  .printOnly {
+    display: block !important;
+  }
+
+  /* Print card styling */
+  .printCard {
+    page-break-inside: avoid;
+    margin-bottom: 10px;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+  }
+}
+/* Temp: show cards on screen for testing */
+.print-only {
+  display: flex !important;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+/* Card styling */
+.medicine-card {
+  width: 30%;
+  box-sizing: border-box;
+  border-radius: 6px;
+  padding: 10px;
+  margin-bottom: 10px;
+  background-color: #fff;
+  font-size: 12px;
+  page-break-inside: avoid;
+
+  /* Shadow */
+  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+  border: 1px solid #ddd;
+}
+
+.medicine-card p {
+  margin: 4px 0;
+}

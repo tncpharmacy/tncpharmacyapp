@@ -15,12 +15,12 @@ export default function SideNav() {
       <ul className="side_menu-list">
         <li>
           <Link href="/admin-dashboard" className="link">
-            <i className="bi bi-activity"></i> Dashboard
+            <i className="bi bi-speedometer2"></i> Dashboard
           </Link>
         </li>
         <li>
           <Link href="/orders" className="link">
-            <i className="bi bi-cart-plus-fill"></i> Order
+            <i className="bi bi-cart-check"></i> Order
           </Link>
         </li>
         <li>
@@ -31,7 +31,7 @@ export default function SideNav() {
             <i className="bi bi-receipt-cutoff"></i> Purchase Invoice
           </div>
           {openMenu === "purchase-invoice" && (
-            <ul className="submenu">
+            <ul className="submenu myList">
               <li>
                 <Link href="/import">
                   <i className="bi bi-box-arrow-in-up"></i> Import
@@ -47,27 +47,31 @@ export default function SideNav() {
         </li>
         <li>
           <div onClick={() => toggleMenu("product")} className="link arrow">
-            <i className="bi bi-capsule"></i> Product Master
+            <i className="bi bi-box-seam"></i> Product Master
           </div>
           {openMenu === "product" && (
-            <ul className="submenu">
+            <ul className="submenu myList">
               <li>
-                <Link href="/medicine">Medicine Details</Link>
+                <Link href="/medicine">
+                  <i className="bi bi-capsule"></i> Medicine Details
+                </Link>
               </li>
               <li>
-                <Link href="/other-product">Other Product Details</Link>
+                <Link href="/other-product">
+                  <i className="bi bi-box-seam"></i> Other Product Details
+                </Link>
               </li>
             </ul>
           )}
         </li>
         <li>
           <Link href="/clinic" className="link">
-            <i className="bi bi-person-plus"></i> Hospital & Clinic
+            <i className="bi bi-hospital"></i> Hospital & Clinic
           </Link>
         </li>
         <li>
           <Link href="/doctors" className="link">
-            <i className="bi bi-person-plus"></i> Doctors
+            <i className="bi bi-person-badge"></i> Doctors
           </Link>
         </li>
 
@@ -79,48 +83,62 @@ export default function SideNav() {
 
         <li>
           <Link href="/pharmacist" className="link">
-            <i className="bi bi-people"></i> Pharmacist
+            <i className="bi bi-person-workspace"></i> Pharmacist
           </Link>
         </li>
 
         <li>
           <Link href="/buyer" className="link">
-            <i className="bi bi-shop-window"></i> Buyer
+            <i className="bi bi-person"></i> Buyer
           </Link>
         </li>
 
         <li>
           <Link href="/supplier" className="link">
-            <i className="bi bi-shop-window"></i> Supplier
+            <i className="bi bi-truck"></i> Supplier
           </Link>
         </li>
 
         <li>
           <div onClick={() => toggleMenu("admins")} className="link arrow">
-            <i className="bi bi-capsule-pill"></i> Admin Master
+            <i className="bi bi-person-gear"></i> Admin Master
           </div>
           {openMenu === "admins" && (
-            <ul className="submenu">
+            <ul className="submenu myList">
               <li>
-                <Link href="/category">Category</Link>
+                <Link href="/category">
+                  <i className="bi bi-collection me-2"></i> Category
+                </Link>
               </li>
               <li>
-                <Link href="/sub-category">Sub Category</Link>
+                <Link href="/sub-category">
+                  <i className="bi bi-collection-fill me-2"></i> Sub Category
+                </Link>
               </li>
               <li>
-                <Link href="/unit">Unit</Link>
+                <Link href="/unit">
+                  <i className="bi bi-rulers me-2"></i>Unit
+                </Link>
               </li>
               <li>
-                <Link href="/generic">Generic</Link>
+                <Link href="/generic">
+                  <i className="bi bi-capsule me-2"></i>Generic
+                </Link>
               </li>
               <li>
-                <Link href="/manufacturer">Manufacturer</Link>
+                <Link href="/manufacturer">
+                  <i className="bi bi-building me-2"></i>Manufacturer
+                </Link>
               </li>
               <li>
-                <Link href="/variant">Variant</Link>
+                <Link href="/variant">
+                  <i className="bi bi-diagram-3 me-2"></i>Variant
+                </Link>
               </li>
               <li>
-                <Link href="/strength">Strength</Link>
+                <Link href="/dose-form">
+                  <i className="bi bi-droplet-half me-2"></i> Dose Form
+                </Link>
               </li>
             </ul>
           )}
@@ -139,6 +157,16 @@ export default function SideNav() {
           )}
         </li>
       </ul>
+      <style jsx>{`
+        .myList {
+          list-style: none;
+          padding: 0;
+          margin: 0;
+        }
+        .myList li::before {
+          content: none !important;
+        }
+      `}</style>
     </div>
   );
 }

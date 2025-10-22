@@ -1,4 +1,3 @@
-// src/lib/api/pharmacy.ts
 import api from "@/lib/axios";
 import { ENDPOINTS } from "@/lib/config";
 import { Pharmacist, PharmaciesResponse } from "@/types/pharmacist";

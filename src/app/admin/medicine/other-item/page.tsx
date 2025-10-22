@@ -6,12 +6,6 @@ import "../../css/admin-style.css";
 import SideNav from "@/app/admin/components/SideNav/page";
 import Header from "@/app/admin/components/Header/page";
 import { useAppDispatch, useAppSelector } from "@/lib/hooks";
-import {
-  fetchClinics,
-  deleteClinic,
-  updateClinic,
-} from "@/lib/features/clinicSlice/clinicSlice";
-import type { ClinicAdd, Clinic } from "@/types/clinic";
 import { useRouter } from "next/navigation";
 import { formatDateTime, formatDateOnly } from "@/utils/dateFormatter";
 import InfiniteScroll from "@/app/components/InfiniteScroll/InfiniteScroll";
@@ -19,11 +13,15 @@ import Link from "next/link";
 import TableLoader from "@/app/components/TableLoader/TableLoader";
 import Input from "@/app/components/Input/Input";
 import toast from "react-hot-toast";
+import SelectInput from "@/app/components/Input/SelectInput";
+import { getCategoriesList } from "@/lib/features/categorySlice/categorySlice";
+import { Category } from "@/types/category";
+import { Medicine } from "@/types/medicine";
 
 export default function OtherMedicineList() {
   const dispatch = useAppDispatch();
   const router = useRouter();
-  const { clinics, loading } = useAppSelector((state) => state.clinicList);
+  const { list: getCategoryList } = useAppSelector((state) => state.category);
 
   // Infinite scroll state
   const [visibleCount, setVisibleCount] = useState(10);
@@ -31,47 +29,54 @@ export default function OtherMedicineList() {
 
   // Modal state
   const [showModal, setShowModal] = useState(false);
-  const [selectedClinic, setSelectedClinic] = useState<
-    Clinic | ClinicAdd | null
-  >(null);
-  console.log("clincs", clinics);
+  // const [selectedClinic, setSelectedClinic] = useState<
+  //   Clinic | ClinicAdd | null
+  // >(null);
 
   // filtered records by search box
   const [searchTerm, setSearchTerm] = useState("");
-  const [filteredData, setFilteredData] = useState<Clinic[]>(clinics);
+  // const [filteredData, setFilteredData] = useState<Medicine[]>(medicines);
 
   //status
-  const [records, setRecords] = useState<ClinicAdd[]>([]);
+  // const [records, setRecords] = useState<ClinicAdd[]>([]);
   const [status, setStatus] = useState<string>("");
+  const [category, setCategory] = useState<string>("");
 
   // Fetch all pharmacies once
   useEffect(() => {
-    dispatch(fetchClinics());
+    dispatch(getCategoriesList());
   }, [dispatch]);
 
+  const categoryOptions = (getCategoryList || [])
+    .filter((c) => c.category_name !== "Medicines")
+    .map((c: Category) => ({
+      label: c.category_name,
+      value: c.id,
+    }));
+
   // filtered records by search box + status filter
-  useEffect(() => {
-    let data = clinics || [];
+  // useEffect(() => {
+  //   let data = getCategoriesList || [];
 
-    // 🔹 Search filter
-    if (searchTerm) {
-      const lower = searchTerm.toLowerCase();
-      data = data.filter((item: Clinic) =>
-        (Object.keys(item) as (keyof Clinic)[]).some((key) =>
-          String(item[key] ?? "")
-            .toLowerCase()
-            .includes(lower)
-        )
-      );
-    }
+  //   // 🔹 Search filter
+  //   if (searchTerm) {
+  //     const lower = searchTerm.toLowerCase();
+  //     data = data.filter((item: Category) =>
+  //       (Object.keys(item) as (keyof Category)[]).some((key) =>
+  //         String(item[key] ?? "")
+  //           .toLowerCase()
+  //           .includes(lower)
+  //       )
+  //     );
+  //   }
 
-    // 🔹 Status filter
-    if (status) {
-      data = data.filter((item: Clinic) => item.status === status);
-    }
+  //   // 🔹 Status filter
+  //   if (status) {
+  //     data = data.filter((item: Category) => item.status === status);
+  //   }
 
-    setFilteredData(data);
-  }, [searchTerm, status, clinics.length]); // ✅ only length (primitive)
+  //   setFilteredData(data);
+  // }, [searchTerm, status, clinics.length]); // ✅ only length (primitive)
 
   const handleToggleStatus = async (id: number) => {
     // Find category in the filteredData (latest UI state)
@@ -115,7 +120,7 @@ export default function OtherMedicineList() {
 
   //infinte scroll records
   const loadMore = () => {
-    if (loadings || visibleCount >= clinics.length) return;
+    if (loadings || visibleCount >= getCategoryList.length) return;
     setLoadings(true);
     setTimeout(() => {
       setVisibleCount((prev) => prev + 5);
@@ -123,15 +128,15 @@ export default function OtherMedicineList() {
     }, 3000); // spinner for 3 sec
   };
 
-  const handleView = (pharmacy: Clinic | ClinicAdd) => {
-    setSelectedClinic(pharmacy);
-    setShowModal(true);
-  };
+  // const handleView = (pharmacy: Clinic | ClinicAdd) => {
+  //   setSelectedClinic(pharmacy);
+  //   setShowModal(true);
+  // };
 
-  const handleEdit = (id: number) => {
-    const encodedId = encodeURIComponent(btoa(String(id)));
-    router.push(`/update-clinic/${encodedId}`);
-  };
+  // const handleEdit = (id: number) => {
+  //   const encodedId = encodeURIComponent(btoa(String(id)));
+  //   router.push(`/update-clinic/${encodedId}`);
+  // };
 
   return (
     <>
@@ -139,18 +144,19 @@ export default function OtherMedicineList() {
       <div className="body_wrap">
         <SideNav />
         <div className="body_right">
-          <InfiniteScroll
+          <div className="body_content">
+            {/* <InfiniteScroll
             loadMore={loadMore}
             hasMore={visibleCount < filteredData.length}
             className="body_content"
-          >
+          > */}
             <div className="pageTitle">
               <i className="bi bi-shop-window"></i> Other Product List
             </div>
             <div className="main_content">
               <div className="col-sm-12">
                 <div className="row">
-                  <div className="col-md-4">
+                  <div className="col-md-3">
                     <div className="txt_col">
                       <span className="lbl1">Search</span>
                       <input
@@ -163,17 +169,33 @@ export default function OtherMedicineList() {
                       />
                     </div>
                   </div>
-                  <Input
-                    label="Status"
-                    name="status"
-                    type="select"
-                    value={status}
-                    options={[
-                      { label: "Active", value: "Active" },
-                      { label: "Inactive", value: "Inactive" },
-                    ]}
-                    onChange={(event) => setStatus(event.target.value)}
-                  />
+                  <div className="col-md-3">
+                    <div className="txt_col">
+                      <span className="lbl1">Category</span>
+                      <select className="txt1">
+                        <option>-Select-</option>
+                        {categoryOptions.map((cat) => (
+                          <option key={cat.value} value={cat.value}>
+                            {cat.label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                  <div className="col-md-2">
+                    <div className="txt_col">
+                      <span className="lbl1">Status</span>
+                      <select
+                        className="txt1"
+                        value={status} // ✅ controlled component ke liye
+                        onChange={(event) => setStatus(event.target.value)}
+                      >
+                        <option value="">-Select-</option>
+                        <option value="Active">Active</option>
+                        <option value="Inactive">Inactive</option>
+                      </select>
+                    </div>
+                  </div>
                   <div className="col-md-4 text-end">
                     <div className="txt_col">
                       <Link
@@ -260,7 +282,8 @@ export default function OtherMedicineList() {
                 </div>
               </div>
             </div>
-          </InfiniteScroll>
+            {/* </InfiniteScroll> */}
+          </div>
         </div>
       </div>
 

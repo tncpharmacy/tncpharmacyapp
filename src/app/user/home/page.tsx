@@ -7,10 +7,51 @@ import { useEffect, useState } from "react";
 import Slider from "react-slick";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
+import { useAppDispatch, useAppSelector } from "@/lib/hooks";
+import {
+  getGroupCare,
+  getMedicinesByCategoryId,
+  getMedicinesMenuByOtherId,
+} from "@/lib/features/medicineSlice/medicineSlice";
+import Image from "next/image";
 
 export default function HomePage() {
   const [show, setShow] = useState(false);
   const [open, setOpen] = useState(false);
+  const despatch = useAppDispatch();
+  const { groupCare } = useAppSelector((state) => state.medicine);
+  const { medicines: medicineMenuByCategory } = useAppSelector(
+    (state) => state.medicine
+  );
+  const { medicines: medicineMenuByOtherId } = useAppSelector(
+    (state) => state.medicine
+  );
+
+  useEffect(() => {
+    despatch(getGroupCare());
+    despatch(getMedicinesByCategoryId(2));
+    despatch(getMedicinesMenuByOtherId(0));
+  }, [despatch]);
+
+  // Component के बाहर या अंदर define करें
+  const CARE_GROUP_ICONS: Record<string, string> = {
+    "Diabetic Care": "images/icons/icon-diabetes-care.svg",
+    "Cardiac Care": "images/icons/icon-cardiac-care.svg",
+    "Stomach Care": "images/icons/icon-stomach-care.svg",
+    "Liver Care": "images/icons/icon-liver-care.svg",
+    "Oral Care": "images/icons/icon-oral-care.svg",
+    "Eye Care": "images/icons/icon-eye-care.svg", // Example mapping
+    "Hair Care": "images/icons/icon-hair-care.svg", // Example mapping
+    "Pain Relief": "images/icons/icon-pain-relief-care.svg", // Example mapping
+    "Heart Care": "images/icons/icon-heart-care.svg", // Example mapping
+    // Default icon अगर कोई match न मिले
+    DEFAULT: "images/icons/icon-default-care.svg",
+  };
+  // Background Color Class Mapping (Optional but good practice)
+  const BG_CLASSES = ["bg-1", "bg-2", "bg-3", "bg-4", "bg-5", "bg-6"];
+  const getIconPath = (groupName: string): string => {
+    return CARE_GROUP_ICONS[groupName] || CARE_GROUP_ICONS.DEFAULT;
+  };
 
   useEffect(() => {
     const timeout = setTimeout(() => {
@@ -90,89 +131,43 @@ export default function HomePage() {
         </Carousel.Item>
       </Carousel>
 
+      {/* Make sure to check if data exists before mapping */}
       <section className="category_sec">
         <div className="container">
           <h2 className="section_title">Browse by Health Conditions</h2>
           <div className="slider-container">
+            {/*Slider Implementation */}
             <Slider {...settings}>
-              <div>
-                <div className="category_item">
-                  <div className="category_img bg-1">
-                    <img src="images/icons/icon-diabetes-care.svg" />
-                  </div>
-                  <div>
-                    <h2 className="category_title">Diabetes Care</h2>
-                    <span className="category_link">
-                      View Now<i className="bi bi-arrow-right-short"></i>
-                    </span>
-                  </div>
-                </div>
-              </div>
-              <div>
-                <div className="category_item">
-                  <div className="category_img bg-2">
-                    <img src="images/icons/icon-cardiac-care.svg" />
-                  </div>
-                  <div>
-                    <h2 className="category_title">Cardiac Care</h2>
-                    <span className="category_link">
-                      View Now<i className="bi bi-arrow-right-short"></i>
-                    </span>
-                  </div>
-                </div>
-              </div>
-              <div>
-                <div className="category_item">
-                  <div className="category_img bg-3">
-                    <img src="images/icons/icon-stomach-care.svg" />
-                  </div>
-                  <div>
-                    <h2 className="category_title">Stomach Care</h2>
-                    <span className="category_link">
-                      View Now<i className="bi bi-arrow-right-short"></i>
-                    </span>
+              {/* groupCare.data को map करो।
+          optional chaining (?) का उपयोग करें यदि data अभी load हो रहा हो। 
+        */}
+              {groupCare?.map((group, index) => (
+                <div key={group.id}>
+                  <div className="category_item">
+                    <div
+                      className={`category_img ${
+                        BG_CLASSES[index % BG_CLASSES.length] // Dynamically assign bg-1, bg-2, ...
+                      }`}
+                    >
+                      {/* ✅ Image Source Dynamic: group_name के आधार पर local icon path प्राप्त करें।
+                       */}
+                      <Image
+                        src={getIconPath(group.group_name)}
+                        alt={`${group.group_name} Icon`}
+                        width={50}
+                        height={50}
+                      />
+                    </div>
+                    <div>
+                      {/* ✅ Group Name Dynamic */}
+                      <h2 className="category_title">{group.group_name}</h2>
+                      <span className="category_link">
+                        View Now<i className="bi bi-arrow-right-short"></i>
+                      </span>
+                    </div>
                   </div>
                 </div>
-              </div>
-              <div>
-                <div className="category_item">
-                  <div className="category_img bg-4">
-                    <img src="images/icons/icon-liver-care.svg" />
-                  </div>
-                  <div>
-                    <h2 className="category_title">Liver Care</h2>
-                    <span className="category_link">
-                      View Now<i className="bi bi-arrow-right-short"></i>
-                    </span>
-                  </div>
-                </div>
-              </div>
-              <div>
-                <div className="category_item">
-                  <div className="category_img bg-5">
-                    <img src="images/icons/icon-oral-care.svg" />
-                  </div>
-                  <div>
-                    <h2 className="category_title">Oral Care</h2>
-                    <span className="category_link">
-                      View Now<i className="bi bi-arrow-right-short"></i>
-                    </span>
-                  </div>
-                </div>
-              </div>
-              <div>
-                <div className="category_item">
-                  <div className="category_img bg-1">
-                    <img src="images/icons/icon-diabetes-care.svg" />
-                  </div>
-                  <div>
-                    <h2 className="category_title">Diabetes Care</h2>
-                    <span className="category_link">
-                      View Now<i className="bi bi-arrow-right-short"></i>
-                    </span>
-                  </div>
-                </div>
-              </div>
+              ))}
             </Slider>
           </div>
         </div>
@@ -180,7 +175,7 @@ export default function HomePage() {
 
       <section className="pd_section">
         <div className="container">
-          <h2 className="section_title">Vitamins & Nutritions</h2>
+          <h2 className="section_title">Vitamins, Nutrition & Supplements</h2>
           <div className="row">
             <div className="col">
               <div className="pd_box">

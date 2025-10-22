@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import ProfileMenu from "@/app/components/ProfileMenu/ProfileMenu";
 import HeaderProfilePic from "@/app/components/HeaderProfilePic/HeaderProfilePic";
+import Link from "next/link";
 
 export default function Header() {
   const { accessToken } = useAppSelector((state) => state.auth);
@@ -21,9 +22,9 @@ export default function Header() {
       <div className="container-fluid">
         <div className="row">
           <div className="col-sm-6">
-            <a className="logo" href="dashboard.html">
+            <Link href="/admin-dashboard" className="logo">
               <img src="/images/logo.png" alt="" />
-            </a>
+            </Link>
           </div>
           <div className="col-sm-6 text-right">
             <div className="header-right">

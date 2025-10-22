@@ -1,6 +1,6 @@
 "use client";
 
-import { SetStateAction, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 
 export default function SideNav() {
@@ -18,7 +18,7 @@ export default function SideNav() {
 
       <ul className="side_menu-list">
         <li>
-          <Link href="/pharmacy-dashboard" className="link">
+          <Link href="/doctor-dashboard" className="link">
             <i className="bi bi-activity"></i> Dashboard
           </Link>
         </li>

@@ -35,7 +35,7 @@ export default function PurchaseInvoiceExport() {
     }, 3000);
   };
 
-  // ✅ Dropdown se select hua
+  // ✅ Selected product from the dropdown
   const handleSelectMedicine = (
     selected: { label: string; value: number }[]
   ) => {

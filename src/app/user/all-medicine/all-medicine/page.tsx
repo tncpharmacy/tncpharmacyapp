@@ -1,13 +1,20 @@
 "use client";
-import Link from "next/link";
 import "../../css/site-style.css";
 import "../../css/user-style.css";
 import SiteHeader from "@/app/user/components/header/header";
 import MedicineList from "../../components/MedicineCard/MedicineList";
-import FilterSidebar from "../../components/FilterSideBar/FilterSideBar";
 import { Image } from "react-bootstrap";
+import { useAppDispatch, useAppSelector } from "@/lib/hooks";
+import { useEffect } from "react";
+import { getMenuMedicinesList } from "@/lib/features/medicineSlice/medicineSlice";
 
 export default function AllMedicine() {
+  const dispatch = useAppDispatch();
+  const { medicines } = useAppSelector((state) => state.medicine);
+
+  useEffect(() => {
+    dispatch(getMenuMedicinesList());
+  }, [dispatch]);
   return (
     <>
       <div className="page-wrapper">
@@ -21,7 +28,7 @@ export default function AllMedicine() {
                 <Image src={"/images/favicon.png"} alt="" /> Medicine
               </div>
               {/* <Link href={"#"}> */}
-              <MedicineList />
+              <MedicineList medicines={medicines || []} />
               {/* </Link> */}
             </div>
           </div>
@@ -192,7 +199,7 @@ export default function AllMedicine() {
                 <div className="col-sm-6 text-end">
                   <div>
                     <h5 className="ftr_title">Payment Accept</h5>
-                    <img
+                    <Image
                       src="images/payment-option.png"
                       alt=""
                       className="ftr_payment"
@@ -231,12 +238,12 @@ export default function AllMedicine() {
                     data-bs-dismiss="toast"
                     aria-label="Close"
                   ></button>
-                  <img
+                  <Image
                     src="/Content/Images/logo.svg"
                     className="clogo"
                     alt=""
                   />
-                  <img
+                  <Image
                     src="/Content/Images/qr-code.jpg"
                     className="w-100"
                     alt=""
@@ -244,7 +251,7 @@ export default function AllMedicine() {
                   <span className="hint">Scan to Download App</span>
                 </div>
               </div>
-              <img
+              <Image
                 src="/Content/Images/download-app.svg"
                 className="toastimg"
                 alt="download app"

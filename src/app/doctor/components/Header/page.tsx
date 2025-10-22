@@ -8,9 +8,9 @@ export default function Header() {
       <div className="container-fluid">
         <div className="row">
           <div className="col-sm-6">
-            <a className="logo" href="dashboard.html">
+            <Link href="/doctor-dashboard" className="logo">
               <img src="/images/logo.png" alt="" />
-            </a>
+            </Link>
           </div>
           <div className="col-sm-6 text-right">
             <div className="header-right">

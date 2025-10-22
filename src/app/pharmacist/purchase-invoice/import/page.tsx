@@ -12,11 +12,13 @@ import InfiniteScroll from "@/app/components/InfiniteScroll/InfiniteScroll";
 import SelectInput from "@/app/components/Input/SelectInput";
 import Input from "@/app/components/Input/Input";
 import { getUser } from "@/lib/auth/auth";
+import { createPurchaseStock } from "@/lib/features/purchaseStockSlice/purchaseStockSlice";
+import toast from "react-hot-toast";
 
 export default function PurchaseInvoiceImport() {
   const dispatch = useAppDispatch();
   const userPharmacy = getUser();
-  const pharmacy_id = userPharmacy?.pharmacy_id || "";
+  const pharmacy_id = userPharmacy?.pharmacy_id || 0;
   const pharmacist_id = userPharmacy?.id || 0;
   const { medicines: getMedicine } = useAppSelector((state) => state.medicine);
   // Infinite scroll state
@@ -36,7 +38,6 @@ export default function PurchaseInvoiceImport() {
 
   const [formData, setFormData] = useState<Partial<Product>>({
     id: pharmacist_id,
-    pharmacy: pharmacy_id,
     supplier: "",
     medicine_name: "",
     pack_size: "",
@@ -105,7 +106,53 @@ export default function PurchaseInvoiceImport() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Final Submit Data:", excelData);
+
+    const parseExcelDate = (excelDate: number): string => {
+      if (!excelDate) return new Date().toISOString();
+      const date = new Date((excelDate - 25569) * 86400 * 1000);
+      return date.toISOString();
+    };
+
+    // 🧾 2️⃣ Build purchase_details from Excel data
+    const purchaseDetails = excelData.map((row, i) => ({
+      pharmacy_id: pharmacy_id,
+      product_id: Number(row["Id"]) || 0, // ✅ Excel ka Id hi product_id hai
+      quantity: row["QTY"]?.toString() || "0",
+      available_quantity: row["QTY"]?.toString() || "0",
+      batch: row["Batch"]?.toString() || `BATCH-${i + 1}`,
+      expiry_date: parseExcelDate(Number(row["Expiry Date"])),
+      mrp: row["MRP"]?.toString() || "0",
+      discount: row["Discount (%)"]?.toString() || "0",
+      purchase_rate: row["Purchase Rate"]?.toString() || "0",
+      amount: row["Amount"]?.toString() || "0",
+    }));
+
+    // 🧱 3️⃣ Build Final Payload
+    const payload = {
+      pharmacy_id: Number(pharmacy_id), // ✅ Number not string
+      supplier_id: Number(formData.supplier) || 1,
+      invoice_num: String(formData.invoice_number),
+      purchase_date: new Date(
+        formData.purchase_date || new Date()
+      ).toISOString(),
+      status: "Active",
+      purchase_details: purchaseDetails,
+    };
+
+    console.log("📦 Final Payload to API:", payload);
+    console.log("🧾 purchase_details:", purchaseDetails);
+
+    // 🚀 4️⃣ Dispatch to Redux Thunk
+    dispatch(createPurchaseStock(payload))
+      .unwrap()
+      .then((res) => {
+        console.log("✅ Purchase Created Successfully:", res);
+        toast.success("Purchase Invoice Imported Successfully!");
+      })
+      .catch((err) => {
+        console.error("❌ Failed to create purchase:", err);
+        toast.error("Failed to create purchase. Check console for details.");
+      });
   };
 
   return (

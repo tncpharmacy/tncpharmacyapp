@@ -1,7 +1,9 @@
 body {
     background: #e6f0ff;
 }
-
+.custom-table-header {
+    background-color: #dde7f1 !important; /* !important इसे ओवरराइड होने से रोकेगा */
+}
 .header {
     background: #ffffff;
     width: 100%;

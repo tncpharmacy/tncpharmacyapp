@@ -14,8 +14,8 @@ const nextConfig: NextConfig = {
     return [
       //User routes
       {
-        source: "/product-details",
-        destination: "/user/product-details",
+        source: "/product-details/:id",
+        destination: "/user/product-details/:id",
       },
       {
         source: "/all-medicine",
@@ -277,6 +277,20 @@ const nextConfig: NextConfig = {
       {
         source: "/pharmacist/import",
         destination: "/pharmacist/purchase-invoice/import",
+      },
+      {
+        source: "/pharmacist-dashboard",
+        destination: "/pharmacist/pharmacist-dashboard",
+      },
+      {
+        source: "/pharmacist/retail-counter",
+        destination: "/pharmacist/retail-counter",
+      },
+
+      // Doctor Routes
+      {
+        source: "/doctor-dashboard",
+        destination: "/doctor/doctor-dashboard",
       },
     ];
   },

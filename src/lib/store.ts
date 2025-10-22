@@ -15,6 +15,7 @@ import genericReducer from "@/lib/features/genericSlice/genericSlice";
 import manufacturerReducer from "@/lib/features/manufacturerSlice/manufacturerSlice";
 import medicineReducer from "@/lib/features/medicineSlice/medicineSlice";
 import buyerReducer from "@/lib/features/buyerSlice/buyerSlice";
+import purchaseSlice from "@/lib/features/purchaseStockSlice/purchaseStockSlice";
 
 export const store = configureStore({
   reducer: {
@@ -34,6 +35,7 @@ export const store = configureStore({
     manufacturer: manufacturerReducer,
     medicine: medicineReducer,
     buyer: buyerReducer,
+    purchaseStock: purchaseSlice,
   },
 });
 

@@ -1,3 +1,4 @@
+import { Product } from "@/types/medicine";
 export const ENDPOINTS = {
   // 🔐 Auth
   LOGIN: "/user/login/",
@@ -109,5 +110,19 @@ export const ENDPOINTS = {
   // medicines
   MEDICINES: {
     GET_ALL_LIST: "/medicine/list/",
+    GET_ALL_PRODUCT_LIST: "/medicine/product/list/",
+    GET_PRODUCT_LIST_BY_GENERIC: (productId: number) =>
+      `/medicine/medicine-by-generic/?product_id=${productId}`,
+    GET_MENU_MEDICINE: "/website/medicine/category/1/",
+    GET_BY_MENU_ID: (id: number) => `/website/medicine/${id}/`,
+    GET_GROUP_CARE: "/masterapp/care-group/list/",
+    GET_MENU_OTHER_MEDICINE: (categoryId: number) =>
+      `/website/other/medicine/list/?category_id=${categoryId}`,
+    GET_BY_MENU_OTHER_ID: (id: number) => `/website/other/medicine/${id}/`,
+  },
+
+  // Purchase Stock
+  PURCHASE_STOCK: {
+    CREATE: "/stock/purchase/create/",
   },
 };

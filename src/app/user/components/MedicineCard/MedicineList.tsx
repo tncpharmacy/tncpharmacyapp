@@ -1,172 +1,12 @@
 import React from "react";
 import MedicineCard from "./MedicineCard";
+import { Medicine } from "@/types/medicine";
 
-const medicines = [
-  {
-    name: "Avastin 100mg Injection",
-    pack: "vial of 1 Injection",
-    company: "Roche Products India Pvt Ltd",
-    salt: "Bevacizumab (100mg)",
-    mrp: 33863,
-    prescription: true,
-    availability: "ADD",
-  },
-  {
-    name: "Actorise 40 Injection",
-    pack: "prefilled syringe of 0.4 ml Injection",
-    company: "Cipla Ltd",
-    salt: "Darbepoetin alfa (40mcg)",
-    mrp: 2745.19,
-    prescription: true,
-    availability: "NOT AVAILABLE",
-  },
-  {
-    name: "Avastin 400mg Injection",
-    pack: "vial of 16 ml Injection",
-    company: "Roche Products India Pvt Ltd",
-    salt: "Bevacizumab (400mg)",
-    mrp: 123506,
-    prescription: true,
-    availability: "ADD",
-  },
-  {
-    name: "Avastin 100mg Injection",
-    pack: "vial of 1 Injection",
-    company: "Roche Products India Pvt Ltd",
-    salt: "Bevacizumab (100mg)",
-    mrp: 33863,
-    prescription: true,
-    availability: "ADD",
-  },
-  {
-    name: "Actorise 40 Injection",
-    pack: "prefilled syringe of 0.4 ml Injection",
-    company: "Cipla Ltd",
-    salt: "Darbepoetin alfa (40mcg)",
-    mrp: 2745.19,
-    prescription: true,
-    availability: "NOT AVAILABLE",
-  },
-  {
-    name: "Avastin 400mg Injection",
-    pack: "vial of 16 ml Injection",
-    company: "Roche Products India Pvt Ltd",
-    salt: "Bevacizumab (400mg)",
-    mrp: 123506,
-    prescription: true,
-    availability: "ADD",
-  },
-  {
-    name: "Avastin 100mg Injection",
-    pack: "vial of 1 Injection",
-    company: "Roche Products India Pvt Ltd",
-    salt: "Bevacizumab (100mg)",
-    mrp: 33863,
-    prescription: true,
-    availability: "ADD",
-  },
-  {
-    name: "Actorise 40 Injection",
-    pack: "prefilled syringe of 0.4 ml Injection",
-    company: "Cipla Ltd",
-    salt: "Darbepoetin alfa (40mcg)",
-    mrp: 2745.19,
-    prescription: true,
-    availability: "NOT AVAILABLE",
-  },
-  {
-    name: "Avastin 400mg Injection",
-    pack: "vial of 16 ml Injection",
-    company: "Roche Products India Pvt Ltd",
-    salt: "Bevacizumab (400mg)",
-    mrp: 123506,
-    prescription: true,
-    availability: "ADD",
-  },
-  {
-    name: "Avastin 100mg Injection",
-    pack: "vial of 1 Injection",
-    company: "Roche Products India Pvt Ltd",
-    salt: "Bevacizumab (100mg)",
-    mrp: 33863,
-    prescription: true,
-    availability: "ADD",
-  },
-  {
-    name: "Actorise 40 Injection",
-    pack: "prefilled syringe of 0.4 ml Injection",
-    company: "Cipla Ltd",
-    salt: "Darbepoetin alfa (40mcg)",
-    mrp: 2745.19,
-    prescription: true,
-    availability: "NOT AVAILABLE",
-  },
-  {
-    name: "Avastin 400mg Injection",
-    pack: "vial of 16 ml Injection",
-    company: "Roche Products India Pvt Ltd",
-    salt: "Bevacizumab (400mg)",
-    mrp: 123506,
-    prescription: true,
-    availability: "ADD",
-  },
-  {
-    name: "Avastin 100mg Injection",
-    pack: "vial of 1 Injection",
-    company: "Roche Products India Pvt Ltd",
-    salt: "Bevacizumab (100mg)",
-    mrp: 33863,
-    prescription: true,
-    availability: "ADD",
-  },
-  {
-    name: "Actorise 40 Injection",
-    pack: "prefilled syringe of 0.4 ml Injection",
-    company: "Cipla Ltd",
-    salt: "Darbepoetin alfa (40mcg)",
-    mrp: 2745.19,
-    prescription: true,
-    availability: "NOT AVAILABLE",
-  },
-  {
-    name: "Avastin 400mg Injection",
-    pack: "vial of 16 ml Injection",
-    company: "Roche Products India Pvt Ltd",
-    salt: "Bevacizumab (400mg)",
-    mrp: 123506,
-    prescription: true,
-    availability: "ADD",
-  },
-  {
-    name: "Avastin 100mg Injection",
-    pack: "vial of 1 Injection",
-    company: "Roche Products India Pvt Ltd",
-    salt: "Bevacizumab (100mg)",
-    mrp: 33863,
-    prescription: true,
-    availability: "ADD",
-  },
-  {
-    name: "Actorise 40 Injection",
-    pack: "prefilled syringe of 0.4 ml Injection",
-    company: "Cipla Ltd",
-    salt: "Darbepoetin alfa (40mcg)",
-    mrp: 2745.19,
-    prescription: true,
-    availability: "NOT AVAILABLE",
-  },
-  {
-    name: "Avastin 400mg Injection",
-    pack: "vial of 16 ml Injection",
-    company: "Roche Products India Pvt Ltd",
-    salt: "Bevacizumab (400mg)",
-    mrp: 123506,
-    prescription: true,
-    availability: "ADD",
-  },
-];
+interface MedicineListProps {
+  medicines: Medicine[];
+}
 
-const MedicineList = () => {
+const MedicineList: React.FC<MedicineListProps> = ({ medicines }) => {
   return (
     <>
       <div className="row">
@@ -185,9 +25,11 @@ const MedicineList = () => {
         </div>
       </div>
       <div className="medicine-grid">
-        {medicines.map((med, idx) => (
-          <MedicineCard key={idx} {...med} />
-        ))}
+        {medicines?.length > 0 ? (
+          medicines.map((med, idx) => <MedicineCard key={idx} {...med} />)
+        ) : (
+          <p>No medicines available.</p>
+        )}
       </div>
     </>
   );
