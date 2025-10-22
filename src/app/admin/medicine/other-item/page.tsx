@@ -78,45 +78,45 @@ export default function OtherMedicineList() {
   //   setFilteredData(data);
   // }, [searchTerm, status, clinics.length]); // ✅ only length (primitive)
 
-  const handleToggleStatus = async (id: number) => {
-    // Find category in the filteredData (latest UI state)
-    const toggleRecords = filteredData.find((c) => c.id === id);
-    if (!toggleRecords) return;
+  // const handleToggleStatus = async (id: number) => {
+  //   // Find category in the filteredData (latest UI state)
+  //   const toggleRecords = filteredData.find((c) => c.id === id);
+  //   if (!toggleRecords) return;
 
-    const newStatus = toggleRecords.status === "Active" ? "Inactive" : "Active";
+  //   const newStatus = toggleRecords.status === "Active" ? "Inactive" : "Active";
 
-    try {
-      // Optimistic UI update
-      setFilteredData((prev) =>
-        prev.map((c) => (c.id === id ? { ...c, status: newStatus } : c))
-      );
+  //   try {
+  //     // Optimistic UI update
+  //     setFilteredData((prev) =>
+  //       prev.map((c) => (c.id === id ? { ...c, status: newStatus } : c))
+  //     );
 
-      // Update backend
-      await dispatch(
-        updateClinic({
-          id,
-          clinic: {
-            clinicName: toggleRecords.clinicName,
-            user_name: toggleRecords.user_name,
-            login_id: toggleRecords.login_id,
-            address: toggleRecords.address,
-            status: newStatus,
-          },
-        })
-      ).unwrap();
-      toast.success(`Status updated to ${newStatus}`);
-    } catch (err) {
-      console.error(err);
-      toast.error("Failed to update status");
+  //     // Update backend
+  //     await dispatch(
+  //       updateClinic({
+  //         id,
+  //         clinic: {
+  //           clinicName: toggleRecords.clinicName,
+  //           user_name: toggleRecords.user_name,
+  //           login_id: toggleRecords.login_id,
+  //           address: toggleRecords.address,
+  //           status: newStatus,
+  //         },
+  //       })
+  //     ).unwrap();
+  //     toast.success(`Status updated to ${newStatus}`);
+  //   } catch (err) {
+  //     console.error(err);
+  //     toast.error("Failed to update status");
 
-      // Revert UI if backend fails
-      setFilteredData((prev) =>
-        prev.map((c) =>
-          c.id === id ? { ...c, status: toggleRecords.status } : c
-        )
-      );
-    }
-  };
+  //     // Revert UI if backend fails
+  //     setFilteredData((prev) =>
+  //       prev.map((c) =>
+  //         c.id === id ? { ...c, status: toggleRecords.status } : c
+  //       )
+  //     );
+  //   }
+  // };
 
   //infinte scroll records
   const loadMore = () => {
