@@ -41,7 +41,6 @@ const GenericOptionsModal: React.FC<GenericOptionsModalProps> = ({
     >
       <div
         className="modal-dialog modal-lg"
-        // StopPropagation fix: Stop clicks inside modal from closing it
         onClick={(e) => e.stopPropagation()}
       >
         <div className="modal-content">

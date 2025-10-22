@@ -249,8 +249,8 @@ export default function RetailCounter() {
                         <th>Medicine</th>
                         <th>Doses Instruction</th>
                         <th>Qty</th>
-                        <th>Price (₹)</th>
-                        <th>Discount (%)</th>
+                        <th>MRP (₹)</th>
+                        <th>Discount (₹)</th>
                         <th>Subtotal (₹)</th>
                         <th>Remarks</th>
                         <th></th>
