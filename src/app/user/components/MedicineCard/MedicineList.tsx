@@ -1,6 +1,7 @@
 import React from "react";
 import MedicineCard from "./MedicineCard";
 import { Medicine } from "@/types/medicine";
+import { Image } from "react-bootstrap";
 
 interface MedicineListProps {
   medicines: Medicine[];
@@ -9,6 +10,9 @@ interface MedicineListProps {
 const MedicineList: React.FC<MedicineListProps> = ({ medicines }) => {
   return (
     <>
+      <div className="pageTitle">
+        <Image src={"/images/favicon.png"} alt="" /> Medicine
+      </div>
       <div className="row">
         <div className="col-md-8">
           <div className="txt_col">

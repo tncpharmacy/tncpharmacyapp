@@ -18,20 +18,24 @@ import {
 
 interface MedicineState {
   medicines: Medicine[];
+  otherMedicines: Medicine[];
   groupCare: CareGroup[];
   genericAlternatives: Medicine[];
   count: number;
   loading: boolean;
   error: string | null;
+  byCategory: Record<number, Medicine[]>;
 }
 
 const initialState: MedicineState = {
   medicines: [],
+  otherMedicines: [],
   groupCare: [],
   genericAlternatives: [],
   count: 0,
   loading: false,
   error: null,
+  byCategory: {},
 };
 
 // ✅ Get all medicines menu List
@@ -229,7 +233,7 @@ const medicineSlice = createSlice({
       })
       .addCase(getMedicinesMenuByOtherId.fulfilled, (state, action) => {
         state.loading = false;
-        state.medicines = action.payload.data;
+        state.otherMedicines = action.payload.data;
         state.count = action.payload.count;
         state.error = null;
       })
@@ -244,7 +248,7 @@ const medicineSlice = createSlice({
       })
       .addCase(getMedicinesByCategoryId.fulfilled, (state, action) => {
         state.loading = false;
-        state.medicines = action.payload.data;
+        state.byCategory[action.meta.arg] = action.payload.data; // categoryId as key
         state.error = null;
       })
       .addCase(getMedicinesByCategoryId.rejected, (state, action) => {

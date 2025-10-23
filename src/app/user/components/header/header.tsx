@@ -14,9 +14,11 @@ import PrescriptionUploadModal from "@/app/user/components/PrescriptionUploadMod
 import Image from "next/image";
 import Login from "@/app/admin-login/page";
 import BuyerLoginModal from "@/app/buyer-login/page";
+import { encodeId } from "@/lib/utils/encodeDecode";
 
 const SiteHeader = () => {
   const dispatch = useAppDispatch();
+  const router = useRouter();
   const [showLogin, setShowLogin] = useState(false);
   const [showBuyerLogin, setShowBuyerLogin] = useState(false);
   const { list: categories } = useAppSelector((state) => state.category);
@@ -40,6 +42,10 @@ const SiteHeader = () => {
     const shuffled = [...categories].sort(() => Math.random() - 0.5);
     setShuffledCategories(shuffled);
   }, [categories]);
+
+  const handleClick = (catId: number) => {
+    router.push(`/all-product/${encodeId(catId)}`);
+  };
 
   if (!mounted) return null;
 
@@ -173,7 +179,9 @@ const SiteHeader = () => {
 
                 return (
                   <li key={cat.id}>
-                    <a href="#">{cat.category_name}</a>
+                    <Link href={`/all-product/${encodeId(cat.id)}`}>
+                      {cat.category_name}
+                    </Link>
 
                     {/* Subcategories */}
                     <div className="megamenu-panel">

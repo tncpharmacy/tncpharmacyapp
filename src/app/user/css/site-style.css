@@ -1,6 +1,27 @@
 html {
     scroll-behavior: smooth;
 }
+.hover-link {
+  cursor: pointer !important;
+  color: inherit;
+  transition: color 0.3s ease;
+}
+
+.hover-link:hover {
+  color: #ef6b14 !important;
+}
+.pd-title {
+  font-size: 14px;
+  font-weight: 500;
+  color: #333;
+  margin-bottom: 8px;
+  white-space: nowrap;        /* Single line only */
+  overflow: hidden;           /* Hide extra text */
+  text-overflow: ellipsis;    /* Show ... when overflow */
+  display: block;             /* Needed for ellipsis */
+  width: 100%;                /* Limit width for ellipsis to work */
+  max-width: 200px;           /* You can adjust this */
+}
 
 /*-- category section start --*/
 .category_sec {
@@ -266,6 +287,7 @@ html {
 
 .pd_content {
     padding: 5px 12px 12px;
+    min-height: 120px;
 }
 
 .pd_content .pd_title {
@@ -763,4 +785,35 @@ footer .border-top {
     -webkit-position: sticky;
     top: 0;
     z-index: 1;
+}
+
+.pd_variant{
+    list-style: none;
+    padding: 0;
+    display: flex;
+    flex-flow: wrap;
+    column-gap: 5px;
+    margin: 5px 0 15px 0;
+}
+.pd_variant li {
+    border: 1px solid #dddddd;
+    font-size: 13px;
+    font-weight: 500;
+    padding: 5px;
+    min-width: 100px;
+    text-align: center;
+    border-radius: 2px;
+    cursor: pointer;
+    color: #444444;
+      background: #ffffff;
+}
+
+.pd_variant li:hover {
+    background: #f9f9f9;
+}
+
+.pd_variant li.active {
+    border: 1px solid #9b9b9b;
+    color: #101010;
+    background: #f9f9f9;
 }

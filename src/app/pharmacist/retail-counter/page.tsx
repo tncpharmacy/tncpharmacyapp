@@ -250,7 +250,7 @@ export default function RetailCounter() {
                         <th>Doses Instruction</th>
                         <th>Qty</th>
                         <th>MRP (₹)</th>
-                        <th>Discount (₹)</th>
+                        <th>Discount (%)</th>
                         <th>Subtotal (₹)</th>
                         <th>Remarks</th>
                         <th></th>
@@ -276,7 +276,7 @@ export default function RetailCounter() {
                               <td>{item.dose_form}</td>
                               <td>{item.qty}</td>
                               <td>{item.price}</td>
-                              <td>{discountAmount.toFixed(2)}</td>
+                              <td>{item.Disc}</td>
                               <td>{subtotal}</td>
                               <td>{item.remarks}</td>
                               <td>

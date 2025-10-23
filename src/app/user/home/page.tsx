@@ -2,7 +2,13 @@
 
 import "../css/site-style.css";
 import SiteHeader from "@/app/user/components/header/header";
-import { Carousel, Collapse, Toast, ToastContainer } from "react-bootstrap";
+import {
+  Carousel,
+  Collapse,
+  Image,
+  Toast,
+  ToastContainer,
+} from "react-bootstrap";
 import { useEffect, useState } from "react";
 import Slider from "react-slick";
 import "slick-carousel/slick/slick.css";
@@ -13,41 +19,55 @@ import {
   getMedicinesByCategoryId,
   getMedicinesMenuByOtherId,
 } from "@/lib/features/medicineSlice/medicineSlice";
-import Image from "next/image";
+import { getCategories } from "@/lib/features/categorySlice/categorySlice";
+import { useRouter } from "next/navigation";
+import { encodeId } from "@/lib/utils/encodeDecode";
+const mediaBase = process.env.NEXT_PUBLIC_MEDIA_BASE_URL;
 
 export default function HomePage() {
   const [show, setShow] = useState(false);
   const [open, setOpen] = useState(false);
   const despatch = useAppDispatch();
+  const router = useRouter();
   const { groupCare } = useAppSelector((state) => state.medicine);
-  const { medicines: medicineMenuByCategory } = useAppSelector(
-    (state) => state.medicine
-  );
-  const { medicines: medicineMenuByOtherId } = useAppSelector(
-    (state) => state.medicine
-  );
 
+  const medicineMenuByCategory5 = useAppSelector(
+    (state) => state.medicine.byCategory[5] || []
+  );
+  const medicineMenuByCategory7 = useAppSelector(
+    (state) => state.medicine.byCategory[7] || []
+  );
+  const medicineMenuByCategory9 = useAppSelector(
+    (state) => state.medicine.byCategory[9] || []
+  );
+  const { list: categories } = useAppSelector((state) => state.category);
+  const categoryNamesById: Record<number, string> = {};
+  [5, 7, 9].forEach((id) => {
+    const cat = categories.find((c) => c.id === id);
+    if (cat) categoryNamesById[id] = cat.category_name;
+  });
+  //console.log("medicineMenuByCategory5", medicineMenuByCategory5);
   useEffect(() => {
     despatch(getGroupCare());
-    despatch(getMedicinesByCategoryId(2));
+    despatch(getCategories());
+    despatch(getMedicinesByCategoryId(5));
+    despatch(getMedicinesByCategoryId(7));
+    despatch(getMedicinesByCategoryId(9));
     despatch(getMedicinesMenuByOtherId(0));
   }, [despatch]);
 
-  // Component के बाहर या अंदर define करें
   const CARE_GROUP_ICONS: Record<string, string> = {
     "Diabetic Care": "images/icons/icon-diabetes-care.svg",
     "Cardiac Care": "images/icons/icon-cardiac-care.svg",
     "Stomach Care": "images/icons/icon-stomach-care.svg",
     "Liver Care": "images/icons/icon-liver-care.svg",
     "Oral Care": "images/icons/icon-oral-care.svg",
-    "Eye Care": "images/icons/icon-eye-care.svg", // Example mapping
-    "Hair Care": "images/icons/icon-hair-care.svg", // Example mapping
-    "Pain Relief": "images/icons/icon-pain-relief-care.svg", // Example mapping
-    "Heart Care": "images/icons/icon-heart-care.svg", // Example mapping
-    // Default icon अगर कोई match न मिले
+    "Eye Care": "images/icons/icon-eye-care.svg",
+    "Hair Care": "images/icons/icon-hair-care.svg",
+    "Pain Relief": "images/icons/icon-pain-relief-care.svg",
+    "Heart Care": "images/icons/icon-heart-care.svg",
     DEFAULT: "images/icons/icon-default-care.svg",
   };
-  // Background Color Class Mapping (Optional but good practice)
   const BG_CLASSES = ["bg-1", "bg-2", "bg-3", "bg-4", "bg-5", "bg-6"];
   const getIconPath = (groupName: string): string => {
     return CARE_GROUP_ICONS[groupName] || CARE_GROUP_ICONS.DEFAULT;
@@ -68,6 +88,11 @@ export default function HomePage() {
     slidesToShow: 5,
     slidesToScroll: 1,
     autoplay: true,
+  };
+
+  // 👇 onClick function
+  const handleClick = (product_id: number) => {
+    router.push(`/product-details/${encodeId(product_id)}`);
   };
 
   return (
@@ -138,19 +163,14 @@ export default function HomePage() {
           <div className="slider-container">
             {/*Slider Implementation */}
             <Slider {...settings}>
-              {/* groupCare.data को map करो।
-          optional chaining (?) का उपयोग करें यदि data अभी load हो रहा हो। 
-        */}
               {groupCare?.map((group, index) => (
                 <div key={group.id}>
                   <div className="category_item">
                     <div
                       className={`category_img ${
-                        BG_CLASSES[index % BG_CLASSES.length] // Dynamically assign bg-1, bg-2, ...
+                        BG_CLASSES[index % BG_CLASSES.length]
                       }`}
                     >
-                      {/* ✅ Image Source Dynamic: group_name के आधार पर local icon path प्राप्त करें।
-                       */}
                       <Image
                         src={getIconPath(group.group_name)}
                         alt={`${group.group_name} Icon`}
@@ -175,102 +195,57 @@ export default function HomePage() {
 
       <section className="pd_section">
         <div className="container">
-          <h2 className="section_title">Vitamins, Nutrition & Supplements</h2>
+          <h2 className="section_title">{categoryNamesById[7]}</h2>
           <div className="row">
-            <div className="col">
-              <div className="pd_box">
-                <div className="pd_img">
-                  <img src="images/products/pd-img-1.jpg" />
-                </div>
-                <div className="pd_content">
-                  <h3 className="pd_title">
-                    B-Protin Mango - Bottle of 500g Powder
-                  </h3>
-                  <div className="pd_price">
-                    <span className="new_price">₹418</span>
-                    <span className="old_price">
-                      <del>MRP ₹460</del>9% off
-                    </span>
+            {medicineMenuByCategory7 && medicineMenuByCategory7.length > 0 ? (
+              medicineMenuByCategory7.slice(0, 5).map((item) => {
+                const mrp = item.MRP
+                  ? parseFloat(item.MRP.toString())
+                  : Math.floor(Math.random() * (1000 - 100 + 1)) + 100;
+
+                const discount = parseFloat(item.Discount) || 0;
+                const discountedPrice = Math.round(
+                  mrp - (mrp * discount) / 100
+                );
+
+                const imageUrl = item.DefaultImageURL
+                  ? item.DefaultImageURL.startsWith("http")
+                    ? item.DefaultImageURL
+                    : `${mediaBase}${item.DefaultImageURL}`
+                  : "/images/tnc-default.png";
+
+                return (
+                  <div className="col" key={item.product_id}>
+                    <div className="pd_box">
+                      <div className="pd_img">
+                        <Image src={imageUrl} alt={item.ProductName} />
+                      </div>
+                      <div className="pd_content">
+                        <h3
+                          className="pd-title"
+                          onClick={() => handleClick(item.product_id)}
+                        >
+                          {item.ProductName || ""}
+                        </h3>
+                        <h6 className="pd-title fw-bold">
+                          {item.Manufacturer || ""}
+                        </h6>
+                        <div className="pd_price">
+                          <span className="new_price">₹{discountedPrice}</span>
+                          <span className="old_price">
+                            <del>MRP ₹{mrp}</del> {discount}% off
+                          </span>
+                        </div>
+
+                        <button className="btn-1">ADD</button>
+                      </div>
+                    </div>
                   </div>
-                  <button className="btn-1">ADD</button>
-                </div>
-              </div>
-            </div>
-            <div className="col">
-              <div className="pd_box">
-                <div className="pd_img">
-                  <img src="images/products/pd-img-2.jpg" />
-                </div>
-                <div className="pd_content">
-                  <h3 className="pd_title">Centrum Joint & Mobility Capsule</h3>
-                  <div className="pd_price">
-                    <span className="new_price">₹418</span>
-                    <span className="old_price">
-                      <del>MRP ₹460</del>9% off
-                    </span>
-                  </div>
-                  <button className="btn-1">ADD</button>
-                </div>
-              </div>
-            </div>
-            <div className="col">
-              <div className="pd_box">
-                <div className="pd_img">
-                  <img src="images/products/pd-img-3.jpg" />
-                </div>
-                <div className="pd_content">
-                  <h3 className="pd_title">
-                    Revital H for Woman with Multi- vitamins, Calcium, Zinc &
-                    Natu.
-                  </h3>
-                  <div className="pd_price">
-                    <span className="new_price">₹418</span>
-                    <span className="old_price">
-                      <del>MRP ₹460</del>9% off
-                    </span>
-                  </div>
-                  <button className="btn-1">ADD</button>
-                </div>
-              </div>
-            </div>
-            <div className="col">
-              <div className="pd_box">
-                <div className="pd_img">
-                  <img src="images/products/pd-img-4.jpg" />
-                </div>
-                <div className="pd_content">
-                  <h3 className="pd_title">
-                    Protinex Diabetes Care (Creamy Vanilla Flavor, 400gm, Jar)
-                  </h3>
-                  <div className="pd_price">
-                    <span className="new_price">₹418</span>
-                    <span className="old_price">
-                      <del>MRP ₹460</del>9% off
-                    </span>
-                  </div>
-                  <button className="btn-1">ADD</button>
-                </div>
-              </div>
-            </div>
-            <div className="col">
-              <div className="pd_box">
-                <div className="pd_img">
-                  <img src="images/products/pd-img-5.jpg" />
-                </div>
-                <div className="pd_content">
-                  <h3 className="pd_title">
-                    Neurobion Forte Vitamin B-Complex Tablets - B Vitamins
-                  </h3>
-                  <div className="pd_price">
-                    <span className="new_price">₹418</span>
-                    <span className="old_price">
-                      <del>MRP ₹460</del>9% off
-                    </span>
-                  </div>
-                  <button className="btn-1">ADD</button>
-                </div>
-              </div>
-            </div>
+                );
+              })
+            ) : (
+              <p>Loading medicines...</p>
+            )}
           </div>
         </div>
       </section>
@@ -341,105 +316,52 @@ export default function HomePage() {
 
       <section className="pd_section">
         <div className="container">
-          <h2 className="section_title">Health Devices</h2>
+          <h2 className="section_title">{categoryNamesById[5]}</h2>
           <div className="row">
-            <div className="col">
-              <div className="pd_box">
-                <div className="pd_img">
-                  <img src="images/products/pd-img-6.jpg" />
-                </div>
-                <div className="pd_content">
-                  <h3 className="pd_title">
-                    Omron HEM 7120 Fully Automatic Digital Blood Pressure
-                    Monitor
-                  </h3>
-                  <div className="pd_price">
-                    <span className="new_price">₹418</span>
-                    <span className="old_price">
-                      <del>MRP ₹460</del>9% off
-                    </span>
+            {medicineMenuByCategory5 && medicineMenuByCategory5.length > 0 ? (
+              medicineMenuByCategory5.slice(0, 5).map((item) => {
+                const mrp = item.MRP
+                  ? parseFloat(item.MRP.toString())
+                  : Math.floor(Math.random() * (1000 - 100 + 1)) + 100;
+
+                const discount = parseFloat(item.Discount) || 0;
+                const discountedPrice = Math.round(
+                  mrp - (mrp * discount) / 100
+                );
+
+                const imageUrl = item.DefaultImageURL
+                  ? item.DefaultImageURL.startsWith("http")
+                    ? item.DefaultImageURL
+                    : `${mediaBase}${item.DefaultImageURL}`
+                  : "/images/tnc-default.png";
+
+                return (
+                  <div className="col" key={item.product_id}>
+                    <div className="pd_box">
+                      <div className="pd_img">
+                        <Image src={imageUrl} alt={item.ProductName} />
+                      </div>
+                      <div className="pd_content">
+                        <h3 className="pd-title">{item.ProductName || ""}</h3>
+                        <h6 className="pd-title fw-bold">
+                          {item.Manufacturer || ""}
+                        </h6>
+                        <div className="pd_price">
+                          <span className="new_price">₹{discountedPrice}</span>
+                          <span className="old_price">
+                            <del>MRP ₹{mrp}</del> {discount}% off
+                          </span>
+                        </div>
+
+                        <button className="btn-1">ADD</button>
+                      </div>
+                    </div>
                   </div>
-                  <button className="btn-1">ADD</button>
-                </div>
-              </div>
-            </div>
-            <div className="col">
-              <div className="pd_box">
-                <div className="pd_img">
-                  <img src="images/products/pd-img-7.jpg" />
-                </div>
-                <div className="pd_content">
-                  <h3 className="pd_title">
-                    Dr. Morepen BG-03 Gluco One Glucometer Combo, 50 Strips
-                  </h3>
-                  <div className="pd_price">
-                    <span className="new_price">₹418</span>
-                    <span className="old_price">
-                      <del>MRP ₹460</del>9% off
-                    </span>
-                  </div>
-                  <button className="btn-1">ADD</button>
-                </div>
-              </div>
-            </div>
-            <div className="col">
-              <div className="pd_box">
-                <div className="pd_img">
-                  <img src="images/products/pd-img-8.jpg" />
-                </div>
-                <div className="pd_content">
-                  <h3 className="pd_title">
-                    Hansaplast Soft Cotton Crepe Bandage For Pain Relief
-                  </h3>
-                  <div className="pd_price">
-                    <span className="new_price">₹418</span>
-                    <span className="old_price">
-                      <del>MRP ₹460</del>9% off
-                    </span>
-                  </div>
-                  <button className="btn-1">ADD</button>
-                </div>
-              </div>
-            </div>
-            <div className="col">
-              <div className="pd_box">
-                <div className="pd_img">
-                  <img src="images/products/pd-img-9.jpg" />
-                </div>
-                <div className="pd_content">
-                  <h3 className="pd_title">
-                    DR VAKU Swadesi Non-Contact Infrared Digital Temperature Gun
-                  </h3>
-                  <div className="pd_price">
-                    <span className="new_price">₹418</span>
-                    <span className="old_price">
-                      <del>MRP ₹460</del>9% off
-                    </span>
-                  </div>
-                  <button className="btn-1">ADD</button>
-                </div>
-              </div>
-            </div>
-            <div className="col">
-              <div className="pd_box">
-                <div className="pd_img">
-                  <img src="images/products/pd-img-10.jpg" />
-                </div>
-                <div className="pd_content">
-                  <h3 className="pd_title">
-                    PharmEasy Digital Flexible Tip Thermometer for Fever, Fast
-                    ...
-                  </h3>
-                  <div className="pd_price">
-                    <span className="new_price">₹418</span>
-                    <span className="old_price">
-                      <del>MRP ₹460</del>9% off
-                    </span>
-                  </div>
-                  <button className="btn-1">ADD</button>
-                </div>
-              </div>
-            </div>
+                );
+              })
+            ) : (
+              <p>Loading medicines...</p>
+            )}
           </div>
         </div>
       </section>
@@ -495,105 +417,52 @@ export default function HomePage() {
 
       <section className="pd_section">
         <div className="container">
-          <h2 className="section_title">Ayurveda supplements</h2>
+          <h2 className="section_title">{categoryNamesById[9]}</h2>
           <div className="row">
-            <div className="col">
-              <div className="pd_box">
-                <div className="pd_img">
-                  <img src="images/products/pd-img-11.jpg" />
-                </div>
-                <div className="pd_content">
-                  <h3 className="pd_title">
-                    Dabur Chyawanprakash Sugar free powder
-                  </h3>
-                  <div className="pd_price">
-                    <span className="new_price">₹418</span>
-                    <span className="old_price">
-                      <del>MRP ₹460</del>9% off
-                    </span>
+            {medicineMenuByCategory9 && medicineMenuByCategory9.length > 0 ? (
+              medicineMenuByCategory9.slice(0, 5).map((item) => {
+                const mrp = item.MRP
+                  ? parseFloat(item.MRP.toString())
+                  : Math.floor(Math.random() * (1000 - 100 + 1)) + 100;
+
+                const discount = parseFloat(item.Discount) || 0;
+                const discountedPrice = Math.round(
+                  mrp - (mrp * discount) / 100
+                );
+
+                const imageUrl = item.DefaultImageURL
+                  ? item.DefaultImageURL.startsWith("http")
+                    ? item.DefaultImageURL
+                    : `${mediaBase}${item.DefaultImageURL}`
+                  : "/images/tnc-default.png";
+
+                return (
+                  <div className="col" key={item.product_id}>
+                    <div className="pd_box">
+                      <div className="pd_img">
+                        <Image src={imageUrl} alt={item.ProductName} />
+                      </div>
+                      <div className="pd_content">
+                        <h3 className="pd-title">{item.ProductName || ""}</h3>
+                        <h6 className="pd-title fw-bold">
+                          {item.Manufacturer || ""}
+                        </h6>
+                        <div className="pd_price">
+                          <span className="new_price">₹{discountedPrice}</span>
+                          <span className="old_price">
+                            <del>MRP ₹{mrp}</del> {discount}% off
+                          </span>
+                        </div>
+
+                        <button className="btn-1">ADD</button>
+                      </div>
+                    </div>
                   </div>
-                  <button className="btn-1">ADD</button>
-                </div>
-              </div>
-            </div>
-            <div className="col">
-              <div className="pd_box">
-                <div className="pd_img">
-                  <img src="images/products/pd-img-12.jpg" />
-                </div>
-                <div className="pd_content">
-                  <h3 className="pd_title">
-                    Dabur Jamun Neem Karela Juice 1L | Helps Control Blood
-                    Sugar...
-                  </h3>
-                  <div className="pd_price">
-                    <span className="new_price">₹418</span>
-                    <span className="old_price">
-                      <del>MRP ₹460</del>9% off
-                    </span>
-                  </div>
-                  <button className="btn-1">ADD</button>
-                </div>
-              </div>
-            </div>
-            <div className="col">
-              <div className="pd_box">
-                <div className="pd_img">
-                  <img src="images/products/pd-img-13.jpg" />
-                </div>
-                <div className="pd_content">
-                  <h3 className="pd_title">
-                    Himalaya Ashwagandha General Wellness Tablets | Stress
-                    Relief..
-                  </h3>
-                  <div className="pd_price">
-                    <span className="new_price">₹418</span>
-                    <span className="old_price">
-                      <del>MRP ₹460</del>9% off
-                    </span>
-                  </div>
-                  <button className="btn-1">ADD</button>
-                </div>
-              </div>
-            </div>
-            <div className="col">
-              <div className="pd_box">
-                <div className="pd_img">
-                  <img src="images/products/pd-img-14.jpg" />
-                </div>
-                <div className="pd_content">
-                  <h3 className="pd_title">
-                    Divya Madhunashni Vati Extra Power - 60 g (120 Tablets)
-                  </h3>
-                  <div className="pd_price">
-                    <span className="new_price">₹418</span>
-                    <span className="old_price">
-                      <del>MRP ₹460</del>9% off
-                    </span>
-                  </div>
-                  <button className="btn-1">ADD</button>
-                </div>
-              </div>
-            </div>
-            <div className="col">
-              <div className="pd_box">
-                <div className="pd_img">
-                  <img src="images/products/pd-img-15.jpg" />
-                </div>
-                <div className="pd_content">
-                  <h3 className="pd_title">
-                    Baidyanath Asli Ayurved Maha Bhringraj Hair Oil - 200 ml{" "}
-                  </h3>
-                  <div className="pd_price">
-                    <span className="new_price">₹418</span>
-                    <span className="old_price">
-                      <del>MRP ₹460</del>9% off
-                    </span>
-                  </div>
-                  <button className="btn-1">ADD</button>
-                </div>
-              </div>
-            </div>
+                );
+              })
+            ) : (
+              <p>Loading medicines...</p>
+            )}
           </div>
         </div>
       </section>

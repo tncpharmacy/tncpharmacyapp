@@ -14,12 +14,20 @@ const nextConfig: NextConfig = {
     return [
       //User routes
       {
+        source: "/all-product/:id",
+        destination: "/user/all-product/:id",
+      },
+      {
         source: "/product-details/:id",
         destination: "/user/product-details/:id",
       },
       {
         source: "/all-medicine",
         destination: "/user/all-medicine/all-medicine",
+      },
+      {
+        source: "/medicines-details/:id",
+        destination: "/user/medicines-details/:id",
       },
       {
         source: "/health-bag",

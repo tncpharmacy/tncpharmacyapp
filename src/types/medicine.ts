@@ -70,6 +70,13 @@ export interface Medicine {
   };
   documents: DocumentFile[];
   images?: MedicineImage[];
+
+  product_id: number;
+  ProductName: string;
+  varient: string;
+  Doses_form: string;
+  Discount: string;
+  DefaultImageURL: string;
 }
 
 export interface MedicineResponse {

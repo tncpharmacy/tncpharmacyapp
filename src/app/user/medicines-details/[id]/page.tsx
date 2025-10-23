@@ -161,8 +161,9 @@ export default function ProductPage() {
   const dispatch = useAppDispatch();
   const decodedId = decodeId(params);
   const getByIdMedicines = useAppSelector(
-    (state) => state.medicine.otherMedicines
+    (state) => state.medicine.medicines
   ) as unknown as Medicine;
+
   const {
     id,
     medicine_name,
@@ -182,7 +183,6 @@ export default function ProductPage() {
     side_effect,
     storage,
     uses_benefits,
-    product_introduction,
     images,
   } = getByIdMedicines;
   const { alcohol, pregnancy, breast_feeding, driving, kidney, liver } =
@@ -191,7 +191,10 @@ export default function ProductPage() {
   const [activeSectionId, setActiveSectionId] = useState("1");
   const sections = [
     { id: "1", title: "Description" },
-    { id: "2", title: "Product Introduction" },
+    { id: "2", title: "Uses and benefits" },
+    { id: "3", title: "Side effects" },
+    { id: "4", title: "Direction for use" },
+    { id: "5", title: "Safety advice" },
   ];
   // 3. Mapping Object (Type-safe and complete)
   const safetyFieldLabelMap: Record<SafetyFieldKeys, SafetyLabelKeys> = {
@@ -262,7 +265,7 @@ export default function ProductPage() {
   const [qty, setQty] = useState(1);
   const [selectedPack, setSelectedPack] = useState("500g");
   useEffect(() => {
-    if (decodedId) dispatch(getMedicinesMenuByOtherId(decodedId));
+    if (decodedId) dispatch(getMedicinesMenuById(decodedId));
   }, [decodedId]);
 
   const product: Product = {
@@ -383,27 +386,45 @@ export default function ProductPage() {
               <div className="view_box" id="overview">
                 <div className="row">
                   <div className="col-md-8">
-                    <h3 className="fw-bold">{medicine_name}</h3>
-
-                    <div className="mb-2">
+                    <h1 className="fs-3 fw-bold">{medicine_name}</h1>
+                    <div className="mb-4">
+                      {typeof prescription_required === "number" ? (
+                        prescription_required === 1 ? (
+                          <div className="descr d-flex align-items-center">
+                            <Image
+                              src="/images/RX-small.png"
+                              alt="Prescription Required"
+                              width={28} // same as your inline width
+                              height={28} // required prop
+                              style={{ marginRight: "10px" }}
+                            />
+                            Prescription Required
+                          </div>
+                        ) : (
+                          <div className="descr">No Prescription Required</div>
+                        )
+                      ) : (
+                        // Ye blank placeholder SSR ke liye taaki hydration error na aaye
+                        <div className="descr" suppressHydrationWarning>
+                          &nbsp;
+                        </div>
+                      )}
+                    </div>
+                    <div className="mb-3">
+                      <div className="title">Generic Strength</div>
+                      <div className="descr">
+                        <Link href="#">{generic_name}</Link>
+                      </div>
+                    </div>
+                    <div className="mb-3">
                       <div className="title">Manufacturer</div>
                       <div className="descr">
                         <Link href="#">{manufacturer_name}</Link>
                       </div>
                     </div>
-                    <div className="mb-2">
-                      <div className="title">Pack Size</div>
-                      <div className="descr">
-                        <Link href="#">{pack_size}</Link>
-                      </div>
-                    </div>
-                    <div className="mb-4">
-                      <div className="title fs-6">Variant (3)</div>
-                      <ul className="pd_variant">
-                        <li className="active">Fresh Active</li>
-                        <li>Deep Impact Freshness</li>
-                        <li>Cool Kick</li>
-                      </ul>
+                    <div className="mb-3">
+                      <div className="title">Storage</div>
+                      <div className="descr">{storage}</div>
                     </div>
                   </div>
                   <div className="col-md-4 pb-4">
@@ -458,13 +479,13 @@ export default function ProductPage() {
                 </div>
                 <div className="accordian-wrapper"></div>
               </div>
+              <HorizontalAccordionTabs />
               <div className="herotab">
                 <ul className="herotab_list">
                   {sections.map(({ id, title }) => (
                     <li key={id}>
                       <a
                         href="#"
-                        style={{ maxWidth: "none" }}
                         onClick={(e) => {
                           e.preventDefault();
                           setActiveSectionId(id);
@@ -490,8 +511,103 @@ export default function ProductPage() {
                 <div id="2" className={activeSectionId === "2" ? "" : "d-none"}>
                   <div className="col-12">
                     <div className="mb-3">
-                      <div className="sec_title">Product Introduction</div>
-                      <div className="descr">{product_introduction}</div>
+                      <div className="sec_title">Uses and benefits</div>
+                      <div className="descr">{uses_benefits}</div>
+                    </div>
+                  </div>
+                </div>
+                <div id="3" className={activeSectionId === "3" ? "" : "d-none"}>
+                  <div className="col-12">
+                    <div className="mb-3">
+                      <div className="sec_title">Side effects</div>
+                      <div className="descr">{side_effect}</div>
+                    </div>
+                  </div>
+                </div>
+                <div id="4" className={activeSectionId === "4" ? "" : "d-none"}>
+                  <div className="col-12">
+                    <div className="mb-3">
+                      <div className="sec_title">Direction for use</div>
+                      <div className="descr">{direction_for_use}</div>
+                    </div>
+                  </div>
+                </div>
+                <div id="5" className={activeSectionId === "5" ? "" : "d-none"}>
+                  <div className="col-12">
+                    <div className="mb-3">
+                      <div className="sec_title">Safety Advice</div>
+
+                      <div className="title">
+                        Alcohol{" "}
+                        <small
+                          style={{
+                            color: getLabelColor(alcoholInfo.label),
+                          }}
+                        >
+                          ({alcoholInfo.label})
+                        </small>
+                      </div>
+                      <div className="descr">{alcoholInfo.text}</div>
+
+                      <div className="title">
+                        Pregnancy{" "}
+                        <small
+                          style={{
+                            color: getLabelColor(pregnancyInfo.label),
+                          }}
+                        >
+                          ({pregnancyInfo.label})
+                        </small>
+                      </div>
+                      <div className="descr">{pregnancyInfo.text}</div>
+
+                      <div className="title">
+                        Breast feeding{" "}
+                        <small
+                          style={{
+                            color: getLabelColor(breastFeedingInfo.label),
+                          }}
+                        >
+                          ({breastFeedingInfo.label})
+                        </small>
+                      </div>
+                      <div className="descr">{breastFeedingInfo.text}</div>
+
+                      <div className="title">
+                        Driving{" "}
+                        <small
+                          style={{
+                            color: getLabelColor(alcoholInfo.label),
+                          }}
+                        >
+                          ({drivingInfo.label})
+                        </small>
+                      </div>
+                      <div className="descr">{drivingInfo.text}</div>
+
+                      <div className="title">
+                        Kidney{" "}
+                        <small
+                          style={{
+                            color: getLabelColor(breastFeedingInfo.label),
+                          }}
+                        >
+                          ({kidneyInfo.label})
+                        </small>
+                      </div>
+                      <div className="descr">{kidneyInfo.text}</div>
+
+                      <div className="title">
+                        Liver{" "}
+                        <small
+                          style={{
+                            color: getLabelColor(breastFeedingInfo.label),
+                          }}
+                        >
+                          ({liverInfo.label})
+                        </small>
+                      </div>
+                      <div className="descr">{liverInfo.text}</div>
                     </div>
                   </div>
                 </div>

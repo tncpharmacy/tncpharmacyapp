@@ -30,16 +30,14 @@ export default function MedicineCard({
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
     }).format(value);
-  // 👇 If mrp is null, assign dummy random value
-  const originalMrp = mrp ?? Math.floor(Math.random() * (5000 - 200 + 1)) + 200; // random 200–5000
-  // 👇 Convert discount string (like "10") into number
+
+  const originalMrp = mrp ?? Math.floor(Math.random() * (5000 - 200 + 1)) + 200;
   const discountPercent = parseFloat(discount || "0");
-  // 👇 Calculate discounted price
   const discountedPrice = originalMrp - (originalMrp * discountPercent) / 100;
 
   // 👇 onClick function
   const handleClick = (id: number) => {
-    router.push(`/product-details/${encodeId(id)}`);
+    router.push(`/medicines-details/${encodeId(id)}`);
   };
 
   const fullUrl = primary_image?.document || "";

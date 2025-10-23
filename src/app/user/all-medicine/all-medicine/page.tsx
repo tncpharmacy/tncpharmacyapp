@@ -24,9 +24,6 @@ export default function AllMedicine() {
           {/* <FilterSidebar /> */}
           <div className="body_right">
             <div className="body_content">
-              <div className="pageTitle">
-                <Image src={"/images/favicon.png"} alt="" /> Medicine
-              </div>
               {/* <Link href={"#"}> */}
               <MedicineList medicines={medicines || []} />
               {/* </Link> */}
