@@ -52,6 +52,17 @@ export const fetchMenuMedicinesByOtherId = async (
   return res.data; // ✅ res.data is now MedicineResponse
 };
 // =========================
+// GET MEDICINE ID BY GENERIC
+// =========================
+export const fetchMedicineByGenericId = async (
+  medicineId: number
+): Promise<MedicineResponse> => {
+  const res = await axiosInstance.get<MedicineResponse>(
+    ENDPOINTS.MEDICINES.GET_MEDICINE_LIST_BY_GENERIC(medicineId)
+  );
+  return res.data; // ✅ res.data is now MedicineResponse
+};
+// =========================
 // GET ALL PRODUCT List
 // =========================
 export const fetchProductAllList = async (): Promise<MedicineResponse> => {

@@ -10,7 +10,10 @@ import { getMenuMedicinesList } from "@/lib/features/medicineSlice/medicineSlice
 
 export default function AllMedicine() {
   const dispatch = useAppDispatch();
-  const { medicines } = useAppSelector((state) => state.medicine);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { medicinesList: medicines } = useAppSelector(
+    (state) => state.medicine
+  );
 
   useEffect(() => {
     dispatch(getMenuMedicinesList());

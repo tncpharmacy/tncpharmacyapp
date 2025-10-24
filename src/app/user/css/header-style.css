@@ -187,7 +187,7 @@ span.user_p i .count {
 
 .search_query input[type=text] {
     border: 1px solid #b5cfea;
-    border-radius: 8px;
+    border-radius: 0;
     box-shadow: none;
     color: #696e79;
     font-size: 13px;

@@ -11,6 +11,7 @@ import { decodeId } from "@/lib/utils/encodeDecode";
 import HorizontalAccordionTabs from "@/app/user/product-details/HorizontalAccordionTabs";
 import { useAppDispatch, useAppSelector } from "@/lib/hooks";
 import {
+  getMedicineByGenericId,
   getMedicinesMenuById,
   getMedicinesMenuByOtherId,
 } from "@/lib/features/medicineSlice/medicineSlice";
@@ -161,7 +162,7 @@ export default function ProductPage() {
   const dispatch = useAppDispatch();
   const decodedId = decodeId(params);
   const getByIdMedicines = useAppSelector(
-    (state) => state.medicine.medicines
+    (state) => state.medicine.medicinesList
   ) as unknown as Medicine;
 
   const {
@@ -188,6 +189,7 @@ export default function ProductPage() {
   const { alcohol, pregnancy, breast_feeding, driving, kidney, liver } =
     safety_advice || {};
 
+  //console.log("genericListByMedicine", genericListByMedicine);
   const [activeSectionId, setActiveSectionId] = useState("1");
   const sections = [
     { id: "1", title: "Description" },
@@ -264,9 +266,10 @@ export default function ProductPage() {
   );
   const [qty, setQty] = useState(1);
   const [selectedPack, setSelectedPack] = useState("500g");
+
   useEffect(() => {
     if (decodedId) dispatch(getMedicinesMenuById(decodedId));
-  }, [decodedId]);
+  }, [dispatch, decodedId]);
 
   const product: Product = {
     title:
@@ -479,7 +482,7 @@ export default function ProductPage() {
                 </div>
                 <div className="accordian-wrapper"></div>
               </div>
-              <HorizontalAccordionTabs />
+              <HorizontalAccordionTabs id={id} />
               <div className="herotab">
                 <ul className="herotab_list">
                   {sections.map(({ id, title }) => (

@@ -119,6 +119,8 @@ export const ENDPOINTS = {
     GET_MENU_OTHER_MEDICINE: (categoryId: number) =>
       `/website/other/medicine/list/?category_id=${categoryId}`,
     GET_BY_MENU_OTHER_ID: (id: number) => `/website/other/medicine/${id}/`,
+    GET_MEDICINE_LIST_BY_GENERIC: (medicineId: number) =>
+      `website/generic/medicine/${medicineId}/`,
   },
 
   // Purchase Stock

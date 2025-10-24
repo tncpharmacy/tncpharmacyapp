@@ -222,8 +222,9 @@ export default function HomePage() {
                       </div>
                       <div className="pd_content">
                         <h3
-                          className="pd-title"
+                          className="pd-title hover-link"
                           onClick={() => handleClick(item.product_id)}
+                          style={{ cursor: "pointer" }}
                         >
                           {item.ProductName || ""}
                         </h3>
@@ -342,7 +343,13 @@ export default function HomePage() {
                         <Image src={imageUrl} alt={item.ProductName} />
                       </div>
                       <div className="pd_content">
-                        <h3 className="pd-title">{item.ProductName || ""}</h3>
+                        <h3
+                          className="pd-title hover-link"
+                          onClick={() => handleClick(item.product_id)}
+                          style={{ cursor: "pointer" }}
+                        >
+                          {item.ProductName || ""}
+                        </h3>
                         <h6 className="pd-title fw-bold">
                           {item.Manufacturer || ""}
                         </h6>
@@ -443,7 +450,13 @@ export default function HomePage() {
                         <Image src={imageUrl} alt={item.ProductName} />
                       </div>
                       <div className="pd_content">
-                        <h3 className="pd-title">{item.ProductName || ""}</h3>
+                        <h3
+                          className="pd-title hover-link"
+                          onClick={() => handleClick(item.product_id)}
+                          style={{ cursor: "pointer" }}
+                        >
+                          {item.ProductName || ""}
+                        </h3>
                         <h6 className="pd-title fw-bold">
                           {item.Manufacturer || ""}
                         </h6>

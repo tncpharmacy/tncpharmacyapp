@@ -18,7 +18,7 @@ import AddBillingItemModal from "@/app/components/RetailCounterModal/AddBillingI
 import BillPreviewModal from "@/app/components/RetailCounterModal/BillPreviewModal";
 
 export default function RetailCounter() {
-  const despatch = useAppDispatch();
+  const dispatch = useAppDispatch();
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [cart, setCart] = useState<any[]>([]);
 
@@ -56,8 +56,8 @@ export default function RetailCounter() {
   };
   // Initial product list fetch
   useEffect(() => {
-    despatch(getProductList());
-  }, [despatch]);
+    dispatch(getProductList());
+  }, [dispatch]);
 
   const handleSkipGenericModal = (item: Medicine) => {
     setItemToConfirm(item);
@@ -82,7 +82,7 @@ export default function RetailCounter() {
       setSelectedGenericId(null);
       setSelectedMedicine(selectedMedicine);
       if (categoryId === 1) {
-        despatch(getProductByGenericId(genericId));
+        dispatch(getProductByGenericId(genericId));
         setSelectedGenericId(genericId);
       } else {
         handleSkipGenericModal(selectedMedicine);

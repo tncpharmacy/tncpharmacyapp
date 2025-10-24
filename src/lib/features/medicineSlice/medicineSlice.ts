@@ -1,6 +1,7 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import {
   fetchGroupCare,
+  fetchMedicineByGenericId,
   fetchMedicinesAllList,
   fetchMenuMedicinesById,
   fetchMenuMedicinesByOtherId,
@@ -18,9 +19,11 @@ import {
 
 interface MedicineState {
   medicines: Medicine[];
+  medicinesList: Medicine[];
   otherMedicines: Medicine[];
   groupCare: CareGroup[];
   genericAlternatives: Medicine[];
+  genericAlternativesMedicines: Medicine[];
   count: number;
   loading: boolean;
   error: string | null;
@@ -29,9 +32,11 @@ interface MedicineState {
 
 const initialState: MedicineState = {
   medicines: [],
+  medicinesList: [],
   otherMedicines: [],
   groupCare: [],
   genericAlternatives: [],
+  genericAlternativesMedicines: [],
   count: 0,
   loading: false,
   error: null,
@@ -111,6 +116,23 @@ export const getMedicinesMenuByOtherId = createAsyncThunk<
   }
 });
 
+// ✅ Get all medicine id by generic
+export const getMedicineByGenericId = createAsyncThunk<
+  MedicineResponse,
+  number,
+  { rejectValue: string }
+>("medicine/getMedicineIdByGeneric", async (id, { rejectWithValue }) => {
+  try {
+    const res: MedicineResponse = await fetchMedicineByGenericId(id);
+    return res;
+  } catch (err: unknown) {
+    if (err instanceof Error) {
+      return rejectWithValue(err.message);
+    }
+    return rejectWithValue("Failed to fetch medicines");
+  }
+});
+
 // ✅ Get all menu medicines List
 export const getMenuMedicinesList = createAsyncThunk<
   MedicineResponse, // ✅ returning full object
@@ -145,7 +167,7 @@ export const getProductList = createAsyncThunk<
   }
 });
 
-// ✅ Get all product by id
+// ✅ Get all product id by generic
 export const getProductByGenericId = createAsyncThunk<
   MedicineResponse,
   number,
@@ -205,7 +227,7 @@ const medicineSlice = createSlice({
       })
       .addCase(getMenuMedicinesList.fulfilled, (state, action) => {
         state.loading = false;
-        state.medicines = action.payload.data;
+        state.medicinesList = action.payload.data;
         state.count = action.payload.count;
         state.error = null;
       })
@@ -219,11 +241,26 @@ const medicineSlice = createSlice({
       })
       .addCase(getMedicinesMenuById.fulfilled, (state, action) => {
         state.loading = false;
-        state.medicines = action.payload.data;
+        state.medicinesList = action.payload.data;
         state.count = action.payload.count;
         state.error = null;
       })
       .addCase(getMedicinesMenuById.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload || "Something went wrong";
+      })
+      // fetch medicine id by generic
+      .addCase(getMedicineByGenericId.pending, (state) => {
+        state.loading = true;
+        state.genericAlternativesMedicines = [];
+      })
+      .addCase(getMedicineByGenericId.fulfilled, (state, action) => {
+        state.loading = false;
+        state.genericAlternativesMedicines = action.payload.data;
+        state.count = action.payload.count;
+        state.error = null;
+      })
+      .addCase(getMedicineByGenericId.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload || "Something went wrong";
       })
@@ -269,7 +306,7 @@ const medicineSlice = createSlice({
         state.loading = false;
         state.error = action.payload || "Something went wrong";
       })
-      // fetch product by id
+      // fetch product id by generic
       .addCase(getProductByGenericId.pending, (state) => {
         state.loading = true;
         state.genericAlternatives = [];

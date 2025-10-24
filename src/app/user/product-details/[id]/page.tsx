@@ -167,70 +167,24 @@ export default function ProductPage() {
     id,
     medicine_name,
     manufacturer_name,
-    generic_name,
     dose_form,
     pack_size,
-    prescription_required,
     discount,
     status,
     category_id,
     created_by,
     mrp,
     description,
-    direction_for_use,
-    safety_advice,
-    side_effect,
-    storage,
-    uses_benefits,
     product_introduction,
     images,
   } = getByIdMedicines;
-  const { alcohol, pregnancy, breast_feeding, driving, kidney, liver } =
-    safety_advice || {};
 
   const [activeSectionId, setActiveSectionId] = useState("1");
   const sections = [
-    { id: "1", title: "Description" },
-    { id: "2", title: "Product Introduction" },
+    { id: "1", title: "Product Introduction" },
+    { id: "2", title: "Description" },
   ];
-  // 3. Mapping Object (Type-safe and complete)
-  const safetyFieldLabelMap: Record<SafetyFieldKeys, SafetyLabelKeys> = {
-    alcohol: "alcohol_label",
-    pregnancy: "pregnancy_label",
-    breast_feeding: "breast_feeding_label",
-    driving: "driving_label",
-    kidney: "kidney_label",
-    liver: "liver_label",
-  };
-  // --- getSafetyField Function ---
-  const getSafetyField = (field: SafetyFieldKeys) => {
-    if (!safety_advice) return { label: "N/A", text: "No data available." };
-    const labelKey = safetyFieldLabelMap[field];
-    const labelObj = (safety_advice as SafetyAdvice)[labelKey];
-    return {
-      label: labelObj?.safety_label || "N/A",
-      text: safety_advice[field] || "No data available.",
-    };
-  };
-  // --- Usage ---
-  const alcoholInfo = getSafetyField("alcohol");
-  const pregnancyInfo = getSafetyField("pregnancy");
-  const breastFeedingInfo = getSafetyField("breast_feeding");
-  const drivingInfo = getSafetyField("driving");
-  const kidneyInfo = getSafetyField("kidney");
-  const liverInfo = getSafetyField("liver");
 
-  const labelColors: Record<string, string> = {
-    CAUTION: "#d83ad8",
-    "CONSULT YOUR DOCTOR": "#28c038",
-    UNSAFE: "#598d27db",
-    "N/A": "#6c757d", // Default color अगर label न मिले
-  };
-
-  const getLabelColor = (label: string): string => {
-    // label.toUpperCase() का उपयोग करें ताकि केस सेंसिटिविटी की समस्या न हो
-    return labelColors[label.toUpperCase()] || labelColors["N/A"];
-  };
   // 🧩 Utility function — remove domain
   const getRelativePath = (url: string) => {
     try {
@@ -479,7 +433,7 @@ export default function ProductPage() {
               </div>
 
               <div className="view_box">
-                <div id="1" className={activeSectionId === "1" ? "" : "d-none"}>
+                <div id="2" className={activeSectionId === "2" ? "" : "d-none"}>
                   <div className="col-12">
                     <div className="mb-3">
                       <div className="sec_title">Description</div>
@@ -487,7 +441,7 @@ export default function ProductPage() {
                     </div>
                   </div>
                 </div>
-                <div id="2" className={activeSectionId === "2" ? "" : "d-none"}>
+                <div id="1" className={activeSectionId === "1" ? "" : "d-none"}>
                   <div className="col-12">
                     <div className="mb-3">
                       <div className="sec_title">Product Introduction</div>

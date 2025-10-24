@@ -21,10 +21,6 @@ export default function MedicineCard({
 }: Medicine) {
   const router = useRouter();
   const [isHovered, setIsHovered] = useState(false);
-  // const formatCurrency = (value: number) => {
-  //   return new Intl.NumberFormat("en-IN").format(value);
-  // };
-  // 👇 Format currency helper
   const formatCurrency = (value: number) =>
     new Intl.NumberFormat("en-IN", {
       minimumFractionDigits: 2,

@@ -1,16 +1,37 @@
-// components/HorizontalAccordionTabs.tsx
-
-import React, { useState, useRef } from "react";
-
-const HorizontalAccordionTabs: React.FC = () => {
+import { getMedicineByGenericId } from "@/lib/features/medicineSlice/medicineSlice";
+import { useAppDispatch, useAppSelector } from "@/lib/hooks";
+import { encodeId } from "@/lib/utils/encodeDecode";
+import { Medicine } from "@/types/medicine";
+import Link from "next/link";
+import React, { useState, useRef, useEffect } from "react";
+interface IDProps {
+  id: number;
+}
+interface GenericListProps {
+  genericListByMedicine: Medicine[];
+}
+const HorizontalAccordionTabs: React.FC<IDProps> = ({ id }) => {
   const [isOpen, setIsOpen] = useState(false);
-  // Accordion content की height जानने के लिए ref का उपयोग करें
+  const dispatch = useAppDispatch();
   const contentRef = useRef<HTMLDivElement>(null);
-
+  const genericListByMedicineRaw = useAppSelector(
+    (state) => state.medicine.genericAlternativesMedicines
+  );
   const toggleAccordion = () => {
     setIsOpen(!isOpen);
   };
 
+  const genericListByMedicine: Medicine[] = Array.isArray(
+    genericListByMedicineRaw
+  )
+    ? genericListByMedicineRaw
+    : genericListByMedicineRaw
+    ? [genericListByMedicineRaw]
+    : [];
+
+  useEffect(() => {
+    if (id) dispatch(getMedicineByGenericId(id));
+  }, [id]);
   // Header Button के लिए Styles (BG और Shadow हटा दिया गया)
   const headerButtonStyle: React.CSSProperties = {
     backgroundColor: "transparent",
@@ -73,42 +94,101 @@ const HorizontalAccordionTabs: React.FC = () => {
                       taking any medicines.
                     </div>
                     {/* Items को फुल width (w-50 हटा दिया) */}
-                    <div className="d-flex justify-content-between my-2">
-                      <div>
-                        <div className="">
-                          <a href="#">Noworm Chewable Tablet....</a>
+                    {genericListByMedicine.map((item) => {
+                      // 1️⃣ Random MRP generate (80 to 500)
+                      const randomMRP =
+                        Math.floor(Math.random() * (500 - 80 + 1)) + 80;
+
+                      // 2️⃣ Discount logic (convert to number safely)
+                      const discount = Number(item.discount) || 0;
+                      const discountedPrice =
+                        randomMRP - (randomMRP * discount) / 100;
+
+                      return (
+                        <div
+                          className="d-flex justify-content-between align-items-center my-2"
+                          key={item.id}
+                          style={{
+                            borderBottom: "1px solid #eee",
+                            paddingBottom: "8px",
+                            paddingTop: "8px",
+                          }}
+                        >
+                          {/* Left Side */}
+                          <div>
+                            <div>
+                              <Link
+                                href={`/medicines-details/${encodeId(item.id)}`}
+                              >
+                                {item.medicine_name}
+                              </Link>
+                            </div>
+                            <div
+                              className="descr"
+                              style={{ color: "#28a745", fontSize: "13px" }}
+                            >
+                              {item.manufacturer_name}
+                            </div>
+                          </div>
+
+                          {/* Right Side */}
+                          <div className="text-end">
+                            {discount > 0 ? (
+                              <>
+                                <div
+                                  className="title"
+                                  style={{
+                                    fontSize: "15px",
+                                    fontWeight: "600",
+                                    color: "#d32f2f",
+                                  }}
+                                >
+                                  ₹{discountedPrice.toFixed(2)}
+                                </div>
+                                <div
+                                  //className="descr"
+                                  style={{
+                                    fontSize: "13px",
+                                    color: "#888",
+                                    textDecoration: "line-through",
+                                  }}
+                                >
+                                  ₹{randomMRP}
+                                </div>
+                                <div
+                                  style={{
+                                    fontSize: "12px",
+                                    color: "#007bff",
+                                    fontWeight: 500,
+                                  }}
+                                >
+                                  {discount}% off
+                                </div>
+                              </>
+                            ) : (
+                              <>
+                                <div
+                                  className="title"
+                                  style={{
+                                    fontSize: "15px",
+                                    fontWeight: "600",
+                                    color: "#d32f2f",
+                                  }}
+                                >
+                                  ₹{randomMRP}
+                                </div>
+                                <div
+                                  className="descr"
+                                  style={{ fontSize: "13px", color: "#555" }}
+                                >
+                                  same price
+                                </div>
+                              </>
+                            )}
+                          </div>
                         </div>
-                        <div className="descr">Alkem Laboratories Ltd</div>
-                      </div>
-                      <div className="text-end">
-                        <div className="title">₹8.2/chewable tablet</div>
-                        <div className="descr">same price</div>
-                      </div>
-                    </div>
-                    <div className="d-flex justify-content-between my-2">
-                      <div>
-                        <div className="">
-                          <a href="#">Noworm Chewable Tablet....</a>
-                        </div>
-                        <div className="descr">Alkem Laboratories Ltd</div>
-                      </div>
-                      <div className="text-end">
-                        <div className="title">₹8.2/chewable tablet</div>
-                        <div className="descr">same price</div>
-                      </div>
-                    </div>
-                    <div className="d-flex justify-content-between my-2">
-                      <div>
-                        <div className="">
-                          <a href="#">Noworm Chewable Tablet....</a>
-                        </div>
-                        <div className="descr">Alkem Laboratories Ltd</div>
-                      </div>
-                      <div className="text-end">
-                        <div className="title">₹8.2/chewable tablet</div>
-                        <div className="descr">same price</div>
-                      </div>
-                    </div>
+                      );
+                    })}
                   </div>
                 </div>
               </div>

@@ -1,8 +1,8 @@
 "use client";
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import "../../css/header-style.css";
 import "../../../styles/style-login.css";
-import { Modal } from "react-bootstrap";
+import { Image, Modal } from "react-bootstrap";
 import { useAppDispatch, useAppSelector } from "@/lib/hooks";
 import { useRouter } from "next/navigation";
 import { loginUser } from "@/lib/features/authSlice/authSlice";
@@ -11,10 +11,11 @@ import { getSubcategories } from "@/lib/features/subCategorySlice/subCategorySli
 import { Category } from "@/types/category";
 import Link from "next/link";
 import PrescriptionUploadModal from "@/app/user/components/PrescriptionUploadModal/PrescriptionUploadModal";
-import Image from "next/image";
 import Login from "@/app/admin-login/page";
 import BuyerLoginModal from "@/app/buyer-login/page";
 import { encodeId } from "@/lib/utils/encodeDecode";
+import { getProductList } from "@/lib/features/medicineSlice/medicineSlice";
+import { Medicine } from "@/types/medicine";
 
 const SiteHeader = () => {
   const dispatch = useAppDispatch();
@@ -23,29 +24,106 @@ const SiteHeader = () => {
   const [showBuyerLogin, setShowBuyerLogin] = useState(false);
   const { list: categories } = useAppSelector((state) => state.category);
   const { list: subcategories } = useAppSelector((state) => state.subcategory);
+  const { medicines: productList, loading } = useAppSelector(
+    (state) => state.medicine
+  );
+  // search box related state
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filteredList, setFilteredList] = useState<Medicine[]>([]);
+  const [showList, setShowList] = useState(false);
+  const [highlightIndex, setHighlightIndex] = useState(-1);
+  const isSelecting = useRef(false);
+
+  const [mounted, setMounted] = useState(false);
   const [showModal, setShowModal] = useState(false);
+  const [shuffledCategories, setShuffledCategories] = useState<Category[]>([]);
 
   useEffect(() => {
     dispatch(getCategoriesList());
     dispatch(getSubcategories());
   }, [dispatch]);
 
-  const [show, setShow] = useState(false);
+  useEffect(() => {
+    if (!searchTerm || searchTerm.length === 0) return;
+    dispatch(getProductList());
+  }, [dispatch, searchTerm]);
 
-  const [mounted, setMounted] = useState(false);
+  // filter logic
+  useEffect(() => {
+    if (isSelecting.current) {
+      isSelecting.current = false;
+      return;
+    }
+
+    if (searchTerm.trim().length > 0 && productList?.length > 0) {
+      const lower = searchTerm.toLowerCase();
+      const filtered = productList.filter(
+        (p) =>
+          (p.medicine_name?.toLowerCase().includes(lower) ||
+            p.Manufacturer?.toLowerCase().includes(lower)) ??
+          false
+      );
+      setFilteredList(filtered.slice(0, 10));
+      setShowList(true);
+      setHighlightIndex(-1);
+    } else {
+      setShowList(false);
+    }
+  }, [searchTerm, productList]);
+
+  // keyboard navigation
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (!showList || filteredList.length === 0) return;
+
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      setHighlightIndex((prev) =>
+        prev < filteredList.length - 1 ? prev + 1 : 0
+      );
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      setHighlightIndex((prev) =>
+        prev > 0 ? prev - 1 : filteredList.length - 1
+      );
+    } else if (e.key === "Enter" || e.key === "Tab") {
+      e.preventDefault();
+      if (highlightIndex >= 0 && highlightIndex < filteredList.length) {
+        handleSelect(filteredList[highlightIndex]);
+        setShowList(false);
+      }
+    }
+  };
+
+  // select function wrapper
+  const handleItemSelect = (item: Medicine) => {
+    isSelecting.current = true; // 👈 stop next filtering trigger
+    handleSelect(item);
+    setSearchTerm(item.medicine_name); // show selected item name
+    setShowList(false); // close list
+    setHighlightIndex(-1);
+  };
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const handleSelect = (product: any) => {
+    setSearchTerm(product.medicine_name);
+    setShowList(false);
+    if (product.category_id === 1) {
+      router.push(`/medicines-details/${encodeId(product.id)}`);
+    } else {
+      router.push(`/product-details/${encodeId(product.id)}`);
+    }
+  };
 
   useEffect(() => setMounted(true), []);
-
-  const [shuffledCategories, setShuffledCategories] = useState<Category[]>([]);
 
   useEffect(() => {
     const shuffled = [...categories].sort(() => Math.random() - 0.5);
     setShuffledCategories(shuffled);
   }, [categories]);
 
-  const handleClick = (catId: number) => {
-    router.push(`/all-product/${encodeId(catId)}`);
-  };
+  // const handleClick = (catId: number) => {
+  //   router.push(`/all-product/${encodeId(catId)}`);
+  // };
 
   if (!mounted) return null;
 
@@ -55,7 +133,7 @@ const SiteHeader = () => {
         <div className="container">
           <div className="header_wrap">
             <Link href="/" className="logo">
-              <img src="/images/logo.png" alt="" />
+              <Image src="/images/logo.png" alt="" />
             </Link>
 
             <div className="search_query">
@@ -64,8 +142,68 @@ const SiteHeader = () => {
               </a>
               <input
                 type="text"
-                placeholder="Search for Medicines and Health Products"
+                placeholder="Search for medicines & products..."
+                style={{ borderRadius: "none" }}
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                onFocus={() => searchTerm && setShowList(true)}
+                onKeyDown={handleKeyDown}
               />
+              {/* Suggestions List */}
+              {showList && filteredList.length > 0 && (
+                <ul
+                  style={{
+                    position: "absolute",
+                    top: "70%",
+                    left: 0,
+                    right: 0,
+                    background: "#fff",
+                    maxHeight: "250px",
+                    overflowY: "auto",
+                    marginTop: "5px",
+                    zIndex: 1000,
+                    listStyle: "none",
+                    padding: 0,
+                  }}
+                >
+                  {filteredList.map((item, index) => (
+                    <li
+                      key={item.id}
+                      onClick={() => handleItemSelect(item)}
+                      onMouseDown={(e) => e.preventDefault()}
+                      onMouseEnter={() => setHighlightIndex(index)}
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        padding: "20px 12px",
+                        cursor: "pointer",
+                        borderBottom: "1px solid #eee",
+                        backgroundColor:
+                          index === highlightIndex
+                            ? "rgb(237 240 243)"
+                            : "transparent", // highlight color
+                        color:
+                          index === highlightIndex ? "rgb(31 20 20)" : "#000", // text color
+                      }}
+                    >
+                      <span style={{ fontWeight: 500, fontSize: "15px" }}>
+                        {item.medicine_name}
+                      </span>
+                      <span
+                        style={{
+                          fontSize: "13px",
+                          color: "rgb(208 95 95)",
+                          fontWeight: "600",
+                        }}
+                      >
+                        {item.Manufacturer || "N/A"} | ₹
+                        {item.MRP === null ? 0 : item.MRP}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              )}
             </div>
 
             <ul className="user_right">
@@ -73,9 +211,10 @@ const SiteHeader = () => {
                 <div className="dropdown-user">
                   <span className="user_p dropdownbtn">
                     <i>
-                      <img
+                      <Image
                         className="user_icon"
                         src="/images/icons/icon-profile.svg"
+                        alt=""
                       />
                     </i>
                     Account
@@ -131,7 +270,7 @@ const SiteHeader = () => {
                 <a href="my-wishlist.html">
                   <span className="user_p">
                     <i>
-                      <img
+                      <Image
                         className="user_icon"
                         src="/images/icons/icon-wishlist.svg"
                       />
@@ -145,9 +284,10 @@ const SiteHeader = () => {
                 <Link href="/health-bag">
                   <span className="user_p">
                     <i>
-                      <img
+                      <Image
                         className="user_icon"
                         src="/images/icons/icon-cart.svg"
+                        alt=""
                       />
                       <span className="count">0</span>
                     </i>

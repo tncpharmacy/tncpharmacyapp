@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import "../../css/site-style.css";
 import "../../css/user-style.css";
 import { useRouter } from "next/navigation";
@@ -22,6 +22,7 @@ export default function AllProduct() {
   const decodedId = decodeId(params);
   const [isHovered, setIsHovered] = useState(false);
   const categoryIdNum = Number(decodedId);
+  const [searchTerm, setSearchTerm] = useState("");
 
   const medicines = useAppSelector(
     (state) => state.medicine.byCategory[categoryIdNum] || []
@@ -38,6 +39,17 @@ export default function AllProduct() {
     router.push(`/product-details/${encodeId(product_id)}`);
   };
 
+  // Filter the medicines based on the search term
+  const filteredMedicines = useMemo(() => {
+    if (!searchTerm) {
+      return medicines;
+    }
+    const lowerCaseSearchTerm = searchTerm.toLowerCase();
+    return medicines.filter((med) =>
+      (med.ProductName || "").toLowerCase().includes(lowerCaseSearchTerm)
+    );
+  }, [medicines, searchTerm]);
+
   return (
     <>
       <div className="page-wrapper">
@@ -51,23 +63,22 @@ export default function AllProduct() {
                 <Image src={"/images/favicon.png"} alt="" /> Product
               </div>
               <div className="row">
-                <div className="col-md-8">
+                <div className="col-md-12">
                   <div className="txt_col">
                     <span className="lbl1">Search</span>
                     <input
                       type="text"
-                      className="txt1 rounded my-box" // Bootstrap
-                      // className="border px-3 py-2 w-full rounded-md" // Tailwind
+                      className="txt1 my-box"
                       placeholder="Search products..."
-                      //value={searchTerm}
-                      //onChange={(e) => setSearchTerm(e.target.value)}
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
                     />
                   </div>
                 </div>
               </div>
               <div className="pd_list">
-                {medicines && medicines.length > 0 ? (
-                  medicines.map((item) => {
+                {filteredMedicines && filteredMedicines.length > 0 ? (
+                  filteredMedicines.map((item) => {
                     const mrp = item.MRP
                       ? parseFloat(item.MRP.toString())
                       : Math.floor(Math.random() * (1000 - 100 + 1)) + 100;
