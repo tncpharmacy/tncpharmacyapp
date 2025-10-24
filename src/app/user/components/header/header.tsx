@@ -19,6 +19,7 @@ import {
   getProductList,
 } from "@/lib/features/medicineSlice/medicineSlice";
 import { Medicine } from "@/types/medicine";
+import { useHealthBag } from "@/lib/hooks/useHealthBag";
 
 const SiteHeader = () => {
   const dispatch = useAppDispatch();
@@ -40,6 +41,11 @@ const SiteHeader = () => {
   const [mounted, setMounted] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [shuffledCategories, setShuffledCategories] = useState<Category[]>([]);
+
+  const buyer = useAppSelector((state) => state.buyer.buyer);
+  const userId = buyer?.id || null;
+
+  const { items } = useHealthBag({ userId });
 
   useEffect(() => {
     dispatch(getCategoriesList());
@@ -305,7 +311,7 @@ const SiteHeader = () => {
                         src="/images/icons/icon-cart.svg"
                         alt=""
                       />
-                      <span className="count">0</span>
+                      <span className="count">{items.length}</span>
                     </i>
                     Health Bag
                   </span>
@@ -379,7 +385,9 @@ const SiteHeader = () => {
                       .filter((cat) => cat.category_name !== "Medicines")
                       .map((cat) => (
                         <li key={cat.id} className="">
-                          <a href="#">{cat.category_name}</a>
+                          <Link href={`/all-product/${encodeId(cat.id)}`}>
+                            {cat.category_name}
+                          </Link>
                         </li>
                       ))}
                   </ul>

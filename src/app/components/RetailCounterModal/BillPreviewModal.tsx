@@ -198,7 +198,7 @@ const BillPreviewModal: React.FC<BillPreviewModalProps> = ({
 
         return {
           ...item,
-          medicine_name: translatedName, // Use translated name
+          medicine_name: item.medicine_name, // Use translated name
           dose_form: item.dose_form, // Use original dose form (numeric)
           remarks: translatedRemarks,
         };
@@ -288,25 +288,50 @@ const BillPreviewModal: React.FC<BillPreviewModalProps> = ({
       <Modal.Body>
         <div className={styles.modalContentWrapper} ref={printRef}>
           {/* Header */}
+          {/* Header */}
           <div
-            className={`d-flex justify-content-between align-items-center mb-4 ${styles.billHeader}`}
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "flex-start",
+              marginBottom: "20px",
+              borderBottom: "2px solid #007bff",
+              paddingBottom: "8px",
+            }}
           >
-            <div className="d-flex align-items-center gap-2">
-              {/* Image is standard img tag */}
+            {/* Left: Logo */}
+            <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
               <Image
                 src="/images/logo.png"
                 alt="TnC Pharmacy"
-                style={{ height: 100, width: 220, objectFit: "contain" }}
+                style={{
+                  height: 90,
+                  width: 200,
+                  objectFit: "contain",
+                }}
               />
             </div>
+
+            {/* Right: Address */}
             <div
-              className="text-end"
-              style={{ fontSize: "12px", color: "#555" }}
+              style={{
+                textAlign: "right",
+                fontSize: "12px",
+                color: "#333",
+                lineHeight: "1.4",
+                maxWidth: "220px",
+              }}
             >
-              <p style={{ margin: 0 }}>123 Main Street, City - 000000</p>
-              <p style={{ margin: 0 }}>Ph: +91-9999999999</p>
+              <strong style={{ fontSize: "13px", color: "#007bff" }}>
+                TnC Pharmacy
+              </strong>
+              <br />
+              123 Main Street, City - 000000 <br />
+              Ph: +91-9999999999 <br />
+              Email: support@tncpharmacy.in
             </div>
           </div>
+
           {/* Customer Info */}
           <div className={styles.customerInfo}>
             <div className="d-flex justify-content-between">
@@ -318,11 +343,27 @@ const BillPreviewModal: React.FC<BillPreviewModalProps> = ({
               </div>
             </div>
           </div>
-          {/* Billing Summary (Only visible on Screen, Hidden during Print) */}
-          <section className="print-hide">
-            <h6 className="fw-bold text-primary mb-2">Billing Summary</h6>
+          {/* ✅ Billing Summary (visible both in screen + print) */}
+          <section>
+            <h3
+              style={{
+                fontSize: "16px",
+                fontWeight: "700",
+                color: "#007bff",
+                paddingBottom: "4px",
+                marginBottom: "10px",
+                marginTop: "20px",
+                textTransform: "uppercase",
+                WebkitPrintColorAdjust: "exact", // ✅ ensures color in print
+              }}
+            >
+              Billing Summary
+            </h3>
 
-            <table className={`table table-bordered text-center align-middle`}>
+            <table
+              className="table table-bordered text-center align-middle"
+              style={{ border: "1px solid #000", width: "100%" }}
+            >
               <thead className="table-light">
                 <tr>
                   <th>Medicine</th>
@@ -334,9 +375,6 @@ const BillPreviewModal: React.FC<BillPreviewModalProps> = ({
               </thead>
               <tbody>
                 {translatedCart.map((translatedItem, idx) => {
-                  const originalItem = cart?.[idx];
-                  const displayMedicineName =
-                    originalItem?.medicine_name || translatedItem.medicine_name;
                   const total = translatedItem.qty * translatedItem.price;
                   const discountAmount = translatedItem.Disc
                     ? (total * translatedItem.Disc) / 100
@@ -345,11 +383,11 @@ const BillPreviewModal: React.FC<BillPreviewModalProps> = ({
 
                   return (
                     <tr key={idx}>
-                      <td>{displayMedicineName}</td>
+                      <td>{translatedItem.medicine_name}</td>
                       <td>{translatedItem.qty}</td>
                       <td>{translatedItem.price}</td>
                       <td>{translatedItem.Disc}</td>
-                      <td>{subtotal}</td>
+                      <td>{subtotal.toFixed(2)}</td>
                     </tr>
                   );
                 })}
@@ -397,7 +435,18 @@ const BillPreviewModal: React.FC<BillPreviewModalProps> = ({
             <>
               {/* Doses & Remarks Section: Print-friendly layout */}
               <section className="print-only" style={{ marginTop: "20px" }}>
-                <h6 className="fw-bold mb-3 text-start text-primary">
+                <h3
+                  style={{
+                    fontSize: "16px",
+                    fontWeight: "700",
+                    color: "#007bff",
+                    paddingBottom: "4px",
+                    marginTop: "25px",
+                    marginBottom: "10px",
+                    textTransform: "uppercase",
+                    WebkitPrintColorAdjust: "exact",
+                  }}
+                >
                   Doses & Remarks
                   {language !== "en" && (
                     <span className="text-primary">
@@ -406,7 +455,7 @@ const BillPreviewModal: React.FC<BillPreviewModalProps> = ({
                       {languageOptions.find((l) => l.code === language)?.name})
                     </span>
                   )}
-                </h6>
+                </h3>
 
                 <div className="dose-container">
                   {translatedCart.map((item, idx) => (

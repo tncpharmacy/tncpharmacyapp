@@ -129,10 +129,20 @@ export const ENDPOINTS = {
   },
 
   // add to card
-  CARD: {
-    LOGIN: "/buyer/validate/",
-    CREATE: "/buyer/register/",
-    DELETE: (id: number) => `/buyer/create/${id}/`,
+  HEALTHBAG: {
+    CREATE: "/cart/add/",
+    GET_ALL: (id: number) => `/cart/view/${id}/`,
+    DELETE: (id: number) => `/cart/delete/${id}/`,
+    PUTINCREASE: (id: number) => `/cart/quantity/${id}/?quantity=Increase/`,
+    PUTDECREASE: (id: number) => `/cart/quantity/${id}/?quantity=Decrease/`,
+    GET_ADMIN: "/cart/superadmin/buyers/",
+  },
+
+  // address
+  ADDRESS: {
+    CREATE: "/address/create/",
+    GET_ALL: (id: number) => `/address/view/${id}/`,
+    DELETE: (id: number) => `/address/delete/?id=${id}/`,
   },
 
   // Purchase Stock

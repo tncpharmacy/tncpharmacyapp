@@ -15,6 +15,9 @@ import {
 } from "@/lib/features/medicineSlice/medicineSlice";
 import { Image } from "react-bootstrap";
 import "bootstrap/dist/css/bootstrap.min.css";
+import { useAuth } from "@/lib/hooks/useAuth";
+import { useHealthBag } from "@/lib/hooks/useHealthBag";
+import { createHealthBag } from "@/lib/api/healthBag";
 
 const mediaBase = process.env.NEXT_PUBLIC_MEDIA_BASE_URL;
 
@@ -33,7 +36,20 @@ export default function AllProduct() {
     if (!medicines.length && categoryIdNum) {
       dispatch(getMedicinesByCategoryId(categoryIdNum));
     }
-  }, [categoryIdNum, dispatch, medicines.length]); // 👇 onClick function
+  }, [categoryIdNum, dispatch, medicines.length]);
+
+  const buyer = useAppSelector((state) => state.buyer.buyer);
+  const { items, addItem, removeItem, mergeGuestCart } = useHealthBag({
+    userId: buyer?.id || null,
+  });
+
+  // Merge guest cart into logged-in cart once
+  useEffect(() => {
+    if (buyer?.id) {
+      mergeGuestCart();
+    }
+  }, [buyer?.id]);
+
   const handleClick = (product_id: number) => {
     router.push(`/product-details/${encodeId(product_id)}`);
   };
@@ -62,12 +78,14 @@ export default function AllProduct() {
               </div>
               <div className="row">
                 <div className="col-md-12">
-                  <div className="txt_col">
-                    <span className="lbl1">Search</span>
+                  <div className="search_query">
+                    <a className="query_search_btn" href="javascript:void(0)">
+                      <i className="bi bi-search"></i>
+                    </a>
                     <input
                       type="text"
                       className="txt1 my-box"
-                      placeholder="Search products..."
+                      placeholder="Search product..."
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
                     />
@@ -91,7 +109,9 @@ export default function AllProduct() {
                         ? item.DefaultImageURL
                         : `${mediaBase}${item.DefaultImageURL}`
                       : "/images/tnc-default.png";
-
+                    const isInBag = items.some(
+                      (i) => i.product_id === item.product_id
+                    );
                     return (
                       <div
                         className="pd_box shadow"
@@ -125,7 +145,21 @@ export default function AllProduct() {
                             </span>
                           </div>
 
-                          <button className="btn-1">ADD</button>
+                          <button
+                            className="btn-1"
+                            onClick={() =>
+                              isInBag
+                                ? removeItem(item.product_id)
+                                : addItem({
+                                    id: Date.now(),
+                                    buyer_id: buyer?.id || 0,
+                                    product_id: item.product_id,
+                                    quantity: 1,
+                                  })
+                            }
+                          >
+                            {isInBag ? "REMOVE" : "ADD"}
+                          </button>
                         </div>
                       </div>
                     );

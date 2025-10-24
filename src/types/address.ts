@@ -1,20 +1,20 @@
+export interface AddressResponse {
+  success: boolean;
+  statusCode: number;
+  message: string;
+  data: Address[];
+}
+
 export interface Address {
-  title?: string;
+  id: number;
   name: string;
   mobile: string;
   address: string;
-  city?: string;
-  state?: string;
-  country?: string;
-  pincode?: string;
-  type?: "Home" | "Work" | "Other";
-}
-
-export interface LocationDetails {
-  city?: string;
-  state?: string;
-  country?: string;
-  pincode?: string;
-  lat?: number;
-  lng?: number;
+  pincode: string;
+  location: string;
+  map: string;
+  default_address: number;
+  status: string;
+  buyer: number;
+  address_type_id: number;
 }

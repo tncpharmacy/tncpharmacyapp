@@ -83,8 +83,10 @@ export default function AllProducts() {
               </div>
               <div className="row">
                 <div className="col-md-12">
-                  <div className="txt_col">
-                    <span className="lbl1">Search</span>
+                  <div className="search_query">
+                    <a className="query_search_btn" href="javascript:void(0)">
+                      <i className="bi bi-search"></i>
+                    </a>
                     <input
                       type="text"
                       className="txt1 my-box"
