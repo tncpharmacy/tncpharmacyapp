@@ -10,6 +10,10 @@ export interface Address {
   name: string;
   mobile: string;
   address: string;
+  city: string;
+  state: string;
+  country: string;
+  type: string;
   pincode: string;
   location: string;
   map: string;

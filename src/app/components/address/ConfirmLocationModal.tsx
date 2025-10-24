@@ -16,7 +16,8 @@ export default function ConfirmLocationModal({
   locationDetails,
   onSubmit,
 }: ConfirmLocationModalProps) {
-  const [formData, setFormData] = useState<Address>({
+  const [formData, setFormData] = useState<Partial<Address>>({
+    id: 0,
     name: "",
     mobile: "",
     address: "",
@@ -48,7 +49,7 @@ export default function ConfirmLocationModal({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit(formData);
+    onSubmit(formData as Address);
   };
 
   return (
