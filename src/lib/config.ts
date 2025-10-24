@@ -121,6 +121,18 @@ export const ENDPOINTS = {
     GET_BY_MENU_OTHER_ID: (id: number) => `/website/other/medicine/${id}/`,
     GET_MEDICINE_LIST_BY_GENERIC: (medicineId: number) =>
       `website/generic/medicine/${medicineId}/`,
+    GET_CATEGORY_ID_BY_SUBCATEGORY: (
+      categoryId: number,
+      subCategoryId: number
+    ) =>
+      `website/medicine/list/?category_id=${categoryId}&sub_category_id=${subCategoryId}`,
+  },
+
+  // add to card
+  CARD: {
+    LOGIN: "/buyer/validate/",
+    CREATE: "/buyer/register/",
+    DELETE: (id: number) => `/buyer/create/${id}/`,
   },
 
   // Purchase Stock

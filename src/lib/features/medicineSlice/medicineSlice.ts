@@ -1,5 +1,6 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import {
+  fetchCategoryIdBySubcategory,
   fetchGroupCare,
   fetchMedicineByGenericId,
   fetchMedicinesAllList,
@@ -17,6 +18,11 @@ import {
   MedicineResponse,
 } from "@/types/medicine";
 
+// payload type for thunk
+interface FetchCategoryPayload {
+  categoryId: number;
+  subCategoryId: number;
+}
 interface MedicineState {
   medicines: Medicine[];
   medicinesList: Medicine[];
@@ -28,6 +34,9 @@ interface MedicineState {
   loading: boolean;
   error: string | null;
   byCategory: Record<number, Medicine[]>;
+  byCategorySubcategory: {
+    [key: string]: Medicine[]; // ✅ dynamic keys allowed
+  };
 }
 
 const initialState: MedicineState = {
@@ -41,6 +50,7 @@ const initialState: MedicineState = {
   loading: false,
   error: null,
   byCategory: {},
+  byCategorySubcategory: {},
 };
 
 // ✅ Get all medicines menu List
@@ -184,6 +194,26 @@ export const getProductByGenericId = createAsyncThunk<
   }
 });
 
+// ✅ Get all category id by sub category
+export const getCategoryIdBySubcategory = createAsyncThunk<
+  MedicineResponse, // ✅ fulfilled me return type
+  FetchCategoryPayload, // ✅ dispatch me pass karne ka arg type
+  { rejectValue: string } // ✅ rejectValue type
+>(
+  "medicine/getCategoryIdBySubcategory",
+  async ({ categoryId, subCategoryId }, { rejectWithValue }) => {
+    try {
+      const res = await fetchCategoryIdBySubcategory(categoryId, subCategoryId);
+      return res; // ✅ MedicineResponse return ho raha
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        return rejectWithValue(err.message);
+      }
+      return rejectWithValue("Failed to fetch medicines");
+    }
+  }
+);
+
 // ✅ Get group care
 export const getGroupCare = createAsyncThunk<
   CareGroupResponse, // ✅ returning full object
@@ -318,6 +348,21 @@ const medicineSlice = createSlice({
         state.error = null;
       })
       .addCase(getProductByGenericId.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload || "Something went wrong";
+      })
+      // fetch category Id By sub category
+      .addCase(getCategoryIdBySubcategory.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(getCategoryIdBySubcategory.fulfilled, (state, action) => {
+        state.loading = false;
+        const key = `${action.meta.arg.categoryId}-${action.meta.arg.subCategoryId}`;
+        state.byCategorySubcategory[key] = action.payload.data;
+        state.error = null;
+      })
+      .addCase(getCategoryIdBySubcategory.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload || "Something went wrong";
       })

@@ -14,7 +14,10 @@ import PrescriptionUploadModal from "@/app/user/components/PrescriptionUploadMod
 import Login from "@/app/admin-login/page";
 import BuyerLoginModal from "@/app/buyer-login/page";
 import { encodeId } from "@/lib/utils/encodeDecode";
-import { getProductList } from "@/lib/features/medicineSlice/medicineSlice";
+import {
+  getCategoryIdBySubcategory,
+  getProductList,
+} from "@/lib/features/medicineSlice/medicineSlice";
 import { Medicine } from "@/types/medicine";
 
 const SiteHeader = () => {
@@ -121,9 +124,22 @@ const SiteHeader = () => {
     setShuffledCategories(shuffled);
   }, [categories]);
 
-  // const handleClick = (catId: number) => {
-  //   router.push(`/all-product/${encodeId(catId)}`);
-  // };
+  const handleCategoryClick = async (
+    categoryId: number,
+    subCategoryId: number
+  ) => {
+    try {
+      // 1️⃣ Redux action dispatch karo
+      await dispatch(getCategoryIdBySubcategory({ categoryId, subCategoryId }));
+
+      // 2️⃣ Navigate to new route (category + subcategory)
+      router.push(
+        `/all-products/${encodeId(categoryId)}/${encodeId(subCategoryId)}`
+      );
+    } catch (error) {
+      console.error("Error navigating:", error);
+    }
+  };
 
   if (!mounted) return null;
 
@@ -329,7 +345,14 @@ const SiteHeader = () => {
                         <ul className="megamenu-list">
                           {filteredSubcategories.map((sub) => (
                             <li key={sub.id}>
-                              <a href="#">{sub.sub_category_name}</a>
+                              <Link
+                                href=""
+                                onClick={() =>
+                                  handleCategoryClick(cat.id, sub.id)
+                                }
+                              >
+                                {sub.sub_category_name}
+                              </Link>
                             </li>
                           ))}
                         </ul>

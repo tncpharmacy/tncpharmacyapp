@@ -1,50 +1,71 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
-import "../../css/site-style.css";
-import "../../css/user-style.css";
-import { useRouter, useSearchParams } from "next/navigation";
+import "../../../css/site-style.css";
+import "../../../css/user-style.css";
+import { useRouter } from "next/navigation";
 import { encodeId } from "@/lib/utils/encodeDecode";
 import SiteHeader from "@/app/user/components/header/header";
 import { useParams } from "next/navigation";
 import { decodeId } from "@/lib/utils/encodeDecode";
 import { useAppDispatch, useAppSelector } from "@/lib/hooks";
-import {
-  getCategoryIdBySubcategory,
-  getMedicinesByCategoryId,
-} from "@/lib/features/medicineSlice/medicineSlice";
+import { getCategoryIdBySubcategory } from "@/lib/features/medicineSlice/medicineSlice";
 import { Image } from "react-bootstrap";
 import "bootstrap/dist/css/bootstrap.min.css";
 
 const mediaBase = process.env.NEXT_PUBLIC_MEDIA_BASE_URL;
 
-export default function AllProduct() {
-  const router = useRouter();
-  const { id: params } = useParams();
-  const dispatch = useAppDispatch();
-  const decodedId = decodeId(params);
+export default function AllProducts() {
   const [isHovered, setIsHovered] = useState(false);
-  const categoryIdNum = Number(decodedId);
   const [searchTerm, setSearchTerm] = useState("");
+  const router = useRouter();
+  const params = useParams();
+  const dispatch = useAppDispatch();
+  // raw params
+  const categoryIdRaw = params.categoryId;
+  const subCategoryIdRaw = params.subCategoryId;
+  // decode categoryId
+  const categoryIdNum = Array.isArray(categoryIdRaw)
+    ? decodeId(categoryIdRaw[0])
+    : categoryIdRaw
+    ? decodeId(categoryIdRaw)
+    : null;
+
+  // decode subCategoryId
+  const subCategoryIdNum = Array.isArray(subCategoryIdRaw)
+    ? decodeId(subCategoryIdRaw[0])
+    : subCategoryIdRaw
+    ? decodeId(subCategoryIdRaw)
+    : null;
+
   const medicines = useAppSelector(
-    (state) => state.medicine.byCategory[categoryIdNum] || []
+    (state) =>
+      state.medicine.byCategorySubcategory?.[
+        `${categoryIdNum}-${subCategoryIdNum}`
+      ] || []
   );
+
   useEffect(() => {
-    if (!medicines.length && categoryIdNum) {
-      dispatch(getMedicinesByCategoryId(categoryIdNum));
+    if (categoryIdNum && subCategoryIdNum) {
+      dispatch(
+        getCategoryIdBySubcategory({
+          categoryId: categoryIdNum,
+          subCategoryId: subCategoryIdNum,
+        })
+      );
     }
-  }, [categoryIdNum, dispatch, medicines.length]); // 👇 onClick function
+  }, [categoryIdNum, subCategoryIdNum, dispatch]);
+
   const handleClick = (product_id: number) => {
     router.push(`/product-details/${encodeId(product_id)}`);
   };
+
   // Filter the medicines based on the search term
   const filteredMedicines = useMemo(() => {
-    if (!searchTerm) {
-      return medicines;
-    }
-    const lowerCaseSearchTerm = searchTerm.toLowerCase();
+    if (!searchTerm) return medicines;
+    const lower = searchTerm.toLowerCase();
     return medicines.filter((med) =>
-      (med.ProductName || "").toLowerCase().includes(lowerCaseSearchTerm)
+      (med.ProductName || "").toLowerCase().includes(lower)
     );
   }, [medicines, searchTerm]);
 
@@ -304,7 +325,7 @@ export default function AllProduct() {
               <div className="col-sm-6 text-end">
                 <div>
                   <h5 className="ftr_title">Payment Accept</h5>
-                  <img
+                  <Image
                     src="images/payment-option.png"
                     alt=""
                     className="ftr_payment"
@@ -343,8 +364,12 @@ export default function AllProduct() {
                   data-bs-dismiss="toast"
                   aria-label="Close"
                 ></button>
-                <img src="/Content/Images/logo.svg" className="clogo" alt="" />
-                <img
+                <Image
+                  src="/Content/Images/logo.svg"
+                  className="clogo"
+                  alt=""
+                />
+                <Image
                   src="/Content/Images/qr-code.jpg"
                   className="w-100"
                   alt=""
@@ -352,7 +377,7 @@ export default function AllProduct() {
                 <span className="hint">Scan to Download App</span>
               </div>
             </div>
-            <img
+            <Image
               src="/Content/Images/download-app.svg"
               className="toastimg"
               alt="download app"

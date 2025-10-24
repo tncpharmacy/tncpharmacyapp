@@ -2,7 +2,7 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   images: {
-    domains: ["68.183.174.17"], // yahan tera image server IP ya domain
+    domains: ["68.183.174.17"],
   },
   eslint: {
     // Allow production builds even if ESLint errors are present
@@ -16,6 +16,10 @@ const nextConfig: NextConfig = {
       {
         source: "/all-product/:id",
         destination: "/user/all-product/:id",
+      },
+      {
+        source: "/all-products/:categoryId/:subCategoryId",
+        destination: "/user/all-products/:categoryId/:subCategoryId",
       },
       {
         source: "/product-details/:id",

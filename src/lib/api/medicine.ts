@@ -82,6 +82,21 @@ export const fetchProductByGenericId = async (
   );
   return res.data; // ✅ res.data is now MedicineResponse
 };
+// =================================
+// GET BY CATEGORY ID BY SUBCATEGORY
+// =================================
+export const fetchCategoryIdBySubcategory = async (
+  categoryId: number,
+  subCategoryId: number
+): Promise<MedicineResponse> => {
+  const res = await axiosInstance.get<MedicineResponse>(
+    ENDPOINTS.MEDICINES.GET_CATEGORY_ID_BY_SUBCATEGORY(
+      categoryId,
+      subCategoryId
+    )
+  );
+  return res.data; // ✅ res.data is now MedicineResponse
+};
 // =========================
 // GET GROUP CARE
 // =========================
