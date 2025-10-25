@@ -44,8 +44,27 @@ const SiteHeader = () => {
 
   const buyer = useAppSelector((state) => state.buyer.buyer);
   const userId = buyer?.id || null;
-
   const { items } = useHealthBag({ userId });
+
+  const [localCount, setLocalCount] = useState(items.length);
+
+  // whenever items change locally in this component
+  useEffect(() => {
+    setLocalCount(items.length);
+  }, [items]);
+
+  // listen to custom event
+  useEffect(() => {
+    const update = () => {
+      if (typeof window === "undefined") return;
+      const guest = localStorage.getItem("healthBagGuest");
+      const guestItems = guest ? JSON.parse(guest) : [];
+      setLocalCount(guestItems.length);
+    };
+
+    window.addEventListener("healthBagUpdated", update);
+    return () => window.removeEventListener("healthBagUpdated", update);
+  }, []);
 
   useEffect(() => {
     dispatch(getCategoriesList());
@@ -311,7 +330,7 @@ const SiteHeader = () => {
                         src="/images/icons/icon-cart.svg"
                         alt=""
                       />
-                      <span className="count">{items.length}</span>
+                      <span className="count">{localCount}</span>
                     </i>
                     Health Bag
                   </span>

@@ -29,8 +29,12 @@ export const useHealthBag = ({ userId }: { userId: number | null }) => {
   // Add item
   const addItem = (item: HealthBag) => {
     setItems((prev) => {
-      const newItems = [...prev, item]; // ✅ latest state
-      if (!userId) saveGuest(newItems); // guest save
+      const newItems = [...prev, item];
+      if (!userId) saveGuest(newItems);
+      // Delay dispatch so React finish render
+      setTimeout(() => {
+        window.dispatchEvent(new Event("healthBagUpdated"));
+      }, 0);
       return newItems;
     });
 
@@ -52,6 +56,10 @@ export const useHealthBag = ({ userId }: { userId: number | null }) => {
     setItems((prev) => {
       const newItems = prev.filter((i) => i.product_id !== productId);
       if (!userId) saveGuest(newItems);
+      // Delay dispatch so React finish render
+      setTimeout(() => {
+        window.dispatchEvent(new Event("healthBagUpdated"));
+      }, 0);
       return newItems;
     });
 

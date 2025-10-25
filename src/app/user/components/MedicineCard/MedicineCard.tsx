@@ -1,9 +1,11 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import "../../css/medicine.css";
 import Image from "next/image";
 import { Medicine } from "@/types/medicine";
 import { useRouter } from "next/navigation";
 import { encodeId } from "@/lib/utils/encodeDecode";
+import { useAppSelector } from "@/lib/hooks";
+import { useHealthBag } from "@/lib/hooks/useHealthBag";
 
 const mediaBase = process.env.NEXT_PUBLIC_MEDIA_BASE_URL;
 
@@ -32,6 +34,22 @@ export default function MedicineCard({
   const discountPercent = parseFloat(discount || "0");
   const discountedPrice = originalMrp - (originalMrp * discountPercent) / 100;
 
+  // start for increse header count code
+  const buyer = useAppSelector((state) => state.buyer.buyer);
+  const { items, addItem, removeItem, mergeGuestCart } = useHealthBag({
+    userId: buyer?.id || null,
+  });
+
+  const isInBag = items.some((i) => i.product_id === id);
+
+  // Merge guest cart into logged-in cart once
+  useEffect(() => {
+    if (buyer?.id) {
+      mergeGuestCart();
+    }
+  }, [buyer?.id]);
+
+  // end for increse header count code
   // 👇 onClick function
   const handleClick = (id: number) => {
     router.push(`/medicines-details/${encodeId(id)}`);
@@ -123,7 +141,21 @@ export default function MedicineCard({
             <p className="medicine-mrp">₹{formatCurrency(originalMrp)}</p>
           )}
           {/* <p className="medicine-mrp">MRP ₹{formatCurrency(mrp)}</p>; */}
-          <button className="medicine-btn">ADD</button>
+          <button
+            className="btn-1"
+            onClick={() =>
+              isInBag
+                ? removeItem(id)
+                : addItem({
+                    id: Date.now(),
+                    buyer_id: buyer?.id || 0,
+                    product_id: id,
+                    quantity: 1,
+                  })
+            }
+          >
+            {isInBag ? "REMOVE" : "ADD"}
+          </button>
           {/* {availability === "ADD" ? (
             <button className="medicine-btn">ADD</button>
           ) : (

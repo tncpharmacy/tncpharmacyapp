@@ -22,6 +22,7 @@ import {
 import { getCategories } from "@/lib/features/categorySlice/categorySlice";
 import { useRouter } from "next/navigation";
 import { encodeId } from "@/lib/utils/encodeDecode";
+import { useHealthBag } from "@/lib/hooks/useHealthBag";
 const mediaBase = process.env.NEXT_PUBLIC_MEDIA_BASE_URL;
 
 export default function HomePage() {
@@ -30,6 +31,21 @@ export default function HomePage() {
   const despatch = useAppDispatch();
   const router = useRouter();
   const { groupCare } = useAppSelector((state) => state.medicine);
+
+  // start for increse header count code
+  const buyer = useAppSelector((state) => state.buyer.buyer);
+  const { items, addItem, removeItem, mergeGuestCart } = useHealthBag({
+    userId: buyer?.id || null,
+  });
+
+  // Merge guest cart into logged-in cart once
+  useEffect(() => {
+    if (buyer?.id) {
+      mergeGuestCart();
+    }
+  }, [buyer?.id]);
+
+  // end for increse header count code
 
   const medicineMenuByCategory5 = useAppSelector(
     (state) => state.medicine.byCategory[5] || []
@@ -230,6 +246,9 @@ export default function HomePage() {
                       ? item.DefaultImageURL
                       : `${mediaBase}${item.DefaultImageURL}`
                     : "/images/tnc-default.png";
+                  const isInBag = items.some(
+                    (i) => i.product_id === item.product_id
+                  );
 
                   return (
                     <div className="col" key={item.product_id}>
@@ -261,7 +280,21 @@ export default function HomePage() {
                             </span>
                           </div>
 
-                          <button className="btn-1">ADD</button>
+                          <button
+                            className="btn-1"
+                            onClick={() =>
+                              isInBag
+                                ? removeItem(item.product_id)
+                                : addItem({
+                                    id: Date.now(),
+                                    buyer_id: buyer?.id || 0,
+                                    product_id: item.product_id,
+                                    quantity: 1,
+                                  })
+                            }
+                          >
+                            {isInBag ? "REMOVE" : "ADD"}
+                          </button>
                         </div>
                       </div>
                     </div>
@@ -376,6 +409,10 @@ export default function HomePage() {
                       : `${mediaBase}${item.DefaultImageURL}`
                     : "/images/tnc-default.png";
 
+                  const isInBag = items.some(
+                    (i) => i.product_id === item.product_id
+                  );
+
                   return (
                     <div className="col" key={item.product_id}>
                       <div className="pd_box">
@@ -405,8 +442,21 @@ export default function HomePage() {
                               <del>MRP ₹{mrp}</del> {discount}% off
                             </span>
                           </div>
-
-                          <button className="btn-1">ADD</button>
+                          <button
+                            className="btn-1"
+                            onClick={() =>
+                              isInBag
+                                ? removeItem(item.product_id)
+                                : addItem({
+                                    id: Date.now(),
+                                    buyer_id: buyer?.id || 0,
+                                    product_id: item.product_id,
+                                    quantity: 1,
+                                  })
+                            }
+                          >
+                            {isInBag ? "REMOVE" : "ADD"}
+                          </button>
                         </div>
                       </div>
                     </div>
@@ -506,6 +556,10 @@ export default function HomePage() {
                       : `${mediaBase}${item.DefaultImageURL}`
                     : "/images/tnc-default.png";
 
+                  const isInBag = items.some(
+                    (i) => i.product_id === item.product_id
+                  );
+
                   return (
                     <div className="col" key={item.product_id}>
                       <div className="pd_box">
@@ -536,7 +590,21 @@ export default function HomePage() {
                             </span>
                           </div>
 
-                          <button className="btn-1">ADD</button>
+                          <button
+                            className="btn-1"
+                            onClick={() =>
+                              isInBag
+                                ? removeItem(item.product_id)
+                                : addItem({
+                                    id: Date.now(),
+                                    buyer_id: buyer?.id || 0,
+                                    product_id: item.product_id,
+                                    quantity: 1,
+                                  })
+                            }
+                          >
+                            {isInBag ? "REMOVE" : "ADD"}
+                          </button>
                         </div>
                       </div>
                     </div>

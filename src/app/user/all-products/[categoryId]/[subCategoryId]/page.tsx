@@ -12,6 +12,7 @@ import { useAppDispatch, useAppSelector } from "@/lib/hooks";
 import { getCategoryIdBySubcategory } from "@/lib/features/medicineSlice/medicineSlice";
 import { Image } from "react-bootstrap";
 import "bootstrap/dist/css/bootstrap.min.css";
+import { useHealthBag } from "@/lib/hooks/useHealthBag";
 
 const mediaBase = process.env.NEXT_PUBLIC_MEDIA_BASE_URL;
 
@@ -55,6 +56,21 @@ export default function AllProducts() {
       );
     }
   }, [categoryIdNum, subCategoryIdNum, dispatch]);
+
+  // start for increse header count code
+  const buyer = useAppSelector((state) => state.buyer.buyer);
+  const { items, addItem, removeItem, mergeGuestCart } = useHealthBag({
+    userId: buyer?.id || null,
+  });
+
+  // Merge guest cart into logged-in cart once
+  useEffect(() => {
+    if (buyer?.id) {
+      mergeGuestCart();
+    }
+  }, [buyer?.id]);
+
+  // end for increse header count code
 
   const handleClick = (product_id: number) => {
     router.push(`/product-details/${encodeId(product_id)}`);
@@ -115,6 +131,10 @@ export default function AllProducts() {
                         : `${mediaBase}${item.DefaultImageURL}`
                       : "/images/tnc-default.png";
 
+                    const isInBag = items.some(
+                      (i) => i.product_id === item.product_id
+                    );
+
                     return (
                       <div
                         className="pd_box shadow"
@@ -148,7 +168,21 @@ export default function AllProducts() {
                             </span>
                           </div>
 
-                          <button className="btn-1">ADD</button>
+                          <button
+                            className="btn-1"
+                            onClick={() =>
+                              isInBag
+                                ? removeItem(item.product_id)
+                                : addItem({
+                                    id: Date.now(),
+                                    buyer_id: buyer?.id || 0,
+                                    product_id: item.product_id,
+                                    quantity: 1,
+                                  })
+                            }
+                          >
+                            {isInBag ? "REMOVE" : "ADD"}
+                          </button>
                         </div>
                       </div>
                     );

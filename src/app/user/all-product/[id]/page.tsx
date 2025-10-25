@@ -38,6 +38,7 @@ export default function AllProduct() {
     }
   }, [categoryIdNum, dispatch, medicines.length]);
 
+  // start for increse header count code
   const buyer = useAppSelector((state) => state.buyer.buyer);
   const { items, addItem, removeItem, mergeGuestCart } = useHealthBag({
     userId: buyer?.id || null,
@@ -49,6 +50,8 @@ export default function AllProduct() {
       mergeGuestCart();
     }
   }, [buyer?.id]);
+
+  // end for increse header count code
 
   const handleClick = (product_id: number) => {
     router.push(`/product-details/${encodeId(product_id)}`);

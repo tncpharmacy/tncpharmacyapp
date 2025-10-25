@@ -100,7 +100,7 @@ export default function AddressList() {
       <div className="container my-4">
         {/* ===== BILLING ADDRESS SECTION ===== */}
         <div className="d-flex justify-content-between align-items-center mb-4">
-          <h4 className="fw-bold">Billing Address</h4>
+          <h4 className="fw-bold">Buyer Address</h4>
           <button className="btn btn-primary" onClick={handleAddBillingAddress}>
             + Add new address
           </button>
@@ -162,61 +162,6 @@ export default function AddressList() {
                       className="form-check-input"
                       name="billingAddress"
                       checked={billingAddress === index}
-                      readOnly
-                    />
-                    <label className="form-check-label fw-bold ms-2">
-                      {addr.title}
-                    </label>
-                  </div>
-                  <p className="mt-2 mb-1 small">{addr.address}</p>
-                  <p className="fw-semibold mb-0">{addr.name}</p>
-                  <p className="text-muted small">{addr.mobile}</p>
-                  <div className="d-flex gap-3 mt-2">
-                    {/* <button className="btn btn-link text-danger p-0">
-                      Edit
-                    </button> */}
-                    <button className="btn btn-link text-danger p-0">
-                      Remove
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        <hr className="my-4" />
-
-        {/* ===== SHIPPING ADDRESS SECTION ===== */}
-        <div className="d-flex justify-content-between align-items-center mb-4">
-          <h4 className="fw-bold">Shipping Address</h4>
-          <button
-            className="btn btn-primary"
-            onClick={handleAddShippingAddress}
-          >
-            + Add new address
-          </button>
-        </div>
-
-        <div className="row">
-          {shippingAddresses.map((addr, index) => (
-            <div className="col-md-4 mb-3" key={index}>
-              <div
-                className={`card border-2 ${
-                  shippingAddress === index
-                    ? "border-primary"
-                    : "border-light-subtle"
-                }`}
-                onClick={() => setShippingAddress(index)}
-                style={{ cursor: "pointer" }}
-              >
-                <div className="card-body">
-                  <div className="form-check">
-                    <input
-                      type="radio"
-                      className="form-check-input"
-                      name="shippingAddress"
-                      checked={shippingAddress === index}
                       readOnly
                     />
                     <label className="form-check-label fw-bold ms-2">
