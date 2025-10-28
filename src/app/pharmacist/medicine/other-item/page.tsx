@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Button, Modal } from "react-bootstrap";
-import "../../css/admin-style.css";
+import "../../css/pharmacy-style.css";
 import SideNav from "@/app/admin/components/SideNav/page";
 import Header from "@/app/admin/components/Header/page";
 import { useAppDispatch, useAppSelector } from "@/lib/hooks";

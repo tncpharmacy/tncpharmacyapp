@@ -8,7 +8,7 @@ import SideNav from "../../components/SideNav/page";
 import Header from "../../components/Header/page";
 import { useRouter } from "next/navigation";
 
-export default function Doctors() {
+export default function MedicineList() {
   return (
     <>
       <Header />

@@ -3,13 +3,12 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Button, Modal, OverlayTrigger, Tooltip } from "react-bootstrap";
-import "../../css/admin-style.css";
+import "../../css/pharmacy-style.css";
 import SideNav from "../../components/SideNav/page";
 import Header from "../../components/Header/page";
 import { useRouter } from "next/navigation";
 
-export default function Doctors() {
-
+export default function MedicineList() {
   return (
     <>
       <Header />
@@ -19,7 +18,6 @@ export default function Doctors() {
           <div className="body_content">
             <div className="pageTitle">
               <i className="bi bi-person-add"></i> Medicine List
-
             </div>
             <div className="main_content">
               <div className="col-sm-12">
@@ -65,7 +63,13 @@ export default function Doctors() {
                     </thead>
                     <tbody>
                       <tr>
-                        <td><img src="images/medicine-img.jpg" alt="" style={{ width: '40px', borderRadius: '50%' }} /></td>
+                        <td>
+                          <img
+                            src="images/medicine-img.jpg"
+                            alt=""
+                            style={{ width: "40px", borderRadius: "50%" }}
+                          />
+                        </td>
                         <td>TNC321321</td>
                         <td>Augmentin 625</td>
                         <td>Amoxicillin+Clav</td>
@@ -81,24 +85,47 @@ export default function Doctors() {
                             placement="top"
                             overlay={<Tooltip id="tooltip-top">Edit</Tooltip>}
                           >
-                            <Button className="btn btn-light btn-sm me-2" variant="primary"><i className="bi bi-pencil"></i></Button>
+                            <Button
+                              className="btn btn-light btn-sm me-2"
+                              variant="primary"
+                            >
+                              <i className="bi bi-pencil"></i>
+                            </Button>
                           </OverlayTrigger>
                           <OverlayTrigger
                             placement="top"
                             overlay={<Tooltip id="tooltip-top">View</Tooltip>}
                           >
-                            <Button className="btn btn-light btn-sm me-2" variant="primary"><i className="bi bi-eye-fill"></i></Button>
+                            <Button
+                              className="btn btn-light btn-sm me-2"
+                              variant="primary"
+                            >
+                              <i className="bi bi-eye-fill"></i>
+                            </Button>
                           </OverlayTrigger>
                           <OverlayTrigger
                             placement="top"
-                            overlay={<Tooltip id="tooltip-top">Upload Image</Tooltip>}
+                            overlay={
+                              <Tooltip id="tooltip-top">Upload Image</Tooltip>
+                            }
                           >
-                            <Button className="btn btn-light btn-sm me-2" variant="primary"><i className="bi bi-upload"></i></Button>
+                            <Button
+                              className="btn btn-light btn-sm me-2"
+                              variant="primary"
+                            >
+                              <i className="bi bi-upload"></i>
+                            </Button>
                           </OverlayTrigger>
                         </td>
                       </tr>
                       <tr>
-                        <td><img src="images/medicine-img.jpg" alt="" style={{ width: '40px', borderRadius: '50%' }} /></td>
+                        <td>
+                          <img
+                            src="images/medicine-img.jpg"
+                            alt=""
+                            style={{ width: "40px", borderRadius: "50%" }}
+                          />
+                        </td>
                         <td>TNC321321</td>
                         <td>Augmentin 625</td>
                         <td>Amoxicillin+Clav</td>
@@ -114,24 +141,47 @@ export default function Doctors() {
                             placement="top"
                             overlay={<Tooltip id="tooltip-top">Edit</Tooltip>}
                           >
-                            <Button className="btn btn-light btn-sm me-2" variant="primary"><i className="bi bi-pencil"></i></Button>
+                            <Button
+                              className="btn btn-light btn-sm me-2"
+                              variant="primary"
+                            >
+                              <i className="bi bi-pencil"></i>
+                            </Button>
                           </OverlayTrigger>
                           <OverlayTrigger
                             placement="top"
                             overlay={<Tooltip id="tooltip-top">View</Tooltip>}
                           >
-                            <Button className="btn btn-light btn-sm me-2" variant="primary"><i className="bi bi-eye-fill"></i></Button>
+                            <Button
+                              className="btn btn-light btn-sm me-2"
+                              variant="primary"
+                            >
+                              <i className="bi bi-eye-fill"></i>
+                            </Button>
                           </OverlayTrigger>
                           <OverlayTrigger
                             placement="top"
-                            overlay={<Tooltip id="tooltip-top">Upload Image</Tooltip>}
+                            overlay={
+                              <Tooltip id="tooltip-top">Upload Image</Tooltip>
+                            }
                           >
-                            <Button className="btn btn-light btn-sm me-2" variant="primary"><i className="bi bi-upload"></i></Button>
+                            <Button
+                              className="btn btn-light btn-sm me-2"
+                              variant="primary"
+                            >
+                              <i className="bi bi-upload"></i>
+                            </Button>
                           </OverlayTrigger>
                         </td>
                       </tr>
                       <tr>
-                        <td><img src="images/medicine-img.jpg" alt="" style={{ width: '40px', borderRadius: '50%' }} /></td>
+                        <td>
+                          <img
+                            src="images/medicine-img.jpg"
+                            alt=""
+                            style={{ width: "40px", borderRadius: "50%" }}
+                          />
+                        </td>
                         <td>TNC321321</td>
                         <td>Augmentin 625</td>
                         <td>Amoxicillin+Clav</td>
@@ -147,24 +197,47 @@ export default function Doctors() {
                             placement="top"
                             overlay={<Tooltip id="tooltip-top">Edit</Tooltip>}
                           >
-                            <Button className="btn btn-light btn-sm me-2" variant="primary"><i className="bi bi-pencil"></i></Button>
+                            <Button
+                              className="btn btn-light btn-sm me-2"
+                              variant="primary"
+                            >
+                              <i className="bi bi-pencil"></i>
+                            </Button>
                           </OverlayTrigger>
                           <OverlayTrigger
                             placement="top"
                             overlay={<Tooltip id="tooltip-top">View</Tooltip>}
                           >
-                            <Button className="btn btn-light btn-sm me-2" variant="primary"><i className="bi bi-eye-fill"></i></Button>
+                            <Button
+                              className="btn btn-light btn-sm me-2"
+                              variant="primary"
+                            >
+                              <i className="bi bi-eye-fill"></i>
+                            </Button>
                           </OverlayTrigger>
                           <OverlayTrigger
                             placement="top"
-                            overlay={<Tooltip id="tooltip-top">Upload Image</Tooltip>}
+                            overlay={
+                              <Tooltip id="tooltip-top">Upload Image</Tooltip>
+                            }
                           >
-                            <Button className="btn btn-light btn-sm me-2" variant="primary"><i className="bi bi-upload"></i></Button>
+                            <Button
+                              className="btn btn-light btn-sm me-2"
+                              variant="primary"
+                            >
+                              <i className="bi bi-upload"></i>
+                            </Button>
                           </OverlayTrigger>
                         </td>
                       </tr>
                       <tr>
-                        <td><img src="images/medicine-img.jpg" alt="" style={{ width: '40px', borderRadius: '50%' }} /></td>
+                        <td>
+                          <img
+                            src="images/medicine-img.jpg"
+                            alt=""
+                            style={{ width: "40px", borderRadius: "50%" }}
+                          />
+                        </td>
                         <td>TNC321321</td>
                         <td>Augmentin 625</td>
                         <td>Amoxicillin+Clav</td>
@@ -180,24 +253,47 @@ export default function Doctors() {
                             placement="top"
                             overlay={<Tooltip id="tooltip-top">Edit</Tooltip>}
                           >
-                            <Button className="btn btn-light btn-sm me-2" variant="primary"><i className="bi bi-pencil"></i></Button>
+                            <Button
+                              className="btn btn-light btn-sm me-2"
+                              variant="primary"
+                            >
+                              <i className="bi bi-pencil"></i>
+                            </Button>
                           </OverlayTrigger>
                           <OverlayTrigger
                             placement="top"
                             overlay={<Tooltip id="tooltip-top">View</Tooltip>}
                           >
-                            <Button className="btn btn-light btn-sm me-2" variant="primary"><i className="bi bi-eye-fill"></i></Button>
+                            <Button
+                              className="btn btn-light btn-sm me-2"
+                              variant="primary"
+                            >
+                              <i className="bi bi-eye-fill"></i>
+                            </Button>
                           </OverlayTrigger>
                           <OverlayTrigger
                             placement="top"
-                            overlay={<Tooltip id="tooltip-top">Upload Image</Tooltip>}
+                            overlay={
+                              <Tooltip id="tooltip-top">Upload Image</Tooltip>
+                            }
                           >
-                            <Button className="btn btn-light btn-sm me-2" variant="primary"><i className="bi bi-upload"></i></Button>
+                            <Button
+                              className="btn btn-light btn-sm me-2"
+                              variant="primary"
+                            >
+                              <i className="bi bi-upload"></i>
+                            </Button>
                           </OverlayTrigger>
                         </td>
                       </tr>
                       <tr>
-                        <td><img src="images/medicine-img.jpg" alt="" style={{ width: '40px', borderRadius: '50%' }} /></td>
+                        <td>
+                          <img
+                            src="images/medicine-img.jpg"
+                            alt=""
+                            style={{ width: "40px", borderRadius: "50%" }}
+                          />
+                        </td>
                         <td>TNC321321</td>
                         <td>Augmentin 625</td>
                         <td>Amoxicillin+Clav</td>
@@ -213,24 +309,47 @@ export default function Doctors() {
                             placement="top"
                             overlay={<Tooltip id="tooltip-top">Edit</Tooltip>}
                           >
-                            <Button className="btn btn-light btn-sm me-2" variant="primary"><i className="bi bi-pencil"></i></Button>
+                            <Button
+                              className="btn btn-light btn-sm me-2"
+                              variant="primary"
+                            >
+                              <i className="bi bi-pencil"></i>
+                            </Button>
                           </OverlayTrigger>
                           <OverlayTrigger
                             placement="top"
                             overlay={<Tooltip id="tooltip-top">View</Tooltip>}
                           >
-                            <Button className="btn btn-light btn-sm me-2" variant="primary"><i className="bi bi-eye-fill"></i></Button>
+                            <Button
+                              className="btn btn-light btn-sm me-2"
+                              variant="primary"
+                            >
+                              <i className="bi bi-eye-fill"></i>
+                            </Button>
                           </OverlayTrigger>
                           <OverlayTrigger
                             placement="top"
-                            overlay={<Tooltip id="tooltip-top">Upload Image</Tooltip>}
+                            overlay={
+                              <Tooltip id="tooltip-top">Upload Image</Tooltip>
+                            }
                           >
-                            <Button className="btn btn-light btn-sm me-2" variant="primary"><i className="bi bi-upload"></i></Button>
+                            <Button
+                              className="btn btn-light btn-sm me-2"
+                              variant="primary"
+                            >
+                              <i className="bi bi-upload"></i>
+                            </Button>
                           </OverlayTrigger>
                         </td>
                       </tr>
                       <tr>
-                        <td><img src="images/medicine-img.jpg" alt="" style={{ width: '40px', borderRadius: '50%' }} /></td>
+                        <td>
+                          <img
+                            src="images/medicine-img.jpg"
+                            alt=""
+                            style={{ width: "40px", borderRadius: "50%" }}
+                          />
+                        </td>
                         <td>TNC321321</td>
                         <td>Augmentin 625</td>
                         <td>Amoxicillin+Clav</td>
@@ -246,24 +365,47 @@ export default function Doctors() {
                             placement="top"
                             overlay={<Tooltip id="tooltip-top">Edit</Tooltip>}
                           >
-                            <Button className="btn btn-light btn-sm me-2" variant="primary"><i className="bi bi-pencil"></i></Button>
+                            <Button
+                              className="btn btn-light btn-sm me-2"
+                              variant="primary"
+                            >
+                              <i className="bi bi-pencil"></i>
+                            </Button>
                           </OverlayTrigger>
                           <OverlayTrigger
                             placement="top"
                             overlay={<Tooltip id="tooltip-top">View</Tooltip>}
                           >
-                            <Button className="btn btn-light btn-sm me-2" variant="primary"><i className="bi bi-eye-fill"></i></Button>
+                            <Button
+                              className="btn btn-light btn-sm me-2"
+                              variant="primary"
+                            >
+                              <i className="bi bi-eye-fill"></i>
+                            </Button>
                           </OverlayTrigger>
                           <OverlayTrigger
                             placement="top"
-                            overlay={<Tooltip id="tooltip-top">Upload Image</Tooltip>}
+                            overlay={
+                              <Tooltip id="tooltip-top">Upload Image</Tooltip>
+                            }
                           >
-                            <Button className="btn btn-light btn-sm me-2" variant="primary"><i className="bi bi-upload"></i></Button>
+                            <Button
+                              className="btn btn-light btn-sm me-2"
+                              variant="primary"
+                            >
+                              <i className="bi bi-upload"></i>
+                            </Button>
                           </OverlayTrigger>
                         </td>
                       </tr>
                       <tr>
-                        <td><img src="images/medicine-img.jpg" alt="" style={{ width: '40px', borderRadius: '50%' }} /></td>
+                        <td>
+                          <img
+                            src="images/medicine-img.jpg"
+                            alt=""
+                            style={{ width: "40px", borderRadius: "50%" }}
+                          />
+                        </td>
                         <td>TNC321321</td>
                         <td>Augmentin 625</td>
                         <td>Amoxicillin+Clav</td>
@@ -279,24 +421,47 @@ export default function Doctors() {
                             placement="top"
                             overlay={<Tooltip id="tooltip-top">Edit</Tooltip>}
                           >
-                            <Button className="btn btn-light btn-sm me-2" variant="primary"><i className="bi bi-pencil"></i></Button>
+                            <Button
+                              className="btn btn-light btn-sm me-2"
+                              variant="primary"
+                            >
+                              <i className="bi bi-pencil"></i>
+                            </Button>
                           </OverlayTrigger>
                           <OverlayTrigger
                             placement="top"
                             overlay={<Tooltip id="tooltip-top">View</Tooltip>}
                           >
-                            <Button className="btn btn-light btn-sm me-2" variant="primary"><i className="bi bi-eye-fill"></i></Button>
+                            <Button
+                              className="btn btn-light btn-sm me-2"
+                              variant="primary"
+                            >
+                              <i className="bi bi-eye-fill"></i>
+                            </Button>
                           </OverlayTrigger>
                           <OverlayTrigger
                             placement="top"
-                            overlay={<Tooltip id="tooltip-top">Upload Image</Tooltip>}
+                            overlay={
+                              <Tooltip id="tooltip-top">Upload Image</Tooltip>
+                            }
                           >
-                            <Button className="btn btn-light btn-sm me-2" variant="primary"><i className="bi bi-upload"></i></Button>
+                            <Button
+                              className="btn btn-light btn-sm me-2"
+                              variant="primary"
+                            >
+                              <i className="bi bi-upload"></i>
+                            </Button>
                           </OverlayTrigger>
                         </td>
                       </tr>
                       <tr>
-                        <td><img src="images/medicine-img.jpg" alt="" style={{ width: '40px', borderRadius: '50%' }} /></td>
+                        <td>
+                          <img
+                            src="images/medicine-img.jpg"
+                            alt=""
+                            style={{ width: "40px", borderRadius: "50%" }}
+                          />
+                        </td>
                         <td>TNC321321</td>
                         <td>Augmentin 625</td>
                         <td>Amoxicillin+Clav</td>
@@ -312,19 +477,36 @@ export default function Doctors() {
                             placement="top"
                             overlay={<Tooltip id="tooltip-top">Edit</Tooltip>}
                           >
-                            <Button className="btn btn-light btn-sm me-2" variant="primary"><i className="bi bi-pencil"></i></Button>
+                            <Button
+                              className="btn btn-light btn-sm me-2"
+                              variant="primary"
+                            >
+                              <i className="bi bi-pencil"></i>
+                            </Button>
                           </OverlayTrigger>
                           <OverlayTrigger
                             placement="top"
                             overlay={<Tooltip id="tooltip-top">View</Tooltip>}
                           >
-                            <Button className="btn btn-light btn-sm me-2" variant="primary"><i className="bi bi-eye-fill"></i></Button>
+                            <Button
+                              className="btn btn-light btn-sm me-2"
+                              variant="primary"
+                            >
+                              <i className="bi bi-eye-fill"></i>
+                            </Button>
                           </OverlayTrigger>
                           <OverlayTrigger
                             placement="top"
-                            overlay={<Tooltip id="tooltip-top">Upload Image</Tooltip>}
+                            overlay={
+                              <Tooltip id="tooltip-top">Upload Image</Tooltip>
+                            }
                           >
-                            <Button className="btn btn-light btn-sm me-2" variant="primary"><i className="bi bi-upload"></i></Button>
+                            <Button
+                              className="btn btn-light btn-sm me-2"
+                              variant="primary"
+                            >
+                              <i className="bi bi-upload"></i>
+                            </Button>
                           </OverlayTrigger>
                         </td>
                       </tr>
