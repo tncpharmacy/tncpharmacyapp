@@ -12,9 +12,11 @@ import InfiniteScroll from "@/app/components/InfiniteScroll/InfiniteScroll";
 import SelectInput from "@/app/components/Input/SelectInput";
 import Input from "@/app/components/Input/Input";
 import { getUser } from "@/lib/auth/auth";
+import { useRouter } from "next/navigation";
 
 export default function PurchaseInvoiceImport() {
   const dispatch = useAppDispatch();
+  const router = useRouter();
   const userPharmacy = getUser();
   const pharmacy_name = userPharmacy?.pharmacy_name || "";
   const pharmacy_id = userPharmacy?.id || 0;
@@ -121,6 +123,12 @@ export default function PurchaseInvoiceImport() {
           >
             <div className="pageTitle">
               <i className="bi bi-shop-window"></i> Purchase Invoice Import
+              <button
+                onClick={() => router.push("/pharmacy/purchase-invoice")}
+                className="btn-style2 float-end pe-4 ps-4"
+              >
+                ← Back
+              </button>
             </div>
             <div className="main_content">
               <div className="col-sm-12">

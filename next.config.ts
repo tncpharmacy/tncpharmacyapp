@@ -56,6 +56,10 @@ const nextConfig: NextConfig = {
         destination: "/admin/admin-dashboard",
       },
       {
+        source: "/purchase-invoice",
+        destination: "/admin/purchase-invoice",
+      },
+      {
         source: "/export",
         destination: "/admin/purchase-invoice/export",
       },
@@ -233,6 +237,14 @@ const nextConfig: NextConfig = {
         destination: "/pharmacy/supplier/list-supplier",
       },
       {
+        source: "/pharmacy/orders",
+        destination: "/pharmacy/order/order-list",
+      },
+      {
+        source: "/pharmacy/purchase-invoice",
+        destination: "/pharmacy/purchase-invoice",
+      },
+      {
         source: "/pharmacy/export",
         destination: "/pharmacy/purchase-invoice/export",
       },
@@ -241,39 +253,55 @@ const nextConfig: NextConfig = {
         destination: "/pharmacy/purchase-invoice/import",
       },
       {
-        source: "/variant",
-        destination: "/pharmacy/medicine/medicine-variant",
+        source: "/pharmacy/add-medicine",
+        destination: "/pharmacy/medicine/medicine-item/add",
+      },
+      // {
+      //   source: "/pharmacy/update-medicine",
+      //   destination: "/pharmacy/medicine/medicine-item/add/:id",
+      // },
+      {
+        source: "/pharmacy/medicine",
+        destination: "/pharmacy/medicine/medicine-item",
       },
       {
-        source: "/brand",
-        destination: "/pharmacy/medicine/medicine-brand",
+        source: "/pharmacy/add-other-product",
+        destination: "/pharmacy/medicine/other-item/add",
       },
+      // {
+      //   source: "/pharmacy/update-other-product",
+      //   destination: "/pharmacy/medicine/other-item/add/:id",
+      // },
       {
-        source: "/unit",
-        destination: "/pharmacy/medicine/medicine-unit",
-      },
-      {
-        source: "/manufacturer",
-        destination: "/pharmacy/medicine/medicine-manufacturer",
-      },
-      {
-        source: "/strength",
-        destination: "/pharmacy/medicine/medicine-strength",
-      },
-      {
-        source: "/order",
-        destination: "/pharmacy/order/order-list",
-      },
-      {
-        source: "/medicine",
-        destination: "/pharmacy/medicine/medicine-list",
-      },
-      {
-        source: "/add-medicine",
-        destination: "/pharmacy/medicine/add-medicine",
+        source: "/pharmacy/other-product",
+        destination: "/pharmacy/medicine/other-item",
       },
 
       // Pharmacist Routes
+      {
+        source: "/pharmacist/add-medicine",
+        destination: "/pharmacist/medicine/medicine-item/add",
+      },
+      // {
+      //   source: "/pharmacist/update-medicine",
+      //   destination: "/pharmacist/medicine/medicine-item/add/:id",
+      // },
+      {
+        source: "/pharmacist/medicine",
+        destination: "/pharmacist/medicine/medicine-item",
+      },
+      {
+        source: "/pharmacist/add-other-product",
+        destination: "/pharmacist/medicine/other-item/add",
+      },
+      // {
+      //   source: "/pharmacist/update-other-product",
+      //   destination: "/pharmacist/medicine/other-item/add/:id",
+      // },
+      {
+        source: "/pharmacist/other-product",
+        destination: "/pharmacist/medicine/other-item",
+      },
       {
         source: "/pharmacist/view-profile",
         destination: "/pharmacist/pharmacist-profile/view-profile",
@@ -281,6 +309,14 @@ const nextConfig: NextConfig = {
       {
         source: "/pharmacist/update-profile",
         destination: "/pharmacist/pharmacist-profile/update-profile",
+      },
+      {
+        source: "/pharmacist/orders",
+        destination: "/pharmacist/order/order-list",
+      },
+      {
+        source: "/pharmacist/purchase-invoice",
+        destination: "/pharmacist/purchase-invoice",
       },
       {
         source: "/pharmacist/export",

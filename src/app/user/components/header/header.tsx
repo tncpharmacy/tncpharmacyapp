@@ -20,6 +20,7 @@ import {
 } from "@/lib/features/medicineSlice/medicineSlice";
 import { Medicine } from "@/types/medicine";
 import { useHealthBag } from "@/lib/hooks/useHealthBag";
+import { buyerLogout } from "@/lib/features/buyerSlice/buyerSlice";
 
 const SiteHeader = () => {
   const dispatch = useAppDispatch();
@@ -70,6 +71,10 @@ const SiteHeader = () => {
     dispatch(getCategoriesList());
     dispatch(getSubcategories());
   }, [dispatch]);
+
+  const handleLogout = () => {
+    dispatch(buyerLogout());
+  };
 
   useEffect(() => {
     if (!searchTerm || searchTerm.length === 0) return;
@@ -260,67 +265,61 @@ const SiteHeader = () => {
                     </i>
                     Account
                   </span>
-                  <div className="dropdown-user-content">
-                    <div className="">
-                      <p>
-                        <b>Welcome</b>
-                        <br />
-                        To access account &amp; manage orders
-                      </p>
-                      <div className="d-flex">
-                        <button
-                          className="btn1 me-2"
-                          onClick={() => setShowLogin(true)}
-                        >
-                          Admin Login
-                        </button>
-                        {/* Modal Component */}
-                        <Login
-                          show={showLogin}
-                          handleClose={() => setShowLogin(false)}
-                        />
-                        <button
-                          className="btn1"
-                          onClick={() => setShowBuyerLogin(true)}
-                        >
-                          Buyer Login
-                        </button>
-                        <BuyerLoginModal
-                          show={showBuyerLogin}
-                          handleClose={() => setShowBuyerLogin(false)}
-                        />
+                  <div
+                    className="dropdown-user-content"
+                    style={{ zIndex: "5" }}
+                  >
+                    {!buyer ? (
+                      // ✅ Jab user login nahi hai
+                      <div>
+                        <p>
+                          <b>Welcome</b>
+                          <br />
+                          To access account & manage orders
+                        </p>
+                        <div className="d-flex">
+                          <button
+                            className="btn1 me-2"
+                            onClick={() => setShowLogin(true)}
+                          >
+                            Admin Login
+                          </button>
+                          <Login
+                            show={showLogin}
+                            handleClose={() => setShowLogin(false)}
+                          />
+                          <button
+                            className="btn1"
+                            onClick={() => setShowBuyerLogin(true)}
+                          >
+                            Patient Login
+                          </button>
+                          <BuyerLoginModal
+                            show={showBuyerLogin}
+                            handleClose={() => setShowBuyerLogin(false)}
+                          />
+                        </div>
                       </div>
-                    </div>
-                    <div className="d-none">
-                      <p>
-                        <b>Welcome</b>
-                        <br />
-                        Dharmendra Kumar
-                      </p>
-                      <hr className="border-secondary" />
-                      <a href="#">My Profile</a>
-                      <a href="#">My Orders</a>
-                      <a href="#">Wishlist</a>
-                      <a href="#">Contact Us</a>
-                      <button className="btn1 mt-2">LogOut</button>
-                    </div>
+                    ) : (
+                      // ✅ Jab buyer login hai
+                      <div>
+                        <p>
+                          <b>Welcome</b>
+                          <br />
+                          {buyer?.name || "User"}
+                        </p>
+                        <hr className="border-secondary" />
+                        <Link href="/buyer/profile">My Account</Link>
+                        <Link href="/buyer/orders">My Orders</Link>
+                        {/* <Link href="/contact-us">Contact Us</Link> */}
+                        <button className="btn1 mt-2" onClick={handleLogout}>
+                          Logout
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </div>
               </li>
-              {/* <li>
-                <a href="my-wishlist.html">
-                  <span className="user_p">
-                    <i>
-                      <Image
-                        className="user_icon"
-                        src="/images/icons/icon-wishlist.svg"
-                      />
-                      <span className="count">0</span>
-                    </i>
-                    Wishlist
-                  </span>
-                </a>
-              </li> */}
               <li>
                 <Link href="/health-bag">
                   <span className="user_p">

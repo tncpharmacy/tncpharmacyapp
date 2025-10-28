@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Modal } from "react-bootstrap";
+import { Image, Modal } from "react-bootstrap";
 import { useRouter } from "next/navigation";
 import BuyerSignupModal from "@/app/buyer-signup/page";
 import {
@@ -125,10 +125,10 @@ export default function BuyerLoginModal({
           <div className="row">
             {/* Left Banner */}
             <div className="col-md-5 pe-0 d-none d-md-block">
-              <img
+              <Image
                 src="../images/login-banner-1.jpg"
                 className="w-100"
-                alt="Buyer Login Banner"
+                alt="Patient Login Banner"
               />
             </div>
 
@@ -136,7 +136,7 @@ export default function BuyerLoginModal({
             <div className="col-md-7 ps-md-0 d-flex align-items-center">
               <div className="login_form">
                 <span className="login_title">
-                  {step === 1 ? "Buyer Login" : "Verify OTP"}
+                  {step === 1 ? "Patient Login" : "Verify OTP"}
                 </span>
 
                 {/* STEP 1: Enter Email / Number */}

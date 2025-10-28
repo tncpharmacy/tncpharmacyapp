@@ -22,6 +22,7 @@ import {
 } from "@/types/medicine";
 import Link from "next/link";
 import Image from "next/image";
+import Footer from "@/app/user/components/footer/footer";
 
 // Types
 interface PackOption {
@@ -341,9 +342,7 @@ export default function ProductPage() {
 
                     <div className="mb-2">
                       <div className="title">Manufacturer</div>
-                      <div className="descr">
-                        <Link href="#">{manufacturer_name}</Link>
-                      </div>
+                      <div className="descr">{manufacturer_name}</div>
                     </div>
                     <div className="mb-2">
                       <div className="title">Pack Size</div>
@@ -362,22 +361,37 @@ export default function ProductPage() {
                   </div>
                   <div className="col-md-4 pb-4">
                     <Slider {...singleImageSlider}>
-                      {imageList.map((src, index) => (
-                        <div
-                          key={index}
-                          onClick={() => openModal(index)}
-                          style={{ cursor: "pointer" }}
-                        >
+                      {imageList.length > 0 ? (
+                        imageList.map((src, index) => (
+                          <div
+                            key={index}
+                            onClick={() => openModal(index)}
+                            style={{ cursor: "pointer" }}
+                          >
+                            <Image
+                              src={`${mediaBase}${src}`} // ✅ Full image path
+                              alt={`Product ${index + 1}`}
+                              className="w-100 h-100 rounded"
+                              width={100}
+                              height={100}
+                            />
+                          </div>
+                        ))
+                      ) : (
+                        // 🔹 Default image if no images found
+                        <div>
                           <Image
-                            src={`${mediaBase}${src}`} // ✅ Rebuild full path for display
-                            alt={`Product ${index + 1}`}
+                            src="/images/tnc-default.png" // 👉 default image path (put in /public/images)
+                            alt="No Image Available"
                             className="w-100 h-100 rounded"
                             width={100}
                             height={100}
+                            style={{ opacity: "0.3" }}
                           />
                         </div>
-                      ))}
+                      )}
                     </Slider>
+
                     {/* 🪟 Modal with Fullscreen Slider */}
                     <Modal
                       show={showModal}
@@ -548,234 +562,7 @@ export default function ProductPage() {
           </div>
         </div>
 
-        <footer>
-          <div className="container">
-            <div
-              className="row aos-init aos-animate"
-              data-aos="fade-up"
-              data-aos-duration="1000"
-              data-aos-delay="0"
-            >
-              <div className="col-sm-9">
-                <div className="row">
-                  <div className="col-sm-3">
-                    <h5 className="ftr_title">About TnC Pharmacy</h5>
-                    <ul className="ftr_link">
-                      <li>
-                        <a href="#">About us</a>
-                      </li>
-                      <li>
-                        <a href="#">Contact Us</a>
-                      </li>
-                      <li>
-                        <a href="#">Our Stores</a>
-                      </li>
-                      <li>
-                        <a href="#">Careers</a>
-                      </li>
-                      <li>
-                        <a href="#">News & Media</a>
-                      </li>
-                      <li>
-                        <a href="#">Our Blogs</a>
-                      </li>
-                      <li>
-                        <a href="#">FAQ’s</a>
-                      </li>
-                    </ul>
-                  </div>
-                  <div className="col-sm-3">
-                    <h5 className="ftr_title">Our Policies</h5>
-                    <ul className="ftr_link">
-                      <li>
-                        <a href="#">Returns & Refunds</a>
-                      </li>
-                      <li>
-                        <a href="#">Shipping Terms</a>
-                      </li>
-                      <li>
-                        <a href="#">Privacy Policy</a>
-                      </li>
-                      <li>
-                        <a href="#">Terms and Conditions</a>
-                      </li>
-                      <li>
-                        <a href="#">Editorial Policy</a>
-                      </li>
-                    </ul>
-                  </div>
-                  <div className="col-sm-3">
-                    <h5 className="ftr_title">Product Categories</h5>
-                    <ul className="ftr_link">
-                      <li>
-                        <a href="#">Medicines</a>
-                      </li>
-                      <li>
-                        <a href="#">Personal Care</a>
-                      </li>
-                      <li>
-                        <a href="#">Women Care</a>
-                      </li>
-                      <li>
-                        <a href="#">Baby Care</a>
-                      </li>
-                      <li>
-                        <a href="#">Sports Nutritional</a>
-                      </li>
-                      <li>
-                        <a href="#">Ayurveda</a>
-                      </li>
-                      <li>
-                        <a href="#">Health Devices</a>
-                      </li>
-                    </ul>
-                  </div>
-                  <div className="col-sm-3">
-                    <h5 className="ftr_title">Additional Links</h5>
-                    <ul className="ftr_link">
-                      <li>
-                        <a href="#">Order Medicines</a>
-                      </li>
-                      <li>
-                        <a href="#">Online Doctor Consultation</a>
-                      </li>
-                      <li>
-                        <a href="#">All Doctors List</a>
-                      </li>
-                      <li>
-                        <a href="#">Login/Register</a>
-                      </li>
-                    </ul>
-                  </div>
-                </div>
-              </div>
-              <div className="col-sm-3">
-                <h5 className="ftr_title">Customer Service</h5>
-                <ul className="ftr_link">
-                  <li>
-                    <i className="bi bi-headphones"></i>
-                    <a href="#">+91 97178 XXXXX</a>
-                    <span>(10:00 AM - 6:00 PM)</span>
-                  </li>
-                  <li>
-                    <i className="bi bi-whatsapp"></i>
-                    <a href="#">+91 97178 XXXXX</a>
-                    <span>(24x7 hrs)</span>
-                  </li>
-                  <li>
-                    <i className="bi bi-envelope"></i>
-                    <a href="#">care@tncpharmacy.in</a>
-                  </li>
-                  <li>
-                    <span>
-                      <b className="fw-semibold">Address</b>
-                      <br /> TnC Pharmacy, Ganga Shopping Complex, Sector 29,
-                      Noida, U.P. - 201303
-                    </span>
-                  </li>
-                </ul>
-              </div>
-            </div>
-          </div>
-          <div className="container">
-            <div className="border-top pt-3 mt-3">
-              <div className="row">
-                <div className="col-sm-6">
-                  <h5 className="ftr_title">We are social</h5>
-                  <ul className="ftr_sociallink">
-                    <li>
-                      <a href="#">
-                        <i className="bi bi-facebook"></i>
-                      </a>
-                    </li>
-                    <li>
-                      <a href="#">
-                        <i className="bi bi-twitter-x"></i>
-                      </a>
-                    </li>
-                    <li>
-                      <a href="#">
-                        <i className="bi bi-instagram"></i>
-                      </a>
-                    </li>
-                    <li>
-                      <a href="#">
-                        <i className="bi bi-youtube"></i>
-                      </a>
-                    </li>
-                    <li>
-                      <a href="#">
-                        <i className="bi bi-linkedin"></i>
-                      </a>
-                    </li>
-                  </ul>
-                </div>
-                <div className="col-sm-6 text-end">
-                  <div>
-                    <h5 className="ftr_title">Payment Accept</h5>
-                    <img
-                      src="images/payment-option.png"
-                      alt=""
-                      className="ftr_payment"
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div className="ftr_copywrite">
-            <div className="container">
-              <div className="row">
-                <div className="col-sm-6">
-                  © 2025 TnC Pharmacy | All Rights Reserved
-                </div>
-                <div className="col-sm-6 text-end">
-                  Developed by: <a href="#">Heuristtic Minds</a>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div className="toast-container position-fixed bottom-0 start-0">
-            <div
-              id="liveToast"
-              className="toast toast-app"
-              role="alert"
-              aria-live="assertive"
-              aria-atomic="true"
-              data-bs-autohide="false"
-            >
-              <div className="collapse show" id="mobile-qrcode">
-                <div className="mob">
-                  <button
-                    type="button"
-                    className="btn-close"
-                    data-bs-dismiss="toast"
-                    aria-label="Close"
-                  ></button>
-                  <img
-                    src="/Content/Images/logo.svg"
-                    className="clogo"
-                    alt=""
-                  />
-                  <img
-                    src="/Content/Images/qr-code.jpg"
-                    className="w-100"
-                    alt=""
-                  />
-                  <span className="hint">Scan to Download App</span>
-                </div>
-              </div>
-              <img
-                src="/Content/Images/download-app.svg"
-                className="toastimg"
-                alt="download app"
-                data-bs-toggle="collapse"
-                data-bs-target="#mobile-qrcode"
-                aria-expanded="true"
-              />
-            </div>
-          </div>
-        </footer>
+        <Footer />
       </div>
     </>
   );

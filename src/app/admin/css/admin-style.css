@@ -2,6 +2,58 @@ body {
     background: #e6f0ff;
 }
 
+.search_query {
+    align-items: center;
+    box-sizing: border-box;
+    display: flex;
+    float: left;
+    height: 80px;
+    line-height: 0;
+    padding: 0;
+    width: 100%;
+    position: relative;
+}
+
+.query_search_btn {
+    border-right: none;
+    color: #a3a3a3;
+    line-height: 38px;
+    text-align: center;
+    width: 50px;
+    position: absolute;
+    left: 2px;
+    height: 38px;
+}
+
+.search_query input[type=text] {
+    background: transparent;
+    box-sizing: initial;
+    display: inline-block;
+    height: 40px;
+}
+
+.search_query input[type=text] {
+    border: 1px solid #b5cfea;
+    /* border-radius: 0; */
+    box-shadow: none;
+    color: #696e79;
+    font-size: 13px;
+    margin: 0;
+    outline: 0;
+    padding: 0 55px;
+    width: 100%;
+    letter-spacing: 0.5px;
+}
+
+.search_query input[type=text]::placeholder {
+    color: #c6c6c6;
+    font-style: italic;
+}
+
+.search_query input[type=text]:hover {
+    border-color: #999999;
+}
+
 .header {
     background: #ffffff;
     width: 100%;

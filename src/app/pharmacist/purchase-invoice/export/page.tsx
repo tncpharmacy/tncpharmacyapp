@@ -11,9 +11,11 @@ import InfiniteScroll from "@/app/components/InfiniteScroll/InfiniteScroll";
 import TableLoader from "@/app/components/TableLoader/TableLoader";
 import SelectMedicineDropdown from "@/app/components/Input/SelectMedicineDropdown";
 import { useExportExcel } from "@/lib/hooks/useExportExcel";
+import { useRouter } from "next/navigation";
 
 export default function PurchaseInvoiceExport() {
   const dispatch = useAppDispatch();
+  const router = useRouter();
   const { exportToExcel } = useExportExcel();
   const { medicines: getMedicine } = useAppSelector((state) => state.medicine);
 
@@ -134,6 +136,12 @@ export default function PurchaseInvoiceExport() {
           >
             <div className="pageTitle">
               <i className="bi bi-receipt-cutoff"></i> Purchase Invoice Export
+              <button
+                onClick={() => router.push("/pharmacist/purchase-invoice")}
+                className="btn-style2 float-end pe-4 ps-4"
+              >
+                ← Back
+              </button>
             </div>
 
             <div className="main_content">

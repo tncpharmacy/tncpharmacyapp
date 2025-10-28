@@ -59,7 +59,7 @@ export default function MedicineCard({
   const path = fullUrl ? new URL(fullUrl).pathname : "";
   const imageSrc = primary_image
     ? `${mediaBase}${path}`
-    : "/images/tnc-default-small.png";
+    : "/images/tnc-default.png";
 
   return (
     <div className="medicine-card">
@@ -72,14 +72,26 @@ export default function MedicineCard({
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
           >
-            <Image src={imageSrc} alt="" width={50} height={50} />
+            <Image
+              src={imageSrc}
+              alt="No Image Available"
+              width={70}
+              height={60}
+              style={{
+                opacity: imageSrc === "/images/tnc-default.png" ? 0.3 : 1, // ✅ only default image faded
+              }}
+            />
             {isHovered && (
-              <div className="zoomBox shadow-lg">
+              <div className="zoomBox shadow-xl">
                 <Image
                   src={imageSrc}
                   alt={medicine_name}
                   fill
-                  style={{ objectFit: "contain" }}
+                  style={{
+                    height: "100%",
+                    objectFit: "contain",
+                    opacity: imageSrc === "/images/tnc-default.png" ? 0.3 : 1, // ✅ only default image faded
+                  }}
                 />
               </div>
             )}
@@ -123,39 +135,44 @@ export default function MedicineCard({
         {/* Bottom section */}
         <div className="medicine-bottom">
           {discountPercent > 0 ? (
-            <>
-              <p className="medicine-discounted text-success fw-bold">
-                ₹{formatCurrency(discountedPrice)}{" "}
-                <span className="text-danger fw-semibold">
-                  ({discountPercent}% OFF)
-                </span>
+            <div className="d-flex flex-column align-items-start">
+              <p className="medicine-discounted text-success fw-bold mb-1">
+                ₹{formatCurrency(discountedPrice)}
               </p>
               <p
-                className="medicine-mrp text-muted"
-                style={{ textDecoration: "line-through", marginRight: "180px" }}
+                className="text-danger fw-bold mb-1"
+                style={{ fontSize: "12px" }}
+              >
+                ({discountPercent}% OFF)
+              </p>
+              <p
+                className="medicine-mrp text-muted mb-0"
+                style={{ textDecoration: "line-through" }}
               >
                 ₹{formatCurrency(originalMrp)}
               </p>
-            </>
+            </div>
           ) : (
             <p className="medicine-mrp">₹{formatCurrency(originalMrp)}</p>
           )}
           {/* <p className="medicine-mrp">MRP ₹{formatCurrency(mrp)}</p>; */}
-          <button
-            className="btn-1"
-            onClick={() =>
-              isInBag
-                ? removeItem(id)
-                : addItem({
-                    id: Date.now(),
-                    buyer_id: buyer?.id || 0,
-                    product_id: id,
-                    quantity: 1,
-                  })
-            }
-          >
-            {isInBag ? "REMOVE" : "ADD"}
-          </button>
+          <div className="text-end">
+            <button
+              className="btn-1"
+              onClick={() =>
+                isInBag
+                  ? removeItem(id)
+                  : addItem({
+                      id: Date.now(),
+                      buyer_id: buyer?.id || 0,
+                      product_id: id,
+                      quantity: 1,
+                    })
+              }
+            >
+              {isInBag ? "REMOVE" : "ADD"}
+            </button>
+          </div>
           {/* {availability === "ADD" ? (
             <button className="medicine-btn">ADD</button>
           ) : (

@@ -19,6 +19,38 @@ import purchaseReducer from "@/lib/features/purchaseStockSlice/purchaseStockSlic
 import healthBagReducer from "@/lib/features/healthBagSlice/healthBagSlice";
 import addressReducer from "@/lib/features/addressSlice/addressSlice";
 
+//
+// ✅ STEP 1 — Load preloaded state from localStorage
+//
+const loadState = () => {
+  try {
+    const user = localStorage.getItem("user");
+    const accessToken = localStorage.getItem("accessToken");
+    const refreshToken = localStorage.getItem("refreshToken");
+
+    if (user && accessToken) {
+      return {
+        auth: {
+          user: JSON.parse(user),
+          accessToken,
+          refreshToken,
+          isAuthenticated: true,
+          loading: false,
+          error: null,
+          restoreComplete: true,
+        },
+      };
+    }
+  } catch (err) {
+    console.warn("Failed to load persisted auth state:", err);
+  }
+
+  return undefined;
+};
+
+//
+// ✅ STEP 2 — Configure store with preloadedState
+//
 export const store = configureStore({
   reducer: {
     auth: authReducer,
@@ -41,8 +73,11 @@ export const store = configureStore({
     healthBag: healthBagReducer,
     address: addressReducer,
   },
+  preloadedState: loadState(), // ✅ instant load on refresh
 });
 
-// types for use in components
+//
+// ✅ STEP 3 — Export types
+//
 export type RootState = ReturnType<typeof store.getState>;
 export type AppDispatch = typeof store.dispatch;

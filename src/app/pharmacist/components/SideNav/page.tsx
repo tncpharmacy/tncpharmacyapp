@@ -23,34 +23,34 @@ export default function SideNav() {
           </Link>
         </li>
         <li>
-          <div onClick={() => toggleMenu("medicine")} className="link arrow">
-            <i className="bi bi-capsule-pill"></i> Medicine
-          </div>
-          {openMenu === "medicine" && (
-            <ul className="submenu">
-              <li>
-                <Link href="#">Book Medicine</Link>
-              </li>
-            </ul>
-          )}
+          <Link href="/pharmacist/orders" className="link">
+            <i className="bi bi-cart-plus-fill"></i> Order
+          </Link>
         </li>
         <li>
-          <div
-            onClick={() => toggleMenu("purchase-invoice")}
-            className="link arrow"
-          >
+          <Link href="/pharmacist/purchase-invoice" className="link">
             <i className="bi bi-receipt-cutoff"></i> Purchase Invoice
+          </Link>
+        </li>
+        <li>
+          <Link href="#" className="link">
+            <i className="bi bi-box"></i> Stock
+          </Link>
+        </li>
+        <li>
+          <div onClick={() => toggleMenu("product")} className="link arrow">
+            <i className="bi bi-box-seam"></i> Product Master
           </div>
-          {openMenu === "purchase-invoice" && (
-            <ul className="submenu">
+          {openMenu === "product" && (
+            <ul className="submenu myList">
               <li>
-                <Link href="/pharmacist/import">
-                  <i className="bi bi-box-arrow-in-up"></i> Import
+                <Link href="/pharmacist/medicine">
+                  <i className="bi bi-capsule"></i> Medicine Details
                 </Link>
               </li>
               <li>
-                <Link href="/pharmacist/export">
-                  <i className="bi bi-box-arrow-down"></i> Export
+                <Link href="/pharmacist/other-product">
+                  <i className="bi bi-box-seam"></i> Other Product Details
                 </Link>
               </li>
             </ul>
@@ -60,11 +60,6 @@ export default function SideNav() {
           <Link href="/pharmacist/retail-counter" className="link">
             <i className="bi bi-receipt-cutoff"></i> Retail Counter
           </Link>
-        </li>
-        <li className={`${openMenu === "Stock-Management" ? "active" : ""}`}>
-          <div onClick={() => toggleMenu("Stock-Management")} className="link">
-            <i className="bi bi-box"></i> Stock
-          </div>
         </li>
         {/* <li
           className={`${openMenu === "Prescription-Handling" ? "active" : ""}`}

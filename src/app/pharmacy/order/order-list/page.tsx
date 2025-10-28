@@ -2,16 +2,38 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { Button, Modal } from "react-bootstrap";
+import { Button, Modal, OverlayTrigger, Tooltip } from "react-bootstrap";
 import "../../css/style.css";
-import SideNav from "../../components/SideNav/page";
-import Header from "../../components/Header/page";
+import SideNav from "@/app/pharmacy/components/SideNav/page";
+import Header from "@/app/pharmacy/components/Header/page";
 import { useRouter } from "next/navigation";
+import Input from "@/app/components/Input/Input";
 
 export default function OrderList() {
   const router = useRouter();
   const [showPrint, setShowPrint] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
+
+  const [showReport, setShowReport] = useState(false);
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
+  const [orderType, setOrderType] = useState("");
+
+  // 🗓️ Aaj ki date (YYYY-MM-DD)
+  const today = new Date().toISOString().split("T")[0];
+  const handleExport = () => {
+    if (!startDate || !endDate) {
+      alert("Please select both start and end dates.");
+      return;
+    }
+    if (new Date(startDate) > new Date(endDate)) {
+      alert("Start Date cannot be after End Date!");
+      return;
+    }
+    console.log("Generating report from", startDate, "to", endDate);
+    // 🔽 yahan export / API call logic likho
+    setShowReport(false);
+  };
 
   const handleBook = () => {
     router.push(`/doctor/appointment/bookAppointment`);
@@ -19,6 +41,7 @@ export default function OrderList() {
   const handleHistory = () => {
     setShowHistory(true);
   };
+
   return (
     <>
       <Header />
@@ -27,33 +50,50 @@ export default function OrderList() {
         <div className="body_right">
           <div className="body_content">
             <div className="pageTitle">
-              <i className="bi bi-person-add"></i> Order List
+              <i className="bi bi-receipt"></i> Order Summary
             </div>
             <div className="main_content">
               <div className="col-sm-12">
                 <div className="row">
-                  <div className="col-md-7">
-                    <div className="txt_col">
-                      <span className="lbl1">Search</span>
+                  <div className="col-md-6">
+                    <div className="search_query">
+                      <a className="query_search_btn" href="javascript:void(0)">
+                        <i className="bi bi-search"></i>
+                      </a>
                       <input
                         type="text"
-                        className="txt1 rounded"
+                        className="txt1"
                         id=""
-                        placeholder="Enter order number.."
+                        placeholder="search by order id, name, mobile"
                       />
                     </div>
                   </div>
-                  <div className="col-md-5 text-end">
+                  <div className="col-md-3">
                     <div className="txt_col">
-                      {/* <button
-                        className="btn-style2 me-2"
-                        onClick={() => setShowPrint(true)}
+                      <span className="lbl1">Order Type</span>
+                      <select
+                        className="txt1"
+                        name="orderType"
+                        value={orderType}
+                        onChange={(e) => setOrderType(e.target.value)}
+                        required
                       >
-                        <i className="bi bi-plus"></i> New Order
-                      </button> */}
-                      {/* <button className="btn-style1">
-                        <i className="bi bi-download"></i> Export Statement
-                      </button> */}
+                        <option>-Select-</option>
+                        <option>Online</option>
+                        <option>Offline</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div className="col-md-3 text-end">
+                    <div className="txt_col">
+                      <Button
+                        variant="outline-primary"
+                        onClick={() => setShowReport(true)}
+                        className="btn-style1"
+                      >
+                        <i className="bi bi-file-earmark-text"></i> Generate
+                        Report
+                      </Button>
                     </div>
                   </div>
                 </div>
@@ -62,176 +102,311 @@ export default function OrderList() {
                   <table className="table cust_table1">
                     <thead>
                       <tr>
-                        <th>Order Id</th>
-                        <th>Name</th>
-                        <th>Contact No.</th>
-                        <th>Amount</th>
-                        <th>Order Date</th>
-                        <th>Status</th>
-                        <th>Action</th>
+                        <th style={{ width: "0px" }}></th>
+                        <th className="fw-bold text-start">Order Id</th>
+                        <th className="fw-bold text-start">Name</th>
+                        <th className="fw-bold text-start">Contact No.</th>
+                        <th className="fw-bold text-start">Amount</th>
+                        <th className="fw-bold text-start">Order Date</th>
+                        <th className="fw-bold text-start">Order Type</th>
+                        <th className="fw-bold text-start">Action</th>
                       </tr>
                     </thead>
                     <tbody>
                       <tr>
-                        <td>ORD001</td>
-                        <td>Mohan Kumar</td>
-                        <td>9717XXXXXX</td>
-                        <td>500</td>
-                        <td>10-08-2025</td>
-                        <td>
-                          <span className="status status-active"></span>
-                        </td>
-                        <td>
+                        <td></td>
+                        <td className="text-start">ORD001</td>
+                        <td className="text-start">Mohan Kumar</td>
+                        <td className="text-start">9717XXXXXX</td>
+                        <td className="text-start">500</td>
+                        <td className="text-start">10-08-2025</td>
+                        <td className="text-start">Offline</td>
+                        <td className="text-start">
                           <button
-                            className="btn btn-primary btn-sm"
+                            className="btn-style1"
                             onClick={handleHistory}
                           >
-                            <i className="bi bi-clock-history"></i> Details
+                            <i className="bi bi-card-list"></i> Order Details
                           </button>
                         </td>
                       </tr>
                       <tr>
-                        <td>ORD002</td>
-                        <td>Sohan Kumar</td>
-                        <td>9717XXXXXX</td>
-                        <td>600</td>
-                        <td>07-08-2025</td>
-                        <td>
-                          <span className="status status-active"></span>
-                        </td>
-                        <td>
+                        <td></td>
+                        <td className="text-start">ORD001</td>
+                        <td className="text-start">Mohan Kumar</td>
+                        <td className="text-start">9717XXXXXX</td>
+                        <td className="text-start">500</td>
+                        <td className="text-start">10-08-2025</td>
+                        <td className="text-start">Offline</td>
+                        <td className="text-start">
                           <button
-                            className="btn btn-primary btn-sm"
+                            className="btn-style1"
                             onClick={handleHistory}
                           >
-                            <i className="bi bi-clock-history"></i> Details
+                            <i className="bi bi-card-list"></i> Order Details
                           </button>
+                          {/* <OverlayTrigger
+                            placement="top"
+                            overlay={
+                              <Tooltip id="tooltip-top">View Oreder</Tooltip>
+                            }
+                          >
+                            <Button
+                              className="btn btn-light btn-sm me-2"
+                              variant="primary"
+                              onClick={handleHistory}
+                            >
+                              <i className="bi bi-eye-fill"></i>
+                            </Button>
+                          </OverlayTrigger> */}
                         </td>
                       </tr>
                       <tr>
-                        <td>ORD003</td>
-                        <td>Ramesh Kumar</td>
-                        <td>9717XXXXXX</td>
-                        <td>700</td>
-                        <td>28-02-2025</td>
-                        <td>
-                          <span className="status status-deactive"></span>
-                        </td>
-                        <td>
+                        <td></td>
+                        <td className="text-start">ORD001</td>
+                        <td className="text-start">Mohan Kumar</td>
+                        <td className="text-start">9717XXXXXX</td>
+                        <td className="text-start">500</td>
+                        <td className="text-start">10-08-2025</td>
+                        <td className="text-start">Offline</td>
+                        <td className="text-start">
                           <button
-                            className="btn btn-primary btn-sm"
+                            className="btn-style1"
                             onClick={handleHistory}
                           >
-                            <i className="bi bi-clock-history"></i> Details
+                            <i className="bi bi-card-list"></i> Order Details
                           </button>
+                          {/* <OverlayTrigger
+                            placement="top"
+                            overlay={
+                              <Tooltip id="tooltip-top">View Oreder</Tooltip>
+                            }
+                          >
+                            <Button
+                              className="btn btn-light btn-sm me-2"
+                              variant="primary"
+                              onClick={handleHistory}
+                            >
+                              <i className="bi bi-eye-fill"></i>
+                            </Button>
+                          </OverlayTrigger> */}
                         </td>
                       </tr>
                       <tr>
-                        <td>ORD004</td>
-                        <td>Suresh Kumar</td>
-                        <td>9717XXXXXX</td>
-                        <td>300</td>
-                        <td>27-07-2025</td>
-                        <td>
-                          <span className="status status-active"></span>
-                        </td>
-                        <td>
+                        <td></td>
+                        <td className="text-start">ORD001</td>
+                        <td className="text-start">Mohan Kumar</td>
+                        <td className="text-start">9717XXXXXX</td>
+                        <td className="text-start">500</td>
+                        <td className="text-start">10-08-2025</td>
+                        <td className="text-start">Offline</td>
+                        <td className="text-start">
                           <button
-                            className="btn btn-primary btn-sm"
+                            className="btn-style1"
                             onClick={handleHistory}
                           >
-                            <i className="bi bi-clock-history"></i> Details
+                            <i className="bi bi-card-list"></i> Order Details
                           </button>
+                          {/* <OverlayTrigger
+                            placement="top"
+                            overlay={
+                              <Tooltip id="tooltip-top">View Oreder</Tooltip>
+                            }
+                          >
+                            <Button
+                              className="btn btn-light btn-sm me-2"
+                              variant="primary"
+                              onClick={handleHistory}
+                            >
+                              <i className="bi bi-eye-fill"></i>
+                            </Button>
+                          </OverlayTrigger> */}
                         </td>
                       </tr>
                       <tr>
-                        <td>ORD005</td>
-                        <td>Sonu Kumar</td>
-                        <td>9717XXXXXX</td>
-                        <td>500</td>
-                        <td>29-07-2025</td>
-                        <td>
-                          <span className="status status-active"></span>
-                        </td>
-                        <td>
+                        <td></td>
+                        <td className="text-start">ORD001</td>
+                        <td className="text-start">Mohan Kumar</td>
+                        <td className="text-start">9717XXXXXX</td>
+                        <td className="text-start">500</td>
+                        <td className="text-start">10-08-2025</td>
+                        <td className="text-start">Offline</td>
+                        <td className="text-start">
                           <button
-                            className="btn btn-primary btn-sm"
+                            className="btn-style1"
                             onClick={handleHistory}
                           >
-                            <i className="bi bi-clock-history"></i> Details
+                            <i className="bi bi-card-list"></i> Order Details
                           </button>
+                          {/* <OverlayTrigger
+                            placement="top"
+                            overlay={
+                              <Tooltip id="tooltip-top">View Oreder</Tooltip>
+                            }
+                          >
+                            <Button
+                              className="btn btn-light btn-sm me-2"
+                              variant="primary"
+                              onClick={handleHistory}
+                            >
+                              <i className="bi bi-eye-fill"></i>
+                            </Button>
+                          </OverlayTrigger> */}
                         </td>
                       </tr>
                       <tr>
-                        <td>ORD006</td>
-                        <td>Mohan Kumar</td>
-                        <td>9717XXXXXX</td>
-                        <td>500</td>
-                        <td>07-08-2025</td>
-                        <td>
-                          <span className="status status-active"></span>
-                        </td>
-                        <td>
+                        <td></td>
+                        <td className="text-start">ORD001</td>
+                        <td className="text-start">Mohan Kumar</td>
+                        <td className="text-start">9717XXXXXX</td>
+                        <td className="text-start">500</td>
+                        <td className="text-start">10-08-2025</td>
+                        <td className="text-start">Offline</td>
+                        <td className="text-start">
                           <button
-                            className="btn btn-primary btn-sm"
+                            className="btn-style1"
                             onClick={handleHistory}
                           >
-                            <i className="bi bi-clock-history"></i> Details
+                            <i className="bi bi-card-list"></i> Order Details
                           </button>
+                          {/* <OverlayTrigger
+                            placement="top"
+                            overlay={
+                              <Tooltip id="tooltip-top">View Oreder</Tooltip>
+                            }
+                          >
+                            <Button
+                              className="btn btn-light btn-sm me-2"
+                              variant="primary"
+                              onClick={handleHistory}
+                            >
+                              <i className="bi bi-eye-fill"></i>
+                            </Button>
+                          </OverlayTrigger> */}
                         </td>
                       </tr>
                       <tr>
-                        <td>ORD007</td>
-                        <td>Mohan Kumar</td>
-                        <td>9717XXXXXX</td>
-                        <td>500</td>
-                        <td>01-08-2025</td>
-                        <td>
-                          <span className="status status-active"></span>
-                        </td>
-                        <td>
+                        <td></td>
+                        <td className="text-start">ORD001</td>
+                        <td className="text-start">Mohan Kumar</td>
+                        <td className="text-start">9717XXXXXX</td>
+                        <td className="text-start">500</td>
+                        <td className="text-start">10-08-2025</td>
+                        <td className="text-start">Offline</td>
+                        <td className="text-start">
                           <button
-                            className="btn btn-primary btn-sm"
+                            className="btn-style1"
                             onClick={handleHistory}
                           >
-                            <i className="bi bi-clock-history"></i> Details
+                            <i className="bi bi-card-list"></i> Order Details
                           </button>
+                          {/* <OverlayTrigger
+                            placement="top"
+                            overlay={
+                              <Tooltip id="tooltip-top">View Oreder</Tooltip>
+                            }
+                          >
+                            <Button
+                              className="btn btn-light btn-sm me-2"
+                              variant="primary"
+                              onClick={handleHistory}
+                            >
+                              <i className="bi bi-eye-fill"></i>
+                            </Button>
+                          </OverlayTrigger> */}
                         </td>
                       </tr>
                       <tr>
-                        <td>ORD008</td>
-                        <td>Monu Kumar</td>
-                        <td>9717XXXXXX</td>
-                        <td>400</td>
-                        <td>30-06-2025</td>
-                        <td>
-                          <span className="status status-active"></span>
-                        </td>
-                        <td>
+                        <td></td>
+                        <td className="text-start">ORD001</td>
+                        <td className="text-start">Mohan Kumar</td>
+                        <td className="text-start">9717XXXXXX</td>
+                        <td className="text-start">500</td>
+                        <td className="text-start">10-08-2025</td>
+                        <td className="text-start">Offline</td>
+                        <td className="text-start">
                           <button
-                            className="btn btn-primary btn-sm"
+                            className="btn-style1"
                             onClick={handleHistory}
                           >
-                            <i className="bi bi-clock-history"></i> Details
+                            <i className="bi bi-card-list"></i> Order Details
                           </button>
+                          {/* <OverlayTrigger
+                            placement="top"
+                            overlay={
+                              <Tooltip id="tooltip-top">View Oreder</Tooltip>
+                            }
+                          >
+                            <Button
+                              className="btn btn-light btn-sm me-2"
+                              variant="primary"
+                              onClick={handleHistory}
+                            >
+                              <i className="bi bi-eye-fill"></i>
+                            </Button>
+                          </OverlayTrigger> */}
                         </td>
                       </tr>
                       <tr>
-                        <td>ORD009</td>
-                        <td>Sagar Kumar</td>
-                        <td>9717XXXXXX</td>
-                        <td>600</td>
-                        <td>02-08-2025</td>
-                        <td>
-                          <span className="status status-active"></span>
-                        </td>
-                        <td>
+                        <td></td>
+                        <td className="text-start">ORD001</td>
+                        <td className="text-start">Mohan Kumar</td>
+                        <td className="text-start">9717XXXXXX</td>
+                        <td className="text-start">500</td>
+                        <td className="text-start">10-08-2025</td>
+                        <td className="text-start">Offline</td>
+                        <td className="text-start">
                           <button
-                            className="btn btn-primary btn-sm"
+                            className="btn-style1"
                             onClick={handleHistory}
                           >
-                            <i className="bi bi-clock-history"></i> Details
+                            <i className="bi bi-card-list"></i> Order Details
                           </button>
+                          {/* <OverlayTrigger
+                            placement="top"
+                            overlay={
+                              <Tooltip id="tooltip-top">View Oreder</Tooltip>
+                            }
+                          >
+                            <Button
+                              className="btn btn-light btn-sm me-2"
+                              variant="primary"
+                              onClick={handleHistory}
+                            >
+                              <i className="bi bi-eye-fill"></i>
+                            </Button>
+                          </OverlayTrigger> */}
+                        </td>
+                      </tr>
+                      <tr>
+                        <td></td>
+                        <td className="text-start">ORD001</td>
+                        <td className="text-start">Mohan Kumar</td>
+                        <td className="text-start">9717XXXXXX</td>
+                        <td className="text-start">500</td>
+                        <td className="text-start">10-08-2025</td>
+                        <td className="text-start">Offline</td>
+                        <td className="text-start">
+                          <button
+                            className="btn-style1"
+                            onClick={handleHistory}
+                          >
+                            <i className="bi bi-card-list"></i> Order Details
+                          </button>
+                          {/* <OverlayTrigger
+                            placement="top"
+                            overlay={
+                              <Tooltip id="tooltip-top">View Oreder</Tooltip>
+                            }
+                          >
+                            <Button
+                              className="btn btn-light btn-sm me-2"
+                              variant="primary"
+                              onClick={handleHistory}
+                            >
+                              <i className="bi bi-eye-fill"></i>
+                            </Button>
+                          </OverlayTrigger> */}
                         </td>
                       </tr>
                     </tbody>
@@ -242,69 +417,7 @@ export default function OrderList() {
           </div>
         </div>
       </div>
-      {/* <Modal
-        show={showPrint}
-        onHide={() => setShowPrint(false)}
-        size="lg"
-        centered
-      >
-        <Modal.Header closeButton>
-          <Modal.Title>
-            <i className="bi bi-person-add"></i> Customer
-          </Modal.Title>
-        </Modal.Header>
-
-        <Modal.Body>
-          <div className="container-fluid">
-            <div className="row g-3">
-              <div className="col-md-3">
-                <label className="form-label">Contact No</label>
-                <input
-                  type="text"
-                  className="form-control"
-                  placeholder="Contact number"
-                />
-              </div>
-
-              <div className="col-md-3">
-                <label className="form-label">Patient Name</label>
-                <input
-                  type="text"
-                  className="form-control"
-                  placeholder="Patient name"
-                />
-              </div>
-
-              <div className="col-md-3">
-                <label className="form-label">Gender</label>
-                <select className="form-control">
-                  <option>-Select-</option>
-                  <option>Male</option>
-                  <option>Female</option>
-                </select>
-              </div>
-
-              <div className="col-md-3">
-                <label className="form-label">Age</label>
-                <input
-                  type="text"
-                  className="form-control"
-                  placeholder="Age.."
-                />
-              </div>
-            </div>
-          </div>
-        </Modal.Body>
-
-        <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowPrint(false)}>
-            Close
-          </Button>
-          <Button variant="primary" onClick={handleBook}>
-            Continue
-          </Button>
-        </Modal.Footer>
-      </Modal> */}
+      {/* Order Details Modal */}
       <Modal
         show={showHistory}
         onHide={() => setShowHistory(false)}
@@ -313,7 +426,7 @@ export default function OrderList() {
       >
         <Modal.Header closeButton>
           <Modal.Title>
-            <i className="bi bi-person"></i> Customer Details
+            <i className="bi bi-person-vcard"></i> Buyer Details
           </Modal.Title>
         </Modal.Header>
 
@@ -348,7 +461,7 @@ export default function OrderList() {
             </div>
             <br />
             <Modal.Title>
-              <i className="bi bi-clock-history"></i> Order Details
+              <i className="bi bi-card-list"></i> Order Details
             </Modal.Title>
             <hr />
 
@@ -455,6 +568,62 @@ export default function OrderList() {
 
         <Modal.Footer>
           <Button variant="secondary" onClick={() => setShowHistory(false)}>
+            Close
+          </Button>
+        </Modal.Footer>
+      </Modal>
+
+      {/* Generate Report Modal */}
+      <Modal
+        show={showReport}
+        onHide={() => setShowReport(false)}
+        size="lg"
+        centered
+      >
+        <Modal.Header closeButton>
+          <Modal.Title>
+            <i className="bi bi-file-earmark-text me-2"></i> Generate Report
+          </Modal.Title>
+        </Modal.Header>
+
+        <Modal.Body>
+          <div className="container-fluid">
+            <div className="row align-items-end">
+              <Input
+                label="Start Date"
+                type="date"
+                name="startDate"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+                required
+                max={today}
+              />
+              <Input
+                label="End Date"
+                type="date"
+                name="endDate"
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+                required
+                max={today}
+              />
+
+              <div className="col-md-4 mb-3 d-flex align-items-end">
+                <Button
+                  variant="primary"
+                  className="w-100 d-flex align-items-center justify-content-center gap-2"
+                  style={{ height: "46px" }}
+                  onClick={handleExport}
+                >
+                  <i className="bi bi-download"></i> Export Statement
+                </Button>
+              </div>
+            </div>
+          </div>
+        </Modal.Body>
+
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowReport(false)}>
             Close
           </Button>
         </Modal.Footer>

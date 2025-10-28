@@ -23,36 +23,43 @@ export default function SideNav() {
           </Link>
         </li>
         <li>
-          <Link href="/order" className="link">
+          <Link href="/pharmacy/orders" className="link">
             <i className="bi bi-cart-plus-fill"></i> Order
           </Link>
+        </li>
+        <li>
+          <Link href="/pharmacy/purchase-invoice" className="link">
+            <i className="bi bi-receipt-cutoff"></i> Purchase Invoice
+          </Link>
+        </li>
+        <li>
+          <Link href="#" className="link">
+            <i className="bi bi-box"></i> Stock
+          </Link>
+        </li>
+        <li>
+          <div onClick={() => toggleMenu("product")} className="link arrow">
+            <i className="bi bi-box-seam"></i> Product Master
+          </div>
+          {openMenu === "product" && (
+            <ul className="submenu myList">
+              <li>
+                <Link href="/pharmacy/medicine">
+                  <i className="bi bi-capsule"></i> Medicine Details
+                </Link>
+              </li>
+              <li>
+                <Link href="/pharmacy/other-product">
+                  <i className="bi bi-box-seam"></i> Other Product Details
+                </Link>
+              </li>
+            </ul>
+          )}
         </li>
         <li>
           <Link href="/pharmacy/pharmacist" className="link">
             <i className="bi bi-capsule"></i> Pharmacist
           </Link>
-        </li>
-        <li>
-          <div
-            onClick={() => toggleMenu("purchase-invoice")}
-            className="link arrow"
-          >
-            <i className="bi bi-receipt-cutoff"></i> Purchase Invoice
-          </div>
-          {openMenu === "purchase-invoice" && (
-            <ul className="submenu">
-              <li>
-                <Link href="/pharmacy/import">
-                  <i className="bi bi-box-arrow-in-up"></i> Import
-                </Link>
-              </li>
-              <li>
-                <Link href="/pharmacy/export">
-                  <i className="bi bi-box-arrow-down"></i> Export
-                </Link>
-              </li>
-            </ul>
-          )}
         </li>
         <li>
           <Link href="/supplier" className="link">

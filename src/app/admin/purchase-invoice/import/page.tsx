@@ -12,6 +12,7 @@ import InfiniteScroll from "@/app/components/InfiniteScroll/InfiniteScroll";
 import SelectInput from "@/app/components/Input/SelectInput";
 import Input from "@/app/components/Input/Input";
 import { fetchPharmacyList } from "@/lib/features/pharmacyListSlice/pharmacyListSlice";
+import { useRouter } from "next/navigation";
 
 type PharmacyCommon = {
   id: number;
@@ -20,6 +21,7 @@ type PharmacyCommon = {
 
 export default function PurchaseInvoiceImport() {
   const dispatch = useAppDispatch();
+  const router = useRouter();
   // const userPharmacy = getUser();
   // const pharmacyName = userPharmacy?.pharmacy_name || "";
   // const pharmacyId = userPharmacy?.id || 0;
@@ -137,6 +139,12 @@ export default function PurchaseInvoiceImport() {
           >
             <div className="pageTitle">
               <i className="bi bi-shop-window"></i> Purchase Invoice Import
+              <button
+                onClick={() => router.push("/purchase-invoice")}
+                className="btn-style2 float-end pe-4 ps-4"
+              >
+                ← Back
+              </button>
             </div>
             <div className="main_content">
               <div className="col-sm-12">
