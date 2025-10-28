@@ -171,8 +171,6 @@ const SiteHeader = () => {
     }
   };
 
-  if (!mounted) return null;
-
   return (
     <header id="header">
       <div className="mid_header">
