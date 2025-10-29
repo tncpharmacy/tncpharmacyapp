@@ -14,6 +14,9 @@ const styles = {
 interface CartItem {
   id: number;
   medicine_name: string;
+  generic_name?: string;
+  GenericName?: string;
+  pack_size?: string;
   qty: number;
   price: number;
   dose_form: string;
@@ -238,21 +241,34 @@ const BillPreviewModal: React.FC<BillPreviewModalProps> = ({
           /* Print specific styles */
           .print-hide { display: none !important; }
           .print-only { display: block !important; }
-          .print-card { 
-            page-break-inside: avoid; 
-            margin-bottom: 10px; 
-            padding: 8px; 
-            border: 1px solid #ccc; 
-            border-radius: 4px; 
-            width: 48%; /* For two cards per row */
-            display: inline-block;
-            vertical-align: top;
+         .print-card {
+            page-break-inside: avoid;
+            margin: 8px 0;
+            padding: 10px 14px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            background: #fff;
+            font-size: 13px;
+            line-height: 1.35;
+            width: 100mm; 
+            box-shadow: 0 0 2px rgba(0,0,0,0.1);
+}
+          /* ✅ Center the container and remove stretch */
+          .dose-container {
+            display: flex;            
+            flex-wrap: wrap;
+            justify-content: flex-start; 
+            gap: 10px;
           }
-          .dose-container { 
-            display: flex; 
-            flex-wrap: wrap; 
-            justify-content: space-between; 
-            margin-top: 10px; 
+
+          p {
+            margin: 2px 0;
+          }
+
+          hr {
+            margin: 4px 0;
+            border: none;
+            border-top: 1px solid #ccc;
           }
         </style>
       </head>
@@ -384,7 +400,11 @@ const BillPreviewModal: React.FC<BillPreviewModalProps> = ({
                   return (
                     <tr key={idx}>
                       <td>{translatedItem.medicine_name}</td>
-                      <td>{translatedItem.qty}</td>
+                      <td>
+                        {translatedItem.pack_size
+                          ? `${translatedItem.pack_size} × ${translatedItem.qty}`
+                          : translatedItem.qty}
+                      </td>
                       <td>{translatedItem.price}</td>
                       <td>{translatedItem.Disc}</td>
                       <td>{subtotal.toFixed(2)}</td>
@@ -459,39 +479,59 @@ const BillPreviewModal: React.FC<BillPreviewModalProps> = ({
 
                 <div className="dose-container">
                   {translatedCart.map((item, idx) => (
-                    <div
-                      key={idx}
-                      className="print-card p-2"
-                      style={{
-                        backgroundColor: "#f9f9f9",
-                        border: "1px solid #ddd",
-                      }}
-                    >
-                      <p className="mb-1 text-start fw-bold">
-                        {item.medicine_name}
+                    <div key={idx} className="print-card">
+                      <p>
+                        <strong>TnC Pharmacy</strong>
                       </p>
-                      <hr className="my-1" />
-                      <p className="mb-0" style={{ fontSize: "11px" }}>
-                        <span className="fw-semibold"></span>{" "}
-                        {item.dose_form || "Not specified"}
+                      <hr />
+                      <p>
+                        <strong>Patient:</strong> {customerName || "-"}
                       </p>
-                      <p className="mb-0" style={{ fontSize: "11px" }}>
-                        <span className="fw-semibold"></span>{" "}
-                        {item.remarks || "N/A"}
+                      <p>
+                        <strong>Date:</strong>{" "}
+                        {new Date().toLocaleDateString("en-GB", {
+                          day: "2-digit",
+                          month: "short",
+                          year: "numeric",
+                        })}
                       </p>
+                      <br />
+                      <p>
+                        <strong>Medicine:</strong> {item.medicine_name}
+                      </p>
+                      {/* <p>
+                        <strong>Generic:</strong>{" "}
+                        {item.generic_name || item.GenericName || "N/A"}
+                      </p> */}
+                      <p>
+                        <strong>Dose:</strong> {item.dose_form || "N/A"}
+                      </p>
+                      <p>
+                        <strong>Instruction:</strong> {item.remarks || "N/A"}
+                      </p>
+                      <p>
+                        <strong>Qty:</strong>{" "}
+                        {item.qty
+                          ? `${item.pack_size || "N/A"} × ${item.qty}`
+                          : "N/A"}
+                      </p>
+                      <br />
+                      <div
+                        style={{
+                          fontSize: "12px",
+                          color: "#777",
+                          marginTop: "6px",
+                        }}
+                      >
+                        Thank you for visiting <b>TnC Pharmacy</b>. Get well
+                        soon!
+                      </div>
                     </div>
                   ))}
                 </div>
               </section>
             </>
           )}
-
-          <div
-            className={`text-center mt-4 ${styles.borderDashed}`}
-            style={{ fontSize: "12px", color: "#777" }}
-          >
-            Thank you for visiting <b>TnC Pharmacy</b>. Get well soon!
-          </div>
         </div>
       </Modal.Body>
 

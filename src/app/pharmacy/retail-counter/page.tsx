@@ -1,6 +1,6 @@
 "use client";
 
-import "../css/pharmacy-style.css";
+import "../css/style.css";
 import SideNav from "@/app/pharmacist/components/SideNav/page";
 import Header from "@/app/pharmacist/components/Header/page";
 import { useCallback, useEffect, useState } from "react";

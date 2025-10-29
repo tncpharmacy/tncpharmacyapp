@@ -43,6 +43,12 @@ export default function BuyerLoginModal({
       setError("Please enter email or mobile number");
       return;
     }
+    const mobileRegex = /^\d{10}$/;
+
+    if (!mobileRegex.test(loginId)) {
+      toast.error("Please enter a valid 10-digit Mobile Number.");
+      return;
+    }
 
     setError("");
 
@@ -143,25 +149,33 @@ export default function BuyerLoginModal({
                 {step === 1 && (
                   <>
                     <div className="row_login">
-                      <span className="lbllogin">Email ID / Mobile No</span>
+                      <span className="lbllogin">Mobile No</span>
                       <input
                         type="text"
                         className="txtlogin"
                         value={loginId}
                         onChange={(e) => {
                           const value = e.target.value;
-
-                          // 🔹 Allow only numbers up to 10 digits
-                          if (/^\d*$/.test(value)) {
-                            if (value.length <= 10) setLoginId(value);
-                            return;
-                          }
-
-                          // 🔹 Otherwise (email/text), allow up to 25 chars
-                          if (value.length <= 25) {
+                          // Allow only digits and limit to 10
+                          if (/^\d{0,10}$/.test(value)) {
                             setLoginId(value);
                           }
                         }}
+                        maxLength={10}
+                        // onChange={(e) => {
+                        //   const value = e.target.value;
+
+                        //   // 🔹 Allow only numbers up to 10 digits
+                        //   if (/^\d*$/.test(value)) {
+                        //     if (value.length <= 10) setLoginId(value);
+                        //     return;
+                        //   }
+
+                        //   // 🔹 Otherwise (email/text), allow up to 25 chars
+                        //   if (value.length <= 25) {
+                        //     setLoginId(value);
+                        //   }
+                        // }}
                       />
                     </div>
 

@@ -90,6 +90,12 @@ const AddBillingItemModal: React.FC<AddBillingItemModalProps> = ({
 
     // Dose Instruction और Qty > 0 दोनों चेक करें
     if (selectedDoseValue !== "") {
+      console.log(
+        "➡️ AddBillingItemModal handleSubmit - item:",
+        item,
+        "qty:",
+        qty
+      );
       onConfirmAdd(item, qty, selectedDoseValue, remarks);
     } else {
       toast.error("Please select a Dose Instruction.");

@@ -56,6 +56,47 @@ body {
     border-color: #999999;
 }
 
+.print-card {
+  page-break-inside: avoid;
+  margin-bottom: 8px;
+  padding: 8px 10px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  width: 95% !important; /* ✅ full width in print */
+  display: block !important;
+  background: #fff;
+  font-size: 13px;
+  line-height: 1.3;
+}
+
+.dose-container {
+  display: flex;
+  flex-direction: column; /* ✅ one below another */
+  align-items: center;
+  gap: 10px; /* small vertical spacing */
+}
+
+@media print {
+  body {
+    margin: 0;
+    padding: 10mm;
+  }
+
+  .print-card {
+    width: 100% !important;
+    margin: 0 auto 8px;
+  }
+
+  hr {
+    margin: 4px 0;
+  }
+
+  p {
+    margin: 2px 0;
+  }
+}
+
+
 .header {
     background: #ffffff;
     width: 100%;

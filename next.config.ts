@@ -276,6 +276,10 @@ const nextConfig: NextConfig = {
         source: "/pharmacy/other-product",
         destination: "/pharmacy/medicine/other-item",
       },
+      {
+        source: "/pharmacy/retail-counter",
+        destination: "/pharmacy/retail-counter",
+      },
 
       // Pharmacist Routes
       {

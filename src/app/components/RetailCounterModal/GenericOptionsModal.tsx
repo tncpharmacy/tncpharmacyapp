@@ -113,6 +113,17 @@ const GenericOptionsModal: React.FC<GenericOptionsModalProps> = ({
                           <button
                             className="btn btn-success btn-sm"
                             onClick={() => {
+                              const selectedWithGeneric = {
+                                ...item,
+                                generic_name:
+                                  item.generic_name ||
+                                  item.GenericName ||
+                                  selectedOriginalItem?.generic_name ||
+                                  selectedOriginalItem?.GenericName ||
+                                  productListByGeneric[0]?.generic_name ||
+                                  productListByGeneric[0]?.GenericName ||
+                                  "N/A",
+                              };
                               // ✅ Add to Cart Logic
                               onAddToCart(item);
                               onClose(); // Modal बंद करें
