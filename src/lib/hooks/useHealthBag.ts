@@ -1,5 +1,5 @@
 // hooks/useHealthBag.ts
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import {
   createHealthBag,
   fetchHealthBag,
@@ -23,53 +23,60 @@ export const useHealthBag = ({ userId }: { userId: number | null }) => {
   }, [userId]);
 
   // Save guest cart
-  const saveGuest = (newItems: HealthBag[]) =>
+  const saveGuest = useCallback((newItems: HealthBag[]) => {
     localStorage.setItem(GUEST_KEY, JSON.stringify(newItems));
+  }, []);
 
-  // Add item
-  const addItem = (item: HealthBag) => {
-    setItems((prev) => {
-      const newItems = [...prev, item];
-      if (!userId) saveGuest(newItems);
-      // Delay dispatch so React finish render
-      setTimeout(() => {
-        window.dispatchEvent(new Event("healthBagUpdated"));
-      }, 0);
-      return newItems;
-    });
+  // ✅ Add item (stable)
+  const addItem = useCallback(
+    (item: HealthBag) => {
+      setItems((prev) => {
+        const newItems = [...prev, item];
+        if (!userId) saveGuest(newItems);
+        setTimeout(
+          () => window.dispatchEvent(new Event("healthBagUpdated")),
+          0
+        );
+        return newItems;
+      });
 
-    if (userId) {
-      createHealthBag(item)
-        .then((res) => {
-          setItems((prev) =>
-            prev.map((i) => (i.id === item.id ? { ...i, ...res } : i))
-          );
-        })
-        .catch(() => {
-          setItems((prev) => prev.filter((i) => i.id !== item.id)); // rollback
-        });
-    }
-  };
+      if (userId) {
+        createHealthBag(item)
+          .then((res) => {
+            setItems((prev) =>
+              prev.map((i) => (i.id === item.id ? { ...i, ...res } : i))
+            );
+          })
+          .catch(() => {
+            setItems((prev) => prev.filter((i) => i.id !== item.id)); // rollback
+          });
+      }
+    },
+    [userId, saveGuest]
+  );
 
-  // Remove item
-  const removeItem = (productId: number) => {
-    setItems((prev) => {
-      const newItems = prev.filter((i) => i.product_id !== productId);
-      if (!userId) saveGuest(newItems);
-      // Delay dispatch so React finish render
-      setTimeout(() => {
-        window.dispatchEvent(new Event("healthBagUpdated"));
-      }, 0);
-      return newItems;
-    });
+  // ✅ Remove item (stable)
+  const removeItem = useCallback(
+    (productId: number) => {
+      setItems((prev) => {
+        const newItems = prev.filter((i) => i.product_id !== productId);
+        if (!userId) saveGuest(newItems);
+        setTimeout(
+          () => window.dispatchEvent(new Event("healthBagUpdated")),
+          0
+        );
+        return newItems;
+      });
 
-    if (userId) {
-      deleteHealthBag(productId).catch(() => {});
-    }
-  };
+      if (userId) {
+        deleteHealthBag(productId).catch(() => {});
+      }
+    },
+    [userId, saveGuest]
+  );
 
-  // Merge guest cart after login
-  const mergeGuestCart = () => {
+  // ✅ Merge guest cart (stable)
+  const mergeGuestCart = useCallback(() => {
     if (!userId) return;
     const guest = localStorage.getItem(GUEST_KEY);
     if (!guest) return;
@@ -77,7 +84,7 @@ export const useHealthBag = ({ userId }: { userId: number | null }) => {
     const guestItems: HealthBag[] = JSON.parse(guest);
     guestItems.forEach((item) => addItem({ ...item, buyer_id: userId }));
     localStorage.removeItem(GUEST_KEY);
-  };
+  }, [userId, addItem]);
 
   return { items, addItem, removeItem, mergeGuestCart };
 };

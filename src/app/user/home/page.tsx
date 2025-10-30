@@ -24,6 +24,7 @@ import { useRouter } from "next/navigation";
 import { encodeId } from "@/lib/utils/encodeDecode";
 import { useHealthBag } from "@/lib/hooks/useHealthBag";
 import Footer from "@/app/user/components/footer/footer";
+import { useShuffledOnce } from "@/lib/hooks/useShuffledOnce";
 const mediaBase = process.env.NEXT_PUBLIC_MEDIA_BASE_URL;
 
 export default function HomePage() {
@@ -44,7 +45,7 @@ export default function HomePage() {
     if (buyer?.id) {
       mergeGuestCart();
     }
-  }, [buyer?.id]);
+  }, [buyer?.id, mergeGuestCart]);
 
   // end for increse header count code
 
@@ -63,6 +64,9 @@ export default function HomePage() {
     const cat = categories.find((c) => c.id === id);
     if (cat) categoryNamesById[id] = cat.category_name;
   });
+  const shuffled5 = useShuffledOnce("category5", medicineMenuByCategory5);
+  const shuffled7 = useShuffledOnce("category7", medicineMenuByCategory7);
+  const shuffled9 = useShuffledOnce("category9", medicineMenuByCategory9);
   //console.log("medicineMenuByCategory5", medicineMenuByCategory5);
   useEffect(() => {
     despatch(getGroupCare());
@@ -228,86 +232,79 @@ export default function HomePage() {
             </button>
           </div>
           <div className="row">
-            {medicineMenuByCategory7 && medicineMenuByCategory7.length > 0 ? (
-              [...medicineMenuByCategory7] // copy array
-                .sort(() => Math.random() - 0.5) // shuffle items randomly
-                .slice(0, 5) // sirf 5 items lo
-                .map((item) => {
-                  const mrp = item.MRP
-                    ? parseFloat(item.MRP.toString())
-                    : Math.floor(Math.random() * (1000 - 100 + 1)) + 100;
+            {shuffled7 && shuffled7.length > 0 ? (
+              shuffled7.slice(0, 5).map((item) => {
+                const mrp = item.MRP
+                  ? parseFloat(item.MRP.toString())
+                  : Math.floor(Math.random() * (1000 - 100 + 1)) + 100;
 
-                  const discount = parseFloat(item.Discount) || 0;
-                  const discountedPrice = Math.round(
-                    mrp - (mrp * discount) / 100
-                  );
+                const discount = parseFloat(item.Discount) || 0;
+                const discountedPrice = Math.round(
+                  mrp - (mrp * discount) / 100
+                );
 
-                  const imageUrl = item.DefaultImageURL
-                    ? item.DefaultImageURL.startsWith("http")
-                      ? item.DefaultImageURL
-                      : `${mediaBase}${item.DefaultImageURL}`
-                    : "/images/tnc-default.png";
-                  const isInBag = items.some(
-                    (i) => i.product_id === item.product_id
-                  );
+                const imageUrl = item.DefaultImageURL
+                  ? item.DefaultImageURL.startsWith("http")
+                    ? item.DefaultImageURL
+                    : `${mediaBase}${item.DefaultImageURL}`
+                  : "/images/tnc-default.png";
+                const isInBag = items.some(
+                  (i) => i.product_id === item.product_id
+                );
 
-                  return (
-                    <div className="col" key={item.product_id}>
-                      <div className="pd_box">
-                        <div className="pd_img">
-                          <Image
-                            src={imageUrl}
-                            alt={item.ProductName}
-                            style={{
-                              height: "220px",
-                              objectFit: "contain",
-                              opacity:
-                                imageUrl === "/images/tnc-default.png"
-                                  ? 0.3
-                                  : 1, // ✅ only default image faded
-                            }}
-                          />
+                return (
+                  <div className="col" key={item.product_id}>
+                    <div className="pd_box">
+                      <div className="pd_img">
+                        <Image
+                          src={imageUrl}
+                          alt={item.ProductName}
+                          style={{
+                            height: "220px",
+                            objectFit: "contain",
+                            opacity:
+                              imageUrl === "/images/tnc-default.png" ? 0.3 : 1, // ✅ only default image faded
+                          }}
+                        />
+                      </div>
+                      <div className="pd_content">
+                        <h3
+                          className="pd-title hover-link"
+                          onClick={() => handleClick(item.product_id)}
+                          style={{ cursor: "pointer" }}
+                        >
+                          {item.ProductName || ""}
+                        </h3>
+                        <h6 className="pd-title fw-bold">
+                          {item.Manufacturer || ""}
+                        </h6>
+                        <div className="pd_price">
+                          <span className="new_price">₹{discountedPrice}</span>
+                          <span className="old_price">
+                            <del>MRP ₹{mrp}</del> {discount}% off
+                          </span>
                         </div>
-                        <div className="pd_content">
-                          <h3
-                            className="pd-title hover-link"
-                            onClick={() => handleClick(item.product_id)}
-                            style={{ cursor: "pointer" }}
-                          >
-                            {item.ProductName || ""}
-                          </h3>
-                          <h6 className="pd-title fw-bold">
-                            {item.Manufacturer || ""}
-                          </h6>
-                          <div className="pd_price">
-                            <span className="new_price">
-                              ₹{discountedPrice}
-                            </span>
-                            <span className="old_price">
-                              <del>MRP ₹{mrp}</del> {discount}% off
-                            </span>
-                          </div>
 
-                          <button
-                            className="btn-1"
-                            onClick={() =>
-                              isInBag
-                                ? removeItem(item.product_id)
-                                : addItem({
-                                    id: Date.now(),
-                                    buyer_id: buyer?.id || 0,
-                                    product_id: item.product_id,
-                                    quantity: 1,
-                                  })
-                            }
-                          >
-                            {isInBag ? "REMOVE" : "ADD"}
-                          </button>
-                        </div>
+                        <button
+                          className="btn-1"
+                          onClick={() =>
+                            isInBag
+                              ? removeItem(item.product_id)
+                              : addItem({
+                                  id: Date.now(),
+                                  buyer_id: buyer?.id || 0,
+                                  product_id: item.product_id,
+                                  quantity: 1,
+                                })
+                          }
+                        >
+                          {isInBag ? "REMOVE" : "ADD"}
+                        </button>
                       </div>
                     </div>
-                  );
-                })
+                  </div>
+                );
+              })
             ) : (
               <p>Loading medicines...</p>
             )}
@@ -397,86 +394,79 @@ export default function HomePage() {
             </button>
           </div>
           <div className="row">
-            {medicineMenuByCategory5 && medicineMenuByCategory5.length > 0 ? (
-              [...medicineMenuByCategory5] // copy array
-                .sort(() => Math.random() - 0.5) // shuffle items randomly
-                .slice(0, 5)
-                .map((item) => {
-                  const mrp = item.MRP
-                    ? parseFloat(item.MRP.toString())
-                    : Math.floor(Math.random() * (1000 - 100 + 1)) + 100;
+            {shuffled5 && shuffled5.length > 0 ? (
+              shuffled5.slice(0, 5).map((item) => {
+                const mrp = item.MRP
+                  ? parseFloat(item.MRP.toString())
+                  : Math.floor(Math.random() * (1000 - 100 + 1)) + 100;
 
-                  const discount = parseFloat(item.Discount) || 0;
-                  const discountedPrice = Math.round(
-                    mrp - (mrp * discount) / 100
-                  );
+                const discount = parseFloat(item.Discount) || 0;
+                const discountedPrice = Math.round(
+                  mrp - (mrp * discount) / 100
+                );
 
-                  const imageUrl = item.DefaultImageURL
-                    ? item.DefaultImageURL.startsWith("http")
-                      ? item.DefaultImageURL
-                      : `${mediaBase}${item.DefaultImageURL}`
-                    : "/images/tnc-default.png";
+                const imageUrl = item.DefaultImageURL
+                  ? item.DefaultImageURL.startsWith("http")
+                    ? item.DefaultImageURL
+                    : `${mediaBase}${item.DefaultImageURL}`
+                  : "/images/tnc-default.png";
 
-                  const isInBag = items.some(
-                    (i) => i.product_id === item.product_id
-                  );
+                const isInBag = items.some(
+                  (i) => i.product_id === item.product_id
+                );
 
-                  return (
-                    <div className="col" key={item.product_id}>
-                      <div className="pd_box">
-                        <div className="pd_img">
-                          <Image
-                            src={imageUrl}
-                            alt={item.ProductName}
-                            style={{
-                              height: "220px",
-                              objectFit: "contain",
-                              opacity:
-                                imageUrl === "/images/tnc-default.png"
-                                  ? 0.3
-                                  : 1, // ✅ only default image faded
-                            }}
-                          />
+                return (
+                  <div className="col" key={item.product_id}>
+                    <div className="pd_box">
+                      <div className="pd_img">
+                        <Image
+                          src={imageUrl}
+                          alt={item.ProductName}
+                          style={{
+                            height: "220px",
+                            objectFit: "contain",
+                            opacity:
+                              imageUrl === "/images/tnc-default.png" ? 0.3 : 1, // ✅ only default image faded
+                          }}
+                        />
+                      </div>
+                      <div className="pd_content">
+                        <h3
+                          className="pd-title hover-link"
+                          onClick={() => handleClick(item.product_id)}
+                          style={{ cursor: "pointer" }}
+                        >
+                          {item.ProductName || ""}
+                        </h3>
+                        <h6 className="pd-title fw-bold">
+                          {item.Manufacturer || ""}
+                        </h6>
+                        <div className="pd_price">
+                          <span className="new_price">₹{discountedPrice}</span>
+                          <span className="old_price">
+                            <del>MRP ₹{mrp}</del> {discount}% off
+                          </span>
                         </div>
-                        <div className="pd_content">
-                          <h3
-                            className="pd-title hover-link"
-                            onClick={() => handleClick(item.product_id)}
-                            style={{ cursor: "pointer" }}
-                          >
-                            {item.ProductName || ""}
-                          </h3>
-                          <h6 className="pd-title fw-bold">
-                            {item.Manufacturer || ""}
-                          </h6>
-                          <div className="pd_price">
-                            <span className="new_price">
-                              ₹{discountedPrice}
-                            </span>
-                            <span className="old_price">
-                              <del>MRP ₹{mrp}</del> {discount}% off
-                            </span>
-                          </div>
-                          <button
-                            className="btn-1"
-                            onClick={() =>
-                              isInBag
-                                ? removeItem(item.product_id)
-                                : addItem({
-                                    id: Date.now(),
-                                    buyer_id: buyer?.id || 0,
-                                    product_id: item.product_id,
-                                    quantity: 1,
-                                  })
-                            }
-                          >
-                            {isInBag ? "REMOVE" : "ADD"}
-                          </button>
-                        </div>
+                        <button
+                          className="btn-1"
+                          onClick={() =>
+                            isInBag
+                              ? removeItem(item.product_id)
+                              : addItem({
+                                  id: Date.now(),
+                                  buyer_id: buyer?.id || 0,
+                                  product_id: item.product_id,
+                                  quantity: 1,
+                                })
+                          }
+                        >
+                          {isInBag ? "REMOVE" : "ADD"}
+                        </button>
                       </div>
                     </div>
-                  );
-                })
+                  </div>
+                );
+              })
             ) : (
               <p>Loading medicines...</p>
             )}
@@ -551,87 +541,80 @@ export default function HomePage() {
             </button>
           </div>
           <div className="row">
-            {medicineMenuByCategory9 && medicineMenuByCategory9.length > 0 ? (
-              [...medicineMenuByCategory9] // copy array
-                .sort(() => Math.random() - 0.5) // shuffle items randomly
-                .slice(0, 5)
-                .map((item) => {
-                  const mrp = item.MRP
-                    ? parseFloat(item.MRP.toString())
-                    : Math.floor(Math.random() * (1000 - 100 + 1)) + 100;
+            {shuffled9 && shuffled9.length > 0 ? (
+              shuffled9.slice(0, 5).map((item) => {
+                const mrp = item.MRP
+                  ? parseFloat(item.MRP.toString())
+                  : Math.floor(Math.random() * (1000 - 100 + 1)) + 100;
 
-                  const discount = parseFloat(item.Discount) || 0;
-                  const discountedPrice = Math.round(
-                    mrp - (mrp * discount) / 100
-                  );
+                const discount = parseFloat(item.Discount) || 0;
+                const discountedPrice = Math.round(
+                  mrp - (mrp * discount) / 100
+                );
 
-                  const imageUrl = item.DefaultImageURL
-                    ? item.DefaultImageURL.startsWith("http")
-                      ? item.DefaultImageURL
-                      : `${mediaBase}${item.DefaultImageURL}`
-                    : "/images/tnc-default.png";
+                const imageUrl = item.DefaultImageURL
+                  ? item.DefaultImageURL.startsWith("http")
+                    ? item.DefaultImageURL
+                    : `${mediaBase}${item.DefaultImageURL}`
+                  : "/images/tnc-default.png";
 
-                  const isInBag = items.some(
-                    (i) => i.product_id === item.product_id
-                  );
+                const isInBag = items.some(
+                  (i) => i.product_id === item.product_id
+                );
 
-                  return (
-                    <div className="col" key={item.product_id}>
-                      <div className="pd_box">
-                        <div className="pd_img">
-                          <Image
-                            src={imageUrl}
-                            alt={item.ProductName}
-                            style={{
-                              height: "220px",
-                              objectFit: "contain",
-                              opacity:
-                                imageUrl === "/images/tnc-default.png"
-                                  ? 0.3
-                                  : 1, // ✅ only default image faded
-                            }}
-                          />
+                return (
+                  <div className="col" key={item.product_id}>
+                    <div className="pd_box">
+                      <div className="pd_img">
+                        <Image
+                          src={imageUrl}
+                          alt={item.ProductName}
+                          style={{
+                            height: "220px",
+                            objectFit: "contain",
+                            opacity:
+                              imageUrl === "/images/tnc-default.png" ? 0.3 : 1, // ✅ only default image faded
+                          }}
+                        />
+                      </div>
+                      <div className="pd_content">
+                        <h3
+                          className="pd-title hover-link"
+                          onClick={() => handleClick(item.product_id)}
+                          style={{ cursor: "pointer" }}
+                        >
+                          {item.ProductName || ""}
+                        </h3>
+                        <h6 className="pd-title fw-bold">
+                          {item.Manufacturer || ""}
+                        </h6>
+                        <div className="pd_price">
+                          <span className="new_price">₹{discountedPrice}</span>
+                          <span className="old_price">
+                            <del>MRP ₹{mrp}</del> {discount}% off
+                          </span>
                         </div>
-                        <div className="pd_content">
-                          <h3
-                            className="pd-title hover-link"
-                            onClick={() => handleClick(item.product_id)}
-                            style={{ cursor: "pointer" }}
-                          >
-                            {item.ProductName || ""}
-                          </h3>
-                          <h6 className="pd-title fw-bold">
-                            {item.Manufacturer || ""}
-                          </h6>
-                          <div className="pd_price">
-                            <span className="new_price">
-                              ₹{discountedPrice}
-                            </span>
-                            <span className="old_price">
-                              <del>MRP ₹{mrp}</del> {discount}% off
-                            </span>
-                          </div>
 
-                          <button
-                            className="btn-1"
-                            onClick={() =>
-                              isInBag
-                                ? removeItem(item.product_id)
-                                : addItem({
-                                    id: Date.now(),
-                                    buyer_id: buyer?.id || 0,
-                                    product_id: item.product_id,
-                                    quantity: 1,
-                                  })
-                            }
-                          >
-                            {isInBag ? "REMOVE" : "ADD"}
-                          </button>
-                        </div>
+                        <button
+                          className="btn-1"
+                          onClick={() =>
+                            isInBag
+                              ? removeItem(item.product_id)
+                              : addItem({
+                                  id: Date.now(),
+                                  buyer_id: buyer?.id || 0,
+                                  product_id: item.product_id,
+                                  quantity: 1,
+                                })
+                          }
+                        >
+                          {isInBag ? "REMOVE" : "ADD"}
+                        </button>
                       </div>
                     </div>
-                  );
-                })
+                  </div>
+                );
+              })
             ) : (
               <p>Loading medicines...</p>
             )}

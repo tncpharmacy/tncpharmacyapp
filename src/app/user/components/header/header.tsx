@@ -72,6 +72,29 @@ const SiteHeader = () => {
     dispatch(getSubcategories());
   }, [dispatch]);
 
+  // ✅ Replace your shuffle useEffect with this
+  useEffect(() => {
+    if (!categories || categories.length === 0) return;
+
+    // LocalStorage me purana shuffle check karo
+    const savedShuffle = localStorage.getItem("shuffledMenu");
+    if (savedShuffle) {
+      // Agar hai to wahi use karo
+      setShuffledCategories(JSON.parse(savedShuffle));
+      console.log("♻️ Using saved shuffle (no reshuffle)");
+      return;
+    }
+
+    // Agar nahi hai to naya shuffle banao (page reload par hi)
+    const shuffled = [...categories].sort(() => Math.random() - 0.5);
+    setShuffledCategories(shuffled);
+
+    // Save in localStorage (so it persists until full reload or tab close)
+    localStorage.setItem("shuffledMenu", JSON.stringify(shuffled));
+
+    console.log("🌀 New shuffle created on reload:", shuffled);
+  }, [categories]);
+
   const handleLogout = () => {
     dispatch(buyerLogout());
   };
@@ -149,11 +172,6 @@ const SiteHeader = () => {
 
   useEffect(() => setMounted(true), []);
 
-  useEffect(() => {
-    const shuffled = [...categories].sort(() => Math.random() - 0.5);
-    setShuffledCategories(shuffled);
-  }, [categories]);
-
   const handleCategoryClick = async (
     categoryId: number,
     subCategoryId: number
@@ -170,6 +188,16 @@ const SiteHeader = () => {
       console.error("Error navigating:", error);
     }
   };
+
+  // ✅ Aur ye add kar bottom me
+  useEffect(() => {
+    const handleReload = () => {
+      // Jab page reload hota hai tab shuffle reset karne ke liye
+      localStorage.removeItem("shuffledMenu");
+    };
+    window.addEventListener("beforeunload", handleReload);
+    return () => window.removeEventListener("beforeunload", handleReload);
+  }, []);
 
   return (
     <header id="header">
@@ -346,17 +374,15 @@ const SiteHeader = () => {
                 All Medicine <i className="bi bi-grid-fill"></i>
               </Link>
             </li>
-
             {shuffledCategories
-              .slice(0, 5)
               .filter((cat) => cat.category_name !== "Medicines")
-              .map((cat) => {
+              .slice(0, 5)
+              .map((cat, index) => {
                 const filteredSubcategories = subcategories.filter(
                   (sub) => String(sub.category_id) === String(cat.id)
                 );
-
                 return (
-                  <li key={cat.id}>
+                  <li key={`${cat.id}-${index}`}>
                     <Link href={`/all-product/${encodeId(cat.id)}`}>
                       {cat.category_name}
                     </Link>

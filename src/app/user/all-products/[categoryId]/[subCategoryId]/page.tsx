@@ -15,6 +15,7 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import { useHealthBag } from "@/lib/hooks/useHealthBag";
 import { getCategories } from "@/lib/features/categorySlice/categorySlice";
 import Footer from "@/app/user/components/footer/footer";
+import { useShuffledProduct } from "@/lib/hooks/useShuffledProduct";
 
 const mediaBase = process.env.NEXT_PUBLIC_MEDIA_BASE_URL;
 
@@ -46,6 +47,21 @@ export default function AllProducts() {
       state.medicine.byCategorySubcategory?.[
         `${categoryIdNum}-${subCategoryIdNum}`
       ] || []
+  );
+  // dedupe by product_id (keeps first occurrence)
+  const uniqueMedicines = React.useMemo(() => {
+    if (!medicines || medicines.length === 0) return [];
+    const map = new Map<number, (typeof medicines)[0]>();
+    medicines.forEach((m) => {
+      if (!map.has(m.product_id)) map.set(m.product_id, m);
+    });
+    return Array.from(map.values());
+  }, [medicines]);
+
+  // then call hook on unique list
+  const shuffledMedicines = useShuffledProduct(
+    uniqueMedicines,
+    `product-page-category-${categoryIdNum}-subcategory-${subCategoryIdNum}`
   );
 
   useEffect(() => {
@@ -79,7 +95,7 @@ export default function AllProducts() {
     if (buyer?.id) {
       mergeGuestCart();
     }
-  }, [buyer?.id]);
+  }, [buyer?.id, mergeGuestCart]);
 
   // end for increse header count code
 
@@ -89,12 +105,14 @@ export default function AllProducts() {
 
   // Filter the medicines based on the search term
   const filteredMedicines = useMemo(() => {
-    if (!searchTerm) return medicines;
-    const lower = searchTerm.toLowerCase();
-    return medicines.filter((med) =>
-      (med.ProductName || "").toLowerCase().includes(lower)
+    if (!searchTerm) {
+      return shuffledMedicines;
+    }
+    const lowerCaseSearchTerm = searchTerm.toLowerCase();
+    return shuffledMedicines.filter((med) =>
+      (med.ProductName || "").toLowerCase().includes(lowerCaseSearchTerm)
     );
-  }, [medicines, searchTerm]);
+  }, [shuffledMedicines, searchTerm]);
 
   return (
     <>

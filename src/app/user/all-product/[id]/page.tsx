@@ -17,9 +17,9 @@ import { Image } from "react-bootstrap";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { useAuth } from "@/lib/hooks/useAuth";
 import { useHealthBag } from "@/lib/hooks/useHealthBag";
-import { createHealthBag } from "@/lib/api/healthBag";
 import { getCategories } from "@/lib/features/categorySlice/categorySlice";
 import Footer from "@/app/user/components/footer/footer";
+import { useShuffledProduct } from "@/lib/hooks/useShuffledProduct";
 
 const mediaBase = process.env.NEXT_PUBLIC_MEDIA_BASE_URL;
 
@@ -33,6 +33,11 @@ export default function AllProduct() {
   const [searchTerm, setSearchTerm] = useState("");
   const medicines = useAppSelector(
     (state) => state.medicine.byCategory[categoryIdNum] || []
+  );
+  // ✅ Shuffle product only once per page reload
+  const shuffledMedicines = useShuffledProduct(
+    medicines,
+    `product-page-category-${categoryIdNum}`
   );
   const { list: categories } = useAppSelector((state) => state.category);
   // Find category name
@@ -57,7 +62,7 @@ export default function AllProduct() {
     if (buyer?.id) {
       mergeGuestCart();
     }
-  }, [buyer?.id]);
+  }, [buyer?.id, mergeGuestCart]);
 
   // end for increse header count code
 
@@ -67,13 +72,13 @@ export default function AllProduct() {
   // Filter the medicines based on the search term
   const filteredMedicines = useMemo(() => {
     if (!searchTerm) {
-      return medicines;
+      return shuffledMedicines;
     }
     const lowerCaseSearchTerm = searchTerm.toLowerCase();
-    return medicines.filter((med) =>
+    return shuffledMedicines.filter((med) =>
       (med.ProductName || "").toLowerCase().includes(lowerCaseSearchTerm)
     );
-  }, [medicines, searchTerm]);
+  }, [shuffledMedicines, searchTerm]);
 
   return (
     <>

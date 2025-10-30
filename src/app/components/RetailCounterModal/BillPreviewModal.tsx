@@ -488,6 +488,9 @@ const BillPreviewModal: React.FC<BillPreviewModalProps> = ({
                         <strong>Patient:</strong> {customerName || "-"}
                       </p>
                       <p>
+                        <strong>Mobile:</strong> {mobile || "-"}
+                      </p>
+                      <p>
                         <strong>Date:</strong>{" "}
                         {new Date().toLocaleDateString("en-GB", {
                           day: "2-digit",
@@ -518,13 +521,23 @@ const BillPreviewModal: React.FC<BillPreviewModalProps> = ({
                       <br />
                       <div
                         style={{
-                          fontSize: "12px",
-                          color: "#777",
-                          marginTop: "6px",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "space-between",
+                          borderTop: "1px solid #ccc",
+                          padding: "10px 0",
+                          fontWeight: "bold",
                         }}
                       >
-                        Thank you for visiting <b>TnC Pharmacy</b>. Get well
-                        soon!
+                        <span style={{ textAlign: "left" }}>
+                          www.tncpharmacy.in
+                        </span>
+                        <span style={{ textAlign: "center" }}>
+                          Get Well Soon!
+                        </span>
+                        <span style={{ textAlign: "right" }}>
+                          +91 99993 03165
+                        </span>
                       </div>
                     </div>
                   ))}
