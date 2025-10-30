@@ -7,7 +7,7 @@ import { useAppDispatch, useAppSelector } from "@/lib/hooks";
 import { useRouter } from "next/navigation";
 import { loginUser } from "@/lib/features/authSlice/authSlice";
 import { getCategoriesList } from "@/lib/features/categorySlice/categorySlice";
-import { getSubcategories } from "@/lib/features/subCategorySlice/subCategorySlice";
+import { getSubcategoriesList } from "@/lib/features/subCategorySlice/subCategorySlice";
 import { Category } from "@/types/category";
 import Link from "next/link";
 import PrescriptionUploadModal from "@/app/user/components/PrescriptionUploadModal/PrescriptionUploadModal";
@@ -28,7 +28,9 @@ const SiteHeader = () => {
   const [showLogin, setShowLogin] = useState(false);
   const [showBuyerLogin, setShowBuyerLogin] = useState(false);
   const { list: categories } = useAppSelector((state) => state.category);
-  const { list: subcategories } = useAppSelector((state) => state.subcategory);
+  const { listAll: subcategories } = useAppSelector(
+    (state) => state.subcategory
+  );
   const { medicines: productList, loading } = useAppSelector(
     (state) => state.medicine
   );
@@ -69,7 +71,7 @@ const SiteHeader = () => {
 
   useEffect(() => {
     dispatch(getCategoriesList());
-    dispatch(getSubcategories());
+    dispatch(getSubcategoriesList());
   }, [dispatch]);
 
   // ✅ Replace your shuffle useEffect with this
