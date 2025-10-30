@@ -14,6 +14,10 @@ const nextConfig: NextConfig = {
     return [
       //User routes
       {
+        source: "/profile",
+        destination: "/user/profile",
+      },
+      {
         source: "/all-product/:id",
         destination: "/user/all-product/:id",
       },
