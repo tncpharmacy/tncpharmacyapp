@@ -227,56 +227,124 @@ const BillPreviewModal: React.FC<BillPreviewModalProps> = ({
     if (printWindow) {
       printWindow.document.open();
       printWindow.document.write(`
-    <html>
-      <head>
-        <title>Pharmacy Bill</title>
-        <style>
-          @page { size: A4; margin: 20mm; }
-          body { font-family: 'Segoe UI', sans-serif; }
-          h4, h5, h6 { text-align: center; margin: 4px 0; }
-          table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
-          th, td { border: 1px solid #000; padding: 6px 8px; font-size: 12px; }
-          th { background-color: #f2f2f2; }
-          
-          /* Print specific styles */
-          .print-hide { display: none !important; }
-          .print-only { display: block !important; }
-         .print-card {
-            page-break-inside: avoid;
-            margin: 8px 0;
-            padding: 10px 14px;
-            border: 1px solid #ccc;
-            border-radius: 8px;
-            background: #fff;
-            font-size: 13px;
-            line-height: 1.35;
-            width: 100mm; 
-            box-shadow: 0 0 2px rgba(0,0,0,0.1);
+<html>
+  <head>
+    <title>Pharmacy Bill</title>
+    <style>
+      @page {
+        size: A4;
+        margin: 10mm;
+      }
+
+      body {
+        font-family: 'Segoe UI', sans-serif;
+        font-size: 12px;
+        color: #000;
+        background: #fff;
+      }
+
+      h3, h4 {
+        display: block
+        text-align: center;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 10px;
+      }
+
+      th, td {
+        border: 1px solid #000;
+        padding: 6px;
+        text-align: center;
+      }
+
+      th {
+        background-color: #f2f2f2;
+      }
+
+      .print-hide {
+        display: none !important;
+      }
+
+      /* ✅ Doses Section */
+      .dose-container {
+        display: block;
+        margin-top: 13px;         
+        gap: 10px;
+      }
+
+      .print-card {
+        page-break-inside: avoid;
+        border: 1px solid #ccc;
+        border-radius: 1px;
+        padding: 10px 14px;
+        box-shadow: 0 0 2px rgba(0,0,0,0.1);
+        background: #fff;
+        width: 35% !important;
+        border-radius: 1px;
+        font-size: 12px;
+      }
+
+      .print-card img {
+        object-fit: contain;
+      }
+      .print-card p {
+        margin: 0px;
+        font-size: 12px;
+        line-height: 1;
+      }
+
+      .card-footer {
+        border-top: 1px solid #ccc;
+        text-align: center;
+        font-size: 11px;
+      }
+
+      .card-footer p {
+        font-family: cursive;
+        font-size: 11px;
+      }
+
+      @media print {
+  body, html {
+    margin: 0;
+    padding: 0;
+  }
+
+  .print-card {
+    margin: 0;
+    padding: 10px 15px;
+    box-sizing: border-box;
+    page-break-inside: avoid;
+  }
+
+  .print-card .footer {
+    margin: 0;
+    padding: 0;
+  }
+
+  /* Ensure no big white space after footer */
+  .print-card:last-child {
+    margin-bottom: 0 !important;
+    padding-bottom: 0 !important;
+  }
+
+  /* Just in case Chrome adds print padding */
+  @page {
+    margin: 10mm 10mm 5mm 10mm;
+  }
 }
-          /* ✅ Center the container and remove stretch */
-          .dose-container {
-            display: flex;            
-            flex-wrap: wrap;
-            justify-content: flex-start; 
-            gap: 10px;
-          }
 
-          p {
-            margin: 2px 0;
-          }
+    </style>
+  </head>
+  <body>
+    ${printContents}
+  </body>
+</html>
+`);
 
-          hr {
-            margin: 4px 0;
-            border: none;
-            border-top: 1px solid #ccc;
-          }
-        </style>
-      </head>
-      <body>
-        ${printContents}
-      </body>
-    </html>
-  `);
       printWindow.document.close();
       printWindow.print();
       printWindow.close();
@@ -370,7 +438,8 @@ const BillPreviewModal: React.FC<BillPreviewModalProps> = ({
                 marginBottom: "10px",
                 marginTop: "20px",
                 textTransform: "uppercase",
-                WebkitPrintColorAdjust: "exact", // ✅ ensures color in print
+                WebkitPrintColorAdjust: "exact",
+                display: "block",
               }}
             >
               Billing Summary
@@ -465,6 +534,7 @@ const BillPreviewModal: React.FC<BillPreviewModalProps> = ({
                     marginBottom: "10px",
                     textTransform: "uppercase",
                     WebkitPrintColorAdjust: "exact",
+                    display: "contents",
                   }}
                 >
                   Doses & Remarks
@@ -477,20 +547,70 @@ const BillPreviewModal: React.FC<BillPreviewModalProps> = ({
                   )}
                 </h3>
 
-                <div className="dose-container">
+                <div
+                  className="dose-container"
+                  style={{ display: "block", marginTop: "13px" }}
+                >
                   {translatedCart.map((item, idx) => (
-                    <div key={idx} className="print-card">
-                      <p>
-                        <strong>TnC Pharmacy</strong>
-                      </p>
+                    <div
+                      key={idx}
+                      className="print-card"
+                      style={{
+                        lineHeight: "1",
+                        height: "280px",
+                        width: "35% !important",
+                        borderRadius: "1px",
+                        fontSize: "12px",
+                      }}
+                    >
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "space-between",
+                        }}
+                      >
+                        <span style={{ textAlign: "left" }}>
+                          <Image
+                            src="/images/logo.png"
+                            alt=""
+                            width="100px"
+                            height="35px"
+                          />
+                        </span>
+                        <span style={{ textAlign: "center" }}></span>
+                        <span
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "flex-end",
+                            gap: "5px",
+                            fontSize: "12px",
+                          }}
+                        >
+                          <Image
+                            src="/images/mobile-icon.png"
+                            alt="Phone"
+                            style={{
+                              width: "18px",
+                              height: "18px",
+                              objectFit: "contain",
+                              verticalAlign: "middle",
+                            }}
+                          />
+                          <span style={{ verticalAlign: "middle" }}>
+                            9578458754
+                          </span>
+                        </span>
+                      </div>
                       <hr />
-                      <p>
+                      <p style={{ marginBottom: "7px" }}>
                         <strong>Patient:</strong> {customerName || "-"}
                       </p>
-                      <p>
+                      <p style={{ marginBottom: "7px" }}>
                         <strong>Mobile:</strong> {mobile || "-"}
                       </p>
-                      <p>
+                      <p style={{ marginBottom: "7px" }}>
                         <strong>Date:</strong>{" "}
                         {new Date().toLocaleDateString("en-GB", {
                           day: "2-digit",
@@ -499,20 +619,20 @@ const BillPreviewModal: React.FC<BillPreviewModalProps> = ({
                         })}
                       </p>
                       <br />
-                      <p>
+                      <p style={{ marginBottom: "7px" }}>
                         <strong>Medicine:</strong> {item.medicine_name}
                       </p>
-                      {/* <p>
+                      {/* <p style={{ marginBottom: "7px" }}>
                         <strong>Generic:</strong>{" "}
                         {item.generic_name || item.GenericName || "N/A"}
                       </p> */}
-                      <p>
+                      <p style={{ marginBottom: "7px" }}>
                         <strong>Dose:</strong> {item.dose_form || "N/A"}
                       </p>
-                      <p>
+                      <p style={{ marginBottom: "7px" }}>
                         <strong>Instruction:</strong> {item.remarks || "N/A"}
                       </p>
-                      <p>
+                      <p style={{ marginBottom: "7px" }}>
                         <strong>Qty:</strong>{" "}
                         {item.qty
                           ? `${item.pack_size || "N/A"} × ${item.qty}`
@@ -529,15 +649,24 @@ const BillPreviewModal: React.FC<BillPreviewModalProps> = ({
                           fontWeight: "bold",
                         }}
                       >
-                        <span style={{ textAlign: "left" }}>
+                        <span style={{ textAlign: "left" }}></span>
+                        <span style={{ textAlign: "center", fontSize: "11px" }}>
                           www.tncpharmacy.in
+                          <br />
+                          <div
+                            className="footer"
+                            style={{
+                              textAlign: "center",
+                              fontSize: "11px",
+                              marginTop: "5px",
+                              marginBottom: "0",
+                              paddingBottom: "0",
+                            }}
+                          >
+                            <strong>Get Well Soon</strong>
+                          </div>
                         </span>
-                        <span style={{ textAlign: "center" }}>
-                          Get Well Soon!
-                        </span>
-                        <span style={{ textAlign: "right" }}>
-                          +91 99993 03165
-                        </span>
+                        <span style={{ textAlign: "right" }}></span>
                       </div>
                     </div>
                   ))}

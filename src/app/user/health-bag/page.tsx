@@ -493,7 +493,7 @@ export default function HealthBag() {
                             </div>
                             <Button
                               size="sm"
-                              className="btn-outline-primary text-white-bold"
+                              className="btn-1"
                               onClick={() =>
                                 isInBag
                                   ? removeItem(item.product_id)
@@ -607,7 +607,7 @@ export default function HealthBag() {
                             </div>
                             <Button
                               size="sm"
-                              className="btn-outline-primary text-white-bold"
+                              className="btn-1"
                               onClick={() =>
                                 isInBag
                                   ? removeItem(item.product_id)
@@ -721,7 +721,7 @@ export default function HealthBag() {
                             </div>
                             <Button
                               size="sm"
-                              className="btn-outline-primary text-white-bold"
+                              className="btn-1"
                               onClick={() =>
                                 isInBag
                                   ? removeItem(item.product_id)

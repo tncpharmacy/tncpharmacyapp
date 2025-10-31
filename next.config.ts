@@ -45,15 +45,57 @@ const nextConfig: NextConfig = {
         source: "/address",
         destination: "/user/address",
       },
+      {
+        source: "/about-us",
+        destination: "/user/about-us",
+      },
+      {
+        source: "/contact-us",
+        destination: "/user/contact-us",
+      },
+      {
+        source: "/return-refund",
+        destination: "/user/return-refund",
+      },
+      {
+        source: "/shipping-terms",
+        destination: "/user/shipping-terms",
+      },
+      {
+        source: "/terms-and-conditions",
+        destination: "/user/terms-and-conditions",
+      },
+      {
+        source: "/privacy-policy",
+        destination: "/user/privacy-policy",
+      },
+      {
+        source: "/editorial-policy",
+        destination: "/user/editorial-policy",
+      },
+      {
+        source: "/FAQs",
+        destination: "/user/FAQs",
+      },
+      {
+        source: "/our-stores",
+        destination: "/user/our-stores",
+      },
+      {
+        source: "/blog",
+        destination: "/user/blog",
+      },
       // {
       //   source: "/address",
       //   destination: "/user/address/add",
       // },
+
       // Backend API rewrites
       {
         source: "/api/:path*",
         destination: `${process.env.NEXT_PUBLIC_API_BASE_URL}/:path*`,
       },
+
       // Admin dashboard routes
       {
         source: "/admin-dashboard",

@@ -17,8 +17,12 @@ import GenericOptionsModal from "@/app/components/RetailCounterModal/GenericOpti
 import AddBillingItemModal from "@/app/components/RetailCounterModal/AddBillingItemModal";
 import BillPreviewModal from "@/app/components/RetailCounterModal/BillPreviewModal";
 import toast from "react-hot-toast";
+import { getUser } from "@/lib/auth/auth";
+import { getPharmacy } from "@/lib/api/pharmacySelf";
 
 export default function RetailCounter() {
+  const userPharmacy = getUser();
+  const pharmacy_id = userPharmacy?.pharmacy_id || 0;
   const dispatch = useAppDispatch();
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [cart, setCart] = useState<any[]>([]);
@@ -69,6 +73,7 @@ export default function RetailCounter() {
   // Initial product list fetch
   useEffect(() => {
     dispatch(getProductList());
+    //dispatch(getPharmacy());
   }, [dispatch]);
 
   const handleSkipGenericModal = (item: Medicine) => {
