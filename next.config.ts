@@ -165,10 +165,10 @@ const nextConfig: NextConfig = {
         source: "/add-medicine",
         destination: "/admin/medicine/medicine-item/add",
       },
-      // {
-      //   source: "/update-medicine",
-      //   destination: "/admin/medicine/medicine-item/add/:id",
-      // },
+      {
+        source: "/update-medicine/:id",
+        destination: "/admin/medicine/medicine-item/add/:id",
+      },
       {
         source: "/medicine",
         destination: "/admin/medicine/medicine-item",
@@ -177,10 +177,10 @@ const nextConfig: NextConfig = {
         source: "/add-other-product",
         destination: "/admin/medicine/other-item/add",
       },
-      // {
-      //   source: "/update-other-product",
-      //   destination: "/admin/medicine/other-item/add/:id",
-      // },
+      {
+        source: "/update-other-product/:id",
+        destination: "/admin/medicine/other-item/add/:id",
+      },
       {
         source: "/other-product",
         destination: "/admin/medicine/other-item",

@@ -279,12 +279,12 @@ const BillPreviewModal: React.FC<BillPreviewModalProps> = ({
         page-break-inside: avoid;
         border: 1px solid #ccc;
         border-radius: 1px;
-        padding: 10px 14px;
         box-shadow: 0 0 2px rgba(0,0,0,0.1);
         background: #fff;
         width: 35% !important;
         border-radius: 1px;
-        font-size: 12px;
+        font-size: 10px;
+        height: 100%;
       }
 
       .print-card img {
@@ -292,50 +292,72 @@ const BillPreviewModal: React.FC<BillPreviewModalProps> = ({
       }
       .print-card p {
         margin: 0px;
-        font-size: 12px;
+        font-size: 8px;
         line-height: 1;
       }
-
+      .card-getWell {
+        font-size: 6px;
+      }
+      .card-webMob {
+        font-size: 3px;
+      }
       .card-footer {
         border-top: 1px solid #ccc;
         text-align: center;
-        font-size: 11px;
+        font-size: 8px;
       }
 
       .card-footer p {
         font-family: cursive;
-        font-size: 11px;
+        font-size: 8px;
       }
 
       @media print {
-  body, html {
-    margin: 0;
-    padding: 0;
-  }
+        body, html {
+          margin: 0;
+          padding: 0;
+        }
 
-  .print-card {
-    margin: 0;
-    padding: 10px 15px;
-    box-sizing: border-box;
-    page-break-inside: avoid;
-  }
+        .print-card {
+         margin: 0 0 10px 0 !important;  
+          padding: 10px 15px;
+          box-sizing: border-box;
+          page-break-inside: avoid;
+        }
 
-  .print-card .footer {
-    margin: 0;
-    padding: 0;
-  }
+        .print-card .footer {
+          margin: 0;
+          padding: 0;
+          line-height: 1;
+        }
 
-  /* Ensure no big white space after footer */
-  .print-card:last-child {
-    margin-bottom: 0 !important;
-    padding-bottom: 0 !important;
-  }
+        /* ✅ Remove any extra white space under footer */
+        .print-card .footer > div:last-child {
+          margin-top: 1px !important;
+          margin-bottom: 0 !important;
+          padding-bottom: 0 !important;
+          line-height: 1 !important;          
+          font-size: 7px !important;
+          font-style: italic !important;
+        }
 
-  /* Just in case Chrome adds print padding */
-  @page {
-    margin: 10mm 10mm 5mm 10mm;
-  }
-}
+        .print-card:last-child {
+          margin-bottom: 0 !important;
+          padding-bottom: 0 !important;
+        }
+
+        /* ✅ Remove Chrome auto spacing after elements */
+        img, p, div {
+          line-height: 1 !important;
+          font-size: 7px;
+        }
+
+        /* Just in case Chrome adds print padding */
+        @page {
+          margin: 10mm 10mm 5mm 10mm;
+        }
+      }
+
 
     </style>
   </head>
@@ -557,7 +579,7 @@ const BillPreviewModal: React.FC<BillPreviewModalProps> = ({
                       className="print-card"
                       style={{
                         lineHeight: "1",
-                        height: "280px",
+                        height: "100%",
                         width: "35% !important",
                         borderRadius: "1px",
                         fontSize: "12px",
@@ -588,37 +610,20 @@ const BillPreviewModal: React.FC<BillPreviewModalProps> = ({
                             fontSize: "12px",
                           }}
                         >
-                          <Image
-                            src="/images/mobile-icon.png"
-                            alt="Phone"
-                            style={{
-                              width: "18px",
-                              height: "18px",
-                              objectFit: "contain",
-                              verticalAlign: "middle",
-                            }}
-                          />
-                          <span style={{ verticalAlign: "middle" }}>
-                            9578458754
-                          </span>
+                          <p style={{ marginBottom: "7px" }}>
+                            <strong>Date:</strong>{" "}
+                            {new Date().toLocaleDateString("en-GB", {
+                              day: "2-digit",
+                              month: "short",
+                              year: "numeric",
+                            })}
+                          </p>
                         </span>
                       </div>
-                      <hr />
+                      <hr style={{ marginTop: "4px", marginBottom: "6px" }} />
                       <p style={{ marginBottom: "7px" }}>
                         <strong>Patient:</strong> {customerName || "-"}
                       </p>
-                      <p style={{ marginBottom: "7px" }}>
-                        <strong>Mobile:</strong> {mobile || "-"}
-                      </p>
-                      <p style={{ marginBottom: "7px" }}>
-                        <strong>Date:</strong>{" "}
-                        {new Date().toLocaleDateString("en-GB", {
-                          day: "2-digit",
-                          month: "short",
-                          year: "numeric",
-                        })}
-                      </p>
-                      <br />
                       <p style={{ marginBottom: "7px" }}>
                         <strong>Medicine:</strong> {item.medicine_name}
                       </p>
@@ -632,7 +637,7 @@ const BillPreviewModal: React.FC<BillPreviewModalProps> = ({
                       <p style={{ marginBottom: "7px" }}>
                         <strong>Instruction:</strong> {item.remarks || "N/A"}
                       </p>
-                      <p style={{ marginBottom: "7px" }}>
+                      <p style={{ marginBottom: "2px" }}>
                         <strong>Qty:</strong>{" "}
                         {item.qty
                           ? `${item.pack_size || "N/A"} × ${item.qty}`
@@ -641,32 +646,57 @@ const BillPreviewModal: React.FC<BillPreviewModalProps> = ({
                       <br />
                       <div
                         style={{
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "space-between",
                           borderTop: "1px solid #ccc",
-                          padding: "10px 0",
-                          fontWeight: "bold",
+                          textAlign: "center",
+                          padding: "5px 0",
+                          backgroundColor: "#fff",
                         }}
                       >
-                        <span style={{ textAlign: "left" }}></span>
-                        <span style={{ textAlign: "center", fontSize: "11px" }}>
+                        <div
+                          className="card-webMob"
+                          style={{ fontSize: "9px", fontWeight: "bold" }}
+                        >
                           www.tncpharmacy.in
-                          <br />
-                          <div
-                            className="footer"
+                        </div>
+                        <div
+                          className="card-webMob"
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            gap: "6px",
+                            fontSize: "9px",
+                            marginTop: "4px",
+                          }}
+                        >
+                          {/* <Image
+                            src="/images/mobile-icon.png"
+                            alt="Phone"
                             style={{
-                              textAlign: "center",
-                              fontSize: "11px",
-                              marginTop: "5px",
-                              marginBottom: "0",
-                              paddingBottom: "0",
+                              width: "12px",
+                              height: "12px",
+                              objectFit: "contain",
+                              verticalAlign: "middle",
                             }}
-                          >
-                            <strong>Get Well Soon</strong>
-                          </div>
-                        </span>
-                        <span style={{ textAlign: "right" }}></span>
+                          /> */}
+                          <span style={{ verticalAlign: "middle" }}>
+                            24*7 Pharmacist Support: 9578458754
+                          </span>
+                        </div>
+                        <div
+                          className="card-getWell"
+                          style={{
+                            textAlign: "center",
+                            fontSize: "8px",
+                            marginTop: "5px",
+                            marginBottom: "0",
+                            paddingBottom: "0",
+                            fontStyle: "italic",
+                            fontWeight: "normal",
+                          }}
+                        >
+                          Get Well Soon
+                        </div>
                       </div>
                     </div>
                   ))}

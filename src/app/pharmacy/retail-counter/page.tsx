@@ -278,12 +278,12 @@ export default function RetailCounter() {
                     <thead className="table-light">
                       <tr>
                         <th>Medicine</th>
-                        <th>Doses Instruction</th>
                         <th>Qty</th>
+                        <th>Doses</th>
+                        <th>Instruction</th>
                         <th>MRP (₹)</th>
                         <th>Discount (%)</th>
                         <th>Subtotal (₹)</th>
-                        <th>Remarks</th>
                         <th></th>
                       </tr>
                     </thead>
@@ -304,16 +304,16 @@ export default function RetailCounter() {
                           return (
                             <tr key={index}>
                               <td>{item.medicine_name}</td>
-                              <td>{item.dose_form}</td>
                               <td>
                                 {item.pack_size
                                   ? `${item.pack_size} × ${item.qty}`
                                   : item.qty}
                               </td>
+                              <td>{item.dose_form}</td>
+                              <td>{item.remarks}</td>
                               <td>{item.price}</td>
                               <td>{item.Disc}</td>
                               <td>{subtotal}</td>
-                              <td>{item.remarks}</td>
                               <td>
                                 <button
                                   className="btn btn-sm btn-danger"

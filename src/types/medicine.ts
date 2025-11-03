@@ -11,7 +11,7 @@ export interface MedicineImage {
 }
 export interface MedicineFormData {
   id: number;
-  item_name: string;
+  medicine_name: string;
   pack_size: string;
   variant: string;
   product_introduction: string;
@@ -22,8 +22,8 @@ export interface MedicineFormData {
   category: string | number;
   sub_category: string | number;
   description: string;
-  dose: string;
-  uses: string;
+  dose_form: string;
+  uses_benefits: string;
   side_effect: string;
   direction_for_use: string;
   storage: string;

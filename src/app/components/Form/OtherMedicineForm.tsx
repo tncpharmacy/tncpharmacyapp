@@ -8,7 +8,7 @@ import {
   fetchPharmacyByIdApi,
   fetchPharmaciesApi,
 } from "@/lib/api/pharmacy";
-import { useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import InputFile from "@/app/components/Input/InputFile";
 import Input from "@/app/components/Input/Input";
 import SideNav from "@/app/admin/components/SideNav/page";
@@ -32,6 +32,11 @@ import { MedicineFormData } from "@/types/medicine";
 import CustomSelectInput from "@/app/components/Input/CustomSelectInput";
 import RichTextEditor from "@/app/components/Input/RichTextEditor";
 import MultiSelectDropdown from "@/app/components/Input/MultiSelectDropdown";
+import { decodeId } from "@/lib/utils/encodeDecode";
+import {
+  getMedicineListById,
+  updateMedicineListById,
+} from "@/lib/features/medicineSlice/medicineSlice";
 
 interface Props {
   id?: number; // agar edit mode hai to id milegi
@@ -55,6 +60,11 @@ interface Option {
 export default function OtherMedicineForm({ id }: Props) {
   const router = useRouter();
   const dispatch = useAppDispatch();
+  const { id: params } = useParams();
+  const decodedId = decodeId(params);
+  const { medicinesList: medicinesDetails } = useAppSelector(
+    (state) => state.medicine
+  );
   const { list: units } = useAppSelector((state) => state.unit);
   const { list: generics } = useAppSelector((state) => state.generic);
   const { list: manufacturers } = useAppSelector((state) => state.manufacturer);
@@ -65,10 +75,10 @@ export default function OtherMedicineForm({ id }: Props) {
   const [selectedSubCategories, setSelectedSubCategories] = useState<number[]>(
     []
   );
-
+  const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState<Partial<MedicineFormData>>({
     id: 0,
-    item_name: "",
+    medicine_name: "",
     pack_size: "",
     product_introduction: "",
     variant: "",
@@ -78,10 +88,37 @@ export default function OtherMedicineForm({ id }: Props) {
     category: "",
     sub_category: "",
     description: "",
-    dose: "",
+    dose_form: "",
     uploadedFiles: [],
     documents: [],
   });
+
+  // ✅ Load data when editing
+  useEffect(() => {
+    if (decodedId) {
+      setLoading(true);
+      dispatch(getMedicineListById(decodedId))
+        .unwrap()
+        .then((res) => {
+          const data = Array.isArray(res) ? res[0] : res;
+          if (data) {
+            setFormData((prev) => ({ ...prev, ...data }));
+          }
+        })
+        .catch((err) => console.error("Error fetching medicine:", err))
+        .finally(() => setLoading(false));
+    }
+  }, [decodedId, dispatch]);
+
+  // ✅ agar Redux state me update ho to bhi reflect kar
+  useEffect(() => {
+    if (medicinesDetails && Object.keys(medicinesDetails).length > 0) {
+      setFormData((prev) => ({
+        ...prev,
+        ...medicinesDetails,
+      }));
+    }
+  }, [medicinesDetails]);
 
   useEffect(() => {
     dispatch(getCategoriesList());
@@ -180,96 +217,86 @@ export default function OtherMedicineForm({ id }: Props) {
     }));
   };
 
-  // const handleSubmit = async (e: React.FormEvent) => {
-  //   e.preventDefault();
-  //   console.log("🚀 handleSubmit called, current formData:", formData);
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    console.log("🚀 Submitting formData:", formData);
 
-  //   const formDataToSend = new FormData();
+    const formDataToSend = new FormData();
 
-  //   // string / number fields
-  //   formDataToSend.append("clinicName", formData.clinicName || "");
-  //   formDataToSend.append("user_name", formData.user_name || "");
-  //   formDataToSend.append("gst_number", formData.gst_number || "");
-  //   formDataToSend.append("license_number", formData.license_number || "");
-  //   formDataToSend.append(
-  //     "license_valid_upto",
-  //     formData.license_valid_upto || ""
-  //   );
-  //   formDataToSend.append("email_id", formData.email_id || "");
-  //   formDataToSend.append("login_id", formData.login_id ?? "");
-  //   formDataToSend.append("address", formData.address || "");
-  //   formDataToSend.append("district", formData.district || "");
-  //   formDataToSend.append(
-  //     "department_specialties",
-  //     formData.department_specialties
-  //   );
-  //   formDataToSend.append("number_of_staff", formData.number_of_staff);
-  //   formDataToSend.append("number_of_doctors", formData.number_of_doctors);
-  //   formDataToSend.append("pincode", formData.pincode);
-  //   formDataToSend.append("state", String(formData.state)); // backend ko id chahiye
-  //   formDataToSend.append("status", formData.status);
+    // formDataToSend.append("medicine_name", formData.medicine_name || "");
+    // formDataToSend.append("pack_size", formData.pack_size || "");
+    // formDataToSend.append(
+    //   "prescription_required",
+    //   String(formData.prescription_required ?? 1)
+    // );
+    // formDataToSend.append("unit", String(formData.unit || ""));
+    // formDataToSend.append("generic", String(formData.generic || ""));
+    // formDataToSend.append("manufacturer", String(formData.manufacturer || ""));
+    // formDataToSend.append("category", String(formData.category || ""));
+    // formDataToSend.append("sub_category", String(formData.sub_category || ""));
+    formDataToSend.append("description", formData.description || "");
+    formDataToSend.append(
+      "product_introduction",
+      formData.product_introduction || ""
+    );
+    // formDataToSend.append("side_effect", formData.side_effect || "");
+    // formDataToSend.append("storage", formData.storage || "");
+    // formDataToSend.append("uses_benefits", formData.uses_benefits || "");
+    // formDataToSend.append("status", formData.status || "Active");
 
-  //   // ✅ password -> sirf create mode me bhejna
-  //   if (!id) {
-  //     formDataToSend.append("password", password);
-  //   }
+    // ✅ id bhejna zaruri hai update mode me
+    if (decodedId) {
+      formDataToSend.append("id", String(decodedId));
+    }
 
-  //   // ✅ edit mode id + pharmacy_id_code
-  //   if (id) {
-  //     formDataToSend.append("id", String(formData.id));
-  //     formDataToSend.append("clinic_id_code", formData.clinic_id_code);
-  //   }
+    // ✅ Old documents
+    if (formData.documents && formData.documents.length > 0) {
+      formData.documents.forEach((doc) => {
+        if (doc.id)
+          formDataToSend.append("existing_document_ids", String(doc.id));
+      });
+    }
 
-  //   // ✅ Existing documents ids (edit mode)
-  //   if (formData.documents && formData.documents.length > 0) {
-  //     formData.documents.forEach((doc) => {
-  //       formDataToSend.append("existing_document_ids", String(doc.id)); // [] hata diya
-  //     });
-  //   }
+    // ✅ New uploaded files
+    if (formData.uploadedFiles && formData.uploadedFiles.length > 0) {
+      formData.uploadedFiles.forEach((file) => {
+        formDataToSend.append("documents", file);
+      });
+    }
 
-  //   // ✅ New uploaded files
-  //   if (formData.uploadedFiles && formData.uploadedFiles.length > 0) {
-  //     formData.uploadedFiles.forEach((file) => {
-  //       formDataToSend.append("documents", file); // backend field name ke sath match kare
-  //     });
-  //   }
+    for (const [key, value] of formDataToSend.entries()) {
+      console.log("📦", key, value);
+    }
 
-  //   // debug: show all FormData entries
-  //   for (const [key, value] of formDataToSend.entries()) {
-  //     console.log("📦 FormData entry:", key, value);
-  //   }
+    try {
+      setLoading(true);
+      if (decodedId) {
+        await dispatch(
+          updateMedicineListById({
+            id: decodedId,
+            data: formDataToSend,
+          })
+        ).unwrap();
+        toast.success("Medicine updated successfully");
+      } else {
+        //await createMedicineApi(formDataToSend);
+        toast.success("Medicine added successfully");
+      }
 
-  //   try {
-  //     if (id) {
-  //       await updatePharmacyApi(id, formDataToSend);
-  //       toast.success("✅ Pharmacy successfully updated");
-
-  //       await dispatch(fetchPharmacy()).unwrap();
-  //       router.push("/admin/pharmacy");
-  //     } else {
-  //       const res = await createPharmacyApi(formDataToSend);
-  //       toast.success("✅ Pharmacy successfully added");
-
-  //       await dispatch(fetchPharmacy()).unwrap();
-
-  //       setFormData((prev) => ({
-  //         ...prev,
-  //         //pharmacy_id_code: res.pharmacy_id_code ?? prev.pharmacy_id_code,
-  //       }));
-
-  //       router.push("/admin/pharmacy");
-  //     }
-  //   } catch (error: unknown) {
-  //     const err = error as AxiosError<{ message?: string; detail?: string }>;
-  //     const errorMsg =
-  //       err.response?.data?.message ||
-  //       err.response?.data?.detail ||
-  //       err.message;
-
-  //     console.error("❌ API call failed:", errorMsg);
-  //     toast.error(errorMsg);
-  //   }
-  // };
+      router.push("/other-product");
+    } catch (error) {
+      const err = error as AxiosError<{ message?: string; detail?: string }>;
+      const errorMsg =
+        err.response?.data?.message ||
+        err.response?.data?.detail ||
+        err.message ||
+        "Unknown error";
+      console.error("❌ API Error:", errorMsg);
+      toast.error(errorMsg);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <>
@@ -282,7 +309,7 @@ export default function OtherMedicineForm({ id }: Props) {
               <i className="bi bi-shop-window me-2"></i>
               {id ? "Update Other Product" : "Add Other Product"}
               <button
-                onClick={() => router.push("/medicine")}
+                onClick={() => router.push("/other-product")}
                 className="btn-style2 float-end pe-4 ps-4"
               >
                 ← Back
@@ -290,17 +317,14 @@ export default function OtherMedicineForm({ id }: Props) {
             </div>
             <div className="main_content">
               {/* <p>Generated Password: {password}</p> */}
-              <form
-                //onSubmit={handleSubmit}
-                className="row g-3"
-              >
+              <form onSubmit={handleSubmit} className="row g-3">
                 <Input
                   label="Item Name"
                   type="text"
-                  name="item_name"
-                  value={formData.item_name}
+                  name="medicine_name"
+                  value={formData.medicine_name}
                   onChange={handleChange}
-                  required
+                  //required
                 />
                 <Input
                   label="Pack Size"
@@ -308,7 +332,7 @@ export default function OtherMedicineForm({ id }: Props) {
                   name="pack_size"
                   value={formData.pack_size}
                   onChange={handleChange}
-                  required
+                  //required
                 />
                 <Input
                   label="Prescription Required"
@@ -316,7 +340,7 @@ export default function OtherMedicineForm({ id }: Props) {
                   name="prescription_required"
                   value={formData.prescription_required}
                   onChange={handleChange}
-                  required
+                  //required
                   options={[
                     { value: 1, label: "Yes" },
                     { value: 0, label: "No" },
@@ -336,7 +360,7 @@ export default function OtherMedicineForm({ id }: Props) {
                   // onAddOption={(label) => {
                   //   dispatch(addGeneric({ label, value: label })); // ✅ action dispatch
                   // }}
-                  required
+                  // required
                 />
                 <CustomSelectInput
                   label="Unit"
@@ -349,7 +373,7 @@ export default function OtherMedicineForm({ id }: Props) {
                       unit: e.toString(),
                     }))
                   }
-                  required
+                  // required
                 />
                 <CustomSelectInput
                   label="Manufacturer"
@@ -362,7 +386,7 @@ export default function OtherMedicineForm({ id }: Props) {
                       manufacturer: e.toString(),
                     }))
                   }
-                  required
+                  //required
                 />
                 <MultiSelectDropdown
                   label="Categories"
@@ -385,7 +409,7 @@ export default function OtherMedicineForm({ id }: Props) {
                       sub_category: e.toString(),
                     }))
                   }
-                  required
+                  //required
                 />
 
                 <div
@@ -456,7 +480,7 @@ export default function OtherMedicineForm({ id }: Props) {
                       product_introduction: val,
                     }))
                   }
-                  required
+                  //required
                   colClass="col-md-12"
                 />
                 <RichTextEditor
@@ -466,7 +490,7 @@ export default function OtherMedicineForm({ id }: Props) {
                   onChange={(val) =>
                     setFormData((prev) => ({ ...prev, description: val }))
                   }
-                  required
+                  //required
                   colClass="col-md-12"
                 />
                 <InputFile

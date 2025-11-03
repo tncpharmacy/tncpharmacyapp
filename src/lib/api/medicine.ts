@@ -106,3 +106,36 @@ export const fetchGroupCare = async (): Promise<CareGroupResponse> => {
   );
   return res.data; // ✅ res.data is now MedicineResponse
 };
+
+// =========================
+// GET MEDICINE LIST BY ID
+// =========================
+export const fetchMedicineListById = async (
+  id: number
+): Promise<MedicineResponse> => {
+  const res = await axiosInstance.get<MedicineResponse>(
+    ENDPOINTS.MEDICINES.GET_MEDICINE_LIST_BY_ID(id)
+  );
+  return res.data;
+};
+
+// ============================
+// UPDATE MEDICINE LIST UPDATE
+// ============================
+
+export const fetchMedicineListUpdate = async (
+  id: number | string,
+  data: Partial<MedicineResponse> | FormData
+): Promise<MedicineResponse> => {
+  const res = await axiosInstance.put<MedicineResponse>(
+    ENDPOINTS.MEDICINES.GET_MEDICINE_LIST_UPDATE(id),
+    data,
+    {
+      headers:
+        data instanceof FormData
+          ? { "Content-Type": "multipart/form-data" }
+          : {},
+    }
+  );
+  return res.data;
+};

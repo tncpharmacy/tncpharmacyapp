@@ -2,118 +2,136 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import "../../css/header-style.css";
 import "../../../styles/style-login.css";
-import { Image, Modal } from "react-bootstrap";
+import { Image } from "react-bootstrap";
 import { useAppDispatch, useAppSelector } from "@/lib/hooks";
 import { useRouter } from "next/navigation";
-import { loginUser } from "@/lib/features/authSlice/authSlice";
-import { getCategoriesList } from "@/lib/features/categorySlice/categorySlice";
-import { getSubcategoriesList } from "@/lib/features/subCategorySlice/subCategorySlice";
-import { Category } from "@/types/category";
 import Link from "next/link";
+import { Category } from "@/types/category";
+import { Medicine } from "@/types/medicine";
 import PrescriptionUploadModal from "@/app/user/components/PrescriptionUploadModal/PrescriptionUploadModal";
 import Login from "@/app/admin-login/page";
 import BuyerLoginModal from "@/app/buyer-login/page";
 import { encodeId } from "@/lib/utils/encodeDecode";
+import { getCategoriesList } from "@/lib/features/categorySlice/categorySlice";
 import {
   getCategoryIdBySubcategory,
   getProductList,
 } from "@/lib/features/medicineSlice/medicineSlice";
-import { Medicine } from "@/types/medicine";
 import { useHealthBag } from "@/lib/hooks/useHealthBag";
 import { buyerLogout } from "@/lib/features/buyerSlice/buyerSlice";
+import { getSubcategoriesList } from "@/lib/features/subCategorySlice/subCategorySlice";
+import { fetchHealthBag } from "@/lib/api/healthBag";
+import { loadLocalHealthBag } from "@/lib/features/healthBagSlice/healthBagSlice";
 
 const SiteHeader = () => {
   const dispatch = useAppDispatch();
   const router = useRouter();
+  const [mounted, setMounted] = useState(false);
+
+  const buyer = useAppSelector((state) => state.buyer.buyer);
+  const userId = buyer?.id || null;
+  const { items } = useHealthBag({ userId });
+
+  const [localCount, setLocalCount] = useState(0);
   const [showLogin, setShowLogin] = useState(false);
   const [showBuyerLogin, setShowBuyerLogin] = useState(false);
+  const [showModal, setShowModal] = useState(false);
+
   const { list: categories } = useAppSelector((state) => state.category);
   const { listAll: subcategories } = useAppSelector(
     (state) => state.subcategory
   );
-  const { medicines: productList, loading } = useAppSelector(
-    (state) => state.medicine
-  );
-  // search box related state
+  const { medicines: productList } = useAppSelector((state) => state.medicine);
+
+  const [shuffledCategories, setShuffledCategories] = useState<Category[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [filteredList, setFilteredList] = useState<Medicine[]>([]);
   const [showList, setShowList] = useState(false);
   const [highlightIndex, setHighlightIndex] = useState(-1);
   const isSelecting = useRef(false);
 
-  const [mounted, setMounted] = useState(false);
-  const [showModal, setShowModal] = useState(false);
-  const [shuffledCategories, setShuffledCategories] = useState<Category[]>([]);
-
-  const buyer = useAppSelector((state) => state.buyer.buyer);
-  const userId = buyer?.id || null;
-  const { items } = useHealthBag({ userId });
-
-  const [localCount, setLocalCount] = useState(items.length);
-
-  // whenever items change locally in this component
+  // ---------- INITIAL LOAD ----------
   useEffect(() => {
-    setLocalCount(items.length);
-  }, [items]);
-
-  // listen to custom event
-  useEffect(() => {
-    const update = () => {
-      if (typeof window === "undefined") return;
-      const guest = localStorage.getItem("healthBagGuest");
-      const guestItems = guest ? JSON.parse(guest) : [];
-      setLocalCount(guestItems.length);
-    };
-
-    window.addEventListener("healthBagUpdated", update);
-    return () => window.removeEventListener("healthBagUpdated", update);
-  }, []);
-
-  useEffect(() => {
+    setMounted(true);
     dispatch(getCategoriesList());
     dispatch(getSubcategoriesList());
   }, [dispatch]);
 
-  // ✅ Replace your shuffle useEffect with this
+  // ---------- HANDLE CART COUNT ----------
+  // useEffect(() => {
+  //   setLocalCount(items.length);
+  // }, [items, mounted]);
+
+  useEffect(() => {
+    if (!buyer?.id) {
+      dispatch(loadLocalHealthBag()); // ✅ Load LS items into Redux when not logged in
+    }
+  }, [buyer?.id, dispatch]);
+
+  useEffect(() => {
+    console.log("🧮 Updated count from items:", items.length);
+  }, [items]);
+
+  useEffect(() => {
+    if (!mounted) return;
+    const update = async () => {
+      try {
+        if (userId) {
+          const res = await fetchHealthBag(userId);
+          setLocalCount(res.data?.length || 0);
+        } else {
+          const guest = localStorage.getItem("healthBagGuest");
+          const guestItems = guest ? JSON.parse(guest) : [];
+          setLocalCount(guestItems.length);
+        }
+      } catch (err) {
+        console.error("Error updating count:", err);
+      }
+    };
+    window.addEventListener("healthBagUpdated", update);
+    update();
+    return () => window.removeEventListener("healthBagUpdated", update);
+  }, [userId, mounted]);
+
+  // ---------- CATEGORY SHUFFLE ----------
   useEffect(() => {
     if (!categories || categories.length === 0) return;
-
-    // LocalStorage me purana shuffle check karo
     const savedShuffle = localStorage.getItem("shuffledMenu");
     if (savedShuffle) {
-      // Agar hai to wahi use karo
       setShuffledCategories(JSON.parse(savedShuffle));
-      console.log("♻️ Using saved shuffle (no reshuffle)");
       return;
     }
-
-    // Agar nahi hai to naya shuffle banao (page reload par hi)
     const shuffled = [...categories].sort(() => Math.random() - 0.5);
     setShuffledCategories(shuffled);
-
-    // Save in localStorage (so it persists until full reload or tab close)
     localStorage.setItem("shuffledMenu", JSON.stringify(shuffled));
-
-    console.log("🌀 New shuffle created on reload:", shuffled);
   }, [categories]);
 
-  const handleLogout = () => {
-    dispatch(buyerLogout());
-  };
-
   useEffect(() => {
-    if (!searchTerm || searchTerm.length === 0) return;
-    dispatch(getProductList());
-  }, [dispatch, searchTerm]);
+    const handleReload = () => localStorage.removeItem("shuffledMenu");
+    window.addEventListener("beforeunload", handleReload);
+    return () => window.removeEventListener("beforeunload", handleReload);
+  }, []);
 
-  // filter logic
+  // ---------- LOGOUT ----------
+  const handleLogout = () => dispatch(buyerLogout());
+
+  // ---------- SEARCH ----------
+  useEffect(() => {
+    if (searchTerm.trim().length > 0) {
+      dispatch(getProductList());
+    } else {
+      setFilteredList([]);
+      setShowList(false);
+    }
+  }, [searchTerm, dispatch]);
+
   useEffect(() => {
     if (isSelecting.current) {
       isSelecting.current = false;
       return;
     }
 
-    if (searchTerm.trim().length > 0 && productList?.length > 0) {
+    if (searchTerm.trim() && productList?.length > 0) {
       const lower = searchTerm.toLowerCase();
       const filtered = productList.filter(
         (p) =>
@@ -123,13 +141,26 @@ const SiteHeader = () => {
       );
       setFilteredList(filtered.slice(0, 10));
       setShowList(true);
-      setHighlightIndex(-1);
     } else {
       setShowList(false);
     }
   }, [searchTerm, productList]);
 
-  // keyboard navigation
+  const handleSelect = (product: Medicine) => {
+    setSearchTerm(product.medicine_name);
+    setShowList(false);
+    const path =
+      product.category_id === 1
+        ? `/medicines-details/${encodeId(product.id)}`
+        : `/product-details/${encodeId(product.id)}`;
+    router.push(path);
+  };
+
+  const handleItemSelect = (item: Medicine) => {
+    isSelecting.current = true;
+    handleSelect(item);
+  };
+
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (!showList || filteredList.length === 0) return;
 
@@ -143,46 +174,20 @@ const SiteHeader = () => {
       setHighlightIndex((prev) =>
         prev > 0 ? prev - 1 : filteredList.length - 1
       );
-    } else if (e.key === "Enter" || e.key === "Tab") {
+    } else if (e.key === "Enter") {
       e.preventDefault();
       if (highlightIndex >= 0 && highlightIndex < filteredList.length) {
-        handleSelect(filteredList[highlightIndex]);
-        setShowList(false);
+        handleItemSelect(filteredList[highlightIndex]);
       }
     }
   };
-
-  // select function wrapper
-  const handleItemSelect = (item: Medicine) => {
-    isSelecting.current = true; // 👈 stop next filtering trigger
-    handleSelect(item);
-    setSearchTerm(item.medicine_name); // show selected item name
-    setShowList(false); // close list
-    setHighlightIndex(-1);
-  };
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const handleSelect = (product: any) => {
-    setSearchTerm(product.medicine_name);
-    setShowList(false);
-    if (product.category_id === 1) {
-      router.push(`/medicines-details/${encodeId(product.id)}`);
-    } else {
-      router.push(`/product-details/${encodeId(product.id)}`);
-    }
-  };
-
-  useEffect(() => setMounted(true), []);
 
   const handleCategoryClick = async (
     categoryId: number,
     subCategoryId: number
   ) => {
     try {
-      // 1️⃣ Redux action dispatch karo
       await dispatch(getCategoryIdBySubcategory({ categoryId, subCategoryId }));
-
-      // 2️⃣ Navigate to new route (category + subcategory)
       router.push(
         `/all-products/${encodeId(categoryId)}/${encodeId(subCategoryId)}`
       );
@@ -191,25 +196,17 @@ const SiteHeader = () => {
     }
   };
 
-  // ✅ Aur ye add kar bottom me
-  useEffect(() => {
-    const handleReload = () => {
-      // Jab page reload hota hai tab shuffle reset karne ke liye
-      localStorage.removeItem("shuffledMenu");
-    };
-    window.addEventListener("beforeunload", handleReload);
-    return () => window.removeEventListener("beforeunload", handleReload);
-  }, []);
-
+  // ---------- RENDER ----------
   return (
     <header id="header">
       <div className="mid_header">
         <div className="container">
           <div className="header_wrap">
             <Link href="/" className="logo">
-              <Image src="/images/logo.png" alt="" />
+              <Image src="/images/logo.png" alt="Logo" />
             </Link>
 
+            {/* ---------- SEARCH ---------- */}
             <div className="search_query">
               <a className="query_search_btn" href="javascript:void(0)">
                 <i className="bi bi-search"></i>
@@ -217,13 +214,11 @@ const SiteHeader = () => {
               <input
                 type="text"
                 placeholder="Search for medicines & products..."
-                style={{ borderRadius: "none" }}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 onFocus={() => searchTerm && setShowList(true)}
                 onKeyDown={handleKeyDown}
               />
-              {/* Suggestions List */}
               {showList && filteredList.length > 0 && (
                 <ul
                   style={{
@@ -244,21 +239,18 @@ const SiteHeader = () => {
                     <li
                       key={item.id}
                       onClick={() => handleItemSelect(item)}
-                      onMouseDown={(e) => e.preventDefault()}
                       onMouseEnter={() => setHighlightIndex(index)}
                       style={{
                         display: "flex",
                         justifyContent: "space-between",
                         alignItems: "center",
-                        padding: "20px 12px",
+                        padding: "15px 12px",
                         cursor: "pointer",
                         borderBottom: "1px solid #eee",
                         backgroundColor:
                           index === highlightIndex
                             ? "rgb(237 240 243)"
-                            : "transparent", // highlight color
-                        color:
-                          index === highlightIndex ? "rgb(31 20 20)" : "#000", // text color
+                            : "transparent",
                       }}
                     >
                       <span style={{ fontWeight: 500, fontSize: "15px" }}>
@@ -268,7 +260,7 @@ const SiteHeader = () => {
                         style={{
                           fontSize: "13px",
                           color: "rgb(208 95 95)",
-                          fontWeight: "600",
+                          fontWeight: 600,
                         }}
                       >
                         {item.Manufacturer || "N/A"} | ₹
@@ -280,6 +272,7 @@ const SiteHeader = () => {
               )}
             </div>
 
+            {/* ---------- RIGHT SIDE ---------- */}
             <ul className="user_right">
               <li>
                 <div className="dropdown-user">
@@ -288,7 +281,7 @@ const SiteHeader = () => {
                       <Image
                         className="user_icon"
                         src="/images/icons/icon-profile.svg"
-                        alt=""
+                        alt="Profile"
                       />
                     </i>
                     Account
@@ -297,8 +290,27 @@ const SiteHeader = () => {
                     className="dropdown-user-content"
                     style={{ zIndex: "5" }}
                   >
-                    {!buyer ? (
-                      // ✅ Jab user login nahi hai
+                    {!mounted ? (
+                      <p>
+                        <b>Welcome</b>
+                        <br />
+                        To access account & manage orders
+                      </p>
+                    ) : buyer ? (
+                      <div>
+                        <p>
+                          <b>Welcome</b>
+                          <br />
+                          {buyer?.name || "User"}
+                        </p>
+                        <hr className="border-secondary" />
+                        <Link href="/profile">My Account</Link>
+                        <Link href="/buyer/orders">My Orders</Link>
+                        <button className="btn1 mt-2" onClick={handleLogout}>
+                          Logout
+                        </button>
+                      </div>
+                    ) : (
                       <div>
                         <p>
                           <b>Welcome</b>
@@ -328,26 +340,11 @@ const SiteHeader = () => {
                           />
                         </div>
                       </div>
-                    ) : (
-                      // ✅ Jab buyer login hai
-                      <div>
-                        <p>
-                          <b>Welcome</b>
-                          <br />
-                          {buyer?.name || "User"}
-                        </p>
-                        <hr className="border-secondary" />
-                        <Link href="/profile">My Account</Link>
-                        <Link href="/buyer/orders">My Orders</Link>
-                        {/* <Link href="/contact-us">Contact Us</Link> */}
-                        <button className="btn1 mt-2" onClick={handleLogout}>
-                          Logout
-                        </button>
-                      </div>
                     )}
                   </div>
                 </div>
               </li>
+
               <li>
                 <Link href="/health-bag">
                   <span className="user_p">
@@ -355,9 +352,9 @@ const SiteHeader = () => {
                       <Image
                         className="user_icon"
                         src="/images/icons/icon-cart.svg"
-                        alt=""
+                        alt="Cart"
                       />
-                      <span className="count">{localCount}</span>
+                      <span className="count">{items?.length || 0}</span>
                     </i>
                     Health Bag
                   </span>
@@ -368,6 +365,7 @@ const SiteHeader = () => {
         </div>
       </div>
 
+      {/* ---------- MENU ---------- */}
       <div className="menu_header">
         <div className="container">
           <ul className="main_menu">
@@ -376,6 +374,7 @@ const SiteHeader = () => {
                 All Medicine <i className="bi bi-grid-fill"></i>
               </Link>
             </li>
+
             {shuffledCategories
               .filter((cat) => cat.category_name !== "Medicines")
               .slice(0, 5)
@@ -388,15 +387,13 @@ const SiteHeader = () => {
                     <Link href={`/all-product/${encodeId(cat.id)}`}>
                       {cat.category_name}
                     </Link>
-
-                    {/* Subcategories */}
                     <div className="megamenu-panel">
                       {filteredSubcategories.length > 0 ? (
                         <ul className="megamenu-list">
                           {filteredSubcategories.map((sub) => (
                             <li key={sub.id}>
                               <Link
-                                href=""
+                                href="#"
                                 onClick={() =>
                                   handleCategoryClick(cat.id, sub.id)
                                 }
@@ -419,16 +416,14 @@ const SiteHeader = () => {
             {/* More Menu */}
             {shuffledCategories.length > 5 && (
               <li className="position-relative">
-                <a href="#" className="">
-                  More
-                </a>
+                <a href="#">More</a>
                 <div className="megamenu-panel2">
                   <ul className="megamenu-list">
                     {shuffledCategories
                       .slice(5)
                       .filter((cat) => cat.category_name !== "Medicines")
                       .map((cat) => (
-                        <li key={cat.id} className="">
+                        <li key={cat.id}>
                           <Link href={`/all-product/${encodeId(cat.id)}`}>
                             {cat.category_name}
                           </Link>
@@ -439,6 +434,7 @@ const SiteHeader = () => {
               </li>
             )}
 
+            {/* Upload Prescription */}
             <li className="float-end">
               <button className="btn_uoload" onClick={() => setShowModal(true)}>
                 <span>
@@ -452,7 +448,6 @@ const SiteHeader = () => {
                   alt="Upload"
                 />
               </button>
-              {/* Modal*/}
               <PrescriptionUploadModal
                 show={showModal}
                 handleClose={() => setShowModal(false)}

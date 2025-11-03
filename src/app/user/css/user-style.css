@@ -19,6 +19,19 @@ body {
     outline: none;
 }
 
+.btn-1 {
+    background: #ff7b00;
+    color: #ffffff;
+    border: 0;
+    font-size: 14px;
+    font-weight: 600;
+    width: 120px;
+    padding: 8px;
+    border-radius: 35px;
+    margin: 5px auto;
+    display: block;
+}
+
 .header .logo img {
     height: 55px;
 }

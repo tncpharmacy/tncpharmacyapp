@@ -1,8 +1,11 @@
+import { Medicine } from "./../../../types/medicine";
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import {
   fetchCategoryIdBySubcategory,
   fetchGroupCare,
   fetchMedicineByGenericId,
+  fetchMedicineListById,
+  fetchMedicineListUpdate,
   fetchMedicinesAllList,
   fetchMenuMedicinesById,
   fetchMenuMedicinesByOtherId,
@@ -14,7 +17,6 @@ import {
 import {
   CareGroup,
   CareGroupResponse,
-  Medicine,
   MedicineResponse,
 } from "@/types/medicine";
 
@@ -231,6 +233,36 @@ export const getGroupCare = createAsyncThunk<
   }
 });
 
+// ✅ Get medicine list by ID
+export const getMedicineListById = createAsyncThunk<
+  MedicineResponse,
+  number,
+  { rejectValue: string }
+>("medicine/getMedicineListById", async (id, { rejectWithValue }) => {
+  try {
+    const res = await fetchMedicineListById(id);
+    return res;
+  } catch (err: unknown) {
+    if (err instanceof Error) return rejectWithValue(err.message);
+    return rejectWithValue("Failed to fetch medicine list by ID");
+  }
+});
+
+// ✅ Update medicine list by ID
+export const updateMedicineListById = createAsyncThunk(
+  "medicine/updateMedicineListById",
+  async ({ id, data }: { id: number; data: FormData }, { rejectWithValue }) => {
+    try {
+      return await fetchMedicineListUpdate(id, data);
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        return rejectWithValue(err.message);
+      }
+      return rejectWithValue("Data is not successfully updated");
+    }
+  }
+);
+
 const medicineSlice = createSlice({
   name: "medicine",
   initialState,
@@ -378,6 +410,36 @@ const medicineSlice = createSlice({
       .addCase(getGroupCare.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload || "Something went wrong";
+      })
+      // ✅ Get medicine list by ID
+      .addCase(getMedicineListById.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(getMedicineListById.fulfilled, (state, action) => {
+        state.loading = false;
+        state.medicinesList = action.payload.data;
+        state.count = action.payload.count;
+        state.error = null;
+      })
+      .addCase(getMedicineListById.rejected, (state, action) => {
+        state.loading = false;
+        state.error =
+          action.payload || "Something went wrong while fetching by ID";
+      })
+
+      // ✅ Update medicine list by ID
+      .addCase(updateMedicineListById.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(updateMedicineListById.fulfilled, (state, action) => {
+        state.loading = false;
+        state.medicinesList = action.payload.data;
+        state.count = action.payload.count;
+        state.error = null;
+      })
+      .addCase(updateMedicineListById.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
       });
   },
 });

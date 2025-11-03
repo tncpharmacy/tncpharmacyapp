@@ -17,11 +17,16 @@ export default function SideNav() {
       </span>
 
       <ul className="side_menu-list">
-        <li>
+        <li className={`${openMenu === "Retail-Counter" ? "active" : ""}`}>
+          <Link href="/pharmacist/retail-counter" className="link">
+            <i className="bi bi-receipt-cutoff"></i> Retail Counter
+          </Link>
+        </li>
+        {/* <li>
           <Link href="/pharmacist-dashboard" className="link">
             <i className="bi bi-activity"></i> Dashboard
           </Link>
-        </li>
+        </li> */}
         <li>
           <Link href="/pharmacist/orders" className="link">
             <i className="bi bi-cart-plus-fill"></i> Order
@@ -55,11 +60,6 @@ export default function SideNav() {
               </li>
             </ul>
           )}
-        </li>
-        <li className={`${openMenu === "Retail-Counter" ? "active" : ""}`}>
-          <Link href="/pharmacist/retail-counter" className="link">
-            <i className="bi bi-receipt-cutoff"></i> Retail Counter
-          </Link>
         </li>
         {/* <li
           className={`${openMenu === "Prescription-Handling" ? "active" : ""}`}

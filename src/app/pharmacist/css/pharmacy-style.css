@@ -62,7 +62,7 @@ body {
   padding: 8px 10px;
   border: 1px solid #ccc;
   border-radius: 6px;
-  width: 95% !important; /* ✅ full width in print */
+  width: 35% !important; /* ✅ full width in print */
   display: block !important;
   background: #fff;
   font-size: 13px;

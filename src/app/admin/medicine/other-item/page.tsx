@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Button, Modal } from "react-bootstrap";
 import "../../css/admin-style.css";
 import SideNav from "@/app/admin/components/SideNav/page";
@@ -17,11 +17,24 @@ import SelectInput from "@/app/components/Input/SelectInput";
 import { getCategoriesList } from "@/lib/features/categorySlice/categorySlice";
 import { Category } from "@/types/category";
 import { Medicine } from "@/types/medicine";
+import {
+  getMedicinesList,
+  getMenuMedicinesList,
+} from "@/lib/features/medicineSlice/medicineSlice";
+import { encodeId } from "@/lib/utils/encodeDecode";
 
 export default function OtherMedicineList() {
   const dispatch = useAppDispatch();
   const router = useRouter();
   const { list: getCategoryList } = useAppSelector((state) => state.category);
+  const { medicines: medicineList } = useAppSelector((state) => state.medicine);
+  // filter directly
+  const filteredMedicines = useMemo(() => {
+    return medicineList?.filter((item) => item.category_id !== 1) || [];
+  }, [medicineList]);
+
+  // 🆕 Category filter state
+  const [selectedCategoryId, setSelectedCategoryId] = useState<number | "">("");
 
   // Infinite scroll state
   const [visibleCount, setVisibleCount] = useState(10);
@@ -29,21 +42,20 @@ export default function OtherMedicineList() {
 
   // Modal state
   const [showModal, setShowModal] = useState(false);
-  // const [selectedClinic, setSelectedClinic] = useState<
-  //   Clinic | ClinicAdd | null
-  // >(null);
+  const [selectedMedicine, setSelectedMedicine] = useState<Medicine | null>(
+    null
+  );
 
   // filtered records by search box
+  const [filteredData, setFilteredData] = useState<Medicine[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
-  // const [filteredData, setFilteredData] = useState<Medicine[]>(medicines);
 
   //status
-  // const [records, setRecords] = useState<ClinicAdd[]>([]);
-  const [status, setStatus] = useState<string>("");
-  const [category, setCategory] = useState<string>("");
+  const [status, setStatus] = useState<string>("all");
 
   // Fetch all pharmacies once
   useEffect(() => {
+    dispatch(getMedicinesList());
     dispatch(getCategoriesList());
   }, [dispatch]);
 
@@ -55,88 +67,47 @@ export default function OtherMedicineList() {
     }));
 
   // filtered records by search box + status filter
-  // useEffect(() => {
-  //   let data = getCategoriesList || [];
+  // 🧠 Master filter logic
+  useEffect(() => {
+    let data = filteredMedicines;
 
-  //   // 🔹 Search filter
-  //   if (searchTerm) {
-  //     const lower = searchTerm.toLowerCase();
-  //     data = data.filter((item: Category) =>
-  //       (Object.keys(item) as (keyof Category)[]).some((key) =>
-  //         String(item[key] ?? "")
-  //           .toLowerCase()
-  //           .includes(lower)
-  //       )
-  //     );
-  //   }
+    // Category filter
+    if (selectedCategoryId) {
+      data = data.filter((item) => item.category_id === selectedCategoryId);
+    }
 
-  //   // 🔹 Status filter
-  //   if (status) {
-  //     data = data.filter((item: Category) => item.status === status);
-  //   }
+    // Search filter
+    if (searchTerm) {
+      data = data.filter((item) =>
+        item.medicine_name.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
 
-  //   setFilteredData(data);
-  // }, [searchTerm, status, clinics.length]); // ✅ only length (primitive)
+    // Status filter
+    if (status !== "all") {
+      data = data.filter((item) => item.status === status);
+    }
 
-  // const handleToggleStatus = async (id: number) => {
-  //   // Find category in the filteredData (latest UI state)
-  //   const toggleRecords = filteredData.find((c) => c.id === id);
-  //   if (!toggleRecords) return;
+    setFilteredData(data);
+  }, [filteredMedicines, selectedCategoryId, searchTerm, status]);
 
-  //   const newStatus = toggleRecords.status === "Active" ? "Inactive" : "Active";
-
-  //   try {
-  //     // Optimistic UI update
-  //     setFilteredData((prev) =>
-  //       prev.map((c) => (c.id === id ? { ...c, status: newStatus } : c))
-  //     );
-
-  //     // Update backend
-  //     await dispatch(
-  //       updateClinic({
-  //         id,
-  //         clinic: {
-  //           clinicName: toggleRecords.clinicName,
-  //           user_name: toggleRecords.user_name,
-  //           login_id: toggleRecords.login_id,
-  //           address: toggleRecords.address,
-  //           status: newStatus,
-  //         },
-  //       })
-  //     ).unwrap();
-  //     toast.success(`Status updated to ${newStatus}`);
-  //   } catch (err) {
-  //     console.error(err);
-  //     toast.error("Failed to update status");
-
-  //     // Revert UI if backend fails
-  //     setFilteredData((prev) =>
-  //       prev.map((c) =>
-  //         c.id === id ? { ...c, status: toggleRecords.status } : c
-  //       )
-  //     );
-  //   }
-  // };
-
-  //infinte scroll records
+  // ✅ only length (primitive)
   const loadMore = () => {
-    if (loadings || visibleCount >= getCategoryList.length) return;
+    if (loadings || visibleCount >= filteredMedicines.length) return;
     setLoadings(true);
     setTimeout(() => {
       setVisibleCount((prev) => prev + 5);
       setLoadings(false);
-    }, 3000); // spinner for 3 sec
+    }, 1500); // spinner for 3 sec
   };
 
-  // const handleView = (pharmacy: Clinic | ClinicAdd) => {
-  //   setSelectedClinic(pharmacy);
-  //   setShowModal(true);
-  // };
-
-  // const handleEdit = (id: number) => {
-  //   const encodedId = encodeURIComponent(btoa(String(id)));
-  //   router.push(`/update-clinic/${encodedId}`);
-  // };
+  const handleView = (medicine: Medicine) => {
+    setSelectedMedicine(medicine);
+    setShowModal(true);
+  };
+  const handleEdit = (id: number) => {
+    router.push(`/update-other-product/${encodeId(id)}`);
+  };
 
   return (
     <>
@@ -144,12 +115,11 @@ export default function OtherMedicineList() {
       <div className="body_wrap">
         <SideNav />
         <div className="body_right">
-          <div className="body_content">
-            {/* <InfiniteScroll
+          <InfiniteScroll
             loadMore={loadMore}
             hasMore={visibleCount < filteredData.length}
             className="body_content"
-          > */}
+          >
             <div className="pageTitle">
               <i className="bi bi-shop-window"></i> Other Product List
             </div>
@@ -172,8 +142,16 @@ export default function OtherMedicineList() {
                   <div className="col-md-3">
                     <div className="txt_col">
                       <span className="lbl1">Category</span>
-                      <select className="txt1">
-                        <option>-Select-</option>
+                      <select
+                        className="txt1"
+                        value={selectedCategoryId}
+                        onChange={(e) =>
+                          setSelectedCategoryId(
+                            e.target.value ? Number(e.target.value) : ""
+                          )
+                        }
+                      >
+                        <option value="">-Select-</option>
                         {categoryOptions.map((cat) => (
                           <option key={cat.value} value={cat.value}>
                             {cat.label}
@@ -213,77 +191,92 @@ export default function OtherMedicineList() {
                 {/* Table */}
                 <div className="scroll_table mt-4 w-full">
                   <table className="table cust_table1">
-                    <thead className="fw-bold text-dark">
+                    <thead>
                       <tr>
-                        <th className="fw-bold text-start">Medicine Code</th>
+                        {/* <th className="fw-bold text-start"></th> */}
                         <th className="fw-bold text-start">Medicine Name</th>
                         <th className="fw-bold text-start">Unit</th>
-                        <th className="fw-bold text-start">
-                          Salt Composition (Generic)
-                        </th>
-                        <th className="fw-bold text-start">Category</th>
-                        <th className="fw-bold text-start">Sub Category</th>
-                        <th className="fw-bold text-start">Manufacturer</th>
+                        <th className="fw-bold text-start">Manufacture</th>
+                        <th className="fw-bold text-start">Pack Size</th>
                         <th className="fw-bold text-start">Status</th>
                         <th className="fw-bold text-start">Action</th>
                       </tr>
                     </thead>
                     <tbody>
-                      <tr>
-                        <td className="text-start">MEDICINE321321</td>
-                        <td className="text-start">EYEmist Gel 10gm</td>
-                        <td className="text-start">STRP</td>
-                        <td className="text-start">
-                          Hydroxypropylmethylcellulose (0.3% w/w)
-                        </td>
-                        <td className="text-start">Medicine</td>
-                        <td className="text-start">Eye Care</td>
-                        <td className="text-start">
-                          Sun Pharmaceutical Industries Ltd
-                        </td>
-                        <td className="text-start">
-                          <span className="status status-active"></span>
-                        </td>
-                        <td className="text-start">
-                          <button className="btn btn-light btn-sm me-2">
-                            <i className="bi bi-pencil"></i>
-                          </button>
-                          <button className="btn btn-light btn-sm">
-                            <i className="bi bi-eye-fill"></i>
-                          </button>
-                        </td>
-                      </tr>
-                      <tr>
-                        <td className="text-start">MEDICINE321321</td>
-                        <td className="text-start">EYEmist Gel 10gm</td>
-                        <td className="text-start">STRP</td>
-                        <td className="text-start">
-                          Hydroxypropylmethylcellulose (0.3% w/w)
-                        </td>
-                        <td className="text-start">Medicine</td>
-                        <td className="text-start">Eye Care</td>
-                        <td className="text-start">
-                          Sun Pharmaceutical Industries Ltd
-                        </td>
-                        <td className="text-start">
-                          <span className="status status-active"></span>
-                        </td>
-                        <td className="text-start">
-                          <button className="btn btn-light btn-sm me-2">
-                            <i className="bi bi-pencil"></i>
-                          </button>
-                          <button className="btn btn-light btn-sm">
-                            <i className="bi bi-eye-fill"></i>
-                          </button>
-                        </td>
-                      </tr>
+                      {Array.isArray(filteredData) &&
+                        filteredData
+                          .slice(0, visibleCount)
+                          .map((p: Medicine, index) => {
+                            return (
+                              <tr key={p.id}>
+                                {/* <td>{index + 1}</td> */}
+                                <td className="text-start">
+                                  {p.medicine_name ?? "-"}
+                                </td>
+                                <td className="text-start">{p.unit ?? "-"}</td>
+                                <td className="text-start">
+                                  {p.manufacturer_name ?? "-"}
+                                </td>
+                                <td className="text-start">
+                                  {p.pack_size ?? "-"}
+                                </td>
+                                {/* <td>{p.discount ?? "-"}</td>
+                              <td>{p.mrp ?? "-"}</td> */}
+                                <td>
+                                  <span
+                                    //onClick={() => handleToggleStatus(p.id)}
+                                    className={`status ${
+                                      p.status === "Active"
+                                        ? "status-active"
+                                        : "status-inactive"
+                                    } cursor-pointer`}
+                                    title="Click to change status"
+                                  >
+                                    {p.status === "Active"
+                                      ? "Active"
+                                      : "Inactive"}
+                                  </span>
+                                </td>
+                                <td>
+                                  <button
+                                    className="btn btn-light btn-sm me-2"
+                                    onClick={() => handleEdit(p.id)}
+                                  >
+                                    <i className="bi bi-pencil"></i>
+                                  </button>
+                                  <button
+                                    className="btn btn-light btn-sm"
+                                    onClick={() => handleView(p)}
+                                  >
+                                    <i className="bi bi-eye-fill"></i>
+                                  </button>
+                                </td>
+                              </tr>
+                            );
+                          })}
+                      {/* Spinner row */}
+                      {loadings && (
+                        <TableLoader colSpan={9} text="Loading more..." />
+                      )}
+
+                      {/* No more records */}
+                      {!loadings &&
+                        visibleCount >= filteredMedicines.length && (
+                          <tr>
+                            <td
+                              colSpan={9}
+                              className="text-center py-2 text-muted fw-bold fs-6"
+                            >
+                              No more records
+                            </td>
+                          </tr>
+                        )}
                     </tbody>
                   </table>
                 </div>
               </div>
             </div>
-            {/* </InfiniteScroll> */}
-          </div>
+          </InfiniteScroll>
         </div>
       </div>
 

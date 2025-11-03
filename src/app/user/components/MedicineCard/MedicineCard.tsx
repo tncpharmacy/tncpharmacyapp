@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { encodeId } from "@/lib/utils/encodeDecode";
 import { useAppSelector } from "@/lib/hooks";
 import { useHealthBag } from "@/lib/hooks/useHealthBag";
+import { HealthBag } from "@/types/healthBag";
 
 const mediaBase = process.env.NEXT_PUBLIC_MEDIA_BASE_URL;
 
@@ -23,6 +24,9 @@ export default function MedicineCard({
 }: Medicine) {
   const router = useRouter();
   const [isHovered, setIsHovered] = useState(false);
+  // --- Local states for instant UI ---
+  const [localBag, setLocalBag] = useState<number[]>([]);
+  const [processingIds, setProcessingIds] = useState<number[]>([]);
 
   const formatCurrency = (value: number) =>
     new Intl.NumberFormat("en-IN", {
@@ -40,16 +44,57 @@ export default function MedicineCard({
     userId: buyer?.id || null,
   });
 
-  const isInBag = items.some((i) => i.product_id === id);
+  // ---------- CHECK IF IN CART ----------
+  const isInBag =
+    localBag.includes(id) ||
+    items.some(
+      (i) =>
+        i.productid === id || // backend
+        i.product_id === id // local/guest
+    );
 
-  // Merge guest cart into logged-in cart once
+  // ---------- SYNC LOCAL CART ----------
   useEffect(() => {
-    if (buyer?.id) {
-      mergeGuestCart();
+    if (items?.length) {
+      setLocalBag(
+        items.map((i) => i.productid || i.product_id).filter(Boolean)
+      );
+    } else {
+      setLocalBag([]);
     }
-  }, [buyer?.id]);
+  }, [items]);
 
-  // end for increse header count code
+  // ---------- MERGE GUEST CART ----------
+  useEffect(() => {
+    if (buyer?.id) mergeGuestCart();
+  }, [buyer?.id, mergeGuestCart]);
+
+  // ---------- HANDLERS ----------
+  const handleAdd = async (productId: number) => {
+    setProcessingIds((prev) => [...prev, productId]);
+    try {
+      await addItem({
+        id: 0,
+        buyer_id: buyer?.id || 0,
+        product_id: productId,
+        quantity: 1,
+      } as HealthBag);
+      setLocalBag((prev) => [...prev, productId]);
+    } finally {
+      setProcessingIds((prev) => prev.filter((id) => id !== productId));
+    }
+  };
+
+  const handleRemove = async (productId: number) => {
+    setProcessingIds((prev) => [...prev, productId]);
+    try {
+      await removeItem(productId);
+      setLocalBag((prev) => prev.filter((id) => id !== productId));
+    } finally {
+      setProcessingIds((prev) => prev.filter((id) => id !== productId));
+    }
+  };
+
   // 👇 onClick function
   const handleClick = (id: number) => {
     router.push(`/medicines-details/${encodeId(id)}`);
@@ -158,19 +203,15 @@ export default function MedicineCard({
           {/* <p className="medicine-mrp">MRP ₹{formatCurrency(mrp)}</p>; */}
           <div className="text-end">
             <button
-              className="btn-1"
-              onClick={() =>
-                isInBag
-                  ? removeItem(id)
-                  : addItem({
-                      id: Date.now(),
-                      buyer_id: buyer?.id || 0,
-                      product_id: id,
-                      quantity: 1,
-                    })
-              }
+              className={`btn-1 btn-HO ${isInBag ? "remove" : "add"}`}
+              disabled={processingIds.includes(id)}
+              onClick={() => (isInBag ? handleRemove(id) : handleAdd(id))}
             >
-              {isInBag ? "REMOVE" : "ADD"}
+              {processingIds.includes(id)
+                ? "Processing..."
+                : isInBag
+                ? "REMOVE"
+                : "ADD"}
             </button>
           </div>
           {/* {availability === "ADD" ? (

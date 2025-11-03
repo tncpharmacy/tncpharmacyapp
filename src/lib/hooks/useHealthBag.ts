@@ -1,90 +1,151 @@
-// hooks/useHealthBag.ts
 import { useEffect, useState, useCallback } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import {
-  createHealthBag,
-  fetchHealthBag,
-  deleteHealthBag,
-} from "@/lib/api/healthBag";
+  getHealthBag,
+  addLocalHealthBag,
+  removeLocalHealthBag,
+  loadLocalHealthBag,
+} from "@/lib/features/healthBagSlice/healthBagSlice";
+import { RootState } from "@/lib/store";
 import { HealthBag } from "@/types/healthBag";
+import { createHealthBag, deleteHealthBag } from "@/lib/api/healthBag";
 
-const GUEST_KEY = "healthBagGuest";
+const GUEST_KEY = "healthbag";
 
 export const useHealthBag = ({ userId }: { userId: number | null }) => {
-  const [items, setItems] = useState<HealthBag[]>([]);
+  const dispatch = useDispatch();
+  const { items } = useSelector((state: RootState) => state.healthBag);
+  const [mounted, setMounted] = useState(false);
 
-  // Load initial items
+  // 🔹 Load cart on mount
   useEffect(() => {
     if (userId) {
-      fetchHealthBag(userId).then((res) => setItems(res.data));
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      dispatch(getHealthBag(userId) as any);
     } else {
-      const guest = localStorage.getItem(GUEST_KEY);
-      setItems(guest ? JSON.parse(guest) : []);
+      dispatch(loadLocalHealthBag());
     }
-  }, [userId]);
+    setMounted(true);
+  }, [userId, dispatch]);
 
-  // Save guest cart
-  const saveGuest = useCallback((newItems: HealthBag[]) => {
-    localStorage.setItem(GUEST_KEY, JSON.stringify(newItems));
-  }, []);
+  // 🔹 Fetch cart depending on login state
+  const fetchCart = useCallback(async () => {
+    if (userId) {
+      // ✅ Logged-in user → fetch from API
+      try {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        await dispatch(getHealthBag(userId) as any);
+      } catch (err) {
+        console.error("Error fetching API cart:", err);
+      }
+    } else {
+      // ✅ Guest user → load from LS
+      dispatch(loadLocalHealthBag());
+    }
+  }, [userId, dispatch]);
 
-  // ✅ Add item (stable)
+  useEffect(() => {
+    fetchCart();
+    setMounted(true);
+  }, [fetchCart]);
+
+  // 🔹 Add item
   const addItem = useCallback(
-    (item: HealthBag) => {
-      setItems((prev) => {
-        const newItems = [...prev, item];
-        if (!userId) saveGuest(newItems);
-        setTimeout(
-          () => window.dispatchEvent(new Event("healthBagUpdated")),
-          0
-        );
-        return newItems;
-      });
+    async (item: HealthBag) => {
+      if (!mounted) return;
+      const already = items.find((i) => i.product_id === item.product_id);
+      if (already) return;
 
       if (userId) {
-        createHealthBag(item)
-          .then((res) => {
-            setItems((prev) =>
-              prev.map((i) => (i.id === item.id ? { ...i, ...res } : i))
-            );
-          })
-          .catch(() => {
-            setItems((prev) => prev.filter((i) => i.id !== item.id)); // rollback
+        try {
+          await createHealthBag({
+            buyer_id: userId,
+            product_id: item.product_id,
+            quantity: item.quantity || 1,
           });
+          // ✅ Reload from backend
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          dispatch(getHealthBag(userId) as any);
+        } catch (err) {
+          console.error("Add item failed:", err);
+        }
+      } else {
+        dispatch(addLocalHealthBag(item));
       }
     },
-    [userId, saveGuest]
+    [userId, mounted, items, dispatch]
   );
 
-  // ✅ Remove item (stable)
+  // 🔹 Remove item
   const removeItem = useCallback(
-    (productId: number) => {
-      setItems((prev) => {
-        const newItems = prev.filter((i) => i.product_id !== productId);
-        if (!userId) saveGuest(newItems);
-        setTimeout(
-          () => window.dispatchEvent(new Event("healthBagUpdated")),
-          0
-        );
-        return newItems;
-      });
+    async (productId: number) => {
+      if (!mounted) return;
+
+      // ✅ find item by productid (not product_id)
+      const itemToDelete = items.find((i) => i.productid === productId);
+      if (!itemToDelete) return;
 
       if (userId) {
-        deleteHealthBag(productId).catch(() => {});
+        try {
+          console.log("🗑 Removing cart item id:", itemToDelete.id);
+          await deleteHealthBag(itemToDelete.id); // ✅ send correct cart id to API
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          dispatch(getHealthBag(userId) as any);
+        } catch (err) {
+          console.error("Remove item failed:", err);
+        }
+      } else {
+        dispatch(removeLocalHealthBag(productId));
       }
     },
-    [userId, saveGuest]
+    [userId, mounted, items, dispatch]
   );
 
-  // ✅ Merge guest cart (stable)
-  const mergeGuestCart = useCallback(() => {
+  // 🔹 Merge guest → user cart
+  const mergeGuestCart = useCallback(async () => {
     if (!userId) return;
+
     const guest = localStorage.getItem(GUEST_KEY);
     if (!guest) return;
 
     const guestItems: HealthBag[] = JSON.parse(guest);
-    guestItems.forEach((item) => addItem({ ...item, buyer_id: userId }));
-    localStorage.removeItem(GUEST_KEY);
-  }, [userId, addItem]);
+    if (guestItems.length === 0) return;
 
-  return { items, addItem, removeItem, mergeGuestCart };
+    try {
+      // 👇 First loop: Send each guest item to backend
+      for (const item of guestItems) {
+        const payload = {
+          buyer_id: userId,
+          product_id: item.product_id || item.productid || item.id,
+          quantity: item.quantity || 1,
+        };
+        console.log("📦 Payload being sent to API:", payload); // 👈 add this
+        await createHealthBag(payload);
+      }
+
+      // ✅ Clear LS only after successful merge
+      localStorage.removeItem(GUEST_KEY);
+
+      // ✅ Wait for all API calls to finish, then re-fetch cart cleanly
+      await new Promise((resolve) => setTimeout(resolve, 500)); // small delay
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await dispatch(getHealthBag(userId) as any);
+
+      // ✅ Trigger header update manually (optional)
+      window.dispatchEvent(new Event("healthBagUpdated"));
+    } catch (err) {
+      console.error("❌ Merge guest cart failed:", err);
+    }
+  }, [userId, dispatch]);
+
+  // 🔹 Merge guest cart automatically after login
+  useEffect(() => {
+    if (userId) {
+      mergeGuestCart().then(() => {
+        console.log("🧩 LS after merge:", localStorage.getItem(GUEST_KEY));
+      });
+    }
+  }, [userId, mergeGuestCart]);
+
+  return { items, addItem, removeItem, mergeGuestCart, fetchCart };
 };

@@ -3,6 +3,7 @@
 import "../css/site-style.css";
 import SiteHeader from "@/app/user/components/header/header";
 import {
+  Button,
   Carousel,
   Collapse,
   Image,
@@ -25,9 +26,13 @@ import { encodeId } from "@/lib/utils/encodeDecode";
 import { useHealthBag } from "@/lib/hooks/useHealthBag";
 import Footer from "@/app/user/components/footer/footer";
 import { useShuffledOnce } from "@/lib/hooks/useShuffledOnce";
+import { HealthBag } from "@/types/healthBag";
 const mediaBase = process.env.NEXT_PUBLIC_MEDIA_BASE_URL;
 
 export default function HomePage() {
+  // --- Local states for instant UI ---
+  const [localBag, setLocalBag] = useState<number[]>([]);
+  const [processingIds, setProcessingIds] = useState<number[]>([]);
   const [show, setShow] = useState(false);
   const [open, setOpen] = useState(false);
   const despatch = useAppDispatch();
@@ -40,15 +45,7 @@ export default function HomePage() {
     userId: buyer?.id || null,
   });
 
-  // Merge guest cart into logged-in cart once
-  useEffect(() => {
-    if (buyer?.id) {
-      mergeGuestCart();
-    }
-  }, [buyer?.id, mergeGuestCart]);
-
   // end for increse header count code
-
   const medicineMenuByCategory5 = useAppSelector(
     (state) => state.medicine.byCategory[5] || []
   );
@@ -111,6 +108,48 @@ export default function HomePage() {
     autoplay: true,
   };
 
+  // --- Sync localBag with Redux items ---
+  useEffect(() => {
+    if (items?.length) {
+      setLocalBag(items.map((i) => i.productid)); // ✅ correct key
+    } else {
+      setLocalBag([]);
+    }
+  }, [items]);
+
+  // Merge guest cart into logged-in cart once
+  useEffect(() => {
+    if (buyer?.id) {
+      mergeGuestCart();
+    }
+  }, [buyer?.id, mergeGuestCart]);
+
+  // --- Handlers ---
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const handleAdd = async (item: any) => {
+    setLocalBag((prev) => [...prev, item.product_id]);
+    setProcessingIds((prev) => [...prev, item.product_id]);
+    try {
+      await addItem({
+        id: 0,
+        buyer_id: buyer?.id || 0,
+        product_id: item.product_id,
+        quantity: 1,
+      } as HealthBag);
+    } finally {
+      setProcessingIds((prev) => prev.filter((id) => id !== item.product_id));
+    }
+  };
+
+  const handleRemove = async (productId: number) => {
+    setLocalBag((prev) => prev.filter((id) => id !== productId));
+    setProcessingIds((prev) => [...prev, productId]);
+    try {
+      await removeItem(productId);
+    } finally {
+      setProcessingIds((prev) => prev.filter((id) => id !== productId));
+    }
+  };
   // 👇 onClick function
   const handleClick = (product_id: number) => {
     router.push(`/product-details/${encodeId(product_id)}`);
@@ -248,9 +287,13 @@ export default function HomePage() {
                     ? item.DefaultImageURL
                     : `${mediaBase}${item.DefaultImageURL}`
                   : "/images/tnc-default.png";
-                const isInBag = items.some(
-                  (i) => i.product_id === item.product_id
-                );
+                const isInBag =
+                  localBag.includes(item.product_id) ||
+                  items.some(
+                    (i) =>
+                      i.productid === item.product_id || // backend data
+                      i.product_id === item.product_id // guest/local data
+                  );
 
                 return (
                   <div className="col" key={item.product_id}>
@@ -285,21 +328,25 @@ export default function HomePage() {
                           </span>
                         </div>
 
-                        <button
-                          className="btn-1"
+                        <Button
+                          size="sm"
+                          className={`btn-1 btn-HO ${
+                            isInBag ? "remove" : "add"
+                          }`}
+                          style={{ borderRadius: "35px" }}
+                          disabled={processingIds.includes(item.product_id)}
                           onClick={() =>
                             isInBag
-                              ? removeItem(item.product_id)
-                              : addItem({
-                                  id: Date.now(),
-                                  buyer_id: buyer?.id || 0,
-                                  product_id: item.product_id,
-                                  quantity: 1,
-                                })
+                              ? handleRemove(item.product_id)
+                              : handleAdd(item)
                           }
                         >
-                          {isInBag ? "REMOVE" : "ADD"}
-                        </button>
+                          {processingIds.includes(item.product_id)
+                            ? "Processing..."
+                            : isInBag
+                            ? "REMOVE"
+                            : "ADD"}
+                        </Button>
                       </div>
                     </div>
                   </div>
@@ -411,9 +458,13 @@ export default function HomePage() {
                     : `${mediaBase}${item.DefaultImageURL}`
                   : "/images/tnc-default.png";
 
-                const isInBag = items.some(
-                  (i) => i.product_id === item.product_id
-                );
+                const isInBag =
+                  localBag.includes(item.product_id) ||
+                  items.some(
+                    (i) =>
+                      i.productid === item.product_id || // backend data
+                      i.product_id === item.product_id // guest/local data
+                  );
 
                 return (
                   <div className="col" key={item.product_id}>
@@ -447,21 +498,25 @@ export default function HomePage() {
                             <del>MRP ₹{mrp}</del> {discount}% off
                           </span>
                         </div>
-                        <button
-                          className="btn-1"
+                        <Button
+                          size="sm"
+                          className={`btn-1 btn-HO ${
+                            isInBag ? "remove" : "add"
+                          }`}
+                          style={{ borderRadius: "35px" }}
+                          disabled={processingIds.includes(item.product_id)}
                           onClick={() =>
                             isInBag
-                              ? removeItem(item.product_id)
-                              : addItem({
-                                  id: Date.now(),
-                                  buyer_id: buyer?.id || 0,
-                                  product_id: item.product_id,
-                                  quantity: 1,
-                                })
+                              ? handleRemove(item.product_id)
+                              : handleAdd(item)
                           }
                         >
-                          {isInBag ? "REMOVE" : "ADD"}
-                        </button>
+                          {processingIds.includes(item.product_id)
+                            ? "Processing..."
+                            : isInBag
+                            ? "REMOVE"
+                            : "ADD"}
+                        </Button>
                       </div>
                     </div>
                   </div>
@@ -558,9 +613,13 @@ export default function HomePage() {
                     : `${mediaBase}${item.DefaultImageURL}`
                   : "/images/tnc-default.png";
 
-                const isInBag = items.some(
-                  (i) => i.product_id === item.product_id
-                );
+                const isInBag =
+                  localBag.includes(item.product_id) ||
+                  items.some(
+                    (i) =>
+                      i.productid === item.product_id || // backend data
+                      i.product_id === item.product_id // guest/local data
+                  );
 
                 return (
                   <div className="col" key={item.product_id}>
@@ -595,21 +654,25 @@ export default function HomePage() {
                           </span>
                         </div>
 
-                        <button
-                          className="btn-1"
+                        <Button
+                          size="sm"
+                          className={`btn-1 btn-HO ${
+                            isInBag ? "remove" : "add"
+                          }`}
+                          style={{ borderRadius: "35px" }}
+                          disabled={processingIds.includes(item.product_id)}
                           onClick={() =>
                             isInBag
-                              ? removeItem(item.product_id)
-                              : addItem({
-                                  id: Date.now(),
-                                  buyer_id: buyer?.id || 0,
-                                  product_id: item.product_id,
-                                  quantity: 1,
-                                })
+                              ? handleRemove(item.product_id)
+                              : handleAdd(item)
                           }
                         >
-                          {isInBag ? "REMOVE" : "ADD"}
-                        </button>
+                          {processingIds.includes(item.product_id)
+                            ? "Processing..."
+                            : isInBag
+                            ? "REMOVE"
+                            : "ADD"}
+                        </Button>
                       </div>
                     </div>
                   </div>
@@ -624,7 +687,7 @@ export default function HomePage() {
 
       <section className="adv-full">
         <div className="container">
-          <img src="images/adv-banner-4.jpg" className="w-100" alt="" />
+          <Image src="images/adv-banner-4.jpg" className="w-100" alt="" />
         </div>
       </section>
 
@@ -634,7 +697,7 @@ export default function HomePage() {
             <div className="col-sm-3">
               <div className="why_box">
                 <div>
-                  <img src="images/icons/icon-shipping.svg" alt="" />
+                  <Image src="images/icons/icon-shipping.svg" alt="" />
                 </div>
                 <div>
                   <h4>Free & Fast Shipping</h4>
@@ -645,7 +708,7 @@ export default function HomePage() {
             <div className="col-sm-3">
               <div className="why_box">
                 <div>
-                  <img src="images/icons/icon-money-bag.svg" alt="" />
+                  <Image src="images/icons/icon-money-bag.svg" alt="" />
                 </div>
                 <div>
                   <h4>Money Back Guarantee</h4>
@@ -656,7 +719,7 @@ export default function HomePage() {
             <div className="col-sm-3">
               <div className="why_box">
                 <div>
-                  <img src="images/icons/icon-secure.svg" alt="" />
+                  <Image src="images/icons/icon-secure.svg" alt="" />
                 </div>
                 <div>
                   <h4>All Secure Payment</h4>
@@ -667,7 +730,7 @@ export default function HomePage() {
             <div className="col-sm-3">
               <div className="why_box">
                 <div>
-                  <img src="images/icons/icon-discount.svg" alt="" />
+                  <Image src="images/icons/icon-discount.svg" alt="" />
                 </div>
                 <div>
                   <h4>Upto 20% Off on Purchase</h4>

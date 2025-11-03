@@ -110,6 +110,9 @@ export const ENDPOINTS = {
   // medicines
   MEDICINES: {
     GET_ALL_LIST: "/medicine/list/",
+    GET_MEDICINE_LIST_BY_ID: (id: number) => `/medicine/list/${id}/`,
+    GET_MEDICINE_LIST_UPDATE: (id: number | string) =>
+      `/medicine/update/${id}/`,
     GET_ALL_PRODUCT_LIST: "/medicine/product/list/",
     GET_PRODUCT_LIST_BY_GENERIC: (productId: number) =>
       `/medicine/medicine-by-generic/?product_id=${productId}`,

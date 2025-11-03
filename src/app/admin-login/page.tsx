@@ -36,10 +36,10 @@ export default function Login({ show, handleClose }: LoginFormProps) {
           router.push("/doctor/doctor-dashboard");
           break;
         case 4:
-          router.push("/pharmacy/pharmacy-dashboard");
+          router.push("/pharmacy/retail-counter");
           break;
         case 5:
-          router.push("/pharmacist/pharmacist-dashboard");
+          router.push("/pharmacist/retail-counter");
           break;
       }
     },

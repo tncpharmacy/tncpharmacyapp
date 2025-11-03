@@ -17,9 +17,15 @@ export default function SideNav() {
       </span>
 
       <ul className="side_menu-list">
-        <li>
+        {/* <li>
           <Link href="/pharmacy-dashboard" className="link">
             <i className="bi bi-activity"></i> Dashboard
+          </Link>
+        </li> */}
+
+        <li>
+          <Link href="/pharmacy/retail-counter" className="link">
+            <i className="bi bi-capsule"></i> Retail Counter
           </Link>
         </li>
         <li>
@@ -55,11 +61,6 @@ export default function SideNav() {
               </li>
             </ul>
           )}
-        </li>
-        <li>
-          <Link href="/pharmacy/retail-counter" className="link">
-            <i className="bi bi-capsule"></i> Retail Counter
-          </Link>
         </li>
         <li>
           <Link href="/pharmacy/pharmacist" className="link">

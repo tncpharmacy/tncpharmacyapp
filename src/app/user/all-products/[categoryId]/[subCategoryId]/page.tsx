@@ -10,17 +10,21 @@ import { useParams } from "next/navigation";
 import { decodeId } from "@/lib/utils/encodeDecode";
 import { useAppDispatch, useAppSelector } from "@/lib/hooks";
 import { getCategoryIdBySubcategory } from "@/lib/features/medicineSlice/medicineSlice";
-import { Image } from "react-bootstrap";
+import { Button, Image } from "react-bootstrap";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { useHealthBag } from "@/lib/hooks/useHealthBag";
 import { getCategories } from "@/lib/features/categorySlice/categorySlice";
 import Footer from "@/app/user/components/footer/footer";
 import { useShuffledProduct } from "@/lib/hooks/useShuffledProduct";
+import { HealthBag } from "@/types/healthBag";
 
 const mediaBase = process.env.NEXT_PUBLIC_MEDIA_BASE_URL;
 
 export default function AllProducts() {
   const [isHovered, setIsHovered] = useState(false);
+  // --- Local states for instant UI ---
+  const [localBag, setLocalBag] = useState<number[]>([]);
+  const [processingIds, setProcessingIds] = useState<number[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const router = useRouter();
   const params = useParams();
@@ -90,6 +94,15 @@ export default function AllProducts() {
     userId: buyer?.id || null,
   });
 
+  // --- Sync localBag with Redux items ---
+  useEffect(() => {
+    if (items?.length) {
+      setLocalBag(items.map((i) => i.productid)); // ✅ correct key
+    } else {
+      setLocalBag([]);
+    }
+  }, [items]);
+
   // Merge guest cart into logged-in cart once
   useEffect(() => {
     if (buyer?.id) {
@@ -97,8 +110,32 @@ export default function AllProducts() {
     }
   }, [buyer?.id, mergeGuestCart]);
 
-  // end for increse header count code
+  // --- Handlers ---
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const handleAdd = async (item: any) => {
+    setLocalBag((prev) => [...prev, item.product_id]);
+    setProcessingIds((prev) => [...prev, item.product_id]);
+    try {
+      await addItem({
+        id: 0,
+        buyer_id: buyer?.id || 0,
+        product_id: item.product_id,
+        quantity: 1,
+      } as HealthBag);
+    } finally {
+      setProcessingIds((prev) => prev.filter((id) => id !== item.product_id));
+    }
+  };
 
+  const handleRemove = async (productId: number) => {
+    setLocalBag((prev) => prev.filter((id) => id !== productId));
+    setProcessingIds((prev) => [...prev, productId]);
+    try {
+      await removeItem(productId);
+    } finally {
+      setProcessingIds((prev) => prev.filter((id) => id !== productId));
+    }
+  };
   const handleClick = (product_id: number) => {
     router.push(`/product-details/${encodeId(product_id)}`);
   };
@@ -161,9 +198,13 @@ export default function AllProducts() {
                         : `${mediaBase}${item.DefaultImageURL}`
                       : "/images/tnc-default.png";
 
-                    const isInBag = items.some(
-                      (i) => i.product_id === item.product_id
-                    );
+                    const isInBag =
+                      localBag.includes(item.product_id) ||
+                      items.some(
+                        (i) =>
+                          i.productid === item.product_id || // backend data
+                          i.product_id === item.product_id // guest/local data
+                      );
 
                     return (
                       <div
@@ -206,19 +247,21 @@ export default function AllProducts() {
                           </div>
 
                           <button
-                            className="btn-1"
+                            className={`btn-1 btn-HO ${
+                              isInBag ? "remove" : "add"
+                            }`}
+                            disabled={processingIds.includes(item.product_id)}
                             onClick={() =>
                               isInBag
-                                ? removeItem(item.product_id)
-                                : addItem({
-                                    id: Date.now(),
-                                    buyer_id: buyer?.id || 0,
-                                    product_id: item.product_id,
-                                    quantity: 1,
-                                  })
+                                ? handleRemove(item.product_id)
+                                : handleAdd(item)
                             }
                           >
-                            {isInBag ? "REMOVE" : "ADD"}
+                            {processingIds.includes(item.product_id)
+                              ? "Processing..."
+                              : isInBag
+                              ? "REMOVE"
+                              : "ADD"}
                           </button>
                         </div>
                       </div>

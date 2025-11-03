@@ -3,23 +3,19 @@
 import React, { useEffect, useMemo, useState } from "react";
 import "../../css/site-style.css";
 import "../../css/user-style.css";
-import { useRouter, useSearchParams } from "next/navigation";
-import { encodeId } from "@/lib/utils/encodeDecode";
+import { useRouter } from "next/navigation";
+import { encodeId, decodeId } from "@/lib/utils/encodeDecode";
 import SiteHeader from "@/app/user/components/header/header";
 import { useParams } from "next/navigation";
-import { decodeId } from "@/lib/utils/encodeDecode";
 import { useAppDispatch, useAppSelector } from "@/lib/hooks";
-import {
-  getCategoryIdBySubcategory,
-  getMedicinesByCategoryId,
-} from "@/lib/features/medicineSlice/medicineSlice";
-import { Image } from "react-bootstrap";
+import { getMedicinesByCategoryId } from "@/lib/features/medicineSlice/medicineSlice";
+import { Button, Image } from "react-bootstrap";
 import "bootstrap/dist/css/bootstrap.min.css";
-import { useAuth } from "@/lib/hooks/useAuth";
 import { useHealthBag } from "@/lib/hooks/useHealthBag";
 import { getCategories } from "@/lib/features/categorySlice/categorySlice";
 import Footer from "@/app/user/components/footer/footer";
 import { useShuffledProduct } from "@/lib/hooks/useShuffledProduct";
+import { HealthBag } from "@/types/healthBag";
 
 const mediaBase = process.env.NEXT_PUBLIC_MEDIA_BASE_URL;
 
@@ -28,22 +24,42 @@ export default function AllProduct() {
   const { id: params } = useParams();
   const dispatch = useAppDispatch();
   const decodedId = decodeId(params);
-  const [isHovered, setIsHovered] = useState(false);
   const categoryIdNum = Number(decodedId);
-  const [searchTerm, setSearchTerm] = useState("");
+
+  const buyer = useAppSelector((state) => state.buyer.buyer);
+  const { items, addItem, removeItem, mergeGuestCart } = useHealthBag({
+    userId: buyer?.id || null,
+  });
+
   const medicines = useAppSelector(
     (state) => state.medicine.byCategory[categoryIdNum] || []
   );
-  // ✅ Shuffle product only once per page reload
+  const { list: categories } = useAppSelector((state) => state.category);
+
   const shuffledMedicines = useShuffledProduct(
     medicines,
     `product-page-category-${categoryIdNum}`
   );
-  const { list: categories } = useAppSelector((state) => state.category);
-  // Find category name
+
   const categoryName =
     categories.find((cat) => cat.id === categoryIdNum)?.category_name ||
     "Unknown Category";
+
+  // --- Local states for instant UI ---
+  const [localBag, setLocalBag] = useState<number[]>([]);
+  const [processingIds, setProcessingIds] = useState<number[]>([]);
+  const [searchTerm, setSearchTerm] = useState("");
+
+  // --- Sync localBag with Redux items ---
+  useEffect(() => {
+    if (items?.length) {
+      setLocalBag(items.map((i) => i.productid)); // ✅ correct key
+    } else {
+      setLocalBag([]);
+    }
+  }, [items]);
+
+  // --- Fetch data initially ---
   useEffect(() => {
     if (!medicines.length && categoryIdNum) {
       dispatch(getMedicinesByCategoryId(categoryIdNum));
@@ -51,34 +67,52 @@ export default function AllProduct() {
     }
   }, [categoryIdNum, dispatch, medicines.length]);
 
-  // start for increse header count code
-  const buyer = useAppSelector((state) => state.buyer.buyer);
-  const { items, addItem, removeItem, mergeGuestCart } = useHealthBag({
-    userId: buyer?.id || null,
-  });
-
-  // Merge guest cart into logged-in cart once
+  // --- Merge guest cart ---
   useEffect(() => {
     if (buyer?.id) {
       mergeGuestCart();
     }
   }, [buyer?.id, mergeGuestCart]);
 
-  // end for increse header count code
+  // --- Filter products ---
+  const filteredMedicines = useMemo(() => {
+    if (!searchTerm) return shuffledMedicines;
+    const lower = searchTerm.toLowerCase();
+    return shuffledMedicines.filter((med) =>
+      (med.ProductName || "").toLowerCase().includes(lower)
+    );
+  }, [shuffledMedicines, searchTerm]);
+
+  // --- Handlers ---
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const handleAdd = async (item: any) => {
+    setLocalBag((prev) => [...prev, item.product_id]);
+    setProcessingIds((prev) => [...prev, item.product_id]);
+    try {
+      await addItem({
+        id: 0,
+        buyer_id: buyer?.id || 0,
+        product_id: item.product_id,
+        quantity: 1,
+      } as HealthBag);
+    } finally {
+      setProcessingIds((prev) => prev.filter((id) => id !== item.product_id));
+    }
+  };
+
+  const handleRemove = async (productId: number) => {
+    setLocalBag((prev) => prev.filter((id) => id !== productId));
+    setProcessingIds((prev) => [...prev, productId]);
+    try {
+      await removeItem(productId);
+    } finally {
+      setProcessingIds((prev) => prev.filter((id) => id !== productId));
+    }
+  };
 
   const handleClick = (product_id: number) => {
     router.push(`/product-details/${encodeId(product_id)}`);
   };
-  // Filter the medicines based on the search term
-  const filteredMedicines = useMemo(() => {
-    if (!searchTerm) {
-      return shuffledMedicines;
-    }
-    const lowerCaseSearchTerm = searchTerm.toLowerCase();
-    return shuffledMedicines.filter((med) =>
-      (med.ProductName || "").toLowerCase().includes(lowerCaseSearchTerm)
-    );
-  }, [shuffledMedicines, searchTerm]);
 
   return (
     <>
@@ -86,13 +120,13 @@ export default function AllProduct() {
         <SiteHeader />
 
         <div className="body_wrap">
-          {/* <FilterSidebar /> */}
           <div className="body_right">
             <div className="body_content">
               <div className="pageTitle">
                 <Image src={"/images/favicon.png"} alt="" /> Product:{" "}
                 {categoryName}
               </div>
+
               <div className="row">
                 <div className="col-md-12">
                   <div className="search_query">
@@ -109,6 +143,7 @@ export default function AllProduct() {
                   </div>
                 </div>
               </div>
+
               <div className="pd_list">
                 {filteredMedicines && filteredMedicines.length > 0 ? (
                   filteredMedicines.map((item) => {
@@ -126,14 +161,20 @@ export default function AllProduct() {
                         ? item.DefaultImageURL
                         : `${mediaBase}${item.DefaultImageURL}`
                       : "/images/tnc-default.png";
-                    const isInBag = items.some(
-                      (i) => i.product_id === item.product_id
-                    );
+
+                    const isInBag =
+                      localBag.includes(item.product_id) ||
+                      items.some(
+                        (i) =>
+                          i.productid === item.product_id || // backend data
+                          i.product_id === item.product_id // guest/local data
+                      );
+
                     return (
                       <div
                         className="pd_box shadow"
-                        style={{ boxShadow: "0 2px 5px rgba(0, 0, 0, 0.05)" }}
                         key={item.product_id}
+                        style={{ boxShadow: "0 2px 5px rgba(0, 0, 0, 0.05)" }}
                       >
                         <div className="pd_img">
                           <Image
@@ -145,10 +186,11 @@ export default function AllProduct() {
                               opacity:
                                 imageUrl === "/images/tnc-default.png"
                                   ? 0.3
-                                  : 1, // ✅ only default image faded
+                                  : 1,
                             }}
                           />
                         </div>
+
                         <div className="pd_content">
                           <h3
                             className="pd-title hover-link"
@@ -160,6 +202,7 @@ export default function AllProduct() {
                           <h6 className="pd-title fw-bold">
                             {item.Manufacturer || ""}
                           </h6>
+
                           <div className="pd_price">
                             <span className="new_price">
                               ₹{discountedPrice}
@@ -170,19 +213,21 @@ export default function AllProduct() {
                           </div>
 
                           <button
-                            className="btn-1"
+                            className={`btn-1 btn-HO ${
+                              isInBag ? "remove" : "add"
+                            }`}
+                            disabled={processingIds.includes(item.product_id)}
                             onClick={() =>
                               isInBag
-                                ? removeItem(item.product_id)
-                                : addItem({
-                                    id: Date.now(),
-                                    buyer_id: buyer?.id || 0,
-                                    product_id: item.product_id,
-                                    quantity: 1,
-                                  })
+                                ? handleRemove(item.product_id)
+                                : handleAdd(item)
                             }
                           >
-                            {isInBag ? "REMOVE" : "ADD"}
+                            {processingIds.includes(item.product_id)
+                              ? "Processing..."
+                              : isInBag
+                              ? "REMOVE"
+                              : "ADD"}
                           </button>
                         </div>
                       </div>

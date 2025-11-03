@@ -174,7 +174,7 @@ const AddBillingItemModal: React.FC<AddBillingItemModalProps> = ({
               >
                 {/* Default Option */}
                 <option value="" disabled>
-                  Select Doses Instruction
+                  Select Doses
                 </option>
 
                 {/* Map the Data */}
@@ -188,7 +188,7 @@ const AddBillingItemModal: React.FC<AddBillingItemModalProps> = ({
 
             {/* Remarks Input */}
             <div className="mb-3">
-              <label className="form-label">Remarks</label>
+              <label className="form-label">Instruction</label>
               <input
                 type="text"
                 className="form-control"

@@ -518,31 +518,50 @@ export default function ProductPage() {
                   <div className="col-12">
                     <div className="mb-3">
                       <div className="sec_title">Description</div>
-                      <div className="descr">{description}</div>
+                      <div
+                        className="descr"
+                        dangerouslySetInnerHTML={{ __html: description || "" }}
+                      ></div>
                     </div>
                   </div>
                 </div>
+
                 <div id="2" className={activeSectionId === "2" ? "" : "d-none"}>
                   <div className="col-12">
                     <div className="mb-3">
                       <div className="sec_title">Uses and benefits</div>
-                      <div className="descr">{uses_benefits}</div>
+                      <div
+                        className="descr"
+                        dangerouslySetInnerHTML={{
+                          __html: uses_benefits || "",
+                        }}
+                      ></div>
                     </div>
                   </div>
                 </div>
+
                 <div id="3" className={activeSectionId === "3" ? "" : "d-none"}>
                   <div className="col-12">
                     <div className="mb-3">
                       <div className="sec_title">Side effects</div>
-                      <div className="descr">{side_effect}</div>
+                      <div
+                        className="descr"
+                        dangerouslySetInnerHTML={{ __html: side_effect || "" }}
+                      ></div>
                     </div>
                   </div>
                 </div>
+
                 <div id="4" className={activeSectionId === "4" ? "" : "d-none"}>
                   <div className="col-12">
                     <div className="mb-3">
                       <div className="sec_title">Direction for use</div>
-                      <div className="descr">{direction_for_use}</div>
+                      <div
+                        className="descr"
+                        dangerouslySetInnerHTML={{
+                          __html: direction_for_use || "",
+                        }}
+                      ></div>
                     </div>
                   </div>
                 </div>

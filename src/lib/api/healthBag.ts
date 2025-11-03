@@ -49,39 +49,3 @@ export const fetchHealthBagAdmin = async (): Promise<HealthBag> => {
   const res = await axiosInstance.get<HealthBag>(ENDPOINTS.HEALTHBAG.GET_ADMIN);
   return res.data;
 };
-
-// =========================
-// GET CATEGORY BY ID
-// =========================
-// export const fetchCategoryById = async (id: number): Promise<Category> => {
-//   const res = await axiosInstance.get<Category>(
-//     ENDPOINTS.CATEGORY.GET_BY_ID(id)
-//   );
-//   return res.data;
-// };
-
-// =========================
-// UPDATE CATEGORY (ADMIN)
-// =========================
-// export interface UpdateCategoryDTO {
-//   category_name?: string;
-//   description?: string;
-//   status?: "Active" | "Inactive";
-// }
-
-// Update API ab CategoryResponse return karega
-// export const updateCategoryApi = async (
-//   id: number,
-//   data: UpdateCategoryDTO
-// ): Promise<Category> => {
-//   const res = await axiosInstance.patch<CategoryResponse>(
-//     ENDPOINTS.CATEGORY.UPDATE(id),
-//     data
-//   );
-
-//   if (!res.data.data || res.data.data.length === 0) {
-//     throw new Error("No category returned from backend");
-//   }
-
-//   return res.data.data[0];
-// };

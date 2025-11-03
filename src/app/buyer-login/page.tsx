@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Image, Modal } from "react-bootstrap";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import BuyerSignupModal from "@/app/buyer-signup/page";
 import {
   buyerLogin,
@@ -22,7 +22,7 @@ export default function BuyerLoginModal({
 }) {
   const dispatch = useAppDispatch();
   const router = useRouter();
-
+  const pathname = usePathname();
   const [step, setStep] = useState<1 | 2>(1);
   const [loginId, setLoginId] = useState("");
   const [otp, setOtp] = useState("");
@@ -94,7 +94,10 @@ export default function BuyerLoginModal({
       toast.success(res.message || "Login successful!");
       handleClose();
       resetForm();
-      router.push("/"); // refresh page state (if needed)
+      // ✅ Redirect to previous page
+      const redirectPath = localStorage.getItem("redirectAfterLogin") || "/";
+      localStorage.removeItem("redirectAfterLogin");
+      router.push(redirectPath);
     } catch (err: unknown) {
       if (typeof err === "string") setError(err);
       else if (err instanceof Error) setError(err.message);
@@ -115,8 +118,10 @@ export default function BuyerLoginModal({
 
   // Reset when modal closes
   useEffect(() => {
-    if (!show) resetForm();
-  }, [show]);
+    if (show) {
+      localStorage.setItem("redirectAfterLogin", pathname);
+    }
+  }, [show, pathname]);
 
   return (
     <>

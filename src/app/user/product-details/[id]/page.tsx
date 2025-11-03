@@ -451,7 +451,10 @@ export default function ProductPage() {
                   <div className="col-12">
                     <div className="mb-3">
                       <div className="sec_title">Description</div>
-                      <div className="descr">{description}</div>
+                      <div
+                        className="descr"
+                        dangerouslySetInnerHTML={{ __html: description || "" }}
+                      ></div>
                     </div>
                   </div>
                 </div>
@@ -459,7 +462,12 @@ export default function ProductPage() {
                   <div className="col-12">
                     <div className="mb-3">
                       <div className="sec_title">Product Introduction</div>
-                      <div className="descr">{product_introduction}</div>
+                      <div
+                        className="descr"
+                        dangerouslySetInnerHTML={{
+                          __html: product_introduction || "",
+                        }}
+                      ></div>
                     </div>
                   </div>
                 </div>

@@ -91,42 +91,64 @@ const healthBagSlice = createSlice({
       state.message = null;
     },
 
-    // ===== LOCAL CART (For Non-Logged-in Users) =====
+    // 🔹 OPTIMISTIC ADD
+    addHealthBagOptimistic: (state, action) => {
+      const exists = state.items.find(
+        (i) => i.product_id === action.payload.product_id
+      );
+      if (!exists) {
+        state.items.push({
+          ...action.payload,
+          id: action.payload.id ?? Date.now(),
+        });
+      }
+    },
+
+    // 🔹 OPTIMISTIC REMOVE (fixed by product_id)
+    removeHealthBagOptimistic: (state, action) => {
+      state.items = state.items.filter((i) => i.product_id !== action.payload);
+    },
+
     addLocalHealthBag: (state, action: PayloadAction<HealthBag>) => {
       const local = JSON.parse(localStorage.getItem("healthbag") || "[]");
-      local.push(action.payload);
-      localStorage.setItem("healthbag", JSON.stringify(local));
+      const exists = local.find(
+        (i: HealthBag) => i.productid === action.payload.product_id // ✅ compare by productid
+      );
+      if (!exists) {
+        const newItem = {
+          id: action.payload.id,
+          productid: action.payload.product_id,
+          qty: action.payload.quantity || 1,
+        };
+        local.push(newItem);
+        localStorage.setItem("healthbag", JSON.stringify(local));
+      }
       state.items = local;
     },
 
     removeLocalHealthBag: (state, action: PayloadAction<number>) => {
       const local = JSON.parse(localStorage.getItem("healthbag") || "[]");
+      // ✅ Compare using productid not id
       const updated = local.filter(
-        (item: HealthBag) => item.id !== action.payload
+        (item: HealthBag) =>
+          item.productid !== action.payload &&
+          item.product_id !== action.payload
       );
       localStorage.setItem("healthbag", JSON.stringify(updated));
       state.items = updated;
     },
-
     loadLocalHealthBag: (state) => {
       const local = localStorage.getItem("healthbag");
       if (local) {
-        state.items = JSON.parse(local);
+        const parsed = JSON.parse(local);
+        state.items = Array.isArray(parsed) ? parsed : [];
+      } else {
+        state.items = [];
       }
     },
-
     clearLocalHealthBag: (state) => {
       localStorage.removeItem("healthbag");
       state.items = [];
-    },
-
-    mergeLocalHealthBag: (state, action: PayloadAction<HealthBag[]>) => {
-      // merges items after login
-      const existingIds = new Set(state.items.map((i) => i.product_id));
-      const newItems = action.payload.filter(
-        (i) => !existingIds.has(i.product_id)
-      );
-      state.items.push(...newItems);
     },
   },
   extraReducers: (builder) => {
@@ -156,7 +178,16 @@ const healthBagSlice = createSlice({
         createHealthBagItem.fulfilled,
         (state, action: PayloadAction<HealthBag>) => {
           state.loading = false;
-          state.items.push(action.payload);
+          const exists = state.items.find(
+            (i) => i.product_id === action.payload.product_id
+          );
+          if (exists) {
+            state.items = state.items.map((i) =>
+              i.product_id === action.payload.product_id ? action.payload : i
+            );
+          } else {
+            state.items.push(action.payload);
+          }
           state.message = "Item added successfully.";
         }
       )
@@ -182,22 +213,6 @@ const healthBagSlice = createSlice({
       .addCase(removeHealthBagItem.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
-      })
-
-      // ===== ADMIN =====
-      .addCase(getHealthBagAdmin.pending, (state) => {
-        state.loading = true;
-      })
-      .addCase(getHealthBagAdmin.fulfilled, (state, action) => {
-        state.loading = false;
-        state.items = Array.isArray(action.payload)
-          ? action.payload
-          : [action.payload];
-        state.error = null;
-      })
-      .addCase(getHealthBagAdmin.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload as string;
       });
   },
 });
@@ -208,7 +223,8 @@ export const {
   removeLocalHealthBag,
   loadLocalHealthBag,
   clearLocalHealthBag,
-  mergeLocalHealthBag,
+  addHealthBagOptimistic,
+  removeHealthBagOptimistic,
 } = healthBagSlice.actions;
 
 export default healthBagSlice.reducer;

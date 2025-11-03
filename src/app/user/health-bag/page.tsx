@@ -2,9 +2,10 @@
 
 import React, { useEffect, useState } from "react";
 import SiteHeader from "@/app/user/components/header/header";
-import { Button, Image } from "react-bootstrap";
+import { Button, Form, Image } from "react-bootstrap";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "../css/site-style.css";
+import "../css/user-style.css";
 import Link from "next/link";
 import { useAppDispatch, useAppSelector } from "@/lib/hooks";
 import { useRouter } from "next/navigation";
@@ -13,10 +14,14 @@ import { getCategories } from "@/lib/features/categorySlice/categorySlice";
 import {
   getMedicinesByCategoryId,
   getMedicinesMenuByOtherId,
+  getProductList,
 } from "@/lib/features/medicineSlice/medicineSlice";
 import { encodeId } from "@/lib/utils/encodeDecode";
 import Footer from "@/app/user/components/footer/footer";
 import { useShuffledOnce } from "@/lib/hooks/useShuffledOnce";
+import { HealthBag } from "@/types/healthBag";
+import DoseInstructionSelect from "@/app/components/Input/DoseInstructionSelect";
+import Input from "@/app/components/Input/InputColSm";
 const mediaBase = process.env.NEXT_PUBLIC_MEDIA_BASE_URL;
 
 type CartItem = {
@@ -38,9 +43,13 @@ type Product = {
   reviews?: number;
 };
 
-export default function HealthBag() {
+export default function HealthBags() {
   const [quantities, setQuantities] = useState<number[]>([1, 1]);
-  const despatch = useAppDispatch();
+  const [dose, setDose] = useState("");
+  // --- Local states for instant UI ---
+  const [localBag, setLocalBag] = useState<number[]>([]);
+  const [processingIds, setProcessingIds] = useState<number[]>([]);
+  const dispatch = useAppDispatch();
   const router = useRouter();
   // start for increse header count code
   const buyer = useAppSelector((state) => state.buyer.buyer);
@@ -49,16 +58,12 @@ export default function HealthBag() {
     addItem,
     removeItem,
     mergeGuestCart,
+    fetchCart,
   } = useHealthBag({
     userId: buyer?.id || null,
   });
 
-  // Merge guest cart into logged-in cart once
-  useEffect(() => {
-    if (buyer?.id) {
-      mergeGuestCart();
-    }
-  }, [buyer?.id, mergeGuestCart]);
+  const { medicines: productList } = useAppSelector((state) => state.medicine);
 
   // end for increse header count code
   const medicineMenuByCategory5 = useAppSelector(
@@ -81,12 +86,60 @@ export default function HealthBag() {
   const shuffled9 = useShuffledOnce("category9", medicineMenuByCategory9);
   //console.log("medicineMenuByCategory5", medicineMenuByCategory5);
   useEffect(() => {
-    despatch(getCategories());
-    despatch(getMedicinesByCategoryId(5));
-    despatch(getMedicinesByCategoryId(7));
-    despatch(getMedicinesByCategoryId(9));
-    despatch(getMedicinesMenuByOtherId(0));
-  }, [despatch]);
+    dispatch(getCategories());
+    dispatch(getMedicinesByCategoryId(5));
+    dispatch(getMedicinesByCategoryId(7));
+    dispatch(getMedicinesByCategoryId(9));
+    dispatch(getMedicinesMenuByOtherId(0));
+    dispatch(getProductList());
+  }, [dispatch]);
+
+  // --- Sync localBag with Redux items ---
+  useEffect(() => {
+    if (bagItem?.length) {
+      setLocalBag(bagItem.map((i) => i.productid)); // ✅ correct key
+    } else {
+      setLocalBag([]);
+    }
+  }, [bagItem]);
+
+  // Merge guest cart into logged-in cart once
+  useEffect(() => {
+    if (buyer?.id) {
+      mergeGuestCart();
+    }
+  }, [buyer?.id, mergeGuestCart]);
+
+  useEffect(() => {
+    fetchCart(); // ensures cart is synced after any add/remove
+  }, [fetchCart]);
+
+  // --- Handlers ---
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const handleAdd = async (item: any) => {
+    setLocalBag((prev) => [...prev, item.product_id]);
+    setProcessingIds((prev) => [...prev, item.product_id]);
+    try {
+      await addItem({
+        id: 0,
+        buyer_id: buyer?.id || 0,
+        product_id: item.product_id,
+        quantity: 1,
+      } as HealthBag);
+    } finally {
+      setProcessingIds((prev) => prev.filter((id) => id !== item.product_id));
+    }
+  };
+
+  const handleRemove = async (productId: number) => {
+    setLocalBag((prev) => prev.filter((id) => id !== productId));
+    setProcessingIds((prev) => [...prev, productId]);
+    try {
+      await removeItem(productId);
+    } finally {
+      setProcessingIds((prev) => prev.filter((id) => id !== productId));
+    }
+  };
 
   // 👇 onClick function
   const handleClick = (product_id: number) => {
@@ -98,188 +151,55 @@ export default function HealthBag() {
       prev.map((q, i) => (i === index ? Math.max(1, q + delta) : q))
     );
 
-  const items: CartItem[] = [
-    {
-      name: "Accu-Chek Active Blood Glucometer Kit (Box of 10 Test strips Free) | Blood Glucose Monitors",
-      pack: "Packet of 1 kit",
-      img: "/images/products/gluco-meter.png",
-      price: 921,
-      mrp: 1124,
-      discount: 18,
-    },
-    {
-      name: "Protinex Diabetes Care Protein Powder with Vitamins | For Strength, Blood Sugar & Weight Management",
-      pack: "Box of 400 gm powder",
-      img: "/images/products/protinex.png",
-      price: 587,
-      mrp: 675,
-      discount: 13,
-    },
-  ];
+  // 🟢 Merge: cart items (from LS/API) + product details (from all product list)
+  const mergedItems = (bagItem || []).map((cartItem) => {
+    const product = productList.find(
+      (p) => p.id === cartItem.productid || p.product_id === cartItem.productid
+    );
+
+    const mrp =
+      product?.MRP !== undefined
+        ? typeof product.MRP === "string"
+          ? parseFloat(product.MRP)
+          : product.MRP
+        : 0;
+
+    const discount =
+      product?.discount !== undefined
+        ? typeof product.discount === "string"
+          ? parseFloat(product.discount)
+          : product.discount
+        : 0;
+
+    const discountMrp = mrp ? mrp - (mrp * discount) / 100 : 0;
+
+    return {
+      ...cartItem,
+      name: product?.medicine_name || cartItem.productname || "",
+      manufacturer: product?.Manufacturer || "",
+      pack_size: product?.pack_size || "",
+      mrp,
+      discount,
+      discountMrp,
+      image:
+        product?.DefaultImageURL && product.DefaultImageURL !== ""
+          ? product.DefaultImageURL.startsWith("http")
+            ? product.DefaultImageURL
+            : `${mediaBase}${product.DefaultImageURL}`
+          : "/images/tnc-default.png",
+    };
+  });
 
   const handlingCharges = 12;
-  const totalDiscount = items.reduce(
-    (acc, it, i) => acc + (it.mrp - it.price) * quantities[i],
-    0
-  );
-  const itemTotal = items.reduce(
-    (acc, it, i) => acc + it.price * quantities[i],
-    0
-  );
-  const toBePaid = itemTotal + handlingCharges;
-
-  const productSections: { title: string; products: Product[] }[] = [
-    {
-      title: "Healthcare & Medical Supplies",
-      products: [
-        {
-          name: "Digital Thermometer (Fast Read)",
-          img: "/images/products/pd-img-9.jpg",
-          price: 299,
-          mrp: 399,
-          discount: 25,
-          rating: 4.6,
-          reviews: 47,
-        },
-        {
-          name: "Automatic BP Monitor with Cuff",
-          img: "/images/products/pd-img-6.jpg",
-          price: 999,
-          mrp: 1299,
-          discount: 23,
-          rating: 4.4,
-          reviews: 153,
-        },
-        {
-          name: "Pulse Oximeter (Fingertip)",
-          img: "/images/products/pd-img-16.jpg",
-          price: 649,
-          mrp: 799,
-          discount: 18,
-          rating: 4.3,
-          reviews: 98,
-        },
-        {
-          name: "Accu-Chek Active Blood Glucose Glucometer Kit With Vial Of 10 Strips, 10 Lancets",
-          img: "/images/products/pd-img-20.jpg",
-          price: 649,
-          mrp: 799,
-          discount: 18,
-          rating: 4.3,
-          reviews: 98,
-        },
-        {
-          name: "Digital Thermometer (Fast Read)",
-          img: "/images/products/pd-img-9.jpg",
-          price: 299,
-          mrp: 399,
-          discount: 25,
-          rating: 4.6,
-          reviews: 47,
-        },
-      ],
-    },
-    {
-      title: "Ayurveda & Herbal",
-      products: [
-        {
-          name: "Dabur Chyawanprash - 1kg",
-          img: "/images/products/pd-img-11.jpg",
-          price: 475,
-          mrp: 599,
-          discount: 21,
-          rating: 4.5,
-          reviews: 312,
-        },
-        {
-          name: "Himalaya Ashwagandha 60 Tablets",
-          img: "/images/products/pd-img-13.jpg",
-          price: 199,
-          mrp: 249,
-          discount: 20,
-          rating: 4.2,
-          reviews: 84,
-        },
-        {
-          name: "Zandu Balm - Pain Relief",
-          img: "/images/products/pd-img-19.jpg",
-          price: 120,
-          mrp: 150,
-          discount: 20,
-          rating: 4.1,
-          reviews: 64,
-        },
-        {
-          name: "Dabur Jamun Neem Karela Juice - 1L | Helps Control Blood Sugar Level & Reduces Bad Cholesterol ",
-          img: "/images/products/pd-img-12.jpg",
-          price: 150,
-          mrp: 250,
-          discount: 20,
-          rating: 4.1,
-          reviews: 64,
-        },
-        {
-          name: "Dabur Chyawanprash - 1kg",
-          img: "/images/products/pd-img-11.jpg",
-          price: 475,
-          mrp: 599,
-          discount: 21,
-          rating: 4.5,
-          reviews: 312,
-        },
-      ],
-    },
-    {
-      title: "Wellness & Lifestyle",
-      products: [
-        {
-          name: "Whey Protein Shake - 1kg (Chocolate)",
-          img: "/images/products/pd-img-4.jpg",
-          price: 850,
-          mrp: 999,
-          discount: 15,
-          rating: 4.4,
-          reviews: 214,
-        },
-        {
-          name: "Omega-3 Fish Oil 60 Caps",
-          img: "/images/products/pd-img-17.jpg",
-          price: 699,
-          mrp: 799,
-          discount: 12,
-          rating: 4.3,
-          reviews: 132,
-        },
-        {
-          name: "Daily Multivitamin - 60 Tablets",
-          img: "/images/products/pd-img-18.jpg",
-          price: 499,
-          mrp: 599,
-          discount: 17,
-          rating: 4.2,
-          reviews: 73,
-        },
-        {
-          name: "Centrum MultivitaminMineral Supplement for Women 50, India | Ubuy",
-          img: "/images/products/pd-img-21.jpg",
-          price: 499,
-          mrp: 599,
-          discount: 17,
-          rating: 4.2,
-          reviews: 73,
-        },
-        {
-          name: "Cadbury Bournvita - Health Drink, 75 gm Pouch , 200 gm Jar , 500 gm Ja",
-          img: "/images/products/pd-img-1.jpg",
-          price: 850,
-          mrp: 999,
-          discount: 15,
-          rating: 4.4,
-          reviews: 214,
-        },
-      ],
-    },
-  ];
+  // const totalDiscount = items.reduce(
+  //   (acc, it, i) => acc + (it.MRP - it.MRP) * quantities[i],
+  //   0
+  // );
+  // const itemTotal = items.reduce(
+  //   (acc, it, i) => acc + it.price * quantities[i],
+  //   0
+  // );
+  // const toBePaid = itemTotal + handlingCharges;
 
   return (
     <>
@@ -296,59 +216,88 @@ export default function HealthBag() {
               </p>
 
               <div className="border rounded p-3 mb-3 bg-white">
-                {items.map((item, index) => (
-                  <div
-                    key={index}
-                    className="d-flex align-items-start border-bottom pb-3 mb-3"
-                  >
-                    <img
-                      src={item.img}
-                      alt={item.name}
-                      className="me-3 rounded"
-                      style={{ width: 90, height: 90, objectFit: "contain" }}
-                    />
-                    <div className="flex-grow-1">
-                      <h6 className="fw-semibold mb-1">{item.name}</h6>
-                      <p className="text-muted small mb-1">{item.pack}</p>
-                      <a
-                        href="#"
-                        className="text-danger small text-decoration-none"
-                      >
-                        Remove
-                      </a>
-                    </div>
-
-                    <div className="text-end ms-3">
-                      <h6 className="mb-1">
-                        ₹{item.price.toLocaleString()}{" "}
-                        <small className="text-muted text-decoration-line-through">
-                          ₹{item.mrp.toLocaleString()}
-                        </small>{" "}
-                        <span className="text-success small">
-                          {item.discount}% off
-                        </span>
-                      </h6>
-
-                      <div className="d-inline-flex align-items-center border rounded px-2 py-1">
-                        <Button
-                          variant="link"
-                          className="p-0 text-dark fw-bold"
-                          onClick={() => handleQuantityChange(index, -1)}
+                {mergedItems.length > 0 ? (
+                  mergedItems.map((item, index) => (
+                    <div
+                      key={index}
+                      className="d-flex align-items-start border-bottom pb-3 mb-3"
+                    >
+                      <Image
+                        src={item.image}
+                        alt={item.name}
+                        className="me-3 rounded"
+                        style={{ width: 90, height: 90, objectFit: "contain" }}
+                      />
+                      <div className="flex-grow-1">
+                        <h6 className="fw-semibold mb-1">{item.name}</h6>
+                        <p
+                          className="mb-1 fw-semibold  small"
+                          style={{ fontSize: "13px" }}
                         >
-                          <i className="bi bi-dash-lg"></i>
-                        </Button>
-                        <span className="mx-2">{quantities[index]}</span>
-                        <Button
-                          variant="link"
-                          className="p-0 text-dark fw-bold"
-                          onClick={() => handleQuantityChange(index, +1)}
+                          {item.manufacturer}
+                        </p>
+                        <p
+                          className="mb-1 fw-semibold  small"
+                          style={{ fontSize: "14px" }}
                         >
-                          <i className="bi bi-plus-lg"></i>
-                        </Button>
+                          {item.pack_size}
+                        </p>
+                        <div className="row">
+                          <DoseInstructionSelect
+                            type="select"
+                            label="Doses"
+                            name="dose"
+                            value={dose}
+                            onChange={(e) => setDose(e.target.value)}
+                            colSm={4}
+                            required
+                          />
+                        </div>
+                        <button
+                          className="text-danger small border-0 bg-transparent p-0"
+                          onClick={() => handleRemove(item.productid)}
+                        >
+                          Remove
+                        </button>
+                      </div>
+
+                      <div className="text-end ms-3">
+                        <h6 className="mb-1 text-danger">
+                          ₹{item.discountMrp.toLocaleString()} <br />
+                          <span className="text-success small">
+                            {item.discount}% off
+                          </span>
+                          <br />
+                          <small className="text-muted text-decoration-line-through">
+                            ₹{(item.mrp ?? 0).toLocaleString()}
+                          </small>{" "}
+                        </h6>
+
+                        <div className="d-inline-flex align-items-center border rounded px-2 py-1">
+                          <Button
+                            variant="link"
+                            className="p-0 text-dark fw-bold"
+                            onClick={() => handleQuantityChange(index, -1)}
+                          >
+                            <i className="bi bi-dash-lg"></i>
+                          </Button>
+                          <span className="mx-2">{quantities[index]}</span>
+                          <Button
+                            variant="link"
+                            className="p-0 text-dark fw-bold"
+                            onClick={() => handleQuantityChange(index, +1)}
+                          >
+                            <i className="bi bi-plus-lg"></i>
+                          </Button>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  ))
+                ) : (
+                  <p className="text-muted text-center my-3">
+                    No items in your cart
+                  </p>
+                )}
               </div>
             </div>
 
@@ -359,7 +308,7 @@ export default function HealthBag() {
 
                 <div className="d-flex justify-content-between mb-2 small">
                   <span>Item total (MRP)</span>
-                  <span>₹{items.reduce((s, it) => s + it.mrp, 0)}</span>
+                  {/* <span>₹{items.reduce((s, it) => s + it.mrp, 0)}</span> */}
                 </div>
 
                 <div className="d-flex justify-content-between mb-2 small">
@@ -369,7 +318,7 @@ export default function HealthBag() {
 
                 <div className="d-flex justify-content-between mb-2 small">
                   <span>Total discount</span>
-                  <span className="text-success">-₹{totalDiscount}</span>
+                  {/* <span className="text-success">-₹{totalDiscount}</span> */}
                 </div>
 
                 <div className="d-flex justify-content-between mb-2 small">
@@ -381,7 +330,7 @@ export default function HealthBag() {
 
                 <div className="d-flex justify-content-between mb-3 fw-semibold">
                   <span>To be paid</span>
-                  <span>₹{toBePaid}</span>
+                  {/* <span>₹{toBePaid}</span> */}
                 </div>
 
                 <div className="mb-3 small">
@@ -437,9 +386,13 @@ export default function HealthBag() {
                       ? item.DefaultImageURL
                       : `${mediaBase}${item.DefaultImageURL}`
                     : "/images/tnc-default.png";
-                  const isInBag = bagItem.some(
-                    (i) => i.product_id === item.product_id
-                  );
+                  const isInBag =
+                    localBag.includes(item.product_id) ||
+                    bagItem.some(
+                      (i) =>
+                        i.productid === item.product_id || // backend data
+                        i.product_id === item.product_id // guest/local data
+                    );
 
                   return (
                     <div
@@ -493,19 +446,22 @@ export default function HealthBag() {
                             </div>
                             <Button
                               size="sm"
-                              className="btn-1"
+                              className={`btn-1 btn-HO ${
+                                isInBag ? "remove" : "add"
+                              }`}
+                              style={{ borderRadius: "35px" }}
+                              disabled={processingIds.includes(item.product_id)}
                               onClick={() =>
                                 isInBag
-                                  ? removeItem(item.product_id)
-                                  : addItem({
-                                      id: Date.now(),
-                                      buyer_id: buyer?.id || 0,
-                                      product_id: item.product_id,
-                                      quantity: 1,
-                                    })
+                                  ? handleRemove(item.product_id)
+                                  : handleAdd(item)
                               }
                             >
-                              {isInBag ? "REMOVE" : "ADD"}
+                              {processingIds.includes(item.product_id)
+                                ? "Processing..."
+                                : isInBag
+                                ? "REMOVE"
+                                : "ADD"}
                             </Button>
                           </div>
                         </div>
@@ -551,10 +507,13 @@ export default function HealthBag() {
                       ? item.DefaultImageURL
                       : `${mediaBase}${item.DefaultImageURL}`
                     : "/images/tnc-default.png";
-                  const isInBag = bagItem.some(
-                    (i) => i.product_id === item.product_id
-                  );
-
+                  const isInBag =
+                    localBag.includes(item.product_id) ||
+                    bagItem.some(
+                      (i) =>
+                        i.productid === item.product_id || // backend data
+                        i.product_id === item.product_id // guest/local data
+                    );
                   return (
                     <div
                       key={item.product_id}
@@ -607,19 +566,22 @@ export default function HealthBag() {
                             </div>
                             <Button
                               size="sm"
-                              className="btn-1"
+                              className={`btn-1 btn-HO ${
+                                isInBag ? "remove" : "add"
+                              }`}
+                              style={{ borderRadius: "35px" }}
+                              disabled={processingIds.includes(item.product_id)}
                               onClick={() =>
                                 isInBag
-                                  ? removeItem(item.product_id)
-                                  : addItem({
-                                      id: Date.now(),
-                                      buyer_id: buyer?.id || 0,
-                                      product_id: item.product_id,
-                                      quantity: 1,
-                                    })
+                                  ? handleRemove(item.product_id)
+                                  : handleAdd(item)
                               }
                             >
-                              {isInBag ? "REMOVE" : "ADD"}
+                              {processingIds.includes(item.product_id)
+                                ? "Processing..."
+                                : isInBag
+                                ? "REMOVE"
+                                : "ADD"}
                             </Button>
                           </div>
                         </div>
@@ -665,9 +627,13 @@ export default function HealthBag() {
                       ? item.DefaultImageURL
                       : `${mediaBase}${item.DefaultImageURL}`
                     : "/images/tnc-default.png";
-                  const isInBag = bagItem.some(
-                    (i) => i.product_id === item.product_id
-                  );
+                  const isInBag =
+                    localBag.includes(item.product_id) ||
+                    bagItem.some(
+                      (i) =>
+                        i.productid === item.product_id || // backend data
+                        i.product_id === item.product_id // guest/local data
+                    );
 
                   return (
                     <div
@@ -721,19 +687,22 @@ export default function HealthBag() {
                             </div>
                             <Button
                               size="sm"
-                              className="btn-1"
+                              className={`btn-1 btn-HO ${
+                                isInBag ? "remove" : "add"
+                              }`}
+                              style={{ borderRadius: "35px" }}
+                              disabled={processingIds.includes(item.product_id)}
                               onClick={() =>
                                 isInBag
-                                  ? removeItem(item.product_id)
-                                  : addItem({
-                                      id: Date.now(),
-                                      buyer_id: buyer?.id || 0,
-                                      product_id: item.product_id,
-                                      quantity: 1,
-                                    })
+                                  ? handleRemove(item.product_id)
+                                  : handleAdd(item)
                               }
                             >
-                              {isInBag ? "REMOVE" : "ADD"}
+                              {processingIds.includes(item.product_id)
+                                ? "Processing..."
+                                : isInBag
+                                ? "REMOVE"
+                                : "ADD"}
                             </Button>
                           </div>
                         </div>

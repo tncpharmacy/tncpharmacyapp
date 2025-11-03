@@ -19,11 +19,14 @@ import Link from "next/link";
 import TableLoader from "@/app/components/TableLoader/TableLoader";
 import Input from "@/app/components/Input/Input";
 import toast from "react-hot-toast";
+import { getMenuMedicinesList } from "@/lib/features/medicineSlice/medicineSlice";
+import { Medicine } from "@/types/medicine";
+import { encodeId } from "@/lib/utils/encodeDecode";
 
 export default function MedicineList() {
   const dispatch = useAppDispatch();
   const router = useRouter();
-  const { clinics, loading } = useAppSelector((state) => state.clinicList);
+  const { medicinesList } = useAppSelector((state) => state.medicine);
 
   // Infinite scroll state
   const [visibleCount, setVisibleCount] = useState(10);
@@ -31,33 +34,31 @@ export default function MedicineList() {
 
   // Modal state
   const [showModal, setShowModal] = useState(false);
-  const [selectedClinic, setSelectedClinic] = useState<
-    Clinic | ClinicAdd | null
-  >(null);
-  console.log("clincs", clinics);
+  const [selectedMedicine, setSelectedMedicine] = useState<Medicine | null>(
+    null
+  );
 
   // filtered records by search box
   const [searchTerm, setSearchTerm] = useState("");
-  const [filteredData, setFilteredData] = useState<Clinic[]>(clinics);
+  const [filteredData, setFilteredData] = useState<Medicine[]>([]);
 
   //status
-  const [records, setRecords] = useState<ClinicAdd[]>([]);
   const [status, setStatus] = useState<string>("");
 
   // Fetch all pharmacies once
   useEffect(() => {
-    dispatch(fetchClinics());
+    dispatch(getMenuMedicinesList());
   }, [dispatch]);
 
   // filtered records by search box + status filter
   useEffect(() => {
-    let data = clinics || [];
+    let data = medicinesList || [];
 
     // 🔹 Search filter
     if (searchTerm) {
       const lower = searchTerm.toLowerCase();
-      data = data.filter((item: Clinic) =>
-        (Object.keys(item) as (keyof Clinic)[]).some((key) =>
+      data = data.filter((item: Medicine) =>
+        (Object.keys(item) as (keyof Medicine)[]).some((key) =>
           String(item[key] ?? "")
             .toLowerCase()
             .includes(lower)
@@ -67,70 +68,69 @@ export default function MedicineList() {
 
     // 🔹 Status filter
     if (status) {
-      data = data.filter((item: Clinic) => item.status === status);
+      data = data.filter((item: Medicine) => item.status === status);
     }
 
     setFilteredData(data);
-  }, [searchTerm, status, clinics.length]); // ✅ only length (primitive)
+  }, [searchTerm, status, medicinesList, medicinesList.length]); // ✅ only length (primitive)
 
-  const handleToggleStatus = async (id: number) => {
-    // Find category in the filteredData (latest UI state)
-    const toggleRecords = filteredData.find((c) => c.id === id);
-    if (!toggleRecords) return;
+  // const handleToggleStatus = async (id: number) => {
+  //   // Find category in the filteredData (latest UI state)
+  //   const toggleRecords = filteredData.find((c) => c.id === id);
+  //   if (!toggleRecords) return;
 
-    const newStatus = toggleRecords.status === "Active" ? "Inactive" : "Active";
+  //   const newStatus = toggleRecords.status === "Active" ? "Inactive" : "Active";
 
-    try {
-      // Optimistic UI update
-      setFilteredData((prev) =>
-        prev.map((c) => (c.id === id ? { ...c, status: newStatus } : c))
-      );
+  //   try {
+  //     // Optimistic UI update
+  //     setFilteredData((prev) =>
+  //       prev.map((c) => (c.id === id ? { ...c, status: newStatus } : c))
+  //     );
 
-      // Update backend
-      await dispatch(
-        updateClinic({
-          id,
-          clinic: {
-            clinicName: toggleRecords.clinicName,
-            user_name: toggleRecords.user_name,
-            login_id: toggleRecords.login_id,
-            address: toggleRecords.address,
-            status: newStatus,
-          },
-        })
-      ).unwrap();
-      toast.success(`Status updated to ${newStatus}`);
-    } catch (err) {
-      console.error(err);
-      toast.error("Failed to update status");
+  //     // Update backend
+  //     await dispatch(
+  //       updateClinic({
+  //         id,
+  //         clinic: {
+  //           clinicName: toggleRecords.clinicName,
+  //           user_name: toggleRecords.user_name,
+  //           login_id: toggleRecords.login_id,
+  //           address: toggleRecords.address,
+  //           status: newStatus,
+  //         },
+  //       })
+  //     ).unwrap();
+  //     toast.success(`Status updated to ${newStatus}`);
+  //   } catch (err) {
+  //     console.error(err);
+  //     toast.error("Failed to update status");
 
-      // Revert UI if backend fails
-      setFilteredData((prev) =>
-        prev.map((c) =>
-          c.id === id ? { ...c, status: toggleRecords.status } : c
-        )
-      );
-    }
-  };
+  //     // Revert UI if backend fails
+  //     setFilteredData((prev) =>
+  //       prev.map((c) =>
+  //         c.id === id ? { ...c, status: toggleRecords.status } : c
+  //       )
+  //     );
+  //   }
+  // };
 
   //infinte scroll records
   const loadMore = () => {
-    if (loadings || visibleCount >= clinics.length) return;
+    if (loadings || visibleCount >= medicinesList.length) return;
     setLoadings(true);
     setTimeout(() => {
       setVisibleCount((prev) => prev + 5);
       setLoadings(false);
-    }, 3000); // spinner for 3 sec
+    }, 1500); // spinner for 3 sec
   };
 
-  const handleView = (pharmacy: Clinic | ClinicAdd) => {
-    setSelectedClinic(pharmacy);
+  const handleView = (medicine: Medicine) => {
+    setSelectedMedicine(medicine);
     setShowModal(true);
   };
 
   const handleEdit = (id: number) => {
-    const encodedId = encodeURIComponent(btoa(String(id)));
-    router.push(`/update-clinic/${encodedId}`);
+    router.push(`/update-medicine/${encodeId(id)}`);
   };
 
   return (
@@ -188,70 +188,91 @@ export default function MedicineList() {
                 {/* Table */}
                 <div className="scroll_table mt-4 w-full">
                   <table className="table cust_table1">
-                    <thead className="fw-bold text-dark">
+                    <thead>
                       <tr>
-                        <th className="fw-bold text-start">Medicine Code</th>
+                        {/* <th className="fw-bold text-start"></th> */}
                         <th className="fw-bold text-start">Medicine Name</th>
-                        <th className="fw-bold text-start">Unit</th>
-                        <th className="fw-bold text-start">
-                          Salt Composition (Generic)
-                        </th>
-                        <th className="fw-bold text-start">Category</th>
-                        <th className="fw-bold text-start">Sub Category</th>
-                        <th className="fw-bold text-start">Manufacturer</th>
+                        <th className="fw-bold text-start">Generic</th>
+                        <th className="fw-bold text-start">Manufacture</th>
+                        <th className="fw-bold text-start">Dose</th>
+                        <th className="fw-bold text-start">Pack Size</th>
                         <th className="fw-bold text-start">Status</th>
                         <th className="fw-bold text-start">Action</th>
                       </tr>
                     </thead>
                     <tbody>
-                      <tr>
-                        <td className="text-start">MEDICINE321321</td>
-                        <td className="text-start">EYEmist Gel 10gm</td>
-                        <td className="text-start">STRP</td>
-                        <td className="text-start">
-                          Hydroxypropylmethylcellulose (0.3% w/w)
-                        </td>
-                        <td className="text-start">Medicine</td>
-                        <td className="text-start">Eye Care</td>
-                        <td className="text-start">
-                          Sun Pharmaceutical Industries Ltd
-                        </td>
-                        <td className="text-start">
-                          <span className="status status-active"></span>
-                        </td>
-                        <td className="text-start">
-                          <button className="btn btn-light btn-sm me-2">
-                            <i className="bi bi-pencil"></i>
-                          </button>
-                          <button className="btn btn-light btn-sm">
-                            <i className="bi bi-eye-fill"></i>
-                          </button>
-                        </td>
-                      </tr>
-                      <tr>
-                        <td className="text-start">MEDICINE321321</td>
-                        <td className="text-start">EYEmist Gel 10gm</td>
-                        <td className="text-start">STRP</td>
-                        <td className="text-start">
-                          Hydroxypropylmethylcellulose (0.3% w/w)
-                        </td>
-                        <td className="text-start">Medicine</td>
-                        <td className="text-start">Eye Care</td>
-                        <td className="text-start">
-                          Sun Pharmaceutical Industries Ltd
-                        </td>
-                        <td className="text-start">
-                          <span className="status status-active"></span>
-                        </td>
-                        <td className="text-start">
-                          <button className="btn btn-light btn-sm me-2">
-                            <i className="bi bi-pencil"></i>
-                          </button>
-                          <button className="btn btn-light btn-sm">
-                            <i className="bi bi-eye-fill"></i>
-                          </button>
-                        </td>
-                      </tr>
+                      {Array.isArray(filteredData) &&
+                        filteredData
+                          .slice(0, visibleCount)
+                          .map((p: Medicine, index) => {
+                            return (
+                              <tr key={p.id}>
+                                {/* <td>{index + 1}</td> */}
+                                <td className="text-start">
+                                  {p.medicine_name ?? "-"}
+                                </td>
+                                <td className="text-start">
+                                  {p.generic_name ?? "-"}
+                                </td>
+                                <td className="text-start">
+                                  {p.manufacturer_name ?? "-"}
+                                </td>
+                                <td className="text-start">
+                                  {p.dose_form ?? "-"}
+                                </td>
+                                <td className="text-start">
+                                  {p.pack_size ?? "-"}
+                                </td>
+                                {/* <td>{p.discount ?? "-"}</td>
+                              <td>{p.mrp ?? "-"}</td> */}
+                                <td>
+                                  <span
+                                    //onClick={() => handleToggleStatus(p.id)}
+                                    className={`status ${
+                                      p.status === "Active"
+                                        ? "status-active"
+                                        : "status-inactive"
+                                    } cursor-pointer`}
+                                    title="Click to change status"
+                                  >
+                                    {p.status === "Active"
+                                      ? "Active"
+                                      : "Inactive"}
+                                  </span>
+                                </td>
+                                <td>
+                                  <button
+                                    className="btn btn-light btn-sm me-2"
+                                    onClick={() => handleEdit(p.id)}
+                                  >
+                                    <i className="bi bi-pencil"></i>
+                                  </button>
+                                  <button
+                                    className="btn btn-light btn-sm"
+                                    onClick={() => handleView(p)}
+                                  >
+                                    <i className="bi bi-eye-fill"></i>
+                                  </button>
+                                </td>
+                              </tr>
+                            );
+                          })}
+                      {/* Spinner row */}
+                      {loadings && (
+                        <TableLoader colSpan={9} text="Loading more..." />
+                      )}
+
+                      {/* No more records */}
+                      {!loadings && visibleCount >= medicinesList.length && (
+                        <tr>
+                          <td
+                            colSpan={9}
+                            className="text-center py-2 text-muted fw-bold fs-6"
+                          >
+                            No more records
+                          </td>
+                        </tr>
+                      )}
                     </tbody>
                   </table>
                 </div>
