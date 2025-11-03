@@ -39,6 +39,7 @@ interface MedicineState {
   byCategorySubcategory: {
     [key: string]: Medicine[]; // ✅ dynamic keys allowed
   };
+  selectedMedicine: Medicine | null;
 }
 
 const initialState: MedicineState = {
@@ -53,6 +54,7 @@ const initialState: MedicineState = {
   error: null,
   byCategory: {},
   byCategorySubcategory: {},
+  selectedMedicine: null,
 };
 
 // ✅ Get all medicines menu List
@@ -266,7 +268,12 @@ export const updateMedicineListById = createAsyncThunk(
 const medicineSlice = createSlice({
   name: "medicine",
   initialState,
-  reducers: {},
+  reducers: {
+    clearSelectedMedicine: (state) => {
+      state.selectedMedicine = null;
+      state.medicinesList = []; // ✅ optional, agar form list bhi clear karni ho
+    },
+  },
   extraReducers: (builder) => {
     builder
       // fetch medicine list
@@ -444,4 +451,5 @@ const medicineSlice = createSlice({
   },
 });
 
+export const { clearSelectedMedicine } = medicineSlice.actions;
 export default medicineSlice.reducer;

@@ -1,17 +1,11 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Button, Modal } from "react-bootstrap";
 import "../../css/admin-style.css";
 import SideNav from "@/app/admin/components/SideNav/page";
 import Header from "@/app/admin/components/Header/page";
 import { useAppDispatch, useAppSelector } from "@/lib/hooks";
-import {
-  fetchClinics,
-  deleteClinic,
-  updateClinic,
-} from "@/lib/features/clinicSlice/clinicSlice";
-import type { ClinicAdd, Clinic } from "@/types/clinic";
 import { useRouter } from "next/navigation";
 import { formatDateTime, formatDateOnly } from "@/utils/dateFormatter";
 import InfiniteScroll from "@/app/components/InfiniteScroll/InfiniteScroll";
@@ -19,14 +13,34 @@ import Link from "next/link";
 import TableLoader from "@/app/components/TableLoader/TableLoader";
 import Input from "@/app/components/Input/Input";
 import toast from "react-hot-toast";
-import { getMenuMedicinesList } from "@/lib/features/medicineSlice/medicineSlice";
+import SelectInput from "@/app/components/Input/SelectInput";
+import { getCategoriesList } from "@/lib/features/categorySlice/categorySlice";
+import { Category } from "@/types/category";
 import { Medicine } from "@/types/medicine";
+import {
+  clearSelectedMedicine,
+  getMedicinesList,
+  getMenuMedicinesList,
+} from "@/lib/features/medicineSlice/medicineSlice";
 import { encodeId } from "@/lib/utils/encodeDecode";
 
 export default function MedicineList() {
   const dispatch = useAppDispatch();
   const router = useRouter();
-  const { medicinesList } = useAppSelector((state) => state.medicine);
+  const { list: getCategoryList } = useAppSelector((state) => state.category);
+  const { medicines: medicineList } = useAppSelector((state) => state.medicine);
+  // filter directly
+  // ✅ Base list (without category_id = 1)
+  const filteredMedicines = useMemo(() => {
+    // pura list lo aur ascending order me sort karo (A → Z)
+    const sorted = [...medicineList].sort((a, b) =>
+      a.medicine_name.localeCompare(b.medicine_name)
+    );
+    return sorted;
+  }, [medicineList]);
+
+  // 🆕 Category filter state
+  const [selectedCategoryId, setSelectedCategoryId] = useState<number | "">("");
 
   // Infinite scroll state
   const [visibleCount, setVisibleCount] = useState(10);
@@ -39,84 +53,51 @@ export default function MedicineList() {
   );
 
   // filtered records by search box
-  const [searchTerm, setSearchTerm] = useState("");
   const [filteredData, setFilteredData] = useState<Medicine[]>([]);
+  const [searchTerm, setSearchTerm] = useState("");
 
   //status
-  const [status, setStatus] = useState<string>("");
+  const [status, setStatus] = useState<string>("all");
 
   // Fetch all pharmacies once
   useEffect(() => {
-    dispatch(getMenuMedicinesList());
+    dispatch(getMedicinesList());
+    dispatch(getCategoriesList());
   }, [dispatch]);
 
-  // filtered records by search box + status filter
-  useEffect(() => {
-    let data = medicinesList || [];
+  const categoryOptions = (getCategoryList || []).map((c: Category) => ({
+    label: c.category_name,
+    value: c.id,
+  }));
 
-    // 🔹 Search filter
+  // filtered records by search box + status filter
+  // 🧠 Master filter logic
+  useEffect(() => {
+    let data = filteredMedicines;
+
+    // Category filter
+    if (selectedCategoryId) {
+      data = data.filter((item) => item.category_id === selectedCategoryId);
+    }
+
+    // Search filter
     if (searchTerm) {
-      const lower = searchTerm.toLowerCase();
-      data = data.filter((item: Medicine) =>
-        (Object.keys(item) as (keyof Medicine)[]).some((key) =>
-          String(item[key] ?? "")
-            .toLowerCase()
-            .includes(lower)
-        )
+      data = data.filter((item) =>
+        item.medicine_name.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
 
-    // 🔹 Status filter
-    if (status) {
-      data = data.filter((item: Medicine) => item.status === status);
+    // Status filter
+    if (status !== "all") {
+      data = data.filter((item) => item.status === status);
     }
 
     setFilteredData(data);
-  }, [searchTerm, status, medicinesList, medicinesList.length]); // ✅ only length (primitive)
+  }, [filteredMedicines, selectedCategoryId, searchTerm, status]);
 
-  // const handleToggleStatus = async (id: number) => {
-  //   // Find category in the filteredData (latest UI state)
-  //   const toggleRecords = filteredData.find((c) => c.id === id);
-  //   if (!toggleRecords) return;
-
-  //   const newStatus = toggleRecords.status === "Active" ? "Inactive" : "Active";
-
-  //   try {
-  //     // Optimistic UI update
-  //     setFilteredData((prev) =>
-  //       prev.map((c) => (c.id === id ? { ...c, status: newStatus } : c))
-  //     );
-
-  //     // Update backend
-  //     await dispatch(
-  //       updateClinic({
-  //         id,
-  //         clinic: {
-  //           clinicName: toggleRecords.clinicName,
-  //           user_name: toggleRecords.user_name,
-  //           login_id: toggleRecords.login_id,
-  //           address: toggleRecords.address,
-  //           status: newStatus,
-  //         },
-  //       })
-  //     ).unwrap();
-  //     toast.success(`Status updated to ${newStatus}`);
-  //   } catch (err) {
-  //     console.error(err);
-  //     toast.error("Failed to update status");
-
-  //     // Revert UI if backend fails
-  //     setFilteredData((prev) =>
-  //       prev.map((c) =>
-  //         c.id === id ? { ...c, status: toggleRecords.status } : c
-  //       )
-  //     );
-  //   }
-  // };
-
-  //infinte scroll records
+  // ✅ only length (primitive)
   const loadMore = () => {
-    if (loadings || visibleCount >= medicinesList.length) return;
+    if (loadings || visibleCount >= filteredMedicines.length) return;
     setLoadings(true);
     setTimeout(() => {
       setVisibleCount((prev) => prev + 5);
@@ -128,9 +109,15 @@ export default function MedicineList() {
     setSelectedMedicine(medicine);
     setShowModal(true);
   };
+  const handleEdit = (id: number, category_id?: number) => {
+    const encodedId = encodeId(id);
 
-  const handleEdit = (id: number) => {
-    router.push(`/update-medicine/${encodeId(id)}`);
+    // Safety: agar category_id missing ya 1 hai to medicine page
+    if (!category_id || category_id === 1) {
+      router.push(`/update-medicine/${encodedId}`);
+    } else {
+      router.push(`/update-other-product/${encodedId}`);
+    }
   };
 
   return (
@@ -145,12 +132,12 @@ export default function MedicineList() {
             className="body_content"
           >
             <div className="pageTitle">
-              <i className="bi bi-shop-window"></i> Medicine List
+              <i className="bi bi-shop-window"></i> Product List
             </div>
             <div className="main_content">
               <div className="col-sm-12">
                 <div className="row">
-                  <div className="col-md-4">
+                  <div className="col-md-3">
                     <div className="txt_col">
                       <span className="lbl1">Search</span>
                       <input
@@ -163,25 +150,57 @@ export default function MedicineList() {
                       />
                     </div>
                   </div>
-                  <Input
-                    label="Status"
-                    name="status"
-                    type="select"
-                    value={status}
-                    options={[
-                      { label: "Active", value: "Active" },
-                      { label: "Inactive", value: "Inactive" },
-                    ]}
-                    onChange={(event) => setStatus(event.target.value)}
-                  />
+                  <div className="col-md-3">
+                    <div className="txt_col">
+                      <span className="lbl1">Category</span>
+                      <select
+                        className="txt1"
+                        value={selectedCategoryId}
+                        onChange={(e) =>
+                          setSelectedCategoryId(
+                            e.target.value ? Number(e.target.value) : ""
+                          )
+                        }
+                      >
+                        <option value="">-Select-</option>
+                        {categoryOptions.map((cat) => (
+                          <option key={cat.value} value={cat.value}>
+                            {cat.label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                  <div className="col-md-2">
+                    <div className="txt_col">
+                      <span className="lbl1">Status</span>
+                      <select
+                        className="txt1"
+                        value={status} // ✅ controlled component ke liye
+                        onChange={(event) => setStatus(event.target.value)}
+                      >
+                        <option value="">-Select-</option>
+                        <option value="Active">Active</option>
+                        <option value="Inactive">Inactive</option>
+                      </select>
+                    </div>
+                  </div>
                   <div className="col-md-4 text-end">
                     <div className="txt_col">
-                      <Link href={"/add-medicine"} className="btn-style2 me-2">
+                      <Link
+                        href={"/add-medicine"}
+                        className="btn-style2 me-2"
+                        onClick={() => dispatch(clearSelectedMedicine())}
+                      >
                         <i className="bi bi-plus"></i> Add Medicine
                       </Link>
-                      <button className="btn-style1">
-                        <i className="bi bi-download"></i> Export Statement
-                      </button>
+                      <Link
+                        href={"/add-other-product"}
+                        className="btn-style2 me-2"
+                        onClick={() => dispatch(clearSelectedMedicine())}
+                      >
+                        <i className="bi bi-plus"></i> Add Other Product
+                      </Link>
                     </div>
                   </div>
                 </div>
@@ -192,9 +211,8 @@ export default function MedicineList() {
                       <tr>
                         {/* <th className="fw-bold text-start"></th> */}
                         <th className="fw-bold text-start">Medicine Name</th>
-                        <th className="fw-bold text-start">Generic</th>
+                        <th className="fw-bold text-start">Unit</th>
                         <th className="fw-bold text-start">Manufacture</th>
-                        <th className="fw-bold text-start">Dose</th>
                         <th className="fw-bold text-start">Pack Size</th>
                         <th className="fw-bold text-start">Status</th>
                         <th className="fw-bold text-start">Action</th>
@@ -211,14 +229,9 @@ export default function MedicineList() {
                                 <td className="text-start">
                                   {p.medicine_name ?? "-"}
                                 </td>
-                                <td className="text-start">
-                                  {p.generic_name ?? "-"}
-                                </td>
+                                <td className="text-start">{p.unit ?? "-"}</td>
                                 <td className="text-start">
                                   {p.manufacturer_name ?? "-"}
-                                </td>
-                                <td className="text-start">
-                                  {p.dose_form ?? "-"}
                                 </td>
                                 <td className="text-start">
                                   {p.pack_size ?? "-"}
@@ -243,7 +256,9 @@ export default function MedicineList() {
                                 <td>
                                   <button
                                     className="btn btn-light btn-sm me-2"
-                                    onClick={() => handleEdit(p.id)}
+                                    onClick={() =>
+                                      handleEdit(p.id, p.category_id)
+                                    }
                                   >
                                     <i className="bi bi-pencil"></i>
                                   </button>
@@ -263,16 +278,17 @@ export default function MedicineList() {
                       )}
 
                       {/* No more records */}
-                      {!loadings && visibleCount >= medicinesList.length && (
-                        <tr>
-                          <td
-                            colSpan={9}
-                            className="text-center py-2 text-muted fw-bold fs-6"
-                          >
-                            No more records
-                          </td>
-                        </tr>
-                      )}
+                      {!loadings &&
+                        visibleCount >= filteredMedicines.length && (
+                          <tr>
+                            <td
+                              colSpan={9}
+                              className="text-center py-2 text-muted fw-bold fs-6"
+                            >
+                              No more records
+                            </td>
+                          </tr>
+                        )}
                     </tbody>
                   </table>
                 </div>

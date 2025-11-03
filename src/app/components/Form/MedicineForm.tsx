@@ -34,6 +34,7 @@ import { Medicine, MedicineFormData } from "@/types/medicine";
 import CustomSelectInput from "@/app/components/Input/CustomSelectInput";
 import RichTextEditor from "@/app/components/Input/RichTextEditor";
 import {
+  clearSelectedMedicine,
   getMedicineListById,
   updateMedicineListById,
 } from "@/lib/features/medicineSlice/medicineSlice";
@@ -279,7 +280,7 @@ export default function MedicineForm({ id }: Props) {
                   label="Madicine Name"
                   type="text"
                   name="medicine_name"
-                  value={formData.medicine_name}
+                  value={formData.medicine_name || ""}
                   onChange={handleChange}
                   //required
                 />
@@ -287,7 +288,7 @@ export default function MedicineForm({ id }: Props) {
                   label="Pack Size"
                   type="text"
                   name="pack_size"
-                  value={formData.pack_size}
+                  value={formData.pack_size || ""}
                   onChange={handleChange}
                   //required
                 />
@@ -295,7 +296,7 @@ export default function MedicineForm({ id }: Props) {
                   label="Prescription Required"
                   type="select"
                   name="prescription_required"
-                  value={formData.prescription_required}
+                  value={formData.prescription_required || ""}
                   onChange={handleChange}
                   // required
                   options={[
@@ -428,7 +429,8 @@ export default function MedicineForm({ id }: Props) {
                     <input
                       type="text"
                       className="txt1"
-                      value={formData.storage}
+                      name="storage"
+                      value={formData.storage || ""}
                       onChange={(e) =>
                         setFormData({ ...formData, storage: e.target.value })
                       }

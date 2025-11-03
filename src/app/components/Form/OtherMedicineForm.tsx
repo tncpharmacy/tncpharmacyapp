@@ -310,7 +310,7 @@ export default function OtherMedicineForm({ id }: Props) {
               <i className="bi bi-shop-window me-2"></i>
               {id ? "Update Other Product" : "Add Other Product"}
               <button
-                onClick={() => router.push("/other-product")}
+                onClick={() => router.push("/medicine")}
                 className="btn-style2 float-end pe-4 ps-4"
               >
                 ← Back
@@ -320,7 +320,7 @@ export default function OtherMedicineForm({ id }: Props) {
               {/* <p>Generated Password: {password}</p> */}
               <form onSubmit={handleSubmit} className="row g-3">
                 <Input
-                  label="Item Name"
+                  label="Product Name"
                   type="text"
                   name="medicine_name"
                   value={formData.medicine_name}

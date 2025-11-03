@@ -162,28 +162,24 @@ const nextConfig: NextConfig = {
         destination: "/admin/supplier/add-supplier",
       },
       {
-        source: "/add-medicine",
-        destination: "/admin/medicine/medicine-item/add",
-      },
-      {
-        source: "/update-medicine/:id",
-        destination: "/admin/medicine/medicine-item/add/:id",
-      },
-      {
         source: "/medicine",
         destination: "/admin/medicine/medicine-item",
       },
       {
+        source: "/add-medicine",
+        destination: "/admin/medicine/medicine-item/add-medicine",
+      },
+      {
+        source: "/update-medicine/:id",
+        destination: "/admin/medicine/medicine-item/add-medicine/:id",
+      },
+      {
         source: "/add-other-product",
-        destination: "/admin/medicine/other-item/add",
+        destination: "/admin/medicine/medicine-item/add-product",
       },
       {
         source: "/update-other-product/:id",
-        destination: "/admin/medicine/other-item/add/:id",
-      },
-      {
-        source: "/other-product",
-        destination: "/admin/medicine/other-item",
+        destination: "/admin/medicine/medicine-item/add-product/:id",
       },
       {
         source: "/category",

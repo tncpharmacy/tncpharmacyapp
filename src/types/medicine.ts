@@ -48,7 +48,7 @@ export interface Medicine {
   prescription_required?: number;
   discount?: string;
   status?: string;
-  category_id?: number;
+  category_id: number;
   created_by?: number;
   product_introduction: string;
   mrp?: number | null;

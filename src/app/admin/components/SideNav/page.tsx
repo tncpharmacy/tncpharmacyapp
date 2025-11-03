@@ -24,6 +24,11 @@ export default function SideNav() {
           </Link>
         </li>
         <li>
+          <Link href="/medicine" className="link">
+            <i className="bi bi-box-seam"></i> Product Master
+          </Link>
+        </li>
+        <li>
           <Link href="purchase-invoice" className="link">
             <i className="bi bi-receipt-cutoff"></i> Purchase Invoice
           </Link>
@@ -33,7 +38,7 @@ export default function SideNav() {
             <i className="bi bi-box-seam"></i> stock
           </Link>
         </li>
-        <li>
+        {/* <li>
           <div onClick={() => toggleMenu("product")} className="link arrow">
             <i className="bi bi-box-seam"></i> Product Master
           </div>
@@ -51,7 +56,7 @@ export default function SideNav() {
               </li>
             </ul>
           )}
-        </li>
+        </li> */}
         <li>
           <Link href="/clinic" className="link">
             <i className="bi bi-hospital"></i> Hospital & Clinic
