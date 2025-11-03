@@ -60,8 +60,9 @@ interface Option {
 export default function OtherMedicineForm({ id }: Props) {
   const router = useRouter();
   const dispatch = useAppDispatch();
-  const { id: params } = useParams();
-  const decodedId = decodeId(params);
+  // const { id: params } = useParams();
+  // const decodedId = decodeId(params);
+  const decodedId = id;
   const { medicinesList: medicinesDetails } = useAppSelector(
     (state) => state.medicine
   );
