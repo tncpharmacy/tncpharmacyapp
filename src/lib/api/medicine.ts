@@ -106,6 +106,17 @@ export const fetchGroupCare = async (): Promise<CareGroupResponse> => {
   );
   return res.data; // ✅ res.data is now MedicineResponse
 };
+// =========================
+// GET GROUP CARE BY ID
+// =========================
+export const fetchGroupCareById = async (
+  groupId: number
+): Promise<MedicineResponse> => {
+  const res = await axiosInstance.get<MedicineResponse>(
+    ENDPOINTS.MEDICINES.GET_GROUP_CARE_BY_ID(groupId)
+  );
+  return res.data;
+};
 
 // =========================
 // GET MEDICINE LIST BY ID

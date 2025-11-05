@@ -3,6 +3,7 @@ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import {
   fetchCategoryIdBySubcategory,
   fetchGroupCare,
+  fetchGroupCareById,
   fetchMedicineByGenericId,
   fetchMedicineListById,
   fetchMedicineListUpdate,
@@ -28,6 +29,7 @@ interface FetchCategoryPayload {
 interface MedicineState {
   medicines: Medicine[];
   medicinesList: Medicine[];
+  groupCareList: Medicine[];
   otherMedicines: Medicine[];
   groupCare: CareGroup[];
   genericAlternatives: Medicine[];
@@ -45,6 +47,7 @@ interface MedicineState {
 const initialState: MedicineState = {
   medicines: [],
   medicinesList: [],
+  groupCareList: [],
   otherMedicines: [],
   groupCare: [],
   genericAlternatives: [],
@@ -235,6 +238,23 @@ export const getGroupCare = createAsyncThunk<
   }
 });
 
+// ✅ Get all medicine id by generic
+export const getGroupCareById = createAsyncThunk<
+  MedicineResponse,
+  number,
+  { rejectValue: string }
+>("medicine/getGroupCareById", async (groupId, { rejectWithValue }) => {
+  try {
+    const res: MedicineResponse = await fetchGroupCareById(groupId);
+    return res;
+  } catch (err: unknown) {
+    if (err instanceof Error) {
+      return rejectWithValue(err.message);
+    }
+    return rejectWithValue("Failed to fetch medicines");
+  }
+});
+
 // ✅ Get medicine list by ID
 export const getMedicineListById = createAsyncThunk<
   MedicineResponse,
@@ -405,7 +425,7 @@ const medicineSlice = createSlice({
         state.loading = false;
         state.error = action.payload || "Something went wrong";
       })
-      // fetch group care
+      // Get group care
       .addCase(getGroupCare.pending, (state) => {
         state.loading = true;
       })
@@ -417,6 +437,20 @@ const medicineSlice = createSlice({
       .addCase(getGroupCare.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload || "Something went wrong";
+      })
+      // ✅ Get group care by ID
+      .addCase(getGroupCareById.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(getGroupCareById.fulfilled, (state, action) => {
+        state.loading = false;
+        state.groupCareList = action.payload.data;
+        state.error = null;
+      })
+      .addCase(getGroupCareById.rejected, (state, action) => {
+        state.loading = false;
+        state.error =
+          action.payload || "Something went wrong while fetching by ID";
       })
       // ✅ Get medicine list by ID
       .addCase(getMedicineListById.pending, (state) => {

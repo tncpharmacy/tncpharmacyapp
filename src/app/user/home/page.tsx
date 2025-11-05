@@ -241,7 +241,12 @@ export default function HomePage() {
                     <div>
                       {/* ✅ Group Name Dynamic */}
                       <h2 className="category_title">{group.group_name}</h2>
-                      <span className="category_link">
+                      <span
+                        className="category_link"
+                        onClick={() =>
+                          router.push(`/all-group-care/${encodeId(group.id)}`)
+                        }
+                      >
                         View Now<i className="bi bi-arrow-right-short"></i>
                       </span>
                     </div>
@@ -360,64 +365,128 @@ export default function HomePage() {
       </section>
 
       <section className="brand_section">
-        <div className="container">
-          <h2 className="section_title">Manufacturer</h2>
-          <div className="brand_list">
-            <div className="brand_item">
-              <img src="images/brand/cipla.png" alt="" />
-              <span className="b_name">Cipla</span>
+        <div className="container-fluid">
+          <h2 className="section_title text-start">Manufacturer</h2>
+
+          <div className="brand_wrapper">
+            {/* Row 1 - Left to Right */}
+            <div className="brand_list row_one">
+              <div className="brand_item">
+                <img src="/images/brand/abbott.png" alt="Abbott" />
+                <span className="b_name">Abbott</span>
+              </div>
+              <div className="brand_item">
+                <img src="/images/brand/alembic.png" alt="Alembic" />
+                <span className="b_name">Alembic</span>
+              </div>
+              <div className="brand_item">
+                <img src="/images/brand/alkem.png" alt="Alkem" />
+                <span className="b_name">Alkem</span>
+              </div>
+              <div className="brand_item">
+                <img src="/images/brand/arbro.png" alt="Arbro" />
+                <span className="b_name">Arbro</span>
+              </div>
+              <div className="brand_item">
+                <img src="/images/brand/avis.png" alt="Avis" />
+                <span className="b_name">Avis</span>
+              </div>
+              <div className="brand_item">
+                <img src="/images/brand/biocon.png" alt="Biocon" />
+                <span className="b_name">Biocon</span>
+              </div>
+              <div className="brand_item">
+                <img src="/images/brand/cadila.png" alt="Cadila" />
+                <span className="b_name">Cadila</span>
+              </div>
+              <div className="brand_item">
+                <img src="/images/brand/cipla.png" alt="Cipla" />
+                <span className="b_name">Cipla</span>
+              </div>
+              <div className="brand_item">
+                <img src="/images/brand/dabur.png" alt="Dabur" />
+                <span className="b_name">Dabur</span>
+              </div>
+              <div className="brand_item">
+                <img src="/images/brand/divis.png" alt="Divis" />
+                <span className="b_name">Divis</span>
+              </div>
+              <div className="brand_item">
+                <img src="/images/brand/dr-reddys.png" alt="Dr. Reddy's" />
+                <span className="b_name">{"Dr. Reddy's"}</span>
+              </div>
+              <div className="brand_item">
+                <img src="/images/brand/emcure.png" alt="Emcure" />
+                <span className="b_name">Emcure</span>
+              </div>
+              <div className="brand_item">
+                <img src="/images/brand/glaxo-smith-kline.png" alt="GSK" />
+                <span className="b_name">GSK</span>
+              </div>
+              <div className="brand_item">
+                <img src="/images/brand/glenmark.png" alt="Glenmark" />
+                <span className="b_name">Glenmark</span>
+              </div>
             </div>
-            <div className="brand_item">
-              <img src="images/brand/zydus-cadila.png" alt="" />
-              <span className="b_name">Zydus Cadila</span>
-            </div>
-            <div className="brand_item">
-              <img src="images/brand/dr-reddys.png" alt="" />
-              <span className="b_name">{"Dr. Reddy's"}</span>
-            </div>
-            <div className="brand_item">
-              <img src="images/brand/alkem.png" alt="" />
-              <span className="b_name">Alkem</span>
-            </div>
-            <div className="brand_item">
-              <img src="images/brand/divis.png" alt="" />
-              <span className="b_name">{"Divi's"}</span>
-            </div>
-            <div className="brand_item">
-              <img src="images/brand/biocon.png" alt="" />
-              <span className="b_name">Biocon</span>
-            </div>
-            <div className="brand_item">
-              <img src="images/brand/glaxo-smith-kline.png" alt="" />
-              <span className="b_name">Glaxo Smith Kline</span>
-            </div>
-            <div className="brand_item">
-              <img src="images/brand/laurus-labs.png" alt="" />
-              <span className="b_name">Laurus Labs</span>
-            </div>
-            <div className="brand_item">
-              <img src="images/brand/emcure.png" alt="" />
-              <span className="b_name">Emcure</span>
-            </div>
-            <div className="brand_item">
-              <img src="images/brand/alembic.png" alt="" />
-              <span className="b_name">Alembic</span>
-            </div>
-            <div className="brand_item">
-              <img src="images/brand/sun-pharma.png" alt="" />
-              <span className="b_name">Sun Pharma</span>
-            </div>
-            <div className="brand_item">
-              <img src="images/brand/arbro.png" alt="" />
-              <span className="b_name">Arbro</span>
-            </div>
-            <div className="brand_item">
-              <img src="images/brand/glenmark.png" alt="" />
-              <span className="b_name">Glenmark</span>
-            </div>
-            <div className="brand_item">
-              <img src="images/brand/abbott.png" alt="" />
-              <span className="b_name">Abbott</span>
+
+            {/* Row 2 - Right to Left */}
+            <div className="brand_list row_two">
+              <div className="brand_item">
+                <img src="/images/brand/hegde.png" alt="Hegde" />
+                <span className="b_name">Hegde</span>
+              </div>
+              <div className="brand_item">
+                <img src="/images/brand/himalaya.png" alt="Himalaya" />
+                <span className="b_name">Himalaya</span>
+              </div>
+              <div className="brand_item">
+                <img src="/images/brand/intas.png" alt="Intas" />
+                <span className="b_name">Intas</span>
+              </div>
+              <div className="brand_item">
+                <img src="/images/brand/kivi.png" alt="Kivi" />
+                <span className="b_name">Kivi</span>
+              </div>
+              <div className="brand_item">
+                <img src="/images/brand/knoll.png" alt="Knoll" />
+                <span className="b_name">Knoll</span>
+              </div>
+              <div className="brand_item">
+                <img src="/images/brand/laurus-labs.png" alt="Laurus Labs" />
+                <span className="b_name">Laurus Labs</span>
+              </div>
+              <div className="brand_item">
+                <img src="/images/brand/leefford.png" alt="Leeford" />
+                <span className="b_name">Leeford</span>
+              </div>
+              <div className="brand_item">
+                <img src="/images/brand/lupin.png" alt="Lupin" />
+                <span className="b_name">Lupin</span>
+              </div>
+              <div className="brand_item">
+                <img src="/images/brand/mankind.png" alt="Mankind" />
+                <span className="b_name">Mankind</span>
+              </div>
+              <div className="brand_item">
+                <img src="/images/brand/obsurge.png" alt="Obsurge" />
+                <span className="b_name">Obsurge</span>
+              </div>
+              <div className="brand_item">
+                <img src="/images/brand/patanjali.png" alt="Patanjali" />
+                <span className="b_name">Patanjali</span>
+              </div>
+              <div className="brand_item">
+                <img src="/images/brand/sun-pharma.png" alt="Sun Pharma" />
+                <span className="b_name">Sun Pharma</span>
+              </div>
+              <div className="brand_item">
+                <img src="/images/brand/wings-pharma.png" alt="Wings Pharma" />
+                <span className="b_name">Wings Pharma</span>
+              </div>
+              <div className="brand_item">
+                <img src="/images/brand/zydus-cadila.png" alt="Zydus Cadila" />
+                <span className="b_name">Zydus Cadila</span>
+              </div>
             </div>
           </div>
         </div>

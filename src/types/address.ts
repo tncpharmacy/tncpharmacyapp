@@ -7,7 +7,6 @@ export interface AddressResponse {
 
 export interface Address {
   id?: number;
-  title?: string;
   name: string;
   mobile: string;
   address: string;
@@ -15,12 +14,11 @@ export interface Address {
   state?: string;
   country?: string;
   pincode?: string;
-  type?: "Home" | "Work" | "Other";
   location?: string;
   map?: string;
   default_address?: number;
   status?: string;
-  buyer?: number;
+  buyer_id?: number;
   address_type_id?: number;
 }
 

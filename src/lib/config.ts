@@ -105,6 +105,8 @@ export const ENDPOINTS = {
     LOGIN: "/buyer/validate/",
     CREATE: "/buyer/register/",
     DELETE: (id: number) => `/buyer/create/${id}/`,
+    GET: (id: number) => `/buyer/profile/${id}/`,
+    PUT: (id: number) => `/buyer/profile/${id}/`,
   },
 
   // medicines
@@ -119,6 +121,7 @@ export const ENDPOINTS = {
     GET_MENU_MEDICINE: "/website/medicine/category/1/",
     GET_BY_MENU_ID: (id: number) => `/website/medicine/${id}/`,
     GET_GROUP_CARE: "/masterapp/care-group/list/",
+    GET_GROUP_CARE_BY_ID: (groupId: number) => `/website/group/${groupId}/`,
     GET_MENU_OTHER_MEDICINE: (categoryId: number) =>
       `/website/other/medicine/list/?category_id=${categoryId}`,
     GET_BY_MENU_OTHER_ID: (id: number) => `/website/other/medicine/${id}/`,
@@ -144,8 +147,11 @@ export const ENDPOINTS = {
   // address
   ADDRESS: {
     CREATE: "/address/create/",
-    GET_ALL: (id: number) => `/address/view/${id}/`,
-    DELETE: (id: number) => `/address/delete/?id=${id}/`,
+    UPDATE: (id: number) => `/address/update/${id}/`,
+    GET_ALL: (buyerId: number) => `/address/view/${buyerId}/`,
+    GET_BY_ID: (buyerId: number, addressId: number) =>
+      `/address/view/${buyerId}/address/${addressId}/`,
+    DELETE: (id: number) => `/address/delete/?id=${id}`,
   },
 
   // Purchase Stock

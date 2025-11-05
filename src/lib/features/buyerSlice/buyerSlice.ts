@@ -1,5 +1,11 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import { buyerLoginApi, buyerRegisterApi } from "@/lib/api/buyer";
+import {
+  buyerDeleteApi,
+  buyerGetApi,
+  buyerLoginApi,
+  buyerRegisterApi,
+  buyerUpdateApi,
+} from "@/lib/api/buyer";
 import { BuyerApiResponse, BuyerState } from "@/types/buyer";
 import { loadBuyerFromToken } from "@/lib/utils/decodeToken";
 import { safeLocalStorage } from "@/lib/utils/safeLocalStorage";
@@ -33,6 +39,60 @@ const initialState: BuyerState = {
 //
 // 🔹 Thunks
 //
+
+// 4️⃣ Get Buyer Profile
+export const getBuyerProfile = createAsyncThunk<
+  BuyerApiResponse,
+  { id: number },
+  { rejectValue: string }
+>("buyer/getProfile", async ({ id }, { rejectWithValue }) => {
+  try {
+    const res = await buyerGetApi(id);
+    return res.data as BuyerApiResponse;
+  } catch (err: unknown) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const e = err as any;
+    return rejectWithValue(
+      e.response?.data?.message || "Failed to fetch profile"
+    );
+  }
+});
+
+// 5️⃣ Update Buyer Profile
+export const updateBuyerProfile = createAsyncThunk<
+  BuyerApiResponse,
+  { id: number; payload: { name?: string; email?: string; number?: string } },
+  { rejectValue: string }
+>("buyer/updateProfile", async ({ id, payload }, { rejectWithValue }) => {
+  try {
+    const res = await buyerUpdateApi(id, payload);
+    return res.data as BuyerApiResponse;
+  } catch (err: unknown) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const e = err as any;
+    return rejectWithValue(
+      e.response?.data?.message || "Failed to update profile"
+    );
+  }
+});
+
+// 6️⃣ Delete Buyer
+export const deleteBuyer = createAsyncThunk<
+  BuyerApiResponse,
+  { id: number },
+  { rejectValue: string }
+>("buyer/delete", async ({ id }, { rejectWithValue }) => {
+  try {
+    const res = await buyerDeleteApi(id);
+    return res.data as BuyerApiResponse;
+  } catch (err: unknown) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const e = err as any;
+    return rejectWithValue(
+      e.response?.data?.message || "Failed to delete buyer"
+    );
+  }
+});
 
 // 1️⃣ Buyer Login (send OTP)
 export const buyerLogin = createAsyncThunk<
@@ -206,6 +266,69 @@ const buyerSlice = createSlice({
       .addCase(verifyBuyerOtp.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload ?? "OTP verification failed";
+      })
+      // 🔹 Get Buyer Profile
+      .addCase(getBuyerProfile.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(getBuyerProfile.fulfilled, (state, action) => {
+        state.loading = false;
+        const buyerData = action.payload.data;
+        if (buyerData?.id) {
+          state.buyer = {
+            id: buyerData.id,
+            name: buyerData.name,
+            email: buyerData.email,
+            number: buyerData.number,
+          };
+        }
+        toast.success("Profile fetched successfully");
+      })
+      .addCase(getBuyerProfile.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload ?? "Failed to fetch buyer profile";
+      })
+
+      // 🔹 Update Buyer Profile
+      .addCase(updateBuyerProfile.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(updateBuyerProfile.fulfilled, (state, action) => {
+        state.loading = false;
+        const buyerData = action.payload.data;
+        if (buyerData) {
+          if (state.buyer) {
+            state.buyer = {
+              ...state.buyer,
+              ...buyerData,
+            };
+          }
+        }
+        toast.success("Profile updated successfully");
+      })
+      .addCase(updateBuyerProfile.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload ?? "Failed to update profile";
+      })
+
+      // 🔹 Delete Buyer
+      .addCase(deleteBuyer.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(deleteBuyer.fulfilled, (state) => {
+        state.loading = false;
+        state.buyer = null;
+        state.token = null;
+        safeLocalStorage.removeItem("buyerAccessToken");
+        safeLocalStorage.removeItem("buyerRefreshToken");
+        toast.success("Buyer deleted successfully");
+      })
+      .addCase(deleteBuyer.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload ?? "Failed to delete buyer";
       });
   },
 });

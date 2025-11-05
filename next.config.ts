@@ -18,6 +18,10 @@ const nextConfig: NextConfig = {
         destination: "/user/profile",
       },
       {
+        source: "/all-group-care/:id",
+        destination: "/user/all-group-care/:id",
+      },
+      {
         source: "/all-product/:id",
         destination: "/user/all-product/:id",
       },
@@ -54,12 +58,16 @@ const nextConfig: NextConfig = {
         destination: "/user/contact-us",
       },
       {
-        source: "/return-refund",
-        destination: "/user/return-refund",
+        source: "/return-policy",
+        destination: "/user/return-policy",
       },
       {
-        source: "/shipping-terms",
-        destination: "/user/shipping-terms",
+        source: "/refund-policy",
+        destination: "/user/refund-policy",
+      },
+      {
+        source: "/shipping-policy",
+        destination: "/user/shipping-policy",
       },
       {
         source: "/terms-and-conditions",

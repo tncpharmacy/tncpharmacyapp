@@ -1,96 +1,95 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import SiteHeader from "@/app/user/components/header/header";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "../css/site-style.css";
 import AddAddressModal from "@/app/components/address/AddAddressModal";
 import CurrentLocationMapModal from "@/app/components/address/CurrentLocationMapModal";
 import ConfirmLocationModal from "@/app/components/address/ConfirmLocationModal";
+import ManualLocationModal from "@/app/components/address/ManualLocationModal";
 import toast from "react-hot-toast";
-import ManualLocationModal from "@/app/components/address/ManualLocationModal"; // ✅ new
 import { Address, LocationDetails } from "@/types/address";
+import { useAppDispatch, useAppSelector } from "@/lib/hooks";
+import { useRouter } from "next/navigation";
+import {
+  getAddress,
+  getAddressById,
+  removeAddress,
+} from "@/lib/features/addressSlice/addressSlice";
+
+type StepType = "none" | "add" | "map" | "confirm" | "manual";
 
 export default function AddressList() {
-  const [step, setStep] = useState<
-    "none" | "add" | "map" | "confirm" | "manual"
-  >("none");
+  const router = useRouter();
+  const dispatch = useAppDispatch();
+  const buyer = useAppSelector((state) => state.buyer.buyer);
+  const userId: number | null = buyer?.id || null;
+
+  const [showModal, setShowModal] = useState(false);
+  const [selectedAddress, setSelectedAddress] = useState<Address | null>(null);
+
+  const [isClient, setIsClient] = useState(false); // ✅ ensure client render only
+  const [step, setStep] = useState<StepType>("none");
   const [selectedLocation, setSelectedLocation] =
     useState<LocationDetails | null>(null);
   const [billingAddress, setBillingAddress] = useState(0);
-  const [shippingAddress, setShippingAddress] = useState(0);
-  const [billingAddresses, setBillingAddresses] = useState<Address[]>([
-    {
-      title: "Home",
-      address:
-        "1/18/58, Sahadat Ali Kha Ki Chhawani, Ram Nagar, Faizabad, Uttar Pradesh (224001)",
-      name: "Pulkit Srivastava",
-      mobile: "7007319975",
-    },
-    {
-      title: "Office",
-      address:
-        "A-12, Sector 62, Noida, Gautam Buddha Nagar, Uttar Pradesh (201301)",
-      name: "Pulkit Srivastava",
-      mobile: "7007319975",
-    },
-    {
-      title: "Other",
-      address:
-        "Flat No. 303, Tower B, Gaur City 1, Greater Noida West, Uttar Pradesh (201318)",
-      name: "Pulkit Srivastava",
-      mobile: "7007319975",
-    },
-  ]);
 
-  const [shippingAddresses, setShippingAddresses] = useState([
-    {
-      title: "Home",
-      address:
-        "Gali No-1A, D-30, 2nd Floor, Flat no-9, Ganesh Nagar, Delhi (110092)",
-      name: "Pulkit Srivastava",
-      mobile: "7007319975",
-    },
-    {
-      title: "Work",
-      address:
-        "A-202, Flat No-5, Near Gali No-25, New Ashok Nagar, Delhi (110096)",
-      name: "Pulkit Srivastava",
-      mobile: "7007319975",
-    },
-    {
-      title: "Parents",
-      address:
-        "C-45, Rajendra Nagar, Sector 5, Sahibabad, Ghaziabad, Uttar Pradesh (201005)",
-      name: "Pulkit Srivastava",
-      mobile: "7007319975",
-    },
-  ]);
+  const activeAddresses = useAppSelector((state) => state.address.addresses);
+  // ✅ Filter only active addresses
+  const billingAddresses = activeAddresses?.filter(
+    (addr) => addr.status === "Active"
+  );
 
-  // ===== Logic for Add Address Buttons =====
-  const handleAddBillingAddress = () => {
-    // if (billingAddresses.length >= 3) {
-    //   toast.error("You cannot add more than 3 billing addresses!");
-    //   return;
-    // }
+  useEffect(() => {
+    // Run only on client
+    setIsClient(true);
 
-    // ✅ If less than 3 addresses, open first modal
-    setStep("add");
+    const token = localStorage.getItem("buyerAccessToken");
+    if (!token || !userId) {
+      toast.error("Please login first!");
+      router.push("/");
+    }
+  }, [userId, router]);
+
+  useEffect(() => {
+    if (userId) {
+      dispatch(getAddress(userId));
+    }
+  }, [dispatch, userId]);
+
+  // ✅ Prevent hydration mismatch
+  if (!isClient) return null;
+
+  // ✅ Remove handler
+  const handleRemove = async (id: number) => {
+    if (!window.confirm("Are you sure you want to remove this address?"))
+      return;
+
+    try {
+      console.log("Deleting address:", id);
+      const res = await dispatch(removeAddress(id)).unwrap();
+      toast.success("Address removed successfully!");
+      if (userId !== null) {
+        dispatch(getAddress(userId));
+      }
+    } catch (err) {
+      toast.error("Failed to remove address!");
+      console.error("Delete error:", err);
+    }
   };
 
-  const handleAddShippingAddress = () => {
-    // if (shippingAddresses.length >= 3) {
-    //   toast.error("You cannot add more than 3 shipping addresses!");
-    //   return;
-    // }
-    // else -> open your form/modal here (if needed)
-    setStep("add");
+  const handleRefreshList = () => {
+    if (userId) {
+      dispatch(getAddress(userId));
+    }
   };
 
-  const handleSaveAddress = (data: Address) => {
-    setBillingAddresses((prev) => [...prev, data]);
-    alert("Address saved successfully!");
-    setStep("none");
+  const handleEdit = (addressId: number) => {
+    if (userId) {
+      dispatch(getAddressById({ buyerId: userId, addressId }));
+      setShowModal(true);
+    }
   };
 
   return (
@@ -98,86 +97,143 @@ export default function AddressList() {
       <SiteHeader />
 
       <div className="container my-4">
-        {/* ===== BILLING ADDRESS SECTION ===== */}
         <div className="d-flex justify-content-between align-items-center mb-4">
-          <h4 className="fw-bold">Buyer Address</h4>
-          <button className="btn btn-primary" onClick={handleAddBillingAddress}>
-            + Add new address
+          <h4 className="fw-bold">Patient Address</h4>
+
+          <button
+            className="btn btn-primary"
+            onClick={() => setShowModal(true)}
+            disabled={billingAddresses.length >= 6}
+          >
+            + Add New Address
           </button>
-          {/* STEP 1 - Choose Option */}
-          <AddAddressModal
-            show={step === "add"}
-            onClose={() => setStep("none")}
-            onSelectOption={(option) => {
-              if (option === "current") setStep("map");
-              else setStep("manual"); // ✅ open manual modal
-            }}
-          />
-
-          {/* STEP 2 - Map Location */}
-          <CurrentLocationMapModal
-            show={step === "map"}
-            onClose={() => setStep("none")}
-            onConfirm={(loc) => {
-              setSelectedLocation(loc);
-              setStep("confirm");
-            }}
-          />
-
-          {/* STEP 3 - Manual Search Modal */}
-          <ManualLocationModal
-            show={step === "manual"}
-            onClose={() => setStep("none")}
-            onSelectLocation={(loc) => {
-              setSelectedLocation(loc);
-              setStep("confirm");
-            }}
-          />
-
-          {/* STEP 4 - Address Form */}
-          <ConfirmLocationModal
-            show={step === "confirm"}
-            onClose={() => setStep("none")}
-            locationDetails={selectedLocation || {}}
-            onSubmit={handleSaveAddress}
-          />
+          {userId !== null && (
+            <ConfirmLocationModal
+              show={showModal}
+              onClose={() => setShowModal(false)}
+              locationDetails={selectedLocation || {}}
+              onSubmit={handleRefreshList}
+              userId={userId}
+              //isEditMode={true}
+            />
+          )}
         </div>
-
+        <hr style={{ border: "2px solid #000" }} />
         <div className="row">
           {billingAddresses.map((addr, index) => (
-            <div className="col-md-4 mb-3" key={index}>
+            <div className="col-md-4 mb-4" key={index}>
               <div
-                className={`card border-2 ${
-                  billingAddress === index
-                    ? "border-primary"
-                    : "border-light-subtle"
-                }`}
+                className={`card ${
+                  billingAddress === index ? "border-danger" : "border-light"
+                } shadow-sm`}
                 onClick={() => setBillingAddress(index)}
-                style={{ cursor: "pointer" }}
+                style={{
+                  cursor: "pointer",
+                  borderWidth: "2px",
+                  borderRadius: "8px",
+                  transition: "all 0.2s ease-in-out",
+                  fontFamily: "'Inter', 'Segoe UI', sans-serif",
+                }}
               >
-                <div className="card-body">
-                  <div className="form-check">
+                <div className="card-body p-3">
+                  <div className="d-flex align-items-center mb-2">
                     <input
                       type="radio"
-                      className="form-check-input"
                       name="billingAddress"
                       checked={billingAddress === index}
                       readOnly
+                      className="form-check-input me-2"
+                      style={{
+                        accentColor: "#e53935",
+                        transform: "scale(1.1)",
+                      }}
                     />
-                    <label className="form-check-label fw-bold ms-2">
-                      {addr.title}
+                    <label
+                      className="fw-semibold mb-0"
+                      style={{ fontSize: "15px", color: "#212121" }}
+                    >
+                      {addr.address_type_id === 1
+                        ? "Home"
+                        : addr.address_type_id === 2
+                        ? "Office"
+                        : "Other"}
                     </label>
                   </div>
-                  <p className="mt-2 mb-1 small">{addr.address}</p>
-                  <p className="fw-semibold mb-0">{addr.name}</p>
-                  <p className="text-muted small">{addr.mobile}</p>
-                  <div className="d-flex gap-3 mt-2">
-                    {/* <button className="btn btn-link text-danger p-0">
-                      Edit
-                    </button> */}
-                    <button className="btn btn-link text-danger p-0">
-                      Remove
-                    </button>
+
+                  <div className="ps-4">
+                    <p
+                      className="mb-1"
+                      style={{
+                        fontSize: "13px",
+                        color: "#555",
+                        lineHeight: "1",
+                      }}
+                    >
+                      {addr.address}
+                    </p>
+                    <p
+                      className="mb-3"
+                      style={{
+                        fontSize: "13px",
+                        color: "#555",
+                        lineHeight: "1",
+                      }}
+                    >
+                      {addr.location} ({addr.pincode})
+                    </p>
+                    <p
+                      className="mb-0 fw-semibold"
+                      style={{ fontSize: "13.5px", color: "#212121" }}
+                    >
+                      {addr.name}
+                    </p>
+                    <p
+                      className="mb-2"
+                      style={{ fontSize: "13px", color: "#757575" }}
+                    >
+                      {addr.mobile}
+                    </p>
+
+                    <div className="d-flex gap-3 ps-1">
+                      <button
+                        className="btn btn-link p-0 fw-semibold"
+                        style={{
+                          fontSize: "13px",
+                          color: "#e53935",
+                          textDecoration: "none",
+                        }}
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (!addr.id) {
+                            toast.error("Invalid address ID");
+                            return;
+                          }
+                          handleEdit(addr.id);
+                        }}
+                      >
+                        Edit
+                      </button>
+                      <button
+                        className="btn btn-link p-0 fw-semibold"
+                        style={{
+                          fontSize: "13px",
+                          color: "#e53935",
+                          textDecoration: "none",
+                        }}
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (!addr.id) {
+                            toast.error("Invalid address ID");
+                            return;
+                          }
+                          handleRemove(addr.id);
+                        }}
+                      >
+                        Remove
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>

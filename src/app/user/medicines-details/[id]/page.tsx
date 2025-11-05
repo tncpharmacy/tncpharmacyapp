@@ -1,6 +1,7 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import "../../css/site-style.css";
+import "../../css/user-style.css";
 import SiteHeader from "@/app/user/components/header/header";
 import Slider from "react-slick";
 import "slick-carousel/slick/slick.css";
@@ -427,34 +428,59 @@ export default function ProductPage() {
                       <div className="descr">{storage}</div>
                     </div>
                   </div>
-                  <div className="col-md-4 pb-4">
+                  <div className="col-md-4 pb-4 justify-content-center align-items-center">
                     <Slider {...singleImageSlider}>
-                      {imageList.length > 0 ? (
-                        imageList.map((src, index) => (
-                          <div
-                            key={index}
-                            onClick={() => openModal(index)}
-                            style={{ cursor: "pointer" }}
-                          >
-                            <Image
-                              src={`${mediaBase}${src}`} // ✅ Full image path
-                              alt={`Product ${index + 1}`}
-                              className="w-100 h-100 rounded"
-                              width={100}
-                              height={100}
-                            />
-                          </div>
-                        ))
+                      {imageList && imageList.length > 0 ? (
+                        imageList.map((rawSrc, index) => {
+                          // normalize mediaBase + rawSrc into a full URL safely
+                          const cleanedBase = (mediaBase || "").replace(
+                            /\/+$/,
+                            ""
+                          );
+                          const cleanedSrc = (rawSrc || "").replace(/^\/+/, "");
+                          const fullUrl = cleanedBase
+                            ? `${cleanedBase}/${cleanedSrc}`
+                            : rawSrc;
+
+                          // debug log (remove after debugging)
+                          // eslint-disable-next-line no-console
+                          console.log(
+                            `[PRODUCT IMAGE] index=${index} ->`,
+                            fullUrl
+                          );
+
+                          return (
+                            <div
+                              key={index}
+                              onClick={() => openModal(index)}
+                              className="product-image-box"
+                            >
+                              <img
+                                src={fullUrl}
+                                alt={`Product ${index + 1}`}
+                                className="product-image"
+                                loading="lazy"
+                                onError={(e) => {
+                                  // show fallback if image load fails
+                                  e.currentTarget.onerror = null;
+                                  e.currentTarget.src =
+                                    "/images/tnc-default.png";
+                                  // eslint-disable-next-line no-console
+                                  console.warn(
+                                    "[PRODUCT IMAGE] failed to load:",
+                                    fullUrl
+                                  );
+                                }}
+                              />
+                            </div>
+                          );
+                        })
                       ) : (
-                        // 🔹 Default image if no images found
-                        <div>
-                          <Image
-                            src="/images/tnc-default.png" // 👉 default image path (put in /public/images)
+                        <div className="product-image-box">
+                          <img
+                            src="/images/tnc-default.png"
                             alt="No Image Available"
-                            className="w-100 h-100 rounded"
-                            width={100}
-                            height={100}
-                            style={{ opacity: "0.3" }}
+                            className="product-image"
                           />
                         </div>
                       )}
@@ -475,7 +501,7 @@ export default function ProductPage() {
                                 alt={`Modal Image ${index + 1}`}
                                 width={800} // required
                                 height={600} // required
-                                className="w-100"
+                                className="product-modal-img"
                                 style={{
                                   maxHeight: "80vh",
                                   objectFit: "contain",

@@ -34,6 +34,7 @@ export interface MedicineFormData {
 
 export interface Medicine {
   id: number;
+  medicine_id: number;
   unit: string;
   medicine_name: string;
   manufacturer_name?: string;

@@ -1,12 +1,16 @@
+import {
+  fetchAddress,
+  fetchAddressById,
+  createAddress,
+  updateAddress,
+  deleteAddress,
+} from "@/lib/api/address";
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
-import { fetchAddress, createAddress, deleteAddress } from "@/lib/api/address"; // adjust path
 import { Address, AddressResponse } from "@/types/address";
 
-// ===============================
-// SLICE
-// ===============================
 interface AddressState {
   addresses: Address[];
+  selectedAddress: Address | null;
   loading: boolean;
   error: string | null;
   message: string | null;
@@ -14,6 +18,7 @@ interface AddressState {
 
 const initialState: AddressState = {
   addresses: [],
+  selectedAddress: null,
   loading: false,
   error: null,
   message: null,
@@ -23,16 +28,30 @@ const initialState: AddressState = {
 // ASYNC THUNKS
 // ===============================
 export const getAddress = createAsyncThunk(
-  "address/fetch",
+  "address/fetchAll",
   async (buyerId: number, { rejectWithValue }) => {
     try {
       const response = await fetchAddress(buyerId);
       return response;
-    } catch (err: unknown) {
-      if (err instanceof Error) {
-        return rejectWithValue(err.message);
-      }
-      return rejectWithValue("Failed to fetch address");
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (err: any) {
+      return rejectWithValue(err.message || "Failed to fetch address");
+    }
+  }
+);
+
+export const getAddressById = createAsyncThunk(
+  "address/fetchById",
+  async (
+    { buyerId, addressId }: { buyerId: number; addressId: number },
+    { rejectWithValue }
+  ) => {
+    try {
+      const response = await fetchAddressById(buyerId, addressId);
+      return response;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (err: any) {
+      return rejectWithValue(err.message || "Failed to fetch address by id");
     }
   }
 );
@@ -43,11 +62,22 @@ export const addAddress = createAsyncThunk(
     try {
       const response = await createAddress(data);
       return response;
-    } catch (err: unknown) {
-      if (err instanceof Error) {
-        return rejectWithValue(err.message);
-      }
-      return rejectWithValue("Failed to fetch address");
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (err: any) {
+      return rejectWithValue(err.message || "Failed to create address");
+    }
+  }
+);
+
+export const editAddress = createAsyncThunk(
+  "address/update",
+  async ({ id, data }: { id: number; data: Address }, { rejectWithValue }) => {
+    try {
+      const response = await updateAddress(id, data);
+      return response;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (err: any) {
+      return rejectWithValue(err.message || "Failed to update address");
     }
   }
 );
@@ -58,11 +88,9 @@ export const removeAddress = createAsyncThunk(
     try {
       const response = await deleteAddress(id);
       return { id, ...response };
-    } catch (err: unknown) {
-      if (err instanceof Error) {
-        return rejectWithValue(err.message);
-      }
-      return rejectWithValue("Failed to fetch address");
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (err: any) {
+      return rejectWithValue(err.message || "Failed to delete address");
     }
   }
 );
@@ -77,7 +105,7 @@ const addressSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      // ======= FETCH =======
+      // ======= FETCH ALL =======
       .addCase(getAddress.pending, (state) => {
         state.loading = true;
       })
@@ -94,6 +122,23 @@ const addressSlice = createSlice({
         state.error = action.payload as string;
       })
 
+      // ======= FETCH BY ID =======
+      .addCase(getAddressById.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(
+        getAddressById.fulfilled,
+        (state, action: PayloadAction<Address>) => {
+          state.loading = false;
+          state.selectedAddress = action.payload;
+          state.error = null;
+        }
+      )
+      .addCase(getAddressById.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+
       // ======= CREATE =======
       .addCase(addAddress.pending, (state) => {
         state.loading = true;
@@ -103,10 +148,29 @@ const addressSlice = createSlice({
         (state, action: PayloadAction<Address>) => {
           state.loading = false;
           state.addresses.push(action.payload);
-          state.message = "Item added successfully.";
+          state.message = "Address added successfully.";
         }
       )
       .addCase(addAddress.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+
+      // ======= UPDATE =======
+      .addCase(editAddress.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(
+        editAddress.fulfilled,
+        (state, action: PayloadAction<Address>) => {
+          state.loading = false;
+          state.addresses = state.addresses.map((addr) =>
+            addr.id === action.payload.id ? action.payload : addr
+          );
+          state.message = "Address updated successfully.";
+        }
+      )
+      .addCase(editAddress.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
       })

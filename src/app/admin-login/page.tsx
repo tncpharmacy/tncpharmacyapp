@@ -1,6 +1,6 @@
 "use client";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Modal } from "react-bootstrap";
 import { useAppDispatch, useAppSelector } from "@/lib/hooks";
 import { loginUser } from "@/lib/features/authSlice/authSlice";
@@ -22,7 +22,19 @@ export default function Login({ show, handleClose }: LoginFormProps) {
   const [password, setPassword] = useState("");
   const [mounted, setMounted] = useState(false);
 
+  // ✅ Properly typed refs
+  const loginInputRef = useRef<HTMLInputElement | null>(null);
+  const passwordInputRef = useRef<HTMLInputElement | null>(null);
+
+  // ✅ Mount fix for Next.js hydration
   useEffect(() => setMounted(true), []);
+
+  // ✅ Auto-focus on first field when modal opens
+  useEffect(() => {
+    if (show && loginInputRef.current) {
+      setTimeout(() => loginInputRef.current?.focus(), 100);
+    }
+  }, [show]);
 
   // ✅ Wrap redirectUser in useCallback so it stays stable
   const redirectUser = useCallback(
@@ -59,6 +71,21 @@ export default function Login({ show, handleClose }: LoginFormProps) {
     }
   };
 
+  // ✅ Keyboard navigation
+  const handleKeyDown = (
+    e: React.KeyboardEvent<HTMLInputElement>,
+    field: "login_id" | "password"
+  ) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      if (field === "login_id" && passwordInputRef.current) {
+        passwordInputRef.current.focus();
+      } else if (field === "password") {
+        handleLogin();
+      }
+    }
+  };
+
   if (!mounted) return null;
 
   return (
@@ -73,7 +100,7 @@ export default function Login({ show, handleClose }: LoginFormProps) {
         <div className="row">
           <div className="col-md-5 pe-0 d-none d-md-block">
             <img
-              src="../images/login-banner-1.jpg"
+              src="../images/login-banner.gif"
               className="w-100"
               alt="Login Banner"
             />
@@ -84,19 +111,23 @@ export default function Login({ show, handleClose }: LoginFormProps) {
               <div className="row_login">
                 <span className="lbllogin">Login ID</span>
                 <input
+                  ref={loginInputRef}
                   type="text"
                   className="txtlogin"
                   value={login_id}
                   onChange={(e) => setLoginId(e.target.value)}
+                  onKeyDown={(e) => handleKeyDown(e, "login_id")}
                 />
               </div>
               <div className="row_login">
                 <span className="lbllogin">Password</span>
                 <input
+                  ref={passwordInputRef}
                   type="password"
                   className="txtlogin"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
+                  onKeyDown={(e) => handleKeyDown(e, "password")}
                 />
               </div>
               <button

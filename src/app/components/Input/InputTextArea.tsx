@@ -24,7 +24,7 @@ const InputTextArea: React.FC<InputTextAreaProps> = ({
   readOnly = false,
   error,
   colClass = "col-md-12",
-  rows = 4,
+  rows = 6,
   cols,
   maxLength,
   onChange,

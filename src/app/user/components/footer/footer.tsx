@@ -9,6 +9,10 @@ import { useEffect } from "react";
 const Footer = () => {
   const dispatch = useAppDispatch();
   const { list: categories } = useAppSelector((state) => state.category);
+  const reorderedCategories = [
+    ...categories.filter((cat) => cat.category_name === "Medicines"),
+    ...categories.filter((cat) => cat.category_name !== "Medicines"),
+  ];
 
   useEffect(() => {
     dispatch(getCategoriesList());
@@ -32,25 +36,25 @@ const Footer = () => {
                 <h5 className="ftr_title">About TnC Pharmacy</h5>
                 <ul className="ftr_link">
                   <li>
-                    <a href="#">About Us</a>
+                    <Link href="#">About Us</Link>
                   </li>
                   {/* <li>
                     <a href="#">Our Stores</a>
                   </li> */}
                   <li>
-                    <a href="#">Careers</a>
+                    <Link href="#">Careers</Link>
                   </li>
                   <li>
-                    <a href="#">News & Media</a>
+                    <Link href="#">News & Media</Link>
                   </li>
                   {/* <li>
                     <a href="#">Our Blogs</a>
                   </li> */}
                   <li>
-                    <a href="#">Contact Us</a>
+                    <Link href="/contact-us">Contact Us</Link>
                   </li>
                   <li>
-                    <a href="#">FAQs</a>
+                    <Link href="/FAQs">FAQs</Link>
                   </li>
                 </ul>
               </div>
@@ -60,80 +64,80 @@ const Footer = () => {
                 <h5 className="ftr_title">Our Policies</h5>
                 <ul className="ftr_link">
                   <li>
-                    <a href="#">Returns & Refunds</a>
+                    <Link href="/return-policy">Return Policy</Link>
                   </li>
                   <li>
-                    <a href="#">Shipping Terms</a>
+                    <Link href="/refund-policy">Refund Policy</Link>
                   </li>
                   <li>
-                    <a href="#">Privacy Policy</a>
+                    <Link href="/shipping-policy">Shipping Policy</Link>
                   </li>
                   <li>
-                    <a href="#">Terms and Conditions</a>
+                    <Link href="/privacy-policy">Privacy Policy</Link>
                   </li>
                   <li>
-                    <a href="#">Editorial Policy</a>
+                    <Link href="/terms-and-conditions">Terms & Conditions</Link>
                   </li>
-                </ul>
-              </div>
-
-              {/* Product Categories */}
-              <div className="col-sm-3">
-                <h5 className="ftr_title">Product Categories</h5>
-                <ul className="ftr_link">
-                  {categories.map((cat, idx) => (
-                    <li key={idx}>
-                      <Link
-                        href={
-                          cat.id === 1
-                            ? "/all-medicine"
-                            : `/all-product/${encodeId(cat.id)}`
-                        }
-                      >
-                        {cat.category_name}
-                      </Link>
-                    </li>
-                  ))}
-
                   {/* <li>
-                    <a href="#">Personal Care</a>
-                  </li>
-                  <li>
-                    <a href="#">Women Care</a>
-                  </li>
-                  <li>
-                    <a href="#">Baby Care</a>
-                  </li>
-                  <li>
-                    <a href="#">Sports Nutrition</a>
-                  </li>
-                  <li>
-                    <a href="#">Ayurveda</a>
-                  </li>
-                  <li>
-                    <a href="#">Health Devices</a>
+                    <a href="#">Editorial Policy</a>
                   </li> */}
                 </ul>
               </div>
 
-              {/* Additional Links */}
-              <div className="col-sm-3">
-                <h5 className="ftr_title">Additional Links</h5>
-                <ul className="ftr_link">
-                  <li>
-                    <a href="#">Order Medicines</a>
-                  </li>
-                  <li>
-                    <a href="#">Online Doctor Consultation</a>
-                  </li>
-                  <li>
-                    <a href="#">All Doctors List</a>
-                  </li>
-                  <li>
-                    <a href="#">Login / Register</a>
-                  </li>
-                </ul>
+              {/* Product Categories */}
+              <div className="col-sm-6">
+                <h5 className="ftr_title">Product Categories</h5>
+                <div className="row product-cat-row">
+                  <div className="col-6">
+                    <ul className="ftr_link">
+                      {reorderedCategories.slice(0, 5).map((cat, idx) => (
+                        <li key={idx}>
+                          <Link
+                            href={
+                              cat.id === 1
+                                ? "/all-medicine"
+                                : `/all-product/${encodeId(cat.id)}`
+                            }
+                          >
+                            {cat.category_name}
+                          </Link>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  <div className="col-6">
+                    <ul className="ftr_link">
+                      {reorderedCategories.slice(5).map((cat, idx) => (
+                        <li key={idx}>
+                          <Link
+                            href={
+                              cat.id === 1
+                                ? "/all-medicine"
+                                : `/all-product/${encodeId(cat.id)}`
+                            }
+                          >
+                            {cat.category_name}
+                          </Link>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
               </div>
+
+              {/* Additional Links (commented for now) */}
+              {/*
+<div className="col-sm-3">
+  <h5 className="ftr_title">Additional Links</h5>
+                  <ul className="ftr_link">
+                    <li><a href="#">Order Medicines</a></li>
+                    <li><a href="#">Online Doctor Consultation</a></li>
+                    <li><a href="#">All Doctors List</a></li>
+                    <li><a href="#">Login / Register</a></li>
+                  </ul>
+                </div>
+                */}
             </div>
           </div>
 

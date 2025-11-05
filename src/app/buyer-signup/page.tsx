@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Modal } from "react-bootstrap";
 import { useRouter } from "next/navigation";
 import { useAppDispatch, useAppSelector } from "@/lib/hooks";
@@ -38,6 +38,22 @@ export default function BuyerSignupModal({
   const [formError, setFormError] = useState("");
   const [serverOtp, setServerOtp] = useState<string | null>(null);
 
+  // ⭐ Type-safe refs
+  const nameRef = useRef<HTMLInputElement | null>(null);
+  const emailRef = useRef<HTMLInputElement | null>(null);
+  const mobileRef = useRef<HTMLInputElement | null>(null);
+  const otpRef = useRef<HTMLInputElement | null>(null);
+
+  useEffect(() => {
+    if (!show) return;
+
+    if (step === "signup" && nameRef.current) {
+      nameRef.current.focus();
+    } else if (step === "otp" && otpRef.current) {
+      setTimeout(() => otpRef.current?.focus(), 100);
+    }
+  }, [show, step]);
+
   useEffect(() => {
     if (prefillEmail) setEmail(prefillEmail);
     if (prefillMobile) setMobile(prefillMobile);
@@ -45,10 +61,33 @@ export default function BuyerSignupModal({
 
   // ---------- signup handler ----------
   const handleSignup = async () => {
-    if (!name || !email || !mobile) {
-      setFormError("All fields are required.");
+    // ✅ Basic empty check
+    if (!name.trim() || !email.trim() || !mobile.trim()) {
+      setFormError("Please fill in all fields.");
       return;
     }
+
+    // ✅ Name minimum 3 characters
+    if (name.trim().length < 3) {
+      setFormError("Name must be at least 3 characters long.");
+      return;
+    }
+
+    // ✅ Email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setFormError("Please enter a valid email address.");
+      return;
+    }
+
+    // ✅ Mobile validation
+    const mobileRegex = /^\d{10}$/;
+    if (!mobileRegex.test(mobile)) {
+      setFormError("Please enter a valid 10-digit mobile number.");
+      return;
+    }
+
+    // ✅ Clear previous errors
     setFormError("");
 
     try {
@@ -73,6 +112,24 @@ export default function BuyerSignupModal({
     }
   };
 
+  // ⭐ Custom key handler for step-by-step focus navigation
+  // ⭐ Define what values "field" can be
+  const handleKeyDown = (
+    e: React.KeyboardEvent<HTMLInputElement>,
+    field: "name" | "email" | "mobile"
+  ) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      if (field === "name" && emailRef.current) {
+        emailRef.current.focus();
+      } else if (field === "email" && mobileRef.current) {
+        mobileRef.current.focus();
+      } else if (field === "mobile") {
+        handleSignup();
+      }
+    }
+  };
+
   // ---------- OTP verify handler ----------
   const handleOtpSubmit = async () => {
     if (!otp) {
@@ -90,6 +147,12 @@ export default function BuyerSignupModal({
     } catch (err) {
       if (typeof err === "string") setFormError(err);
       else setFormError("Invalid OTP. Please try again.");
+    }
+  };
+
+  const handleKeyDownOtp = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      handleOtpSubmit();
     }
   };
 
@@ -142,7 +205,7 @@ export default function BuyerSignupModal({
           {/* Left banner */}
           <div className="col-md-5 pe-0 d-none d-md-block">
             <img
-              src="../images/login-banner-1.jpg"
+              src="../images/login-banner.gif"
               className="w-100"
               alt="Signup Banner"
             />
@@ -157,33 +220,45 @@ export default function BuyerSignupModal({
                   <div className="row_login">
                     <span className="lbllogin">Full Name</span>
                     <input
+                      ref={nameRef}
                       type="text"
                       className="txtlogin"
                       value={name}
                       onChange={(e) => setName(e.target.value)}
                       maxLength={15}
+                      onKeyDown={(e) => handleKeyDown(e, "name")}
                     />
                   </div>
 
                   <div className="row_login">
                     <span className="lbllogin">Email ID</span>
                     <input
+                      ref={emailRef}
                       type="email"
                       className="txtlogin"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       maxLength={25}
+                      onKeyDown={(e) => handleKeyDown(e, "email")}
                     />
                   </div>
 
                   <div className="row_login">
                     <span className="lbllogin">Mobile No</span>
                     <input
+                      ref={mobileRef}
                       type="text"
                       className="txtlogin"
                       value={mobile}
-                      onChange={(e) => setMobile(e.target.value)}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        // Allow only digits and limit to 10
+                        if (/^\d{0,10}$/.test(value)) {
+                          setMobile(value);
+                        }
+                      }}
                       maxLength={10}
+                      onKeyDown={(e) => handleKeyDown(e, "mobile")}
                     />
                   </div>
 
@@ -211,11 +286,13 @@ export default function BuyerSignupModal({
                   <div className="row_login">
                     <span className="lbllogin">Enter OTP</span>
                     <input
+                      ref={otpRef}
                       type="text"
                       className="txtlogin"
                       value={otp}
                       onChange={(e) => setOtp(e.target.value)}
                       maxLength={4}
+                      onKeyDown={handleKeyDownOtp}
                     />
                   </div>
 

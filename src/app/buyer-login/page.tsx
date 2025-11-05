@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Image, Modal } from "react-bootstrap";
 import { useRouter, usePathname } from "next/navigation";
 import BuyerSignupModal from "@/app/buyer-signup/page";
@@ -34,6 +34,21 @@ export default function BuyerLoginModal({
   const [prefillMobile, setPrefillMobile] = useState("");
 
   const { loading, otpCode } = useAppSelector((state) => state.buyer);
+
+  const loginInputRef = useRef<HTMLInputElement>(null);
+  const otpInputRef = useRef<HTMLInputElement>(null);
+
+  // 👇 useEffect me dono step check kar
+  useEffect(() => {
+    if (!show) return;
+
+    if (step === 1 && loginInputRef.current) {
+      loginInputRef.current.focus();
+    } else if (step === 2 && otpInputRef.current) {
+      // chhoti delay dete hain taaki DOM render ho jaye
+      setTimeout(() => otpInputRef.current?.focus(), 100);
+    }
+  }, [show, step]);
 
   //
   // 🔹 Step 1: Handle login check
@@ -77,6 +92,12 @@ export default function BuyerLoginModal({
     }
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      handleLoginCheck();
+    }
+  };
+
   //
   // 🔹 Step 2: OTP verification
   //
@@ -104,7 +125,11 @@ export default function BuyerLoginModal({
       else setError("Invalid OTP. Please try again.");
     }
   };
-
+  const handleKeyDownOtp = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      handleOtpSubmit();
+    }
+  };
   //
   // 🔹 Reset form helper
   //
@@ -137,7 +162,7 @@ export default function BuyerLoginModal({
             {/* Left Banner */}
             <div className="col-md-5 pe-0 d-none d-md-block">
               <Image
-                src="../images/login-banner-1.jpg"
+                src="../images/login-banner.gif"
                 className="w-100"
                 alt="Patient Login Banner"
               />
@@ -156,6 +181,7 @@ export default function BuyerLoginModal({
                     <div className="row_login">
                       <span className="lbllogin">Mobile No</span>
                       <input
+                        ref={loginInputRef}
                         type="text"
                         className="txtlogin"
                         value={loginId}
@@ -167,6 +193,7 @@ export default function BuyerLoginModal({
                           }
                         }}
                         maxLength={10}
+                        onKeyDown={handleKeyDown}
                         // onChange={(e) => {
                         //   const value = e.target.value;
 
@@ -217,12 +244,14 @@ export default function BuyerLoginModal({
                     <div className="row_login">
                       <span className="lbllogin">Enter OTP</span>
                       <input
+                        ref={otpInputRef}
                         type="text"
                         className="txtlogin"
                         value={otp}
                         placeholder="Enter 4-digit OTP"
                         onChange={(e) => setOtp(e.target.value)}
                         maxLength={4}
+                        onKeyDown={handleKeyDownOtp}
                       />
                     </div>
 

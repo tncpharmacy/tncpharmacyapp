@@ -19,6 +19,40 @@ body {
     outline: none;
 }
 
+/* 🧩 Force each slick slide wrapper to use flex */
+.slick-slide > div {
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  height: 100% !important;
+}
+
+/* 🖼️ Image box container */
+.product-image-box {
+  width: 100%;
+  height: 295px; /* adjust as you need */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f8f9fa;
+  border-radius: 2px;
+  overflow: hidden;
+  border: 1px solid #eaeaea;
+  padding: 10px;
+  text-align: center;
+}
+
+/* 🧍 Actual image */
+.product-image {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  display: block;
+  margin: 0 auto;
+  cursor: pointer;
+}
+
+
 .btn-1 {
     background: #ff7b00;
     color: #ffffff;
