@@ -1,0 +1,133 @@
+.footer-section .footer-top {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+  padding-bottom: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.footer-column {
+  padding-right: 1.5rem;
+}
+
+.footer-column.border-end {
+  border-right: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.footer-section {
+  background: #004aad; /* same blue theme */
+  color: #fff;
+  padding: 3rem 0;
+}
+
+.footer-section .ftr_title {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 1rem;
+}
+
+.footer-section .ftr_link li {
+  list-style: none;
+  margin-bottom: 0.5rem;
+}
+
+.footer-section .ftr_link a {
+  color: #dfe6f1;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.footer-section .ftr_link a:hover {
+  color: #ffffff;
+}
+
+.ftr_sociallink {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0;
+  margin-top: 10px;
+}
+
+.ftr_sociallink li {
+  list-style: none;
+}
+
+.ftr_sociallink a {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 0; /* square buttons */
+  color: #fff;
+  font-size: 1.2rem;
+  transition: all 0.3s ease;
+  background-color: #fff; /* neutral bg */
+  border: 1px solid #ddd;
+}
+
+/* 🔵 Facebook */
+.ftr_sociallink a.facebook {
+  color: #1877f2;
+}
+
+/* 🩵 Twitter */
+.ftr_sociallink a.twitter {
+  color: #1da1f2;
+}
+
+/* 🩵 Common style for all icons */
+.ftr_sociallink a {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border: 2px solid rgba(255, 255, 255, 0.6);
+  background: white;
+  color: #fff;
+  font-size: 1.2rem;
+  transition: all 0.3s ease;
+}
+
+/* ❤️ Instagram (Gradient only inside the icon) */
+.ftr_sociallink a.instagram {
+  background: white; /* white box */
+  border-radius: 6px; /* square but soft corners */
+}
+
+.ftr_sociallink a.instagram i {
+  background: radial-gradient(
+    circle at 30% 107%,
+    #fdf497 0%,
+    #fd5949 45%,
+    #d6249f 60%,
+    #285AEB 90%
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  font-size: 1.4rem; /* slightly larger */
+}
+
+/* ✨ Hover effect (optional) */
+.ftr_sociallink a.instagram:hover {
+  transform: scale(1.1);
+  box-shadow: 0 0 10px rgba(214, 36, 159, 0.3);
+}
+
+
+/* 🔴 YouTube */
+.ftr_sociallink a.youtube {
+  color: #ff0000;
+}
+
+/* 🔵 LinkedIn */
+.ftr_sociallink a.linkedin {
+  color: #0077b5;
+}
+
+/* ✨ Hover Effect */
+.ftr_sociallink a:hover {
+  transform: scale(1.1);
+  opacity: 0.9;
+}

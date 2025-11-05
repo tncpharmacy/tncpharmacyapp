@@ -6,6 +6,7 @@ import { useAppSelector } from "@/lib/hooks";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
+import "../../css/style.css";
 
 export default function Header() {
   const { user, accessToken } = useAppSelector((state) => state.auth);

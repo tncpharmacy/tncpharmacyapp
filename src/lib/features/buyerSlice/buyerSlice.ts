@@ -1,7 +1,9 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import {
+  buyerCreateOrderApi,
   buyerDeleteApi,
   buyerGetApi,
+  buyerGetOrderListApi,
   buyerLoginApi,
   buyerRegisterApi,
   buyerUpdateApi,
@@ -33,7 +35,9 @@ const initialState: BuyerState = {
   registered: false,
   message: null,
   otpCode: null,
-  lastLoginResponse: null, // ✅ Added for temporary storage
+  lastLoginResponse: null,
+  orders: [],
+  orderCreated: false,
 };
 
 //
@@ -164,6 +168,50 @@ export const verifyBuyerOtp = createAsyncThunk<
   }
 });
 
+// 7️⃣ Create Buyer Order
+export const createBuyerOrder = createAsyncThunk<
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  any,
+  {
+    buyerId: number;
+    payload: Record<
+      string,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      any
+    >;
+  },
+  { rejectValue: string }
+>("buyer/createOrder", async ({ buyerId, payload }, { rejectWithValue }) => {
+  try {
+    const res = await buyerCreateOrderApi(buyerId, payload);
+    return res.data;
+  } catch (err: unknown) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const e = err as any;
+    return rejectWithValue(
+      e.response?.data?.message || "Failed to create order"
+    );
+  }
+});
+
+// 8️⃣ Get Buyer Orders
+export const getBuyerOrders = createAsyncThunk<
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  any,
+  void,
+  { rejectValue: string }
+>("buyer/getOrders", async (_, { rejectWithValue }) => {
+  try {
+    const res = await buyerGetOrderListApi();
+    return res.data;
+  } catch (err: unknown) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const e = err as any;
+    return rejectWithValue(
+      e.response?.data?.message || "Failed to fetch orders"
+    );
+  }
+});
 //
 // 🔹 Slice
 //
@@ -329,6 +377,35 @@ const buyerSlice = createSlice({
       .addCase(deleteBuyer.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload ?? "Failed to delete buyer";
+      })
+      // 🔹 Create Buyer Order
+      .addCase(createBuyerOrder.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(createBuyerOrder.fulfilled, (state) => {
+        state.loading = false;
+        state.orderCreated = true;
+        toast.success("Order created successfully!");
+      })
+      .addCase(createBuyerOrder.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload ?? "Failed to create order";
+      })
+
+      // 🔹 Get Buyer Orders
+      .addCase(getBuyerOrders.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(getBuyerOrders.fulfilled, (state, action) => {
+        state.loading = false;
+        state.orders = action.payload?.data || [];
+        toast.success("Orders fetched successfully!");
+      })
+      .addCase(getBuyerOrders.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload ?? "Failed to fetch orders";
       });
   },
 });

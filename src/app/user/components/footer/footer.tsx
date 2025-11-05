@@ -1,4 +1,5 @@
 "use client";
+import "../../css/footer.css";
 import { getCategoriesList } from "@/lib/features/categorySlice/categorySlice";
 import { useAppDispatch, useAppSelector } from "@/lib/hooks";
 import { encodeId } from "@/lib/utils/encodeDecode";
@@ -36,7 +37,7 @@ const Footer = () => {
                 <h5 className="ftr_title">About TnC Pharmacy</h5>
                 <ul className="ftr_link">
                   <li>
-                    <Link href="#">About Us</Link>
+                    <Link href="/about-us">About Us</Link>
                   </li>
                   {/* <li>
                     <a href="#">Our Stores</a>
@@ -84,11 +85,11 @@ const Footer = () => {
                 </ul>
               </div>
 
-              {/* Product Categories */}
-              <div className="col-sm-6">
+              {/* Product Categories 1 */}
+              <div className="col-sm-3">
                 <h5 className="ftr_title">Product Categories</h5>
                 <div className="row product-cat-row">
-                  <div className="col-6">
+                  <div className="col-12">
                     <ul className="ftr_link">
                       {reorderedCategories.slice(0, 5).map((cat, idx) => (
                         <li key={idx}>
@@ -105,8 +106,14 @@ const Footer = () => {
                       ))}
                     </ul>
                   </div>
+                </div>
+              </div>
 
-                  <div className="col-6">
+              {/* Product Categories 2 */}
+              <div className="col-sm-3">
+                <h5 className="ftr_title">Product Categories</h5>
+                <div className="row product-cat-row">
+                  <div className="col-12">
                     <ul className="ftr_link">
                       {reorderedCategories.slice(5).map((cat, idx) => (
                         <li key={idx}>
@@ -125,19 +132,6 @@ const Footer = () => {
                   </div>
                 </div>
               </div>
-
-              {/* Additional Links (commented for now) */}
-              {/*
-<div className="col-sm-3">
-  <h5 className="ftr_title">Additional Links</h5>
-                  <ul className="ftr_link">
-                    <li><a href="#">Order Medicines</a></li>
-                    <li><a href="#">Online Doctor Consultation</a></li>
-                    <li><a href="#">All Doctors List</a></li>
-                    <li><a href="#">Login / Register</a></li>
-                  </ul>
-                </div>
-                */}
             </div>
           </div>
 
@@ -180,29 +174,29 @@ const Footer = () => {
               <h5 className="ftr_title">We are social</h5>
               <ul className="ftr_sociallink">
                 <li>
-                  <a href="#">
+                  <Link href="#" className="facebook">
                     <i className="bi bi-facebook"></i>
-                  </a>
+                  </Link>
                 </li>
                 <li>
-                  <a href="#">
+                  <Link href="#" className="twitter">
                     <i className="bi bi-twitter-x"></i>
-                  </a>
+                  </Link>
                 </li>
                 <li>
-                  <a href="#">
+                  <Link href="#" className="instagram">
                     <i className="bi bi-instagram"></i>
-                  </a>
+                  </Link>
                 </li>
                 <li>
-                  <a href="#">
+                  <Link href="#" className="youtube">
                     <i className="bi bi-youtube"></i>
-                  </a>
+                  </Link>
                 </li>
                 <li>
-                  <a href="#">
+                  <Link href="#" className="linkedin">
                     <i className="bi bi-linkedin"></i>
-                  </a>
+                  </Link>
                 </li>
               </ul>
             </div>
@@ -287,3 +281,20 @@ const Footer = () => {
 };
 
 export default Footer;
+
+{
+  /* Additional Links (commented for now) */
+}
+{
+  /*
+                <div className="col-sm-3">
+                  <h5 className="ftr_title">Additional Links</h5>
+                  <ul className="ftr_link">
+                    <li><a href="#">Order Medicines</a></li>
+                    <li><a href="#">Online Doctor Consultation</a></li>
+                    <li><a href="#">All Doctors List</a></li>
+                    <li><a href="#">Login / Register</a></li>
+                  </ul>
+                </div>
+                */
+}

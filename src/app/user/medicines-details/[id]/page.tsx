@@ -481,6 +481,7 @@ export default function ProductPage() {
                             src="/images/tnc-default.png"
                             alt="No Image Available"
                             className="product-image"
+                            style={{ opacity: "0.3" }}
                           />
                         </div>
                       )}

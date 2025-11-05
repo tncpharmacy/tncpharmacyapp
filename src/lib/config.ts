@@ -107,6 +107,16 @@ export const ENDPOINTS = {
     DELETE: (id: number) => `/buyer/create/${id}/`,
     GET: (id: number) => `/buyer/profile/${id}/`,
     PUT: (id: number) => `/buyer/profile/${id}/`,
+
+    // 🔹 Added Order APIs
+    POST_ORDER: (buyerId: number) => `/order/create-order/${buyerId}/`,
+    GET_ORDER: "/order/list/",
+  },
+
+  // Prescription Upload
+  PRESCRIPTION_UPLOAD: {
+    LOGIN_CREATE: "/ocr/prescription/update-buyer/",
+    PUBLIC_CREATE: "/ocr/prescription/upload/",
   },
 
   // medicines

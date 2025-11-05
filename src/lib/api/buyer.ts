@@ -33,3 +33,17 @@ export const buyerUpdateApi = async (
 export const buyerDeleteApi = async (id: number) => {
   return axiosInstance.delete(ENDPOINTS.BUYER.DELETE(id));
 };
+
+// 🔹 CREATE Order (new)
+export const buyerCreateOrderApi = async (
+  buyerId: number,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  payload: Record<string, any>
+) => {
+  return axiosInstance.post(ENDPOINTS.BUYER.POST_ORDER(buyerId), payload);
+};
+
+// 🔹 GET Order List (new)
+export const buyerGetOrderListApi = async () => {
+  return axiosInstance.get(ENDPOINTS.BUYER.GET_ORDER);
+};

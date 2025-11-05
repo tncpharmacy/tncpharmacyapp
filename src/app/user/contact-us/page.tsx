@@ -189,7 +189,7 @@ export default function ContactUs() {
           {/* ======= Map ======= */}
           <div className="mt-5">
             <iframe
-              src="https://www.google.com/maps?q=Ganga%20Shopping%20Complex%2C%20Sector%2029%2C%20Noida&output=embed"
+              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3504.0705780936546!2d77.33277807500595!3d28.567643287025287!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x390ce5e8e17754a9%3A0x7acc32930c3db705!2sGanga%20Shopping%20Complex!5e0!3m2!1sen!2sin!4v1762340476585!5m2!1sen!2sin"
               width="100%"
               height="350"
               style={{ border: 0 }}

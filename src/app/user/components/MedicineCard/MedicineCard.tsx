@@ -180,21 +180,44 @@ export default function MedicineCard({
         {/* Bottom section */}
         <div className="medicine-bottom">
           {discountPercent > 0 ? (
+            // <div className="d-flex flex-column align-items-start">
+            //   <p className="medicine-discounted text-success fw-bold mb-1">
+            //     ₹{formatCurrency(discountedPrice)}
+            //   </p>
+            //   <p
+            //     className="text-danger fw-bold mb-1"
+            //     style={{ fontSize: "12px" }}
+            //   >
+            //     ({discountPercent}% OFF)
+            //   </p>
+            //   <p
+            //     className="medicine-mrp text-muted mb-0"
+            //     style={{ textDecoration: "line-through" }}
+            //   >
+            //     ₹{formatCurrency(originalMrp)}
+            //   </p>
+            // </div>
+
             <div className="d-flex flex-column align-items-start">
-              <p className="medicine-discounted text-success fw-bold mb-1">
+              {/* Discounted Price */}
+              <p className="text-success fw-bold mb-1">
                 ₹{formatCurrency(discountedPrice)}
               </p>
-              <p
-                className="text-danger fw-bold mb-1"
-                style={{ fontSize: "12px" }}
-              >
-                ({discountPercent}% OFF)
-              </p>
-              <p
-                className="medicine-mrp text-muted mb-0"
-                style={{ textDecoration: "line-through" }}
-              >
-                ₹{formatCurrency(originalMrp)}
+
+              {/* Original MRP + Discount Percent */}
+              <p className="text-muted mb-0">
+                <span
+                  className="medicine-mrp text-muted mb-0"
+                  style={{ textDecoration: "line-through", fontSize: "13px" }}
+                >
+                  ₹{formatCurrency(originalMrp)}
+                </span>{" "}
+                <span
+                  className="text-danger fw-bold"
+                  style={{ fontSize: "13px" }}
+                >
+                  ({discountPercent}% OFF)
+                </span>
               </p>
             </div>
           ) : (

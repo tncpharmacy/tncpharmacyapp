@@ -1,5 +1,6 @@
 "use client";
 import LogoutButton from "@/app/components/Logout/LogoutButton";
+import "../../css/admin-style.css";
 import { useAppSelector } from "@/lib/hooks";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";

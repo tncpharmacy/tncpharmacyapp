@@ -35,4 +35,6 @@ export interface BuyerState {
   buyer: BuyerData | null;
   otpCode: string | null;
   lastLoginResponse: BuyerApiResponse | null;
+  orders: [];
+  orderCreated: boolean;
 }

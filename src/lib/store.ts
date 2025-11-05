@@ -18,6 +18,7 @@ import buyerReducer from "@/lib/features/buyerSlice/buyerSlice";
 import purchaseReducer from "@/lib/features/purchaseStockSlice/purchaseStockSlice";
 import healthBagReducer from "@/lib/features/healthBagSlice/healthBagSlice";
 import addressReducer from "@/lib/features/addressSlice/addressSlice";
+import prescriptionReducer from "@/lib/features/prescriptionSlice/prescriptionSlice";
 
 //
 // ✅ STEP 1 — Load preloaded state from localStorage
@@ -72,6 +73,7 @@ export const store = configureStore({
     purchaseStock: purchaseReducer,
     healthBag: healthBagReducer,
     address: addressReducer,
+    prescription: prescriptionReducer,
   },
   preloadedState: loadState(), // ✅ instant load on refresh
 });

@@ -456,7 +456,7 @@ export default function HomePage() {
                 <span className="b_name">Laurus Labs</span>
               </div>
               <div className="brand_item">
-                <img src="/images/brand/leefford.png" alt="Leeford" />
+                <img src="/images/brand/leeford.png" alt="Leeford" />
                 <span className="b_name">Leeford</span>
               </div>
               <div className="brand_item">
