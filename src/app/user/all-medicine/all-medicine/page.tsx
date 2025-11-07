@@ -15,7 +15,7 @@ export default function AllMedicine() {
   const { medicinesList: medicines } = useAppSelector(
     (state) => state.medicine
   );
-
+  const { loading } = useAppSelector((state) => state.medicine);
   useEffect(() => {
     dispatch(getMenuMedicinesList());
   }, [dispatch]);
@@ -29,7 +29,7 @@ export default function AllMedicine() {
           <div className="body_right">
             <div className="body_content">
               {/* <Link href={"#"}> */}
-              <MedicineList medicines={medicines || []} />
+              <MedicineList medicines={medicines || []} loading={loading} />
               {/* </Link> */}
             </div>
           </div>

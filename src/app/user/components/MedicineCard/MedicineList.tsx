@@ -3,14 +3,15 @@ import React, { useState, useMemo } from "react";
 import MedicineCard from "./MedicineCard";
 import { Image } from "react-bootstrap";
 import { Medicine } from "@/types/medicine";
+import { useAppSelector } from "@/lib/hooks";
 
 interface MedicineListProps {
   medicines: Medicine[];
+  loading: boolean;
 }
 
-const MedicineList: React.FC<MedicineListProps> = ({ medicines }) => {
+const MedicineList: React.FC<MedicineListProps> = ({ medicines, loading }) => {
   const [searchTerm, setSearchTerm] = useState("");
-
   // Filter the medicines based on the search term
   const filteredMedicines = useMemo(() => {
     if (!searchTerm) {
@@ -46,14 +47,14 @@ const MedicineList: React.FC<MedicineListProps> = ({ medicines }) => {
       </div>
       <div className="medicine-grid">
         {/* Use the filtered list for display */}
-        {filteredMedicines.length > 0 ? (
+        {loading ? (
+          <p>Loading products...</p>
+        ) : filteredMedicines.length === 0 ? (
+          <p>No products found.</p>
+        ) : (
           filteredMedicines.map((med, idx) => (
             <MedicineCard key={med.id || idx} {...med} />
           ))
-        ) : (
-          <p className="text-center text-muted w-100 py-4">
-            No medicines found matching {searchTerm}
-          </p>
         )}
       </div>
     </>

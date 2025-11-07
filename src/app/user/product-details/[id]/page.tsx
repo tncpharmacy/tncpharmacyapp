@@ -351,14 +351,14 @@ export default function ProductPage() {
                         <Link href="#">{pack_size}</Link>
                       </div>
                     </div>
-                    <div className="mb-4">
+                    {/* <div className="mb-4">
                       <div className="title fs-6">Variant (3)</div>
                       <ul className="pd_variant">
                         <li className="active">Fresh Active</li>
                         <li>Deep Impact Freshness</li>
                         <li>Cool Kick</li>
                       </ul>
-                    </div>
+                    </div> */}
                   </div>
                   <div className="col-md-4 pb-4 justify-content-center align-items-center">
                     <Slider {...singleImageSlider}>

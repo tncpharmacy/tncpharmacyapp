@@ -37,7 +37,7 @@ export default function AllGroupCare() {
   const medicines = useAppSelector(
     (state) => state.medicine.groupCareList || []
   );
-  console.log("categoryIdNum", categoryIdNum);
+  const { loading } = useAppSelector((state) => state.medicine);
   const { list: categories } = useAppSelector((state) => state.category);
 
   const shuffledMedicines = useShuffledProduct(
@@ -149,7 +149,11 @@ export default function AllGroupCare() {
               </div>
 
               <div className="pd_list">
-                {filteredMedicines && filteredMedicines.length > 0 ? (
+                {loading ? (
+                  <p>Loading products...</p>
+                ) : filteredMedicines.length === 0 ? (
+                  <p>No products found.</p>
+                ) : (
                   filteredMedicines.map((item) => {
                     const mrp = item.MRP
                       ? parseFloat(item.MRP.toString())
@@ -237,8 +241,6 @@ export default function AllGroupCare() {
                       </div>
                     );
                   })
-                ) : (
-                  <p>Loading products...</p>
                 )}
               </div>
             </div>

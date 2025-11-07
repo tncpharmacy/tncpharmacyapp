@@ -23,7 +23,9 @@ export default function MedicineCard({
   primary_image,
 }: Medicine) {
   const router = useRouter();
+  // zooming box state
   const [isHovered, setIsHovered] = useState(false);
+  const [openUpward, setOpenUpward] = useState(false);
   // --- Local states for instant UI ---
   const [localBag, setLocalBag] = useState<number[]>([]);
   const [processingIds, setProcessingIds] = useState<number[]>([]);
@@ -106,38 +108,61 @@ export default function MedicineCard({
     ? `${mediaBase}${path}`
     : "/images/tnc-default.png";
 
+  const handleMouseEnter = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (imageSrc === "/images/tnc-default.png") return;
+
+    const rect = e.currentTarget.getBoundingClientRect();
+    const spaceBelow = window.innerHeight - rect.bottom;
+
+    setOpenUpward(spaceBelow < 320);
+    setIsHovered(true);
+  };
+
   return (
     <div className="medicine-card">
       <div className="medicine-content">
         {/* Top section */}
         <div className="medicine-top">
           {/* Image with zoom on hover */}
-          <div
-            className="medicine-imgs"
-            onMouseEnter={() => setIsHovered(true)}
-            onMouseLeave={() => setIsHovered(false)}
-          >
-            <Image
-              src={imageSrc}
-              alt="No Image Available"
-              width={70}
-              height={60}
-              style={{
-                opacity: imageSrc === "/images/tnc-default.png" ? 0.3 : 1, // ✅ only default image faded
-              }}
-            />
-            {isHovered && (
-              <div className="zoomBox shadow-xl">
-                <Image
-                  src={imageSrc}
-                  alt={medicine_name}
-                  fill
-                  style={{
-                    height: "100%",
-                    objectFit: "contain",
-                    opacity: imageSrc === "/images/tnc-default.png" ? 0.3 : 1, // ✅ only default image faded
-                  }}
-                />
+          <div className="medicine-imgs" style={{ position: "relative" }}>
+            {/* ✅ Only image hover controls zoom */}
+            <div
+              onMouseEnter={handleMouseEnter}
+              onMouseLeave={() =>
+                imageSrc !== "/images/tnc-default.png" && setIsHovered(false)
+              }
+              style={{ display: "inline-block" }}
+            >
+              <Image
+                src={imageSrc}
+                alt="No Image Available"
+                width={70}
+                height={60}
+                style={{
+                  opacity: imageSrc === "/images/tnc-default.png" ? 0.3 : 1,
+                }}
+              />
+            </div>
+
+            {/* ✅ Zoom box */}
+            {imageSrc !== "/images/tnc-default.png" && (
+              <div
+                className={`zoomBox shadow-xl ${isHovered ? "active" : ""}`}
+                style={{
+                  top: openUpward ? "-320px" : "70px",
+                }}
+              >
+                {isHovered && (
+                  <Image
+                    src={imageSrc}
+                    alt={medicine_name}
+                    fill
+                    style={{
+                      height: "100%",
+                      objectFit: "contain",
+                    }}
+                  />
+                )}
               </div>
             )}
           </div>
@@ -180,24 +205,6 @@ export default function MedicineCard({
         {/* Bottom section */}
         <div className="medicine-bottom">
           {discountPercent > 0 ? (
-            // <div className="d-flex flex-column align-items-start">
-            //   <p className="medicine-discounted text-success fw-bold mb-1">
-            //     ₹{formatCurrency(discountedPrice)}
-            //   </p>
-            //   <p
-            //     className="text-danger fw-bold mb-1"
-            //     style={{ fontSize: "12px" }}
-            //   >
-            //     ({discountPercent}% OFF)
-            //   </p>
-            //   <p
-            //     className="medicine-mrp text-muted mb-0"
-            //     style={{ textDecoration: "line-through" }}
-            //   >
-            //     ₹{formatCurrency(originalMrp)}
-            //   </p>
-            // </div>
-
             <div className="d-flex flex-column align-items-start">
               {/* Discounted Price */}
               <p className="text-success fw-bold mb-1">
@@ -210,7 +217,7 @@ export default function MedicineCard({
                   className="medicine-mrp text-muted mb-0"
                   style={{ textDecoration: "line-through", fontSize: "13px" }}
                 >
-                  ₹{formatCurrency(originalMrp)}
+                  MRP ₹{formatCurrency(originalMrp)}
                 </span>{" "}
                 <span
                   className="text-danger fw-bold"

@@ -96,12 +96,13 @@ export default function HealthBags() {
 
   // --- Sync localBag with Redux items ---
   useEffect(() => {
-    if (bagItem?.length) {
-      setLocalBag(bagItem.map((i) => i.productid)); // ✅ correct key
-    } else {
-      setLocalBag([]);
+    const newLocalBag = bagItem?.length ? bagItem.map((i) => i.productid) : [];
+
+    // ✅ Prevent infinite loop — only update if changed
+    if (JSON.stringify(newLocalBag) !== JSON.stringify(localBag)) {
+      setLocalBag(newLocalBag);
     }
-  }, [bagItem]);
+  }, [bagItem, localBag]);
 
   // Merge guest cart into logged-in cart once
   useEffect(() => {
@@ -190,7 +191,23 @@ export default function HealthBags() {
     };
   });
 
+  // ✅ Calculate totals
   const handlingCharges = 12;
+  const totals = mergedItems.reduce(
+    (acc, item, index) => {
+      const qty = quantities[index] ?? 1;
+
+      acc.totalMrp += (item.mrp ?? 0) * qty;
+      acc.totalDiscount += ((item.mrp ?? 0) - item.discountMrp) * qty;
+      acc.totalPay += item.discountMrp * qty;
+
+      return acc;
+    },
+    { totalMrp: 0, totalDiscount: 0, totalPay: 0 }
+  );
+
+  const grandTotal = totals.totalPay + handlingCharges;
+
   // const totalDiscount = items.reduce(
   //   (acc, it, i) => acc + (it.MRP - it.MRP) * quantities[i],
   //   0
@@ -232,17 +249,20 @@ export default function HealthBags() {
                         <h6 className="fw-semibold mb-1">{item.name}</h6>
                         <p
                           className="mb-1 fw-semibold  small"
-                          style={{ fontSize: "13px" }}
-                        >
-                          {item.manufacturer}
-                        </p>
-                        <p
-                          className="mb-1 fw-semibold  small"
                           style={{ fontSize: "14px" }}
                         >
                           {item.pack_size}
                         </p>
-                        <div className="row">
+                        <p
+                          className="mb-1 fw-semibold text-success small"
+                          style={{
+                            fontSize: "13px",
+                          }}
+                        >
+                          {item.manufacturer}
+                        </p>
+
+                        {/* <div className="row">
                           <DoseInstructionSelect
                             type="select"
                             label="Doses"
@@ -252,25 +272,28 @@ export default function HealthBags() {
                             colSm={4}
                             required
                           />
-                        </div>
+                        </div> */}
                         <button
                           className="text-danger small border-0 bg-transparent p-0"
                           onClick={() => handleRemove(item.productid)}
                         >
-                          Remove
+                          <i
+                            className="bi bi-trash text-danger"
+                            style={{ fontSize: "16px" }}
+                          ></i>
                         </button>
                       </div>
 
                       <div className="text-end ms-3">
-                        <h6 className="mb-1 text-danger">
-                          ₹{item.discountMrp.toLocaleString()} <br />
-                          <span className="text-success small">
+                        <h6 className="mb-2 text-success">
+                          ₹{item.discountMrp.toLocaleString()}{" "}
+                          <small className="text-muted text-decoration-line-through">
+                            MRP ₹{(item.mrp ?? 0).toLocaleString()}
+                          </small>
+                          <br />
+                          <span className="text-danger small">
                             {item.discount}% off
                           </span>
-                          <br />
-                          <small className="text-muted text-decoration-line-through">
-                            ₹{(item.mrp ?? 0).toLocaleString()}
-                          </small>{" "}
                         </h6>
 
                         <div className="d-inline-flex align-items-center border rounded px-2 py-1">
@@ -308,7 +331,7 @@ export default function HealthBags() {
 
                 <div className="d-flex justify-content-between mb-2 small">
                   <span>Item total (MRP)</span>
-                  {/* <span>₹{items.reduce((s, it) => s + it.mrp, 0)}</span> */}
+                  <span>₹{totals.totalMrp.toLocaleString()}</span>
                 </div>
 
                 <div className="d-flex justify-content-between mb-2 small">
@@ -318,7 +341,9 @@ export default function HealthBags() {
 
                 <div className="d-flex justify-content-between mb-2 small">
                   <span>Total discount</span>
-                  {/* <span className="text-success">-₹{totalDiscount}</span> */}
+                  <span className="text-success">
+                    -₹{totals.totalDiscount.toLocaleString()}
+                  </span>
                 </div>
 
                 <div className="d-flex justify-content-between mb-2 small">
@@ -330,7 +355,7 @@ export default function HealthBags() {
 
                 <div className="d-flex justify-content-between mb-3 fw-semibold">
                   <span>To be paid</span>
-                  {/* <span>₹{toBePaid}</span> */}
+                  <span>₹{grandTotal.toLocaleString()}</span>
                 </div>
 
                 <div className="mb-3 small">
@@ -440,7 +465,7 @@ export default function HealthBags() {
                               ) : null}
                               {discountedPrice ? (
                                 <small className="text-muted text-decoration-line-through">
-                                  ₹{mrp}
+                                  MRP ₹{mrp}
                                 </small>
                               ) : null}
                             </div>
@@ -560,7 +585,7 @@ export default function HealthBags() {
                               ) : null}
                               {discountedPrice ? (
                                 <small className="text-muted text-decoration-line-through">
-                                  ₹{mrp}
+                                  MRP ₹{mrp}
                                 </small>
                               ) : null}
                             </div>
@@ -681,7 +706,7 @@ export default function HealthBags() {
                               ) : null}
                               {discountedPrice ? (
                                 <small className="text-muted text-decoration-line-through">
-                                  ₹{mrp}
+                                  MRP ₹{mrp}
                                 </small>
                               ) : null}
                             </div>

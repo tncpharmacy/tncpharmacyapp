@@ -52,6 +52,7 @@ export default function AllProducts() {
         `${categoryIdNum}-${subCategoryIdNum}`
       ] || []
   );
+  const { loading } = useAppSelector((state) => state.medicine);
   // dedupe by product_id (keeps first occurrence)
   const uniqueMedicines = React.useMemo(() => {
     if (!medicines || medicines.length === 0) return [];
@@ -181,7 +182,11 @@ export default function AllProducts() {
                 </div>
               </div>
               <div className="pd_list">
-                {filteredMedicines && filteredMedicines.length > 0 ? (
+                {loading ? (
+                  <p>Loading products...</p>
+                ) : filteredMedicines.length === 0 ? (
+                  <p>No products found.</p>
+                ) : (
                   filteredMedicines.map((item) => {
                     const mrp = item.MRP
                       ? parseFloat(item.MRP.toString())
@@ -267,8 +272,6 @@ export default function AllProducts() {
                       </div>
                     );
                   })
-                ) : (
-                  <p>Loading products...</p>
                 )}
               </div>
             </div>

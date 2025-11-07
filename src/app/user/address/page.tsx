@@ -195,7 +195,7 @@ export default function AddressList() {
                     </p>
 
                     <div className="d-flex gap-3 ps-1">
-                      <button
+                      {/* <button
                         className="btn btn-link p-0 fw-semibold"
                         style={{
                           fontSize: "13px",
@@ -213,7 +213,7 @@ export default function AddressList() {
                         }}
                       >
                         Edit
-                      </button>
+                      </button> */}
                       <button
                         className="btn btn-link p-0 fw-semibold"
                         style={{

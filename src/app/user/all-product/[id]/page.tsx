@@ -34,6 +34,8 @@ export default function AllProduct() {
   const medicines = useAppSelector(
     (state) => state.medicine.byCategory[categoryIdNum] || []
   );
+  const { loading } = useAppSelector((state) => state.medicine);
+
   const { list: categories } = useAppSelector((state) => state.category);
 
   const shuffledMedicines = useShuffledProduct(
@@ -145,7 +147,11 @@ export default function AllProduct() {
               </div>
 
               <div className="pd_list">
-                {filteredMedicines && filteredMedicines.length > 0 ? (
+                {loading ? (
+                  <p>Loading products...</p>
+                ) : filteredMedicines.length === 0 ? (
+                  <p>No products found.</p>
+                ) : (
                   filteredMedicines.map((item) => {
                     const mrp = item.MRP
                       ? parseFloat(item.MRP.toString())
@@ -233,8 +239,6 @@ export default function AllProduct() {
                       </div>
                     );
                   })
-                ) : (
-                  <p>Loading products...</p>
                 )}
               </div>
             </div>

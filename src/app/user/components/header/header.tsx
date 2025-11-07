@@ -233,41 +233,128 @@ const SiteHeader = () => {
                     zIndex: 1000,
                     listStyle: "none",
                     padding: 0,
+                    border: "1px solid #ddd",
+                    borderRadius: "4px",
                   }}
                 >
-                  {filteredList.map((item, index) => (
-                    <li
-                      key={item.id}
-                      onClick={() => handleItemSelect(item)}
-                      onMouseEnter={() => setHighlightIndex(index)}
-                      style={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "center",
-                        padding: "15px 12px",
-                        cursor: "pointer",
-                        borderBottom: "1px solid #eee",
-                        backgroundColor:
-                          index === highlightIndex
-                            ? "rgb(237 240 243)"
-                            : "transparent",
-                      }}
-                    >
-                      <span style={{ fontWeight: 500, fontSize: "15px" }}>
-                        {item.medicine_name}
-                      </span>
-                      <span
+                  {filteredList.map((item, index) => {
+                    const mrp = Number(item.MRP) || 0;
+                    const discount = Number(item.discount) || 0;
+                    const discountedPrice = Math.round(
+                      mrp - (mrp * discount) / 100
+                    );
+
+                    return (
+                      <li
+                        key={item.id}
+                        onClick={() => handleItemSelect(item)}
+                        onMouseEnter={() => setHighlightIndex(index)}
                         style={{
-                          fontSize: "13px",
-                          color: "rgb(208 95 95)",
-                          fontWeight: 600,
+                          padding: "10px 12px",
+                          cursor: "pointer",
+                          borderBottom: "1px solid #eee",
+                          backgroundColor:
+                            index === highlightIndex
+                              ? "rgb(237 240 243)"
+                              : "#fff",
                         }}
                       >
-                        {item.Manufacturer || "N/A"} | ₹
-                        {item.MRP === null ? 0 : item.MRP}
-                      </span>
-                    </li>
-                  ))}
+                        <div
+                          style={{ display: "flex", flexDirection: "column" }}
+                        >
+                          {(() => {
+                            const mrp = Number(item.MRP) || 0;
+                            const discount = Number(item.discount) || 0;
+                            const discountedPrice = Math.round(
+                              mrp - (mrp * discount) / 100
+                            );
+
+                            return (
+                              <>
+                                {/* ✅ ROW 1 */}
+                                <div
+                                  style={{
+                                    display: "flex",
+                                    justifyContent: "space-between",
+                                    marginBottom: "10px",
+                                  }}
+                                >
+                                  <span
+                                    style={{
+                                      fontWeight: 600,
+                                      fontSize: "14px",
+                                      color: "#000",
+                                      marginRight: "10px",
+                                      flex: 1,
+                                      lineHeight: "1.2",
+                                    }}
+                                  >
+                                    {item.medicine_name}
+                                  </span>
+
+                                  <span style={{ whiteSpace: "nowrap" }}>
+                                    <span
+                                      style={{
+                                        color: "green",
+                                        fontWeight: 600,
+                                        fontSize: "14px",
+                                        lineHeight: "1.2",
+                                      }}
+                                    >
+                                      ₹{discountedPrice}
+                                    </span>
+                                    <span
+                                      style={{
+                                        marginLeft: 6,
+                                        textDecoration: "line-through",
+                                        color: "#777",
+                                        fontSize: "12px",
+                                      }}
+                                    >
+                                      MRP ₹{mrp}
+                                    </span>
+                                  </span>
+                                </div>
+
+                                {/* ✅ ROW 2 */}
+                                <div
+                                  style={{
+                                    display: "flex",
+                                    justifyContent: "space-between",
+                                    fontSize: "12px",
+                                    color: "#555",
+                                    marginBottom: "10px",
+                                  }}
+                                >
+                                  <span>{item.pack_size}</span>
+                                  <span
+                                    style={{
+                                      color: "rgba(var(--bs-danger-rgb)",
+                                      fontWeight: 600,
+                                    }}
+                                  >
+                                    {discount}% OFF
+                                  </span>
+                                </div>
+
+                                {/* ✅ ROW 3 */}
+                                <div
+                                  style={{
+                                    fontSize: "12px",
+                                    fontWeight: 600,
+                                    color: "rgba(var(--bs-danger-rgb)",
+                                    lineHeight: "1.3",
+                                  }}
+                                >
+                                  {item.Manufacturer}
+                                </div>
+                              </>
+                            );
+                          })()}
+                        </div>
+                      </li>
+                    );
+                  })}
                 </ul>
               )}
             </div>
