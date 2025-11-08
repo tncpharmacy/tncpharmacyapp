@@ -22,6 +22,9 @@ import { useShuffledOnce } from "@/lib/hooks/useShuffledOnce";
 import { HealthBag } from "@/types/healthBag";
 import DoseInstructionSelect from "@/app/components/Input/DoseInstructionSelect";
 import Input from "@/app/components/Input/InputColSm";
+import { getAddress } from "@/lib/features/addressSlice/addressSlice";
+import AddressBar from "../components/AddressBar/AddressBar";
+import toast from "react-hot-toast";
 const mediaBase = process.env.NEXT_PUBLIC_MEDIA_BASE_URL;
 
 type CartItem = {
@@ -46,6 +49,11 @@ type Product = {
 export default function HealthBags() {
   const [quantities, setQuantities] = useState<number[]>([1, 1]);
   const [dose, setDose] = useState("");
+  const [mounted, setMounted] = useState(false);
+  const [billingAddress, setBillingAddress] = useState<
+    number | null | undefined
+  >(null);
+
   // --- Local states for instant UI ---
   const [localBag, setLocalBag] = useState<number[]>([]);
   const [processingIds, setProcessingIds] = useState<number[]>([]);
@@ -62,6 +70,28 @@ export default function HealthBags() {
   } = useHealthBag({
     userId: buyer?.id || null,
   });
+
+  const activeAddresses = useAppSelector((state) => state.address.addresses);
+  // ✅ Filter only actie addresses
+  const defaultAddress = activeAddresses?.find(
+    (addr) => addr.default_address === 1
+  );
+
+  useEffect(() => {
+    if (defaultAddress && typeof defaultAddress.id === "number") {
+      setBillingAddress(defaultAddress.id);
+    }
+  }, [defaultAddress]);
+
+  useEffect(() => {
+    if (buyer?.id) {
+      dispatch(getAddress(buyer?.id));
+    }
+  }, [dispatch, buyer?.id]);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const { medicines: productList } = useAppSelector((state) => state.medicine);
 
@@ -218,6 +248,54 @@ export default function HealthBags() {
   // );
   // const toBePaid = itemTotal + handlingCharges;
 
+  const checkoutData = () => {
+    if (!buyer?.id) {
+      toast.error("Please login to continue!");
+      return;
+    }
+
+    if (!billingAddress) {
+      toast.error("Please select delivery address!");
+      return;
+    }
+
+    // Prepare product data
+    const products = mergedItems.map((item, index) => ({
+      product_id: item.productid,
+      quantity: quantities[index] ?? 1,
+      mrp: item.mrp,
+      discount: item.discount,
+      rate: item.discountMrp,
+      doses: "", // optional: tu baad me dose field add karega
+      instruction: "", // optional
+      status: "1",
+    }));
+
+    const checkoutPayload = {
+      payment_mode: 1, // default UPI/manual
+      payment_status: "1",
+      amount: grandTotal,
+      order_type: 1, // pharmacy
+      pharmacy_id: 1, // static for now
+      address_id: billingAddress,
+      status: "1",
+      products,
+    };
+
+    localStorage.setItem("checkoutData", JSON.stringify(checkoutPayload));
+    toast.success("Checkout data saved!");
+  };
+
+  const handleContinue = () => {
+    if (!buyer?.id) {
+      toast.error("Please login to continue with your order!");
+      return;
+    }
+
+    checkoutData(); // ✅ Save checkout info in LS
+    router.push("/checkout"); // Go to checkout page
+  };
+
   return (
     <>
       <SiteHeader />
@@ -227,11 +305,24 @@ export default function HealthBags() {
           <div className="row g-4">
             {/* Left: Items List */}
             <div className="col-lg-8">
-              <h5 className="mb-3 fw-semibold">2 items added</h5>
-              <p className="text-muted small mb-4">
-                Items not requiring prescription
-              </p>
-
+              {mounted && buyer?.id ? (
+                <AddressBar
+                  address={
+                    defaultAddress
+                      ? {
+                          id: defaultAddress.id ?? 0,
+                          name: defaultAddress.name ?? "Unknown",
+                          pincode: defaultAddress.pincode ?? "000000",
+                          address_line: `${defaultAddress.address}, ${defaultAddress.location}`,
+                          address_type_id: `${defaultAddress.address_type_id}`,
+                        }
+                      : null
+                  }
+                />
+              ) : null}
+              <h5 className="mb-3 fw-semibold">
+                {mergedItems.length} items added
+              </h5>
               <div className="border rounded p-3 mb-3 bg-white">
                 {mergedItems.length > 0 ? (
                   mergedItems.map((item, index) => (
@@ -358,20 +449,10 @@ export default function HealthBags() {
                   <span>₹{grandTotal.toLocaleString()}</span>
                 </div>
 
-                <div className="mb-3 small">
-                  <span className="fw-semibold">Delivering to</span>
-                  <div className="d-flex justify-content-between align-items-center mt-1">
-                    <span>Gurgaon</span>
-                    <Link
-                      href="/address"
-                      className="text-primary text-decoration-none small"
-                    >
-                      Add Address
-                    </Link>
-                  </div>
-                </div>
-
-                <Button className="w-100 py-2 fw-semibold continue-btn">
+                <Button
+                  className="w-100 py-2 fw-semibold continue-btn"
+                  onClick={handleContinue}
+                >
                   Continue
                 </Button>
               </div>

@@ -58,6 +58,15 @@ export default function AddressList() {
     }
   }, [dispatch, userId]);
 
+  useEffect(() => {
+    const defaultIndex = billingAddresses.findIndex(
+      (addr) => addr.default_address === 1
+    );
+    if (defaultIndex !== -1) {
+      setBillingAddress(defaultIndex);
+    }
+  }, [billingAddresses]);
+
   // ✅ Prevent hydration mismatch
   if (!isClient) return null;
 
@@ -231,7 +240,10 @@ export default function AddressList() {
                           handleRemove(addr.id);
                         }}
                       >
-                        Remove
+                        <i
+                          className="bi bi-trash text-danger"
+                          style={{ fontSize: "16px" }}
+                        ></i>
                       </button>
                     </div>
                   </div>

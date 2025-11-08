@@ -33,13 +33,35 @@ export const createHealthBag = async (
 // =========================
 // DELETE HEALTHBAG (BUYER)
 // =========================
+// export const deleteHealthBag = async (id: number) => {
+//   try {
+//     const res = await axiosInstance.delete(
+//       `${ENDPOINTS.HEALTHBAG.DELETE}/${id}`
+//     );
+//     return res.data;
+//     // eslint-disable-next-line @typescript-eslint/no-explicit-any
+//   } catch (err: any) {
+//     console.error(
+//       "❌ deleteHealthBag error:",
+//       err.response?.data || err.message
+//     );
+//     throw err;
+//   }
+// };
 export const deleteHealthBag = async (
   id: number
 ): Promise<{ message: string }> => {
-  const res = await axiosInstance.delete<{ message: string }>(
-    ENDPOINTS.HEALTHBAG.DELETE(id)
-  );
-  return res.data;
+  try {
+    const res = await axiosInstance.delete(ENDPOINTS.HEALTHBAG.DELETE(id));
+    return res.data;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } catch (err: any) {
+    console.error(
+      "❌ deleteHealthBag error:",
+      err.response?.data || err.message
+    );
+    throw err;
+  }
 };
 
 // ===============================

@@ -50,6 +50,10 @@ const nextConfig: NextConfig = {
         destination: "/user/address",
       },
       {
+        source: "/checkout",
+        destination: "/user/checkout",
+      },
+      {
         source: "/about-us",
         destination: "/user/about-us",
       },

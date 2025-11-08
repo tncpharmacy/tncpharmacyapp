@@ -117,13 +117,8 @@ const SiteHeader = () => {
 
   // ---------- SEARCH ----------
   useEffect(() => {
-    if (searchTerm.trim().length > 0) {
-      dispatch(getProductList());
-    } else {
-      setFilteredList([]);
-      setShowList(false);
-    }
-  }, [searchTerm, dispatch]);
+    dispatch(getProductList());
+  }, [dispatch]);
 
   useEffect(() => {
     if (isSelecting.current) {
@@ -342,7 +337,7 @@ const SiteHeader = () => {
                                   style={{
                                     fontSize: "12px",
                                     fontWeight: 600,
-                                    color: "rgba(var(--bs-danger-rgb)",
+                                    color: "green",
                                     lineHeight: "1.3",
                                   }}
                                 >
