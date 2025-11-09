@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { Suspense, useEffect, useState } from "react";
 import "../css/site-style.css";
 import "../css/user-style.css";
 import "bootstrap/dist/css/bootstrap.min.css";
@@ -147,7 +147,7 @@ export default function BuyerProfile() {
   };
 
   return (
-    <>
+    <Suspense fallback={<div>Loading profile...</div>}>
       <div className="page-wrapper">
         <SiteHeader />
 
@@ -424,6 +424,6 @@ export default function BuyerProfile() {
 
       {/* ...footer code... */}
       <Footer />
-    </>
+    </Suspense>
   );
 }
