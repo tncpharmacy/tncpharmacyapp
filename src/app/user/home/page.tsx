@@ -76,7 +76,7 @@ export default function HomePage() {
 
   const CARE_GROUP_ICONS: Record<string, string> = {
     "Diabetic Care": "images/icons/icon-diabetes-care.svg",
-    "Cardiac Care": "images/icons/icon-cardiac-care.svg",
+    "First Aid Care": "images/icons/icon-default-care.svg",
     "Stomach Care": "images/icons/icon-stomach-care.svg",
     "Liver Care": "images/icons/icon-liver-care.svg",
     "Oral Care": "images/icons/icon-oral-care.svg",

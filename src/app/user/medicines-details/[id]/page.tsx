@@ -25,6 +25,8 @@ import {
 import Link from "next/link";
 import Image from "next/image";
 import Footer from "@/app/user/components/footer/footer";
+import { useHealthBag } from "@/lib/hooks/useHealthBag";
+import { HealthBag } from "@/types/healthBag";
 
 // Types
 interface PackOption {
@@ -190,8 +192,22 @@ export default function ProductPage() {
   } = getByIdMedicines;
   const { alcohol, pregnancy, breast_feeding, driving, kidney, liver } =
     safety_advice || {};
-
-  //console.log("genericListByMedicine", genericListByMedicine);
+  const [quantity, setQuantity] = useState(1);
+  const [discountedPrice, setDiscountedPrice] = useState(0);
+  // --- Local states for instant UI ---
+  const [localBag, setLocalBag] = useState<number[]>([]);
+  const [processingIds, setProcessingIds] = useState<number[]>([]);
+  // start for increse header count code
+  const buyer = useAppSelector((state) => state.buyer.buyer);
+  const {
+    items: bagItem,
+    addItem,
+    removeItem,
+    mergeGuestCart,
+    fetchCart,
+  } = useHealthBag({
+    userId: buyer?.id || null,
+  });
   const [activeSectionId, setActiveSectionId] = useState("1");
   const sections = [
     { id: "1", title: "Description" },
@@ -266,6 +282,53 @@ export default function ProductPage() {
   const [selectedImage, setSelectedImage] = useState(
     "/images/product-main.jpg"
   );
+  // --- Sync localBag with Redux items ---
+  useEffect(() => {
+    const newLocalBag = bagItem?.length ? bagItem.map((i) => i.productid) : [];
+    // Prevent infinite loop — only update if changed
+    if (JSON.stringify(newLocalBag) !== JSON.stringify(localBag)) {
+      setLocalBag(newLocalBag);
+    }
+  }, [bagItem, localBag]);
+
+  const isInBag =
+    localBag.includes(id) ||
+    bagItem.some((i) => i.productid === id || i.product_id === id);
+
+  // Merge guest cart into logged-in cart once
+  useEffect(() => {
+    if (buyer?.id) {
+      mergeGuestCart();
+    }
+  }, [buyer?.id, mergeGuestCart]);
+
+  // --- Handlers ---
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const handleAdd = async (item: any) => {
+    setLocalBag((prev) => [...prev, item.product_id]);
+    setProcessingIds((prev) => [...prev, item.product_id]);
+    try {
+      await addItem({
+        id: 0,
+        buyer_id: buyer?.id || 0,
+        product_id: item.product_id,
+        quantity: quantity,
+      } as HealthBag);
+    } finally {
+      setProcessingIds((prev) => prev.filter((id) => id !== item.product_id));
+    }
+  };
+
+  const handleRemove = async (productId: number) => {
+    setLocalBag((prev) => prev.filter((id) => id !== productId));
+    setProcessingIds((prev) => [...prev, productId]);
+    try {
+      await removeItem(productId);
+    } finally {
+      setProcessingIds((prev) => prev.filter((id) => id !== productId));
+    }
+  };
+
   const [qty, setQty] = useState(1);
   const [selectedPack, setSelectedPack] = useState("500g");
 
@@ -329,10 +392,23 @@ export default function ProductPage() {
     alert(`${product.title}\nAdded ${qty} × ${selectedPack} to cart`);
   };
 
-  const [quantity, setQuantity] = useState(1);
+  const mrps = Number(getByIdMedicines?.mrp ?? 0);
+  const discounts = Number(getByIdMedicines?.discount ?? 0);
 
-  const increase = () => setQuantity((prev) => prev + 1);
-  const decrease = () => setQuantity((prev) => (prev > 1 ? prev - 1 : 1));
+  useEffect(() => {
+    // safe calculation with fallback
+    if (!isNaN(mrps) && !isNaN(discounts)) {
+      const calcDiscounted = mrps - (mrps * discounts) / 100;
+      setDiscountedPrice(calcDiscounted);
+    }
+  }, [mrps, discounts]);
+
+  // ✅ Quantity change handlers
+  const increase = () => setQuantity((q) => q + 1);
+  const decrease = () => setQuantity((q) => (q > 1 ? q - 1 : 1));
+
+  // ✅ Final total price (depends on qty)
+  const totalPrice = (discountedPrice * quantity).toFixed(2);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -720,16 +796,20 @@ export default function ProductPage() {
             <div className="col-md-3 ps-0">
               <div className="right_section">
                 <div className="view_box">
+                  {/* MRP and Discount */}
                   <div className="pd_price">
                     <span className="old_price">
-                      <del>MRP ₹8.67</del>5% off
+                      <del>MRP ₹{mrp}</del> {discount}% off
                     </span>
                   </div>
+
+                  {/* Discounted (final) price */}
                   <div className="pd_price">
-                    <span className="new_price">₹8.2</span>
+                    <span className="new_price">₹{totalPrice}</span>
                   </div>
                   <small>Inclusive of all taxes</small>
 
+                  {/* Quantity control */}
                   <div className="d-flex align-items-center my-3">
                     <button
                       onClick={decrease}
@@ -747,11 +827,28 @@ export default function ProductPage() {
                       +
                     </button>
                   </div>
-                  <button className="btn btn-primary btn-sm mb-2 py-2 w-100">
-                    Add to Cart
-                  </button>
-                  <button className="btn btn-outline-secondary btn-sm me-2 py-2 w-100">
-                    Buy Now
+
+                  {/* Add to Health Bag */}
+                  <button
+                    className={`btn btn-sm mb-2 py-2 w-100 ${
+                      isInBag ? "btn-outline-danger" : "btn-primary"
+                    }`}
+                    onClick={() => {
+                      if (isInBag) {
+                        handleRemove(id);
+                      } else {
+                        handleAdd({
+                          product_id: id,
+                        });
+                      }
+                    }}
+                    disabled={processingIds.includes(id)}
+                  >
+                    {processingIds.includes(id)
+                      ? "Processing..."
+                      : isInBag
+                      ? "Remove from Health Bag"
+                      : "Add to Health Bag"}
                   </button>
                 </div>
               </div>

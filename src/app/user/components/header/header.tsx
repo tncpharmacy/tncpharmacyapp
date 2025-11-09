@@ -243,6 +243,7 @@ const SiteHeader = () => {
                       <li
                         key={item.id}
                         onClick={() => handleItemSelect(item)}
+                        onMouseDown={(e) => e.preventDefault()}
                         onMouseEnter={() => setHighlightIndex(index)}
                         style={{
                           padding: "10px 12px",
@@ -387,7 +388,8 @@ const SiteHeader = () => {
                         </p>
                         <hr className="border-secondary" />
                         <Link href="/profile">My Account</Link>
-                        <Link href="/buyer/orders">My Orders</Link>
+                        <Link href="/profile?tab=order">My Orders</Link>
+                        <Link href="/profile?tab=address">My Address</Link>
                         <button className="btn1 mt-2" onClick={handleLogout}>
                           Logout
                         </button>

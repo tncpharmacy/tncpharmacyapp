@@ -13,6 +13,7 @@ import { Address, LocationDetails } from "@/types/address";
 import { useAppDispatch, useAppSelector } from "@/lib/hooks";
 import { useRouter } from "next/navigation";
 import {
+  editAddress,
   getAddress,
   getAddressById,
   removeAddress,
@@ -42,15 +43,17 @@ export default function AddressList() {
   );
 
   useEffect(() => {
-    // Run only on client
     setIsClient(true);
+  }, []);
 
+  useEffect(() => {
+    if (!isClient) return;
     const token = localStorage.getItem("buyerAccessToken");
-    if (!token || !userId) {
-      toast.error("Please login first!");
-      router.push("/");
+    if (!token || !buyer || !buyer.id) {
+      // toast.error("Please login to access your address page!");
+      router.replace("/");
     }
-  }, [userId, router]);
+  }, [isClient, buyer, router]);
 
   useEffect(() => {
     if (userId) {
@@ -59,16 +62,18 @@ export default function AddressList() {
   }, [dispatch, userId]);
 
   useEffect(() => {
-    const defaultIndex = billingAddresses.findIndex(
-      (addr) => addr.default_address === 1
-    );
-    if (defaultIndex !== -1) {
-      setBillingAddress(defaultIndex);
+    if (billingAddresses.length > 0) {
+      const defaultIndex = billingAddresses.findIndex(
+        (addr) => addr.default_address === 1
+      );
+      if (defaultIndex !== -1) {
+        setBillingAddress(defaultIndex);
+      }
     }
   }, [billingAddresses]);
 
   // ✅ Prevent hydration mismatch
-  if (!isClient) return null;
+  if (!isClient || !buyer?.id) return null;
 
   // ✅ Remove handler
   const handleRemove = async (id: number) => {
@@ -94,10 +99,38 @@ export default function AddressList() {
     }
   };
 
-  const handleEdit = (addressId: number) => {
-    if (userId) {
-      dispatch(getAddressById({ buyerId: userId, addressId }));
-      setShowModal(true);
+  // const handleEdit = (addressId: number) => {
+  //   if (userId) {
+  //     dispatch(getAddressById({ buyerId: userId, addressId }));
+  //     setShowModal(true);
+  //   }
+  // };
+
+  const handleSetDefaultAddress = async (address: Address, index: number) => {
+    if (!address.id) return;
+
+    try {
+      // Step 1: Frontend UI update
+      setBillingAddress(index);
+
+      // Step 2: Backend update
+      const updated = { ...address, default_address: 1 };
+      await dispatch(editAddress({ id: address.id, data: updated })).unwrap();
+
+      toast.success("Default address updated successfully!");
+
+      // Step 3: Re-fetch addresses so that latest data load ho
+      if (userId) {
+        // Thoda delay de re-render ke liye
+        setTimeout(() => {
+          dispatch(getAddress(userId));
+        }, 400);
+      }
+      // 6️⃣ Redirect to /healthBag
+      router.push("/healthBag");
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to set default address");
     }
   };
 
@@ -150,7 +183,7 @@ export default function AddressList() {
                       type="radio"
                       name="billingAddress"
                       checked={billingAddress === index}
-                      readOnly
+                      onChange={() => handleSetDefaultAddress(addr, index)}
                       className="form-check-input me-2"
                       style={{
                         accentColor: "#e53935",

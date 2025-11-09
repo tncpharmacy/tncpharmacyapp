@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import SiteHeader from "@/app/user/components/header/header";
 import { Button, Form, Image } from "react-bootstrap";
 import "bootstrap/dist/css/bootstrap.min.css";
@@ -27,24 +27,58 @@ import AddressBar from "../components/AddressBar/AddressBar";
 import toast from "react-hot-toast";
 const mediaBase = process.env.NEXT_PUBLIC_MEDIA_BASE_URL;
 
-type CartItem = {
-  name: string;
-  pack: string;
-  img: string;
-  price: number;
-  mrp: number;
-  discount: number;
-};
+export interface Medicine {
+  // --- Core Identifiers ---
+  id: number; // Internal ID
+  medicine_id?: number; // Alternate ID (if exists)
+  product_id?: number; // Product reference
+  productid?: number; // Sometimes backend uses lowercase
+  buyer_id?: number; // Buyer / user relation
 
-type Product = {
-  name: string;
-  img: string;
-  price: number;
-  mrp?: number;
-  discount?: number;
-  rating?: number;
-  reviews?: number;
-};
+  // --- Basic Info ---
+  name?: string; // Short name
+  medicine_name?: string; // Full medicine name
+  productname?: string; // Alternate name field
+  manufacturer?: string; // Manufacturer name
+  category_id: number; // Category mapping
+
+  // --- Pricing & Offers ---
+  mrp: number | null; // Original price
+  discount: number; // Discount percentage
+  discountMrp?: number; // Calculated discounted price
+  unit?: string; // e.g., TAB, ML, GM
+  pack_size?: string; // e.g., 10 TAB, 200 ML
+  AvailableQTY?: string; // Stock quantity as string
+  quantity?: number; // Quantity user selected
+  qty?: number; // Alternate naming
+
+  // --- Image Info ---
+  image?: string; // Final image URL
+  primary_image?: {
+    id: number;
+    document: string;
+    default_image: number;
+  } | null; // API nested image structure
+
+  // --- Descriptions / Details ---
+  product_introduction?: string;
+  composition?: string;
+  uses?: string;
+  side_effects?: string;
+  storage?: string;
+  prescription_required?: boolean;
+
+  // --- Meta Info ---
+  created_at?: string;
+  updated_at?: string;
+  deleted_at?: string | null;
+  status?: number;
+  success?: boolean;
+
+  // --- Count / Misc ---
+  count?: number;
+  message?: string;
+}
 
 export default function HealthBags() {
   const [quantities, setQuantities] = useState<number[]>([1, 1]);
@@ -59,6 +93,7 @@ export default function HealthBags() {
   const [processingIds, setProcessingIds] = useState<number[]>([]);
   const dispatch = useAppDispatch();
   const router = useRouter();
+  const isSelecting = useRef(false);
   // start for increse header count code
   const buyer = useAppSelector((state) => state.buyer.buyer);
   const {
@@ -145,6 +180,14 @@ export default function HealthBags() {
     fetchCart(); // ensures cart is synced after any add/remove
   }, [fetchCart]);
 
+  //Sync quantities from cart API
+  useEffect(() => {
+    if (bagItem && bagItem.length > 0) {
+      const apiQuantities = bagItem.map((item) => item.qty ?? 1);
+      setQuantities(apiQuantities);
+    }
+  }, [bagItem]);
+
   // --- Handlers ---
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleAdd = async (item: any) => {
@@ -177,10 +220,20 @@ export default function HealthBags() {
     router.push(`/product-details/${encodeId(product_id)}`);
   };
 
-  const handleQuantityChange = (index: number, delta: number) =>
-    setQuantities((prev) =>
-      prev.map((q, i) => (i === index ? Math.max(1, q + delta) : q))
+  const handleQuantityChange = async (index: number, delta: number) => {
+    const newQuantities = quantities.map((q, i) =>
+      i === index ? Math.max(1, q + delta) : q
     );
+    setQuantities(newQuantities);
+
+    const item = bagItem[index];
+    if (item) {
+      await addItem({
+        ...item,
+        quantity: newQuantities[index],
+      });
+    }
+  };
 
   // 🟢 Merge: cart items (from LS/API) + product details (from all product list)
   const mergedItems = (bagItem || []).map((cartItem) => {
@@ -207,16 +260,18 @@ export default function HealthBags() {
     return {
       ...cartItem,
       name: product?.medicine_name || cartItem.productname || "",
+      category_id: product?.category_id || 0,
       manufacturer: product?.Manufacturer || "",
       pack_size: product?.pack_size || "",
       mrp,
       discount,
       discountMrp,
       image:
-        product?.DefaultImageURL && product.DefaultImageURL !== ""
-          ? product.DefaultImageURL.startsWith("http")
-            ? product.DefaultImageURL
-            : `${mediaBase}${product.DefaultImageURL}`
+        product?.primary_image && product.primary_image.document
+          ? `${mediaBase}${product.primary_image.document.replace(
+              /^https?:\/\/68\.183\.174\.17/,
+              ""
+            )}`
           : "/images/tnc-default.png",
     };
   });
@@ -237,16 +292,6 @@ export default function HealthBags() {
   );
 
   const grandTotal = totals.totalPay + handlingCharges;
-
-  // const totalDiscount = items.reduce(
-  //   (acc, it, i) => acc + (it.MRP - it.MRP) * quantities[i],
-  //   0
-  // );
-  // const itemTotal = items.reduce(
-  //   (acc, it, i) => acc + it.price * quantities[i],
-  //   0
-  // );
-  // const toBePaid = itemTotal + handlingCharges;
 
   const checkoutData = () => {
     if (!buyer?.id) {
@@ -283,7 +328,7 @@ export default function HealthBags() {
     };
 
     localStorage.setItem("checkoutData", JSON.stringify(checkoutPayload));
-    toast.success("Checkout data saved!");
+    //toast.success("Checkout data saved!");
   };
 
   const handleContinue = () => {
@@ -296,6 +341,21 @@ export default function HealthBags() {
     router.push("/checkout"); // Go to checkout page
   };
 
+  const handleSelect = (product: Medicine) => {
+    const actualId = product.product_id || product.productid || product.id; // ✅ safe ID fallback
+
+    const path =
+      product.category_id === 1
+        ? `/medicines-details/${encodeId(actualId)}`
+        : `/product-details/${encodeId(actualId)}`;
+
+    router.push(path);
+  };
+
+  const handleItemSelect = (item: Medicine) => {
+    isSelecting.current = true;
+    handleSelect(item);
+  };
   return (
     <>
       <SiteHeader />
@@ -330,12 +390,21 @@ export default function HealthBags() {
                       key={index}
                       className="d-flex align-items-start border-bottom pb-3 mb-3"
                     >
-                      <Image
-                        src={item.image}
-                        alt={item.name}
-                        className="me-3 rounded"
-                        style={{ width: 90, height: 90, objectFit: "contain" }}
-                      />
+                      <span
+                        onClick={() => handleItemSelect(item)}
+                        style={{ cursor: "pointer" }}
+                      >
+                        <Image
+                          src={`${item.image}`}
+                          alt={item.name}
+                          className="me-3 rounded"
+                          style={{
+                            width: 90,
+                            height: 90,
+                            objectFit: "contain",
+                          }}
+                        />
+                      </span>
                       <div className="flex-grow-1">
                         <h6 className="fw-semibold mb-1">{item.name}</h6>
                         <p
@@ -395,7 +464,7 @@ export default function HealthBags() {
                           >
                             <i className="bi bi-dash-lg"></i>
                           </Button>
-                          <span className="mx-2">{quantities[index]}</span>
+                          <span className="mx-2">{quantities}</span>
                           <Button
                             variant="link"
                             className="p-0 text-dark fw-bold"

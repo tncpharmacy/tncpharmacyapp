@@ -25,6 +25,23 @@ export default function Checkout() {
   const { removeItem, items: healthBagItems } = useHealthBag({
     userId: buyer?.id || null,
   });
+  const [isClient, setIsClient] = useState(false); // ✅ ensure client render only
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  useEffect(() => {
+    if (!isClient) return;
+
+    const token = localStorage.getItem("buyerAccessToken");
+
+    // agar login nahi hai
+    if (!token || !buyer || !buyer.id) {
+      //toast.error("Please login to access checkout!");
+      router.replace("/");
+    }
+  }, [isClient, buyer, router]);
+
   // ✅ Load checkout data from LocalStorage
   useEffect(() => {
     const data = safeLocalStorage.getItem("checkoutData");
@@ -35,6 +52,8 @@ export default function Checkout() {
       router.push("/health-bag");
     }
   }, [router]);
+
+  if (!isClient || !buyer?.id) return null;
 
   // 🔙 Back button
   const handleBack = () => {
@@ -189,9 +208,9 @@ export default function Checkout() {
 
             <button
               className="btn btn-primary"
-              onClick={() => router.push("/profile")}
+              onClick={() => router.push("/profile?tab=order")}
             >
-              Go To My Orders
+              Go To Orders
             </button>
           </div>
         </div>

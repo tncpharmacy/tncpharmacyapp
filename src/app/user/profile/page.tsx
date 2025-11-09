@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import "../css/site-style.css";
 import "../css/user-style.css";
 import "bootstrap/dist/css/bootstrap.min.css";
@@ -13,25 +13,108 @@ import OrderDetailsModal, {
   OrderDetails,
 } from "@/app/components/BuyerProfileModal/OrderDetailsModal";
 import { Image } from "react-bootstrap";
+import { useAppDispatch, useAppSelector } from "@/lib/hooks";
+import { useRouter, useSearchParams } from "next/navigation";
+import {
+  getAddress,
+  removeAddress,
+} from "@/lib/features/addressSlice/addressSlice";
+import toast from "react-hot-toast";
+import ConfirmLocationModal from "@/app/components/address/ConfirmLocationModal";
+import { LocationDetails } from "@/types/address";
 
 export default function BuyerProfile() {
+  const dispatch = useAppDispatch();
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState("profile");
   const [showModal, setShowModal] = useState(false);
 
   // Order Details modal
   const [showOrderModal, setShowOrderModal] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<OrderDetails | null>(null);
+  // for buyer
+  const buyer = useAppSelector((state) => state.buyer.buyer);
+  const userId: number | null = buyer?.id || null;
+  const [isClient, setIsClient] = useState(false);
+  // for order get
+  const getOrder = useAppSelector((state) => state.buyer.orders);
+  // for address
+  const activeAddresses = useAppSelector((state) => state.address.addresses);
+  // ✅ Filter only active addresses
+  const billingAddresses = activeAddresses?.filter(
+    (addr) => addr.status === "Active"
+  );
+  const [selectedLocation, setSelectedLocation] =
+    useState<LocationDetails | null>(null);
+  // redirect for active tab
+  const searchParams = useSearchParams();
+  const tabFromURL = searchParams.get("tab");
 
-  const [profile, setProfile] = useState({
-    name: "Pulkit Sharma",
-    mobile: "9999355555",
-    email: "pulkit@example.com",
-  });
+  // ✅ client check
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
-  const handleUpdate = () => {
-    console.log("Updated profile:", profile);
-    setShowModal(false);
+  // ✅ Access protection
+  useEffect(() => {
+    if (isClient && (!buyer || !buyer.id)) {
+      router.replace("/");
+    }
+  }, [buyer, isClient, router]);
+
+  useEffect(() => {
+    if (
+      tabFromURL === "order" ||
+      tabFromURL === "address" ||
+      tabFromURL === "profile"
+    ) {
+      setActiveTab(tabFromURL);
+    } else {
+      setActiveTab("profile");
+    }
+  }, [tabFromURL]);
+
+  useEffect(() => {
+    if (userId) {
+      dispatch(getAddress(userId));
+    }
+  }, [dispatch, userId]);
+
+  if (!isClient) {
+    return <div style={{ height: "40px" }}></div>;
+  }
+
+  // agar login nahi hai to page render mat karo
+  if (!buyer || !buyer.id) return null;
+
+  // ✅ Remove handler
+  const handleRemove = async (id: number) => {
+    if (!window.confirm("Are you sure you want to remove this address?"))
+      return;
+
+    try {
+      console.log("Deleting address:", id);
+      const res = await dispatch(removeAddress(id)).unwrap();
+      toast.success("Address removed successfully!");
+      if (userId !== null) {
+        dispatch(getAddress(userId));
+      }
+    } catch (err) {
+      toast.error("Failed to remove address!");
+      console.error("Delete error:", err);
+    }
   };
+
+  const handleRefreshList = () => {
+    if (userId) {
+      dispatch(getAddress(userId));
+    }
+  };
+
+  // const handleUpdate = () => {
+  //   console.log("Updated profile:", profile);
+  //   setShowModal(false);
+  // };
 
   // Dummy orders
   const orders: OrderDetails[] = [
@@ -107,7 +190,7 @@ export default function BuyerProfile() {
                   style={{ borderColor: "#0a214aff" }}
                 >
                   {[
-                    { id: "profile", label: "My Profile" },
+                    { id: "profile", label: "My Account" },
                     { id: "address", label: "My Address" },
                     { id: "order", label: "My Orders" },
                   ].map((tab) => {
@@ -140,15 +223,14 @@ export default function BuyerProfile() {
                       <div className="d-flex justify-content-between align-items-start">
                         <div>
                           <h5 className="fw-bold mb-1">Hi there!</h5>
-                          <p className="text-muted">Joined in Aug, 2019</p>
                         </div>
-                        <FaEdit
+                        {/* <FaEdit
                           size={22}
                           color="#264b8c"
                           className="cursor-pointer"
                           style={{ cursor: "pointer" }}
                           onClick={() => setShowModal(true)}
-                        />
+                        /> */}
                       </div>
                       <hr />
                       <div className="mt-3">
@@ -164,7 +246,7 @@ export default function BuyerProfile() {
                             <label className="text-muted d-block">
                               Patient Name
                             </label>
-                            <strong>{profile.name}</strong>
+                            <strong>{buyer?.name || "N/A"}</strong>
                           </div>
                         </div>
                         <hr />
@@ -180,7 +262,7 @@ export default function BuyerProfile() {
                             <label className="text-muted d-block">
                               Mobile Number
                             </label>
-                            <strong>{profile.mobile}</strong>
+                            <strong>{buyer?.number || "N/A"}</strong>
                           </div>
                         </div>
                         <hr />
@@ -196,7 +278,7 @@ export default function BuyerProfile() {
                             <label className="text-muted d-block">
                               Primary Email address
                             </label>
-                            <strong>{profile.email}</strong>
+                            <strong>{buyer?.email || "N/A"}</strong>
                           </div>
                         </div>
                       </div>
@@ -207,29 +289,73 @@ export default function BuyerProfile() {
                     <div>
                       <div className="d-flex justify-content-between align-items-center mb-3">
                         <h5 className="fw-bold mb-0">My Address</h5>
-                        <button type="button" className="btn btn-primary">
+                        {/* <button type="button" className="btn btn-primary">
+                          + Add New Address
+                        </button> */}
+                        <button
+                          className="btn btn-primary"
+                          onClick={() => setShowModal(true)}
+                          disabled={billingAddresses.length >= 6}
+                        >
                           + Add New Address
                         </button>
+                        {userId !== null && (
+                          <ConfirmLocationModal
+                            show={showModal}
+                            onClose={() => setShowModal(false)}
+                            locationDetails={selectedLocation || {}}
+                            onSubmit={handleRefreshList}
+                            userId={userId}
+                            //isEditMode={true}
+                          />
+                        )}
                       </div>
 
-                      <div className="border rounded p-3 mb-3">
-                        <h6 className="mb-1">Home</h6>
-                        <p className="text-muted mb-0">Pulkit Srivastava</p>
-                        <p className="text-muted mb-0">
-                          123, Model Town, Delhi, India - 110009
-                        </p>
-                        <p className="text-muted mb-2">9856321478</p>
-                        <i className="bi bi-trash text-danger"></i>
-                      </div>
-                      <div className="border rounded p-3 mb-3">
-                        <h6 className="mb-1">Home</h6>
-                        <p className="text-muted mb-0">Pulkit Srivastava</p>
-                        <p className="text-muted mb-0">
-                          123, Model Town, Delhi, India - 110009
-                        </p>
-                        <p className="text-muted mb-2">9856321478</p>
-                        <i className="bi bi-trash text-danger"></i>
-                      </div>
+                      {billingAddresses.map((addr, index) => (
+                        <div key={index} className="border rounded p-3 mb-3">
+                          {/* <h6 className="mb-1">
+                            {addr.address_type_id || "Home"}
+                          </h6> */}
+                          <label
+                            className="fw-semibold mb-0"
+                            style={{ fontSize: "15px", color: "#212121" }}
+                          >
+                            {addr.address_type_id === 1
+                              ? "Home"
+                              : addr.address_type_id === 2
+                              ? "Office"
+                              : "Other"}
+                          </label>
+                          <p className="text-muted mb-0">{addr.name}</p>
+                          <p className="text-muted mb-0">{addr.address}</p>
+                          <p className="text-muted mb-0">
+                            {addr.location} - {addr.pincode}
+                          </p>
+                          <p className="text-muted mb-2">{addr.mobile}</p>
+                          <button
+                            className="btn btn-link p-0 fw-semibold"
+                            style={{
+                              fontSize: "13px",
+                              color: "#e53935",
+                              textDecoration: "none",
+                            }}
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (!addr.id) {
+                                toast.error("Invalid address ID");
+                                return;
+                              }
+                              handleRemove(addr.id);
+                            }}
+                          >
+                            <i
+                              className="bi bi-trash text-danger"
+                              style={{ fontSize: "16px" }}
+                            ></i>
+                          </button>
+                        </div>
+                      ))}
                     </div>
                   )}
 
@@ -282,13 +408,13 @@ export default function BuyerProfile() {
         </div>
       </div>
       {/* EditProfileModal */}
-      <EditProfileModal
+      {/* <EditProfileModal
         show={showModal}
         handleClose={() => setShowModal(false)}
         profile={profile}
         setProfile={setProfile}
         handleUpdate={handleUpdate}
-      />
+      /> */}
       {/* OrderDetailsModal */}
       <OrderDetailsModal
         show={showOrderModal}

@@ -5,6 +5,7 @@ export interface HealthBag {
   productid: number;
   productname: string;
   quantity: number;
+  qty: number;
   created_at?: string;
   updated_at?: string;
 }
