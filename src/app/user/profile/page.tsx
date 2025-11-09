@@ -1,6 +1,6 @@
 "use client";
 
-import React, { Suspense, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import "../css/site-style.css";
 import "../css/user-style.css";
 import "bootstrap/dist/css/bootstrap.min.css";
@@ -80,6 +80,14 @@ export default function BuyerProfile() {
     }
   }, [dispatch, userId]);
 
+  // ✅ Change tab AND URL both when user clicks a tab
+  const handleTabChange = (tab: string) => {
+    setActiveTab(tab);
+    const params = new URLSearchParams(window.location.search);
+    params.set("tab", tab);
+    window.history.replaceState(null, "", `?${params.toString()}`);
+  };
+
   if (!isClient) {
     return <div style={{ height: "40px" }}></div>;
   }
@@ -147,7 +155,7 @@ export default function BuyerProfile() {
   };
 
   return (
-    <Suspense fallback={<div>Loading profile...</div>}>
+    <>
       <div className="page-wrapper">
         <SiteHeader />
 
@@ -208,7 +216,7 @@ export default function BuyerProfile() {
                             : "rgb(241 245 249)",
                           transition: "all 0.3s ease",
                         }}
-                        onClick={() => setActiveTab(tab.id)}
+                        onClick={() => handleTabChange(tab.id)}
                       >
                         {tab.label}
                       </button>
@@ -424,6 +432,6 @@ export default function BuyerProfile() {
 
       {/* ...footer code... */}
       <Footer />
-    </Suspense>
+    </>
   );
 }
