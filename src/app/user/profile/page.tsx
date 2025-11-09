@@ -48,12 +48,21 @@ export default function BuyerProfile() {
     useState<LocationDetails | null>(null);
   // redirect for active tab
   const searchParams = useSearchParams();
-  const tabFromURL = searchParams.get("tab");
 
   // ✅ client check
   useEffect(() => {
     setIsClient(true);
   }, []);
+
+  useEffect(() => {
+    const tab = searchParams.get("tab");
+    if (tab) setActiveTab(tab);
+  }, [searchParams]);
+
+  const handleTabChange = (tab: string) => {
+    setActiveTab(tab);
+    router.replace(`?tab=${tab}`, { scroll: false }); // URL update without reload
+  };
 
   // ✅ Access protection
   useEffect(() => {
@@ -62,31 +71,23 @@ export default function BuyerProfile() {
     }
   }, [buyer, isClient, router]);
 
-  useEffect(() => {
-    if (
-      tabFromURL === "order" ||
-      tabFromURL === "address" ||
-      tabFromURL === "profile"
-    ) {
-      setActiveTab(tabFromURL);
-    } else {
-      setActiveTab("profile");
-    }
-  }, [tabFromURL]);
+  // useEffect(() => {
+  //   if (
+  //     tabFromURL === "order" ||
+  //     tabFromURL === "address" ||
+  //     tabFromURL === "profile"
+  //   ) {
+  //     setActiveTab(tabFromURL);
+  //   } else {
+  //     setActiveTab("profile");
+  //   }
+  // }, [tabFromURL]);
 
   useEffect(() => {
     if (userId) {
       dispatch(getAddress(userId));
     }
   }, [dispatch, userId]);
-
-  // ✅ Change tab AND URL both when user clicks a tab
-  const handleTabChange = (tab: string) => {
-    setActiveTab(tab);
-    const params = new URLSearchParams(window.location.search);
-    params.set("tab", tab);
-    window.history.replaceState(null, "", `?${params.toString()}`);
-  };
 
   if (!isClient) {
     return <div style={{ height: "40px" }}></div>;
@@ -206,6 +207,7 @@ export default function BuyerProfile() {
                     return (
                       <button
                         key={tab.id}
+                        onClick={() => handleTabChange(tab.id)}
                         className={`btn py-3 w-100 border-0 ${
                           isActive ? "text-white" : "text-secondary"
                         }`}
@@ -216,7 +218,6 @@ export default function BuyerProfile() {
                             : "rgb(241 245 249)",
                           transition: "all 0.3s ease",
                         }}
-                        onClick={() => handleTabChange(tab.id)}
                       >
                         {tab.label}
                       </button>

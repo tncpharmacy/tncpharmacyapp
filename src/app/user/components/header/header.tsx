@@ -387,7 +387,7 @@ const SiteHeader = () => {
                           {buyer?.name || "User"}
                         </p>
                         <hr className="border-secondary" />
-                        <Link href="/profile">My Account</Link>
+                        <Link href="/profile?tab=profile">My Account</Link>
                         <Link href="/profile?tab=order">My Orders</Link>
                         <Link href="/profile?tab=address">My Address</Link>
                         <button className="btn1 mt-2" onClick={handleLogout}>
