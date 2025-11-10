@@ -115,7 +115,7 @@ export const ENDPOINTS = {
 
   // Prescription Upload
   PRESCRIPTION_UPLOAD: {
-    LOGIN_CREATE: "/ocr/prescription/update-buyer/",
+    LOGIN_UPDATE: "/ocr/prescription/update-buyer/",
     PUBLIC_CREATE: "/ocr/prescription/upload/",
   },
 

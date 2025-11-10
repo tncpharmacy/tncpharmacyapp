@@ -12,6 +12,9 @@ import {
 import { useAppDispatch, useAppSelector } from "@/lib/hooks";
 import "../styles/style-login.css";
 import toast from "react-hot-toast";
+import { linkBuyerThunk } from "@/lib/features/prescriptionSlice/prescriptionSlice";
+import { store } from "@/lib/store";
+import PrescriptionStatusModal from "@/app/components/PrescriptionStatusModal/PrescriptionStatusModal";
 
 export default function BuyerLoginModal({
   show,
@@ -29,7 +32,12 @@ export default function BuyerLoginModal({
   const [error, setError] = useState("");
   const [showSignup, setShowSignup] = useState(false);
 
-  // 🔹 this is state for autofill login_id on signup page
+  // Prescription modal state
+  const [showStatusModal, setShowStatusModal] = useState(false);
+  const [modalMode, setModalMode] = useState<
+    "guest-upload" | "loggedin-upload" | "post-login-link"
+  >("guest-upload");
+
   const [prefillEmail, setPrefillEmail] = useState("");
   const [prefillMobile, setPrefillMobile] = useState("");
 
@@ -38,44 +46,34 @@ export default function BuyerLoginModal({
   const loginInputRef = useRef<HTMLInputElement>(null);
   const otpInputRef = useRef<HTMLInputElement>(null);
 
-  // 👇 useEffect me dono step check kar
+  // Focus input on modal open
   useEffect(() => {
     if (!show) return;
-
-    if (step === 1 && loginInputRef.current) {
-      loginInputRef.current.focus();
-    } else if (step === 2 && otpInputRef.current) {
-      // chhoti delay dete hain taaki DOM render ho jaye
+    if (step === 1 && loginInputRef.current) loginInputRef.current.focus();
+    else if (step === 2 && otpInputRef.current)
       setTimeout(() => otpInputRef.current?.focus(), 100);
-    }
   }, [show, step]);
 
-  //
-  // 🔹 Step 1: Handle login check
-  //
+  // Step 1: Login
   const handleLoginCheck = async () => {
     if (!loginId.trim()) {
       setError("Please enter email or mobile number");
       return;
     }
     const mobileRegex = /^\d{10}$/;
-
     if (!mobileRegex.test(loginId)) {
       toast.error("Please enter a valid 10-digit Mobile Number.");
       return;
     }
-
     setError("");
 
     try {
       const result = await dispatch(buyerLogin({ login_id: loginId })).unwrap();
-
       if (result.data?.existing) {
         toast.success("OTP sent successfully!");
         setStep(2);
       } else {
         handleClose();
-        // 👇 Detect if email or mobile
         if (/^\d{10}$/.test(loginId)) {
           setPrefillMobile(loginId);
           setPrefillEmail("");
@@ -93,29 +91,43 @@ export default function BuyerLoginModal({
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter") {
-      handleLoginCheck();
-    }
+    if (e.key === "Enter") handleLoginCheck();
   };
 
-  //
-  // 🔹 Step 2: OTP verification
-  //
+  // Step 2: OTP verification + post-login prescription linking
   const handleOtpSubmit = async () => {
     if (!otp.trim()) {
       setError("Please enter OTP");
       return;
     }
-
     setError("");
 
     try {
       const res = await dispatch(verifyBuyerOtp({ otp })).unwrap();
-
       toast.success(res.message || "Login successful!");
+
+      // ✅ Auto link prescription if guest session exists
+      const sessionId = localStorage.getItem("PRESCRIPTION_SESSION");
+      const buyerState = store.getState().buyer.buyer;
+      const buyerId = buyerState?.id;
+      const token = localStorage.getItem("buyerAccessToken");
+
+      if (sessionId && buyerId && token) {
+        await dispatch(linkBuyerThunk({ sessionId, buyerId, token })).unwrap();
+
+        setModalMode("post-login-link");
+        // ✅ Open Prescription modal AFTER login
+        setShowStatusModal(true);
+
+        // Clear LS
+        localStorage.removeItem("PRESCRIPTION_SESSION");
+        localStorage.removeItem("PRESCRIPTION_ID");
+      }
+
       handleClose();
       resetForm();
-      // ✅ Redirect to previous page
+
+      // Redirect after login
       const redirectPath = localStorage.getItem("redirectAfterLogin") || "/";
       localStorage.removeItem("redirectAfterLogin");
       router.push(redirectPath);
@@ -125,14 +137,11 @@ export default function BuyerLoginModal({
       else setError("Invalid OTP. Please try again.");
     }
   };
+
   const handleKeyDownOtp = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter") {
-      handleOtpSubmit();
-    }
+    if (e.key === "Enter") handleOtpSubmit();
   };
-  //
-  // 🔹 Reset form helper
-  //
+
   const resetForm = () => {
     setStep(1);
     setLoginId("");
@@ -141,11 +150,8 @@ export default function BuyerLoginModal({
     dispatch(resetBuyerState());
   };
 
-  // Reset when modal closes
   useEffect(() => {
-    if (show) {
-      localStorage.setItem("redirectAfterLogin", pathname);
-    }
+    if (show) localStorage.setItem("redirectAfterLogin", pathname);
   }, [show, pathname]);
 
   return (
@@ -159,7 +165,6 @@ export default function BuyerLoginModal({
       >
         <Modal.Body className="p-0">
           <div className="row">
-            {/* Left Banner */}
             <div className="col-md-5 pe-0 d-none d-md-block">
               <Image
                 src="../images/login-banner.gif"
@@ -167,15 +172,12 @@ export default function BuyerLoginModal({
                 alt="Patient Login Banner"
               />
             </div>
-
-            {/* Right Form */}
             <div className="col-md-7 ps-md-0 d-flex align-items-center">
               <div className="login_form">
                 <span className="login_title">
                   {step === 1 ? "Patient Login" : "Verify OTP"}
                 </span>
 
-                {/* STEP 1: Enter Email / Number */}
                 {step === 1 && (
                   <>
                     <div className="row_login">
@@ -187,30 +189,12 @@ export default function BuyerLoginModal({
                         value={loginId}
                         onChange={(e) => {
                           const value = e.target.value;
-                          // Allow only digits and limit to 10
-                          if (/^\d{0,10}$/.test(value)) {
-                            setLoginId(value);
-                          }
+                          if (/^\d{0,10}$/.test(value)) setLoginId(value);
                         }}
                         maxLength={10}
                         onKeyDown={handleKeyDown}
-                        // onChange={(e) => {
-                        //   const value = e.target.value;
-
-                        //   // 🔹 Allow only numbers up to 10 digits
-                        //   if (/^\d*$/.test(value)) {
-                        //     if (value.length <= 10) setLoginId(value);
-                        //     return;
-                        //   }
-
-                        //   // 🔹 Otherwise (email/text), allow up to 25 chars
-                        //   if (value.length <= 25) {
-                        //     setLoginId(value);
-                        //   }
-                        // }}
                       />
                     </div>
-
                     <button
                       onClick={handleLoginCheck}
                       className="btnlogin mt-3"
@@ -221,7 +205,6 @@ export default function BuyerLoginModal({
                   </>
                 )}
 
-                {/* STEP 2: Verify OTP */}
                 {step === 2 && (
                   <>
                     <p className="mb-2">
@@ -240,7 +223,6 @@ export default function BuyerLoginModal({
                         Change
                       </button>
                     </p>
-
                     <div className="row_login">
                       <span className="lbllogin">Enter OTP</span>
                       <input
@@ -254,7 +236,6 @@ export default function BuyerLoginModal({
                         onKeyDown={handleKeyDownOtp}
                       />
                     </div>
-
                     <button
                       onClick={handleOtpSubmit}
                       className="btnlogin mt-3"
@@ -271,7 +252,6 @@ export default function BuyerLoginModal({
                   </p>
                 )}
 
-                {/* Optional: Debug OTP (for dev) */}
                 {otpCode && step === 2 && (
                   <p className="text-muted mt-2" style={{ fontSize: "13px" }}>
                     (Debug OTP: {otpCode})
@@ -283,12 +263,19 @@ export default function BuyerLoginModal({
         </Modal.Body>
       </Modal>
 
-      {/* 🔹 Signup Modal */}
+      {/* Signup Modal */}
       <BuyerSignupModal
         show={showSignup}
         handleClose={() => setShowSignup(false)}
         prefillEmail={prefillEmail}
         prefillMobile={prefillMobile}
+      />
+
+      {/* Prescription Status Modal */}
+      <PrescriptionStatusModal
+        show={showStatusModal}
+        onClose={() => setShowStatusModal(false)}
+        mode={modalMode}
       />
     </>
   );

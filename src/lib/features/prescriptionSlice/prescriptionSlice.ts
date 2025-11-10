@@ -1,8 +1,7 @@
-// src/redux/slices/prescriptionSlice.ts
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import {
-  uploadPrescriptionPublic,
-  uploadPrescriptionLogin,
+  uploadPrescription,
+  linkPrescriptionToBuyer,
 } from "@/lib/api/prescription";
 import { PrescriptionItem } from "@/types/prescription";
 
@@ -20,34 +19,37 @@ const initialState: PrescriptionState = {
   sessionId: null,
 };
 
-// 🔓 Public upload
-export const uploadPrescriptionPublicThunk = createAsyncThunk(
-  "prescription/uploadPublic",
-  async (formData: FormData, { rejectWithValue }) => {
+// 🔓 Guest upload
+export const uploadPrescriptionThunk = createAsyncThunk(
+  "prescription/upload",
+  async ({ formData }: { formData: FormData }, { rejectWithValue }) => {
     try {
-      const res = await uploadPrescriptionPublic(formData);
+      const res = await uploadPrescription({ formData });
       return res;
-    } catch (err: unknown) {
-      if (err instanceof Error) {
-        return rejectWithValue(err.message);
-      }
-      return rejectWithValue("Prescription Upload failed");
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (err: any) {
+      return rejectWithValue(err.response?.data?.message || "Upload failed");
     }
   }
 );
 
-// 🔐 Logged-in upload
-export const uploadPrescriptionLoginThunk = createAsyncThunk(
-  "prescription/uploadLogin",
-  async (formData: FormData, { rejectWithValue }) => {
+// 🔐 Link logged-in user
+export const linkBuyerThunk = createAsyncThunk(
+  "prescription/linkBuyer",
+  async (
+    {
+      sessionId,
+      buyerId,
+      token,
+    }: { sessionId: string; buyerId: number; token: string },
+    { rejectWithValue }
+  ) => {
     try {
-      const res = await uploadPrescriptionLogin(formData);
+      const res = await linkPrescriptionToBuyer({ sessionId, buyerId, token });
       return res;
-    } catch (err: unknown) {
-      if (err instanceof Error) {
-        return rejectWithValue(err.message);
-      }
-      return rejectWithValue("Prescription Upload failed");
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (err: any) {
+      return rejectWithValue(err.response?.data?.message || "Link failed");
     }
   }
 );
@@ -64,38 +66,38 @@ const prescriptionSlice = createSlice({
     },
   },
   extraReducers: (builder) => {
-    // 🔓 PUBLIC UPLOAD
-    builder.addCase(uploadPrescriptionPublicThunk.pending, (state) => {
-      state.loading = true;
-      state.error = null;
-    });
-    builder.addCase(
-      uploadPrescriptionPublicThunk.fulfilled,
-      (state, action) => {
+    builder
+      .addCase(uploadPrescriptionThunk.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(uploadPrescriptionThunk.fulfilled, (state, action) => {
         state.loading = false;
         state.data = action.payload.data;
-        state.sessionId = action.payload.session_id || null;
-      }
-    );
-    builder.addCase(uploadPrescriptionPublicThunk.rejected, (state, action) => {
-      state.loading = false;
-      state.error = action.payload as string;
-    });
+        state.sessionId = action.payload.session_id;
 
-    // 🔐 LOGIN UPLOAD
-    builder.addCase(uploadPrescriptionLoginThunk.pending, (state) => {
-      state.loading = true;
-      state.error = null;
-    });
-    builder.addCase(uploadPrescriptionLoginThunk.fulfilled, (state, action) => {
-      state.loading = false;
-      state.data = action.payload.data;
-      state.sessionId = action.payload.session_id || null;
-    });
-    builder.addCase(uploadPrescriptionLoginThunk.rejected, (state, action) => {
-      state.loading = false;
-      state.error = action.payload as string;
-    });
+        // Save session for guest
+        localStorage.setItem("PRESCRIPTION_SESSION", action.payload.session_id);
+        localStorage.setItem("PRESCRIPTION_ID", String(action.payload.data.id));
+      })
+      .addCase(uploadPrescriptionThunk.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+
+      .addCase(linkBuyerThunk.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(linkBuyerThunk.fulfilled, (state) => {
+        state.loading = false;
+        localStorage.removeItem("PRESCRIPTION_SESSION");
+        localStorage.removeItem("PRESCRIPTION_ID");
+      })
+      .addCase(linkBuyerThunk.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      });
   },
 });
 

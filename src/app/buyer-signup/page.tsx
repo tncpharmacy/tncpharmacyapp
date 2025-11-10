@@ -10,6 +10,8 @@ import {
 } from "@/lib/features/buyerSlice/buyerSlice";
 import "../styles/style-login.css";
 import toast from "react-hot-toast";
+import { store } from "@/lib/store";
+import { linkBuyerThunk } from "@/lib/features/prescriptionSlice/prescriptionSlice";
 
 interface BuyerSignupModalProps {
   show: boolean;
@@ -141,6 +143,25 @@ export default function BuyerSignupModal({
       const result = await dispatch(verifyBuyerOtp({ otp })).unwrap();
 
       toast.success(result.message || "Signup successful!");
+      // ✅ ✅ AFTER LOGIN - AUTO LINK PRESCRIPTION IF SESSION EXISTS
+      const sessionId = localStorage.getItem("PRESCRIPTION_SESSION");
+      // ✅ Get buyer from Redux state
+      const buyerState = store.getState().buyer.buyer;
+      const buyerId = buyerState?.id;
+      const token = localStorage.getItem("buyerAccessToken"); // LS se token
+
+      if (sessionId && buyerId && token) {
+        dispatch(
+          linkBuyerThunk({
+            sessionId,
+            buyerId,
+            token, // token mandatory
+          })
+        );
+        // ✅ Clear LS
+        localStorage.removeItem("PRESCRIPTION_SESSION");
+        localStorage.removeItem("PRESCRIPTION_ID");
+      }
       handleClose();
       router.push("/");
       dispatch(resetBuyerState());
