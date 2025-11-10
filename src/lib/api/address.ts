@@ -40,7 +40,7 @@ export const createAddress = async (data: Address): Promise<Address> => {
 // =========================
 export const updateAddress = async (
   id: number,
-  data: Address
+  data: Partial<Address> | { set_default: boolean }
 ): Promise<Address> => {
   const res = await axiosInstance.put<Address>(
     ENDPOINTS.ADDRESS.UPDATE(id),

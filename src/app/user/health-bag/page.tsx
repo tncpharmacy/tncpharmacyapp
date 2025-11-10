@@ -102,6 +102,9 @@ export default function HealthBags() {
     removeItem,
     mergeGuestCart,
     fetchCart,
+    increaseQty,
+    decreaseQty,
+    updateGuestQuantity,
   } = useHealthBag({
     userId: buyer?.id || null,
   });
@@ -181,10 +184,10 @@ export default function HealthBags() {
   }, [fetchCart]);
 
   //Sync quantities from cart API
+  // ✅ FIXED: Convert qty to number ALWAYS
   useEffect(() => {
     if (bagItem && bagItem.length > 0) {
-      const apiQuantities = bagItem.map((item) => item.qty ?? 1);
-      setQuantities(apiQuantities);
+      setQuantities(bagItem.map((x) => Number(x.qty) || 1));
     }
   }, [bagItem]);
 
@@ -220,27 +223,12 @@ export default function HealthBags() {
     router.push(`/product-details/${encodeId(product_id)}`);
   };
 
-  const handleQuantityChange = async (index: number, delta: number) => {
-    const newQuantities = quantities.map((q, i) =>
-      i === index ? Math.max(1, q + delta) : q
-    );
-    setQuantities(newQuantities);
-
-    const item = bagItem[index];
-    if (item) {
-      await addItem({
-        ...item,
-        quantity: newQuantities[index],
-      });
-    }
-  };
-
   // 🟢 Merge: cart items (from LS/API) + product details (from all product list)
   const mergedItems = (bagItem || []).map((cartItem) => {
     const product = productList.find(
       (p) => p.id === cartItem.productid || p.product_id === cartItem.productid
     );
-
+    const available = Number(product?.AvailableQTY || 0);
     const mrp =
       product?.MRP !== undefined
         ? typeof product.MRP === "string"
@@ -259,8 +247,10 @@ export default function HealthBags() {
 
     return {
       ...cartItem,
+      id: cartItem.id,
       name: product?.medicine_name || cartItem.productname || "",
       category_id: product?.category_id || 0,
+      availableQty: product?.AvailableQTY || 0,
       manufacturer: product?.Manufacturer || "",
       pack_size: product?.pack_size || "",
       mrp,
@@ -275,6 +265,42 @@ export default function HealthBags() {
           : "/images/tnc-default.png",
     };
   });
+
+  const handleQuantityChange = async (index: number, delta: number) => {
+    const item = mergedItems[index];
+    if (!item) return;
+
+    const stock = Number(item.availableQty) || 0;
+    const current = Number(quantities[index]) || 1;
+    const updated = current + delta;
+
+    // ✅ BLOCK BELOW 1
+    if (updated < 1) return;
+
+    // ✅ BLOCK ABOVE STOCK
+    if (updated > stock) {
+      toast.error(`Only ${stock} available in stock`);
+      return;
+    }
+
+    // ✅ INSTANT UI UPDATE
+    const q = [...quantities];
+    q[index] = updated;
+    setQuantities(q);
+
+    // ✅ Guest User → Update LocalStorage only
+    if (!buyer?.id) {
+      updateGuestQuantity(item.productid, updated);
+      return;
+    }
+
+    // ✅ LOGGED USER → USE CORRECT API
+    if (delta === 1) {
+      await increaseQty(item.id, item.productid, updated);
+    } else {
+      await decreaseQty(item.id, item.productid, updated);
+    }
+  };
 
   // ✅ Calculate totals
   const handlingCharges = 12;
@@ -464,7 +490,9 @@ export default function HealthBags() {
                           >
                             <i className="bi bi-dash-lg"></i>
                           </Button>
-                          <span className="mx-2">{quantities}</span>
+
+                          <span className="mx-2">{quantities[index]}</span>
+
                           <Button
                             variant="link"
                             className="p-0 text-dark fw-bold"

@@ -5,6 +5,8 @@ import {
   deleteHealthBag,
   fetchHealthBagAdmin,
   createHealthBagDTO,
+  increaseQuantity,
+  decreaseQuantity,
 } from "@/lib/api/healthBag";
 import { HealthBag, HealthBagResponse } from "@/types/healthBag";
 
@@ -63,6 +65,70 @@ export const removeHealthBagItem = createAsyncThunk(
     } catch (err: unknown) {
       if (err instanceof Error) return rejectWithValue(err.message);
       return rejectWithValue("Failed to delete health bag item");
+    }
+  }
+);
+
+// ✅ Increase Quantity
+export const increaseHealthBagQty = createAsyncThunk(
+  "healthBag/increaseQty",
+  async (
+    {
+      cart_id,
+      buyer_id,
+      product_id,
+      quantity,
+    }: {
+      cart_id: number;
+      buyer_id: number;
+      product_id: number;
+      quantity: number;
+    },
+    { rejectWithValue }
+  ) => {
+    try {
+      const res = await increaseQuantity(
+        cart_id,
+        buyer_id,
+        product_id,
+        quantity
+      );
+      return res; // backend response
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (err: any) {
+      return rejectWithValue(err.response?.data || "Increase qty failed");
+    }
+  }
+);
+
+// ✅ Decrease Quantity
+export const decreaseHealthBagQty = createAsyncThunk(
+  "healthBag/decreaseQty",
+  async (
+    {
+      cart_id,
+      buyer_id,
+      product_id,
+      quantity,
+    }: {
+      cart_id: number;
+      buyer_id: number;
+      product_id: number;
+      quantity: number;
+    },
+    { rejectWithValue }
+  ) => {
+    try {
+      const res = await decreaseQuantity(
+        cart_id,
+        buyer_id,
+        product_id,
+        quantity
+      );
+      return res; // backend response
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (err: any) {
+      return rejectWithValue(err.response?.data || "Decrease qty failed");
     }
   }
 );
@@ -211,6 +277,63 @@ const healthBagSlice = createSlice({
         }
       )
       .addCase(removeHealthBagItem.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+      // =========== INCREASE QTY ===========
+      .addCase(increaseHealthBagQty.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(increaseHealthBagQty.fulfilled, (state, action) => {
+        state.loading = false;
+        state.error = null;
+
+        const updated = action.payload?.data;
+        if (!updated) return;
+
+        const item = state.items.find(
+          (i) =>
+            i.id === updated.cart_id ||
+            i.productid === updated.product_id ||
+            i.product_id === updated.product_id
+        );
+
+        if (item) {
+          item.qty = updated.quantity;
+          item.quantity = updated.quantity;
+        }
+
+        state.message = "Quantity increased";
+      })
+      .addCase(increaseHealthBagQty.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+      // =========== DECREASE QTY ===========
+      .addCase(decreaseHealthBagQty.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(decreaseHealthBagQty.fulfilled, (state, action) => {
+        state.loading = false;
+        state.error = null;
+        const updated = action.payload?.data;
+        if (!updated) return;
+
+        const item = state.items.find(
+          (i) =>
+            i.id === updated.cart_id ||
+            i.productid === updated.product_id ||
+            i.product_id === updated.product_id
+        );
+
+        if (item) {
+          item.qty = updated.quantity;
+          item.quantity = updated.quantity;
+        }
+
+        state.message = "Quantity decreased";
+      })
+      .addCase(decreaseHealthBagQty.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
       });

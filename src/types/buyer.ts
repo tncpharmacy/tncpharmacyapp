@@ -13,6 +13,7 @@ export interface BuyerData {
   otp?: string;
   tokens?: BuyerTokens;
   existing?: boolean;
+  // buyer?: [];
 }
 
 // 🔹 Common API response wrapper

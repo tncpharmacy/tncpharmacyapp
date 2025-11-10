@@ -382,6 +382,7 @@ export default function RetailCounter() {
         cart={cart}
         customerName={customerName}
         mobile={mobile}
+        pharmacy_id={pharmacy_id}
       />
     </>
   );

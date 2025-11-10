@@ -5,10 +5,17 @@ import {
   addLocalHealthBag,
   removeLocalHealthBag,
   loadLocalHealthBag,
+  increaseHealthBagQty,
+  decreaseHealthBagQty,
 } from "@/lib/features/healthBagSlice/healthBagSlice";
 import { RootState } from "@/lib/store";
 import { HealthBag } from "@/types/healthBag";
-import { createHealthBag, deleteHealthBag } from "@/lib/api/healthBag";
+import {
+  createHealthBag,
+  decreaseQuantity,
+  deleteHealthBag,
+  increaseQuantity,
+} from "@/lib/api/healthBag";
 
 const GUEST_KEY = "healthbag";
 
@@ -101,6 +108,42 @@ export const useHealthBag = ({ userId }: { userId: number | null }) => {
     [userId, mounted, items, dispatch]
   );
 
+  const increaseQty = useCallback(
+    async (cartId: number, productId: number, qty: number) => {
+      if (!userId) return;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await (dispatch as any)(
+        increaseHealthBagQty({
+          cart_id: cartId,
+          buyer_id: userId,
+          product_id: productId,
+          quantity: qty,
+        })
+      );
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await dispatch(getHealthBag(userId) as any);
+    },
+    [userId, dispatch]
+  );
+
+  const decreaseQty = useCallback(
+    async (cartId: number, productId: number, qty: number) => {
+      if (!userId) return;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await (dispatch as any)(
+        decreaseHealthBagQty({
+          cart_id: cartId,
+          buyer_id: userId,
+          product_id: productId,
+          quantity: qty,
+        })
+      );
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await dispatch(getHealthBag(userId) as any);
+    },
+    [userId, dispatch]
+  );
+
   // 🔹 Merge guest → user cart
   const mergeGuestCart = useCallback(async () => {
     if (!userId) return;
@@ -138,6 +181,16 @@ export const useHealthBag = ({ userId }: { userId: number | null }) => {
     }
   }, [userId, dispatch]);
 
+  const updateGuestQuantity = (productId: number, qty: number) => {
+    const cart = JSON.parse(localStorage.getItem("healthbag") || "[]");
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const updated = cart.map((item: any) =>
+      item.productid === productId ? { ...item, qty } : item
+    );
+
+    localStorage.setItem("healthbag", JSON.stringify(updated));
+  };
+
   // 🔹 Merge guest cart automatically after login
   useEffect(() => {
     if (userId) {
@@ -147,5 +200,14 @@ export const useHealthBag = ({ userId }: { userId: number | null }) => {
     }
   }, [userId, mergeGuestCart]);
 
-  return { items, addItem, removeItem, mergeGuestCart, fetchCart };
+  return {
+    items,
+    addItem,
+    removeItem,
+    mergeGuestCart,
+    updateGuestQuantity,
+    fetchCart,
+    increaseQty,
+    decreaseQty,
+  };
 };

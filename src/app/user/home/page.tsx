@@ -76,7 +76,6 @@ export default function HomePage() {
 
   const CARE_GROUP_ICONS: Record<string, string> = {
     "Diabetic Care": "images/icons/icon-diabetes-care.svg",
-    "First Aid Care": "images/icons/icon-default-care.svg",
     "Stomach Care": "images/icons/icon-stomach-care.svg",
     "Liver Care": "images/icons/icon-liver-care.svg",
     "Oral Care": "images/icons/icon-oral-care.svg",
@@ -84,6 +83,7 @@ export default function HomePage() {
     "Hair Care": "images/icons/icon-hair-care.svg",
     "Pain Relief": "images/icons/icon-pain-relief-care.svg",
     "Heart Care": "images/icons/icon-heart-care.svg",
+    "First Aid Care": "images/icons/icon-default-care.svg",
     DEFAULT: "images/icons/icon-default-care.svg",
   };
   const BG_CLASSES = ["bg-1", "bg-2", "bg-3", "bg-4", "bg-5", "bg-6"];
@@ -219,7 +219,9 @@ export default function HomePage() {
       {/* Make sure to check if data exists before mapping */}
       <section className="category_sec">
         <div className="container">
-          <h2 className="section_title">Browse by Health Conditions</h2>
+          <h2 className="section_title text-start">
+            Browse by Health Conditions
+          </h2>
           <div className="slider-container">
             {/*Slider Implementation */}
             <Slider {...settings}>

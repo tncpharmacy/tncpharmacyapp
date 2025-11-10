@@ -149,9 +149,11 @@ export const ENDPOINTS = {
     CREATE: "/cart/add/",
     GET_ALL: (id: number) => `/cart/view/${id}/`,
     DELETE: (id: number) => `/cart/delete/${id}/`,
-    PUTINCREASE: (id: number) => `/cart/quantity/${id}/?quantity=Increase/`,
-    PUTDECREASE: (id: number) => `/cart/quantity/${id}/?quantity=Decrease/`,
     GET_ADMIN: "/cart/superadmin/buyers/",
+    QUANTITY_INCREASE: (cartId: number) =>
+      `/cart/quantity/${cartId}/?quantity=Increase`,
+    QUANTITY_DECREASE: (cartId: number) =>
+      `/cart/quantity/${cartId}/?quantity=Decrease`,
   },
 
   // address

@@ -1,6 +1,13 @@
 "use client";
+import {
+  buyerLogin,
+  buyerRegister,
+  createBuyerOrder,
+} from "@/lib/features/buyerSlice/buyerSlice";
+import { useAppDispatch } from "@/lib/hooks";
 import { useEffect, useRef, useState } from "react";
 import { Image, Modal } from "react-bootstrap";
+import toast from "react-hot-toast";
 // Note: next/image is not used; standard image tag is used.
 
 // Mock style object since the user did not provide the actual styles file content
@@ -30,6 +37,7 @@ interface BillPreviewModalProps {
   cart: CartItem[] | undefined;
   customerName: string;
   mobile: string;
+  pharmacy_id: string | number;
 }
 
 const BillPreviewModal: React.FC<BillPreviewModalProps> = ({
@@ -38,9 +46,10 @@ const BillPreviewModal: React.FC<BillPreviewModalProps> = ({
   cart,
   customerName,
   mobile,
+  pharmacy_id,
 }) => {
   const printRef = useRef<HTMLDivElement>(null);
-
+  const dispatch = useAppDispatch();
   // --- Translation State and Logic ---
   const [language, setLanguage] = useState("en");
   const [translatedCart, setTranslatedCart] = useState<CartItem[]>(cart || []);
@@ -67,9 +76,7 @@ const BillPreviewModal: React.FC<BillPreviewModalProps> = ({
     setApiError(null); // Clear previous errors
   }, [show, cart]);
 
-  // --- Gemini API Configuration ---
-  // IMPORTANT: Apni asli API key yahan " " ke andar paste karein.
-  // Example format: const apiKey = "AIzaSy...your-actual-key-here";
+  // google api for translating language
   const apiKey = "AIzaSyDgglnyLRjpHWHRNE8WEacdjnx0XKYyR4w"; // <--- APNI KEY YAHAN PASTE KAREIN
   const modelName = "gemini-2.5-flash-preview-09-2025";
   const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
@@ -219,154 +226,221 @@ const BillPreviewModal: React.FC<BillPreviewModalProps> = ({
   // --- End Translation Logic ---
 
   // --- Print Handler ---
-  const handlePrint = () => {
+  const handlePrint = async () => {
+    try {
+      let buyerId: number | null = null;
+
+      // ✅ 1) Buyer Check
+      const loginRes = await dispatch(
+        buyerLogin({ login_id: mobile })
+      ).unwrap();
+
+      if (loginRes?.data?.existing === true) {
+        buyerId = loginRes.data.id;
+      } else {
+        const regRes = await dispatch(
+          buyerRegister({
+            name: customerName,
+            email: "",
+            number: mobile,
+          })
+        ).unwrap();
+
+        buyerId = regRes.data.id;
+      }
+
+      if (!buyerId) {
+        toast.error("Unable to get buyer ID");
+        return;
+      }
+
+      // ✅ 2) Prepare Products Array EXACT BACKEND FORMAT
+      const products = (cart ?? []).map((item) => ({
+        product_id: item.id,
+        quantity: String(item.qty),
+        mrp: String(item.price), // if price = unit MRP
+        discount: String(item.Disc ?? 0),
+        rate: String(item.qty * item.price), // final rate after discount?
+        doses: item.dose_form,
+        instruction: item.remarks,
+        status: "1",
+      }));
+
+      // ✅ 3) Final Order Payload Exactly As Backend Wants
+      const orderPayload = {
+        payment_mode: 1,
+        payment_status: "1",
+        amount: String(grandTotal),
+        order_type: 1,
+        pharmacy_id: pharmacy_id,
+        address_id: 0, // ✅ YOU TELL ME — address id fixed or dynamic?
+        status: "1",
+        products: products,
+      };
+
+      // ✅ 4) POST ORDER
+      await dispatch(
+        createBuyerOrder({
+          buyerId: buyerId,
+          payload: orderPayload,
+        })
+      ).unwrap();
+
+      // ✅ 5) PRINT
+      actuallyPrintBill();
+    } catch (error) {
+      console.error(error);
+      toast.error("Order failed!");
+    }
+  };
+
+  const actuallyPrintBill = () => {
     const printContents = printRef.current?.innerHTML;
     if (!printContents) return;
 
     const printWindow = window.open("", "_blank", "width=800,height=1000");
+
     if (printWindow) {
-      printWindow.document.open();
       printWindow.document.write(`
-<html>
-  <head>
-    <title>Pharmacy Bill</title>
-    <style>
-      @page {
-        size: A4;
-        margin: 10mm;
-      }
+      <html>
+        <head>
+          <title>Pharmacy Bill</title>
+          <style>
+            @page {
+              size: A4;
+              margin: 10mm;
+            }
 
-      body {
-        font-family: 'Segoe UI', sans-serif;
-        font-size: 12px;
-        color: #000;
-        background: #fff;
-      }
+            body {
+              font-family: 'Segoe UI', sans-serif;
+              font-size: 12px;
+              color: #000;
+              background: #fff;
+            }
 
-      h3, h4 {
-        display: block
-        text-align: center;
-      }
+            h3, h4 {
+              display: block
+              text-align: center;
+            }
 
-      table {
-        width: 100%;
-        border-collapse: collapse;
-        margin-bottom: 10px;
-      }
+            table {
+              width: 100%;
+              border-collapse: collapse;
+              margin-bottom: 10px;
+            }
 
-      th, td {
-        border: 1px solid #000;
-        padding: 6px;
-        text-align: center;
-      }
+            th, td {
+              border: 1px solid #000;
+              padding: 6px;
+              text-align: center;
+            }
 
-      th {
-        background-color: #f2f2f2;
-      }
+            th {
+              background-color: #f2f2f2;
+            }
 
-      .print-hide {
-        display: none !important;
-      }
+            .print-hide {
+              display: none !important;
+            }
 
-      /* ✅ Doses Section */
-      .dose-container {
-        display: block;
-        margin-top: 13px;         
-        gap: 10px;
-      }
+            /* ✅ Doses Section */
+            .dose-container {
+              display: block;
+              margin-top: 13px;         
+              gap: 10px;
+            }
 
-      .print-card {
-        page-break-inside: avoid;
-        border: 1px solid #ccc;
-        border-radius: 1px;
-        box-shadow: 0 0 2px rgba(0,0,0,0.1);
-        background: #fff;
-        width: 35% !important;
-        border-radius: 1px;
-        font-size: 10px;
-        height: 100%;
-      }
+            .print-card {
+              page-break-inside: avoid;
+              border: 1px solid #ccc;
+              border-radius: 1px;
+              box-shadow: 0 0 2px rgba(0,0,0,0.1);
+              background: #fff;
+              width: 35% !important;
+              border-radius: 1px;
+              font-size: 10px;
+              height: 100%;
+            }
 
-      .print-card img {
-        object-fit: contain;
-      }
-      .print-card p {
-        margin: 0px;
-        font-size: 8px;
-        line-height: 1;
-      }
-      .card-getWell {
-        font-size: 6px;
-      }
-      .card-webMob {
-        font-size: 3px;
-      }
-      .card-footer {
-        border-top: 1px solid #ccc;
-        text-align: center;
-        font-size: 8px;
-      }
+            .print-card img {
+              object-fit: contain;
+            }
+            .print-card p {
+              margin: 0px;
+              font-size: 8px;
+              line-height: 1;
+            }
+            .card-getWell {
+              font-size: 6px;
+            }
+            .card-webMob {
+              font-size: 3px;
+            }
+            .card-footer {
+              border-top: 1px solid #ccc;
+              text-align: center;
+              font-size: 8px;
+            }
 
-      .card-footer p {
-        font-family: cursive;
-        font-size: 8px;
-      }
+            .card-footer p {
+              font-family: cursive;
+              font-size: 8px;
+            }
 
-      @media print {
-        body, html {
-          margin: 0;
-          padding: 0;
-        }
+            @media print {
+              body, html {
+                margin: 0;
+                padding: 0;
+              }
 
-        .print-card {
-         margin: 0 0 10px 0 !important;  
-          padding: 10px 15px;
-          box-sizing: border-box;
-          page-break-inside: avoid;
-        }
+              .print-card {
+              margin: 0 0 10px 0 !important;  
+                padding: 10px 15px;
+                box-sizing: border-box;
+                page-break-inside: avoid;
+              }
 
-        .print-card .footer {
-          margin: 0;
-          padding: 0;
-          line-height: 1;
-        }
+              .print-card .footer {
+                margin: 0;
+                padding: 0;
+                line-height: 1;
+              }
 
-        /* ✅ Remove any extra white space under footer */
-        .print-card .footer > div:last-child {
-          margin-top: 1px !important;
-          margin-bottom: 0 !important;
-          padding-bottom: 0 !important;
-          line-height: 1 !important;          
-          font-size: 7px !important;
-          font-style: italic !important;
-        }
+              /* ✅ Remove any extra white space under footer */
+              .print-card .footer > div:last-child {
+                margin-top: 1px !important;
+                margin-bottom: 0 !important;
+                padding-bottom: 0 !important;
+                line-height: 1 !important;          
+                font-size: 7px !important;
+                font-style: italic !important;
+              }
 
-        .print-card:last-child {
-          margin-bottom: 0 !important;
-          padding-bottom: 0 !important;
-        }
+              .print-card:last-child {
+                margin-bottom: 0 !important;
+                padding-bottom: 0 !important;
+              }
 
-        /* ✅ Remove Chrome auto spacing after elements */
-        img, p, div {
-          line-height: 1 !important;
-          font-size: 7px;
-        }
+              /* ✅ Remove Chrome auto spacing after elements */
+              img, p, div {
+                line-height: 1 !important;
+                font-size: 7px;
+              }
 
-        /* Just in case Chrome adds print padding */
-        @page {
-          margin: 10mm 10mm 5mm 10mm;
-        }
-      }
+              /* Just in case Chrome adds print padding */
+              @page {
+                margin: 10mm 10mm 5mm 10mm;
+              }
+            }
 
 
-    </style>
-  </head>
-  <body>
-    ${printContents}
-  </body>
-</html>
+          </style>
+        </head>
+        <body>
+          ${printContents}
+        </body>
+      </html>
 `);
-
       printWindow.document.close();
       printWindow.print();
       printWindow.close();
@@ -594,7 +668,7 @@ const BillPreviewModal: React.FC<BillPreviewModalProps> = ({
                       >
                         <span style={{ textAlign: "left" }}>
                           <Image
-                            src="/images/logo.png"
+                            src="/images/logo-bw-h.png"
                             alt=""
                             width="100px"
                             height="35px"

@@ -16,6 +16,7 @@ export interface Address {
   pincode?: string;
   location?: string;
   map?: string;
+  set_default: boolean;
   default_address?: number;
   status?: string;
   buyer_id?: number;

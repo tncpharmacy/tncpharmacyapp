@@ -30,24 +30,7 @@ export const createHealthBag = async (
   );
   return res.data;
 };
-// =========================
-// DELETE HEALTHBAG (BUYER)
-// =========================
-// export const deleteHealthBag = async (id: number) => {
-//   try {
-//     const res = await axiosInstance.delete(
-//       `${ENDPOINTS.HEALTHBAG.DELETE}/${id}`
-//     );
-//     return res.data;
-//     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-//   } catch (err: any) {
-//     console.error(
-//       "❌ deleteHealthBag error:",
-//       err.response?.data || err.message
-//     );
-//     throw err;
-//   }
-// };
+
 export const deleteHealthBag = async (
   id: number
 ): Promise<{ message: string }> => {
@@ -62,6 +45,45 @@ export const deleteHealthBag = async (
     );
     throw err;
   }
+};
+// ===============================
+// INCREASE QUANTITY
+// ===============================
+export const increaseQuantity = async (
+  cart_id: number,
+  buyer_id: number,
+  product_id: number,
+  quantity: number
+) => {
+  const res = await axiosInstance.put(
+    ENDPOINTS.HEALTHBAG.QUANTITY_INCREASE(cart_id),
+    {
+      buyer_id,
+      product_id,
+      quantity,
+    }
+  );
+  return res.data;
+};
+
+// ===============================
+// DECREASE QUANTITY
+// ===============================
+export const decreaseQuantity = async (
+  cart_id: number,
+  buyer_id: number,
+  product_id: number,
+  quantity: number
+) => {
+  const res = await axiosInstance.put(
+    ENDPOINTS.HEALTHBAG.QUANTITY_DECREASE(cart_id),
+    {
+      buyer_id,
+      product_id,
+      quantity,
+    }
+  );
+  return res.data;
 };
 
 // ===============================

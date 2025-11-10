@@ -71,7 +71,13 @@ export const addAddress = createAsyncThunk(
 
 export const editAddress = createAsyncThunk(
   "address/update",
-  async ({ id, data }: { id: number; data: Address }, { rejectWithValue }) => {
+  async (
+    {
+      id,
+      data,
+    }: { id: number; data: Partial<Address> | { set_default: boolean } },
+    { rejectWithValue }
+  ) => {
     try {
       const response = await updateAddress(id, data);
       return response;

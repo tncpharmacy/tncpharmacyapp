@@ -110,24 +110,21 @@ export default function AddressList() {
     if (!address.id) return;
 
     try {
-      // Step 1: Frontend UI update
+      // UI select
       setBillingAddress(index);
 
-      // Step 2: Backend update
-      const updated = { ...address, default_address: 1 };
-      await dispatch(editAddress({ id: address.id, data: updated })).unwrap();
+      // ✅ Only payload biz required
+      await dispatch(
+        editAddress({ id: address.id, data: { set_default: true } })
+      ).unwrap();
 
-      toast.success("Default address updated successfully!");
+      toast.success("Default address updated!");
 
-      // Step 3: Re-fetch addresses so that latest data load ho
       if (userId) {
-        // Thoda delay de re-render ke liye
-        setTimeout(() => {
-          dispatch(getAddress(userId));
-        }, 400);
+        dispatch(getAddress(userId));
       }
-      // 6️⃣ Redirect to /healthBag
-      router.push("/healthBag");
+
+      router.push("/health-bag");
     } catch (err) {
       console.error(err);
       toast.error("Failed to set default address");
