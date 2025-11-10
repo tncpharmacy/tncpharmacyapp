@@ -37,7 +37,7 @@ interface BillPreviewModalProps {
   cart: CartItem[] | undefined;
   customerName: string;
   mobile: string;
-  pharmacy_id: string | number;
+  pharmacy_id?: number;
 }
 
 const BillPreviewModal: React.FC<BillPreviewModalProps> = ({

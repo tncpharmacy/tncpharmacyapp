@@ -22,7 +22,7 @@ import { getPharmacy } from "@/lib/api/pharmacySelf";
 
 export default function RetailCounter() {
   const userPharmacy = getUser();
-  const pharmacy_id = userPharmacy?.pharmacy_id || 0;
+  const pharmacy_id = Number(userPharmacy?.pharmacy_id) || 0;
   const dispatch = useAppDispatch();
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [cart, setCart] = useState<any[]>([]);
