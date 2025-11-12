@@ -1,14 +1,17 @@
 // app/api/proxy/route.ts
 import { NextResponse } from "next/server";
 
-// Only use in development
-if (process.env.NODE_ENV !== "development") {
-  throw new Error("Proxy route should not be used in production!");
-}
-
 export const runtime = "nodejs";
 
 export async function GET(req: Request) {
+  // Only allow in development
+  if (process.env.NODE_ENV !== "development") {
+    return NextResponse.json(
+      { error: "Proxy route is only allowed in development" },
+      { status: 403 }
+    );
+  }
+
   try {
     const { searchParams } = new URL(req.url);
     const fileUrl = searchParams.get("url");
