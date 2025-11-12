@@ -284,7 +284,7 @@ export default function OtherMedicineForm({ id }: Props) {
         toast.success("Medicine added successfully");
       }
 
-      router.push("/other-product");
+      router.push("/medicine");
     } catch (error) {
       const err = error as AxiosError<{ message?: string; detail?: string }>;
       const errorMsg =

@@ -221,13 +221,13 @@ export default function RetailCounter() {
                   </div>
                   <div className="col-md-4 text-end">
                     <div className="txt_col">
-                      <button
+                      {/* <button
                         className="btn-style1"
                         // onClick={handleExportToExcel}
                         // disabled={selectedMedicines.length === 0}
                       >
                         <i className="bi bi-upload"></i> Upload Prescription
-                      </button>
+                      </button> */}
                     </div>
                   </div>
                 </div>

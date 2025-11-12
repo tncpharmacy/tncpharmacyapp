@@ -1,4 +1,5 @@
 "use client";
+
 import React from "react";
 import { Modal } from "react-bootstrap";
 
@@ -6,10 +7,12 @@ export default function PrescriptionStatusModal({
   show,
   onClose,
   mode,
+  onContinueToLogin,
 }: {
   show: boolean;
   onClose: () => void;
   mode: "guest-upload" | "loggedin-upload" | "post-login-link";
+  onContinueToLogin?: () => void;
 }) {
   const content = {
     "guest-upload": {
@@ -34,35 +37,48 @@ export default function PrescriptionStatusModal({
 
   const { title, message, button } = content[mode];
 
+  const handleButtonClick = () => {
+    if (mode === "guest-upload" && onContinueToLogin) {
+      onContinueToLogin();
+    } else {
+      onClose();
+    }
+  };
+
   return (
-    <Modal show={show} onHide={onClose} centered>
-      <Modal.Body className="text-center p-4">
-        {/* ✅ Green Tick */}
-        <div
-          style={{
-            width: "80px",
-            height: "80px",
-            borderRadius: "50%",
-            backgroundColor: "#28a74522",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            margin: "0 auto 15px",
-          }}
-        >
-          <span style={{ fontSize: "45px", color: "#28a745" }}>✔</span>
-        </div>
+    <>
+      <Modal show={show} onHide={onClose} centered>
+        <Modal.Body className="text-center p-4">
+          {/* ✅ Green Tick */}
+          <div
+            style={{
+              width: "80px",
+              height: "80px",
+              borderRadius: "50%",
+              backgroundColor: "#28a74522",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              margin: "0 auto 15px",
+            }}
+          >
+            <span style={{ fontSize: "45px", color: "#28a745" }}>✔</span>
+          </div>
 
-        <h4 className="fw-bold">{title}</h4>
+          <h4 className="fw-bold">{title}</h4>
 
-        <p className="text-muted mt-2" style={{ fontSize: "15px" }}>
-          {message}
-        </p>
+          <p className="text-muted mt-2" style={{ fontSize: "15px" }}>
+            {message}
+          </p>
 
-        <button onClick={onClose} className="btn btn-primary px-4 py-2 mt-3">
-          {button}
-        </button>
-      </Modal.Body>
-    </Modal>
+          <button
+            onClick={handleButtonClick}
+            className="btn btn-primary px-4 py-2 mt-3"
+          >
+            {button}
+          </button>
+        </Modal.Body>
+      </Modal>
+    </>
   );
 }

@@ -9,9 +9,10 @@ import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import "../../css/pharmacy-style.css";
 import NotificationBell from "@/app/components/NotificationBell/NotificationBell";
+import { Image } from "react-bootstrap";
 
 export default function Header() {
-  const { user, accessToken } = useAppSelector((state) => state.auth);
+  const { accessToken } = useAppSelector((state) => state.auth);
   const router = useRouter();
 
   useEffect(() => {
@@ -25,7 +26,7 @@ export default function Header() {
         <div className="row">
           <div className="col-sm-6">
             <Link href="/pharmacist-dashboard" className="logo">
-              <img src="/images/logo.png" alt="" />
+              <Image src="/images/logo.png" alt="" />
             </Link>
           </div>
           <div className="col-sm-6 text-right">

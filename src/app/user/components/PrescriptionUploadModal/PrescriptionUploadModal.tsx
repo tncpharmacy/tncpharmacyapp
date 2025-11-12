@@ -11,6 +11,7 @@ import {
 import toast from "react-hot-toast";
 import PrescriptionStatusModal from "@/app/components/PrescriptionStatusModal/PrescriptionStatusModal";
 import { store } from "@/lib/store";
+import BuyerLoginModal from "@/app/buyer-login/page";
 
 interface Props {
   show: boolean;
@@ -30,7 +31,7 @@ export default function PrescriptionUploadModal({ show, handleClose }: Props) {
   const [modalMode, setModalMode] = useState<
     "guest-upload" | "loggedin-upload"
   >("guest-upload");
-
+  const [showBuyerLogin, setShowBuyerLogin] = useState(false);
   const dispatch = useAppDispatch();
   const { loading } = useAppSelector((state) => state.prescription);
   const buyer = useAppSelector((state) => state.buyer.buyer);
@@ -131,6 +132,11 @@ export default function PrescriptionUploadModal({ show, handleClose }: Props) {
     }
   }, [show]);
 
+  const handleContinueToLogin = () => {
+    setShowModal(false);
+    setShowBuyerLogin(true);
+  };
+
   return (
     <div
       className={`modal fade ${show ? "show d-block" : "d-none"}`}
@@ -222,6 +228,11 @@ export default function PrescriptionUploadModal({ show, handleClose }: Props) {
         show={showModal}
         onClose={() => setShowModal(false)}
         mode={modalMode}
+        onContinueToLogin={handleContinueToLogin}
+      />
+      <BuyerLoginModal
+        show={showBuyerLogin}
+        handleClose={() => setShowBuyerLogin(false)}
       />
     </div>
   );

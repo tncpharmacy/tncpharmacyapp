@@ -13,7 +13,11 @@ import { createWorker } from "tesseract.js";
 import { useRouter } from "next/navigation";
 const mediaBase = process.env.NEXT_PUBLIC_MEDIA_BASE_URL;
 
-export default function PatientPrescriptionModal() {
+export default function PatientPrescriptionModal({
+  onClose,
+}: {
+  onClose?: () => void;
+}) {
   const dispatch = useAppDispatch();
   const router = useRouter();
   const { list, loadingList, receiveLoading, lastReceived } = useAppSelector(
@@ -55,16 +59,27 @@ export default function PatientPrescriptionModal() {
   // filter logic
   useEffect(() => {
     let data = list;
+    data = data.filter((item) => item.prescription_status.toString() === "1");
+
+    const currentPharmacistId = Number(pharmacistId);
+
+    data = data.filter(
+      (item) =>
+        item.handle_by === null ||
+        item.handle_by === 0 ||
+        item.handle_by === currentPharmacistId
+    );
+
     if (searchTerm) {
       data = data.filter((item) =>
         (item.buyer_name ?? "").toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
-    if (status !== "all") {
-      data = data.filter(
-        (item) => item.prescription_status.toString() === status
-      );
-    }
+    // if (status !== "all") {
+    //   data = data.filter(
+    //     (item) => item.prescription_status.toString() === status
+    //   );
+    // }
     setFilteredData(
       [...data].sort(
         (a, b) =>
@@ -72,7 +87,7 @@ export default function PatientPrescriptionModal() {
       )
     );
     setCurrentPage(1);
-  }, [list, searchTerm, status]);
+  }, [list, searchTerm]);
 
   // pagination calculation
   const totalPages = Math.ceil(filteredData.length / itemsPerPage);
@@ -87,10 +102,6 @@ export default function PatientPrescriptionModal() {
       setCurrentPage(page);
     }
   };
-
-  // PatientPrescriptionModal.tsx (existing handleReceive ko isse replace kar de)
-
-  // PatientPrescriptionModal.tsx ke handleReceiveAndOCR function mein
 
   const handleReceiveAndOCR = async (prescription: PrescriptionItem) => {
     const originalPath = prescription.prescription_pic;
@@ -115,6 +126,10 @@ export default function PatientPrescriptionModal() {
           pharmacistId: Number(pharmacistId),
         })
       ).unwrap();
+
+      if (onClose) {
+        onClose();
+      }
 
       router.push(
         `/pharmacist/ocr-extraction?id=${
@@ -154,7 +169,7 @@ export default function PatientPrescriptionModal() {
         </div>
         <div className="col-md-4 text-end">
           <div className="txt_col">
-            <span className="lbl1">Status</span>
+            {/* <span className="lbl1">Status</span>
             <select
               className="txt1"
               value={status}
@@ -163,7 +178,7 @@ export default function PatientPrescriptionModal() {
               <option value="all">-Select-</option>
               <option value="1">Active</option>
               <option value="0">Inactive</option>
-            </select>
+            </select> */}
           </div>
         </div>
       </div>
@@ -196,77 +211,76 @@ export default function PatientPrescriptionModal() {
                 </td>
               </tr>
             ) : (
-              currentItems.map((p) => (
-                <tr key={p.id}>
-                  <td></td>
-                  <td className="text-start">{p.id}</td>
-                  <td className="text-start">
-                    {(() => {
-                      const fileUrl = `${mediaBase}${p.prescription_pic}`;
-                      const ext = fileUrl.split(".").pop()?.toLowerCase();
-                      return ext === "pdf" ? (
-                        <i
-                          className="bi bi-file-earmark-pdf"
-                          style={{
-                            fontSize: "2rem",
-                            color: "red",
-                            cursor: "pointer",
-                          }}
-                          onClick={() => handlePrescriptionView(p.id)}
-                        ></i>
-                      ) : (
-                        <Image
-                          src={fileUrl}
-                          alt="Prescription"
-                          style={{
-                            width: "50px",
-                            height: "50px",
-                            objectFit: "cover",
-                          }}
-                          onClick={() => handlePrescriptionView(p.id)}
-                        />
-                      );
-                    })()}
-                  </td>
-                  <td className="text-start">{p.buyer_name}</td>
-                  <td className="text-start">{p.buyer_number}</td>
-                  <td className="text-start">{p.buyer_email}</td>
-                  <td className="text-start">
-                    {new Date(p.created_on).toLocaleDateString()}
-                  </td>
-                  <td className="text-start">
-                    {/* <Button
-                      variant={p.handle_by !== 1 ? "success" : "secondary"}
-                      size="sm"
-                      onClick={() => handleReceive(p.id)}
-                      disabled={receiveLoading && lastReceived?.id === p.id}
-                    >
-                      {receiveLoading && lastReceived?.id === p.id
-                        ? "Receiving..."
-                        : p.handle_by !== 1
-                        ? "Receive"
-                        : "Received"}
-                    </Button> */}
-                    <Button
-                      variant={p.handle_by !== 1 ? "success" : "secondary"}
-                      size="sm"
-                      // Yahan change karein: Poora item pass karein
-                      onClick={() => handleReceiveAndOCR(p)}
-                      // disabled={
-                      //   (receiveLoading && lastReceived?.id === p.id) ||
-                      //   p.handle_by === 1
-                      // }
-                    >
-                      Receive & Scan
-                      {/* {receiveLoading && lastReceived?.id === p.id
-                        ? "Processing..."
-                        : p.handle_by !== 1
-                        ? "Receive & Scan" // Button text change kar diya
-                        : "Received"} */}
-                    </Button>
-                  </td>
-                </tr>
-              ))
+              currentItems.map((p) => {
+                // ✅ Check karein ki kya prescription ko current pharmacist ne receive kiya hai
+                const isHandledByMe = p.handle_by === Number(pharmacistId);
+                const isReceived = p.handle_by !== null && p.handle_by !== 0;
+
+                return (
+                  <tr key={p.id}>
+                    <td></td>
+                    <td className="text-start">{p.id}</td>
+                    <td className="text-start">
+                      {(() => {
+                        const fileUrl = `${mediaBase}${p.prescription_pic}`;
+                        const ext = fileUrl.split(".").pop()?.toLowerCase();
+                        return ext === "pdf" ? (
+                          <i
+                            className="bi bi-file-earmark-pdf"
+                            style={{
+                              fontSize: "2rem",
+                              color: "red",
+                              cursor: "pointer",
+                            }}
+                            onClick={() => handlePrescriptionView(p.id)}
+                          ></i>
+                        ) : (
+                          <Image
+                            src={fileUrl}
+                            alt="Prescription"
+                            style={{
+                              width: "50px",
+                              height: "50px",
+                              objectFit: "cover",
+                            }}
+                            onClick={() => handlePrescriptionView(p.id)}
+                          />
+                        );
+                      })()}
+                    </td>
+                    <td className="text-start">{p.buyer_name}</td>
+                    <td className="text-start">{p.buyer_number}</td>
+                    <td className="text-start">{p.buyer_email}</td>
+                    <td className="text-start">
+                      {new Date(p.created_on).toLocaleDateString()}
+                    </td>
+                    <td className="text-start">
+                      <Button // ✅ VARIANT (COLOR) CHANGE
+                        variant={
+                          isHandledByMe
+                            ? "warning"
+                            : isReceived
+                            ? "secondary"
+                            : "success"
+                        }
+                        size="sm"
+                        onClick={() => handleReceiveAndOCR(p)}
+                        // receiveLoading check bhi add kar do
+                        disabled={receiveLoading && lastReceived?.id === p.id}
+                      >
+                        {/* ✅ BUTTON TEXT CHANGE */}
+                        {receiveLoading && lastReceived?.id === p.id
+                          ? "Processing..."
+                          : isHandledByMe
+                          ? "Continue Scan" // Jo tumne receive kiya hai, uspe yeh dikhe
+                          : isReceived
+                          ? "Received" // Agar kisi aur ne receive kiya hai (par filter se woh visible nahi hona chahiye)
+                          : "Receive & Scan"}
+                      </Button>
+                    </td>
+                  </tr>
+                );
+              })
             )}
           </tbody>
         </table>
