@@ -112,10 +112,10 @@ export default function PatientPrescriptionModal({
     const realURL = `${mediaBase}/${mediaPath}`;
 
     // Environment-aware URL
-    const finalFileUrl =
-      process.env.NODE_ENV === "development"
-        ? `/api/proxy?url=${encodeURIComponent(realURL)}`
-        : realURL;
+    const finalFileUrl = realURL;
+    // process.env.NODE_ENV === "development"
+    //   ? `/api/proxy?url=${encodeURIComponent(realURL)}`
+    //   : realURL;
 
     console.log("✅ FINAL PDF URL =", finalFileUrl);
 
