@@ -1,8 +1,8 @@
 // app/api/proxy/route.ts
 import { NextResponse } from "next/server";
 
-// Ensure Node runtime for reliable fetch
-export const runtime = "node";
+// Correct runtime value
+export const runtime = "nodejs";
 
 export async function GET(req: Request) {
   try {
@@ -15,7 +15,6 @@ export async function GET(req: Request) {
 
     console.log("Proxy fetching:", fileUrl);
 
-    // Node fetch (works on local & server)
     const response = await fetch(fileUrl);
 
     if (!response.ok || !response.body) {
@@ -25,7 +24,6 @@ export async function GET(req: Request) {
       );
     }
 
-    // Stream the response to avoid memory issues with large files
     return new NextResponse(response.body, {
       headers: {
         "Content-Type":
