@@ -159,6 +159,17 @@ export const ENDPOINTS = {
       `/cart/quantity/${cartId}/?quantity=Decrease`,
   },
 
+  // add to card
+  HEALTHBAG_PHARMACIST: {
+    CREATE: "/cart/pharmacist/add/",
+    GET_ALL: (id: number) => `/cart/pharmacist/view/${id}/`,
+    DELETE: (id: number) => `/cart/pharmacist/delete/${id}/`,
+    QUANTITY_INCREASE: (cartId: number) =>
+      `/cart/pharmacist/quantity/${cartId}/?quantity=Increase`,
+    QUANTITY_DECREASE: (cartId: number) =>
+      `/cart/pharmacist/quantity/${cartId}/?quantity=Decrease`,
+  },
+
   // address
   ADDRESS: {
     CREATE: "/address/create/",
@@ -172,5 +183,7 @@ export const ENDPOINTS = {
   // Purchase Stock
   PURCHASE_STOCK: {
     CREATE: "/stock/purchase/create/",
+    GET_STOCK_LIST_PHARMACY: (id: number) =>
+      `/stock/pharmacy/${id}/stock-details/`,
   },
 };

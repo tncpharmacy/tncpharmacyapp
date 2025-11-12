@@ -1,8 +1,11 @@
 "use client";
 
+import SingleSelectDropdown from "@/app/components/Input/SingleSelectDropdown";
 import AddBillingItemModal from "@/app/components/RetailCounterModal/AddBillingItemModal";
 import GenericOptionsModal from "@/app/components/RetailCounterModal/GenericOptionsModal";
 import HealthBagModal from "@/app/components/RetailCounterModal/HealthBagModal";
+import WhatsappWaitModal from "@/app/components/RetailCounterModal/WhatsappWaitModal";
+import { createHealthBagItem } from "@/lib/features/healthBagPharmacistSlice/healthBagPharmacistSlice";
 import {
   getMedicineByGenericId,
   getProductByGenericId,
@@ -21,6 +24,7 @@ import {
   Image,
   Button,
 } from "react-bootstrap";
+import toast from "react-hot-toast";
 import Tesseract from "tesseract.js";
 
 interface OcrLogicProps {
@@ -47,6 +51,11 @@ export default function OcrExtractionLogic({
   const [error, setError] = useState<string | null>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [cart, setCart] = useState<any[]>([]);
+
+  const [isWhatsappWaitModalOpen, setIsWhatsappWaitModalOpen] = useState(false);
+
+  const handleOpenWhatsappWaitModal = () => setIsWhatsappWaitModalOpen(true);
+  const handleCloseWhatsappWaitModal = () => setIsWhatsappWaitModalOpen(false);
 
   const [selectedGenericId, setSelectedGenericId] = useState<number | null>(
     null
@@ -132,44 +141,77 @@ export default function OcrExtractionLogic({
     }
   };
 
-  // ✅ Extract only medicine names
-  const extractMedicine = (text: string): string[] => {
-    const words = text
-      .split(/[\s,«\+\/]+/)
-      .map((w) => w.trim())
-      .filter((w) => w.length > 2);
+  const extractMedicine = (text: string, dbNames: string[]): string[] => {
+    // 1. OCR text ko high-confidence, clean string banana
+    const cleanOcrBlob = text
+      .toLowerCase()
+      // Numbers aur non-alphabetic characters hata do
+      .replace(/[^a-z]/g, "");
 
     const finalNames = new Set<string>();
 
-    const knownMedicineParts = {
-      Glymprd: "AB Glymprd",
-      Aceclo: "Aceclo Plus",
-      Glimestar: "Glimestar",
-      Altiva: "Altiva",
-      Fexova: "Fexova",
-    };
-    for (const partKey of Object.keys(knownMedicineParts)) {
-      // TypeScript ko batane ke liye ki 'partKey' ek valid key hai.
-      const key = partKey as keyof typeof knownMedicineParts;
+    // Common words aur form/dosage units jinhe DB names se hatana hai
+    const commonNoise = [
+      "tab",
+      "tablet",
+      "cap",
+      "capsule",
+      "mg",
+      "ml",
+      "gm",
+      "g",
+      "hcl",
+      "inj",
+      "oral",
+      "syrup",
+      "drops",
+      "solution",
+      "im",
+      "iv",
+      "sc", // Thode aur common words
+    ];
 
-      // Check if any word fragment includes this core medicine part
-      for (const word of words) {
-        const lowerWord = word.toLowerCase();
+    // 2. Har DB name ko check karo
+    for (const dbName of dbNames) {
+      let lowerDbName = dbName.toLowerCase();
 
-        // Agar fragment mein core name mil gaya (e.g., 'Aed Altiva' mein 'Altiva' mil gaya)
-        if (lowerWord.includes(key.toLowerCase())) {
-          // Guaranteed clean name add karo (e.g., 'Altiva').
-          finalNames.add(knownMedicineParts[key]);
-          break; // Is medicine ko check kar liya, next par chalo
-        }
+      // A. DB Name se numbers, common noise remove karna
+      lowerDbName = lowerDbName.replace(/[0-9]/g, ""); // Numbers hatao
+
+      for (const noise of commonNoise) {
+        // Noise word ko boundary ke saath replace karo
+        lowerDbName = lowerDbName.replace(
+          new RegExp("\\b" + noise + "\\b", "g"),
+          ""
+        );
+      }
+
+      // B. Final Core String banana (e.g., "AB Glymprd Table" -> "abglymprd")
+      // Ab sirf spaces aur bache hue symbols hatao
+      const dbCoreString = lowerDbName.replace(/[^a-z]/g, "");
+
+      // 🎯 FIX: Agar 'AB' jaise chote names hain toh length 3 ya 4 tak bhi chalegi
+      if (dbCoreString.length < 4) continue;
+
+      // C. Aggressive Substring Search
+      if (cleanOcrBlob.includes(dbCoreString)) {
+        finalNames.add(dbName);
       }
     }
 
-    // 4. Return the unique, sorted list.
     return Array.from(finalNames).sort();
   };
+
   // ✅ Run OCR
   const runOCR = useCallback(async () => {
+    // 🎯 FIX 1: Ab yahan check karo ki productList ready hai ya nahi.
+    if (productList.length === 0) {
+      // Agar product list empty hai, toh OCR chalaane ka koi fayda nahi.
+      // Yeh return kar dega aur agli baar chalaega jab list load ho jayegi (dependency ki wajah se).
+      setLoadings(true); // Loading on rakho
+      return;
+    }
+
     try {
       setLoadings(true);
       let processedImage = imageUrl;
@@ -181,7 +223,22 @@ export default function OcrExtractionLogic({
       const result = await worker.recognize(processedImage);
       await worker.terminate();
 
-      const meds = extractMedicine(result.data.text);
+      // 📢 DEBUG: Yahan raw OCR text ko log karo. Agar yeh kharab hai toh matching fail hogi.
+      console.log("Raw OCR Text:", result.data.text);
+
+      // DB Names ki list taiyar karo (required format for extractMedicine)
+      const dbNamesForOCR = productList
+        .map((p) => p.medicine_name)
+        .filter(
+          (name): name is string => typeof name === "string" && name.length > 2
+        );
+
+      // ✅ Updated call: Ab DB names bhi paas ho rahe hain
+      const meds = extractMedicine(result.data.text, dbNamesForOCR);
+
+      // 📢 DEBUG: Yahan extracted medicine names ko log karo.
+      console.log("Extracted Medicines:", meds);
+
       setMedicines(meds);
     } catch (err) {
       console.error(err);
@@ -189,13 +246,14 @@ export default function OcrExtractionLogic({
     } finally {
       setLoadings(false);
     }
-  }, [imageUrl]);
+    // productList ko dependency mein add karna zaroori hai
+  }, [imageUrl, pdfReady, productList]); // ✅ productList yahan zaroor hona chahiye!
 
   useEffect(() => {
     if (!imageUrl) return;
     if (imageUrl.endsWith(".pdf") && !pdfReady) return;
     runOCR();
-  }, [imageUrl, pdfReady]);
+  }, [imageUrl, pdfReady, runOCR]);
 
   const handleMedicineClick = async (medName: string) => {
     setSelectedMedicine(medName); // 1. Match Product
@@ -325,19 +383,127 @@ export default function OcrExtractionLogic({
     setIsQtyModalOpen(false);
     setIsModalOpen(true);
   };
+
+  //   const handleProceedToHealthBag = async () => {
+  //     if (!buyerId) {
+  //       alert("Buyer ID is missing. Cannot proceed to patient bag.");
+  //       return;
+  //     }
+
+  //     // 1. API Payload तैयार करना
+  //     const payloads = cart.map((item) => ({
+  //       buyer_id: buyerId,
+  //       product_id: Number(item.id),
+  //       quantity: item.qty,
+  //       doses: item.dose_form,
+  //       flag: 1,
+  //       instruction: item.remarks,
+  //     }));
+
+  //     try {
+  //       console.log("Sending Payload to Health Bag API:", payloads);
+
+  //       // ✅ Redux thunk dispatch for each item
+  //       for (const payload of payloads) {
+  //         await dispatch(createHealthBagItem(payload)).unwrap();
+  //       }
+  //       toast.success(
+  //         `Successfully added ${cart.length} item(s) to Patient Bag.`
+  //       );
+  //       setCart([]);
+  //       handleCloseHealthBag();
+  //       // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  //     } catch (error: any) {
+  //       console.error("Failed to add items to Health Bag:", error);
+  //       alert(error || "Failed to add items to Patient Bag. Please check API.");
+  //     }
+  //   };
+
+  const handleProceedToHealthBag = async () => {
+    handleCloseHealthBag();
+    handleOpenWhatsappWaitModal();
+  };
+
+  // OcrExtractionLogic.tsx
+
+  // ... (other handlers like handleMedicineClick, handleSkipGenericModal) ...
+
+  // ✅ New Handler for SingleSelectDropdown
+  const handleSelectMedicine = (selectedOption: OptionType | null) => {
+    if (selectedOption) {
+      // 1. Find the full Medicine object using the ID (selectedOption.value)
+      const selectedProductFromDropdown = productList.find(
+        (m) => m.id === selectedOption.value
+      );
+
+      if (!selectedProductFromDropdown) {
+        console.error("Selected product not found in list.");
+        return;
+      }
+
+      // 2. Set the selected product for the component state
+      setSelectedProduct(selectedProductFromDropdown);
+
+      const genericId = selectedProductFromDropdown.id;
+      const categoryId = selectedProductFromDropdown.category_id;
+
+      // 3. Category branching logic (Same as handleMedicineClick)
+      if (categoryId === 1) {
+        // Category 1: Generic Alternatives Modal
+        if (genericId) {
+          // ID ko number mein convert karke dispatch karo for safety
+          dispatch(getProductByGenericId(Number(genericId)));
+          setIsModalOpen(true); // Open Generic Modal
+        }
+      } else {
+        // Other Categories: Direct to Billing/Qty Modal
+        handleSkipGenericModal(selectedProductFromDropdown); // This sets itemToConfirm & opens AddBillingItemModal
+      }
+    } else {
+      // Selection clear ho gaya
+      setSelectedProduct(null);
+      setIsModalOpen(false);
+      setIsQtyModalOpen(false);
+      setItemToConfirm(null);
+    }
+  };
+
+  // ... (rest of the logic) ...
   return (
     <Row>
+      <div className="col-md-6" style={{ marginTop: "-6px" }}>
+        <div className="txt_col">
+          <SingleSelectDropdown
+            medicines={productList} // DB se aayi puri medicine list
+            selected={
+              selectedProduct // Hum `selectedProduct` state use karenge
+                ? {
+                    label: selectedProduct.medicine_name,
+                    value: selectedProduct.id,
+                  }
+                : null
+            }
+            onChange={handleSelectMedicine} // Naya handler
+          />
+        </div>
+      </div>
+      <div className="col-md-6 text-end">
+        <div className="txt_col">
+          {/* 🎯 Health Bag Button */}
+          <button
+            className="btn btn-primary px-4 mb-2"
+            onClick={handleOpenHealthBag}
+            disabled={cart.length === 0}
+          >
+            🛒 Health Bag ({cart.length})
+          </button>
+        </div>
+      </div>
+
       {/* LEFT: Medicines */}
       <Col md={6}>
-        <h5 className="mb-3">Detected Medicines</h5>
-        {/* 🎯 Health Bag Button */}
-        <button
-          className="btn btn-primary px-4 mb-2"
-          onClick={handleOpenHealthBag}
-          disabled={cart.length === 0}
-        >
-          🛒 Health Bag ({cart.length})
-        </button>
+        <h6>Detected Medicines</h6>
+
         {loadings && (
           <div className="text-center">
             <Spinner animation="border" />
@@ -365,7 +531,7 @@ export default function OcrExtractionLogic({
 
       {/* RIGHT: PDF or Image Preview */}
       <Col md={6}>
-        <h4>Prescription (ID: {prescriptionId})</h4>
+        <h6>Prescription (ID: {prescriptionId})</h6>
 
         {imageUrl.toLowerCase().endsWith(".pdf") ? (
           <div
@@ -437,9 +603,12 @@ export default function OcrExtractionLogic({
       <HealthBagModal
         isOpen={isHealthBagOpen}
         onClose={handleCloseHealthBag}
-        cartItems={cart} // Cart data yahan se paas ho raha hai
-        // Agar tum remove functionality chahte ho toh:
-        // onRemoveItem={(itemId) => setCart(cart.filter(item => item.cartItemId !== itemId))}
+        cartItems={cart}
+        onProceed={handleProceedToHealthBag}
+      />
+      <WhatsappWaitModal
+        isOpen={isWhatsappWaitModalOpen}
+        onClose={handleCloseWhatsappWaitModal}
       />
     </Row>
   );

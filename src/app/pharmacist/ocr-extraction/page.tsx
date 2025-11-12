@@ -82,7 +82,7 @@ const OcrExtractionPage: React.FC = () => {
               buyerEmail={searchParams.get("buyer_email") || ""}
               buyerName={searchParams.get("buyer_name") || ""}
               buyerMobile={Number(searchParams.get("mobile") || 0)}
-              buyerId={Number(searchParams.get("buyer") || 0)}
+              buyerId={Number(buyerId || 0)}
             />
             {/* </Card> */}
             {/* </Container> */}

@@ -2,6 +2,7 @@ import api from "@/lib/axios";
 import { ENDPOINTS } from "@/lib/config";
 import axios from "axios";
 import { PurchasePayload, PurchaseResponse } from "@/types/purchase";
+import { StockResponse } from "@/types/stock";
 
 export const createPurchase = async (
   payload: PurchasePayload
@@ -35,4 +36,13 @@ export const createPurchase = async (
       statusCode: 500,
     };
   }
+};
+
+export const fetchPharmacyStock = async (
+  pharmacyId: number
+): Promise<StockResponse> => {
+  const res = await api.get(
+    ENDPOINTS.PURCHASE_STOCK.GET_STOCK_LIST_PHARMACY(pharmacyId)
+  );
+  return res.data;
 };

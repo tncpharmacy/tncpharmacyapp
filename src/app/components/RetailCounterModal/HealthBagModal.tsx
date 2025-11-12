@@ -7,13 +7,15 @@ interface HealthBagModalProps {
   isOpen: boolean;
   onClose: () => void;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  cartItems: any[]; // Cart data includes dose_form, qty, and remarks
+  cartItems: any[];
+  onProceed: () => void;
 }
 
 const HealthBagModal: React.FC<HealthBagModalProps> = ({
   isOpen,
   onClose,
   cartItems,
+  onProceed,
 }) => {
   return (
     <Modal show={isOpen} onHide={onClose} size="xl">
@@ -74,8 +76,12 @@ const HealthBagModal: React.FC<HealthBagModalProps> = ({
         <Button variant="secondary" onClick={onClose}>
           Close
         </Button>
-        <Button variant="primary" disabled={cartItems.length === 0}>
-          Proceed To Go Patient Bag
+        <Button
+          variant="primary"
+          onClick={onProceed}
+          disabled={cartItems.length === 0}
+        >
+          Add To Patient HealthBag
         </Button>
       </Modal.Footer>
     </Modal>

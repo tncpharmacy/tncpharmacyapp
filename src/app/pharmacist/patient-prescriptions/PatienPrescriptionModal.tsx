@@ -168,6 +168,8 @@ export default function PatientPrescriptionModal() {
         <table className="table cust_table1" style={{ marginBottom: "0" }}>
           <thead>
             <tr>
+              <th style={{ width: "0px" }}></th>
+              <th className="fw-bold text-start">Prescription ID</th>
               <th className="fw-bold text-start">Prescription Image</th>
               <th className="fw-bold text-start">Patient Name</th>
               <th className="fw-bold text-start">Mobile</th>
@@ -192,6 +194,8 @@ export default function PatientPrescriptionModal() {
             ) : (
               currentItems.map((p) => (
                 <tr key={p.id}>
+                  <td></td>
+                  <td className="text-start">{p.id}</td>
                   <td className="text-start">
                     {(() => {
                       const fileUrl = `${mediaBase}${p.prescription_pic}`;

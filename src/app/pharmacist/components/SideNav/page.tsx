@@ -22,11 +22,11 @@ export default function SideNav() {
             <i className="bi bi-receipt-cutoff"></i> Retail Counter
           </Link>
         </li>
-        <li>
+        {/* <li>
           <Link href="/patient-prescriptions" className="link">
             <i className="bi bi-file-medical"></i> Patient Prescriptions
           </Link>
-        </li>
+        </li> */}
         <li>
           <Link href="/pharmacist/orders" className="link">
             <i className="bi bi-cart-plus-fill"></i> Order
@@ -38,7 +38,7 @@ export default function SideNav() {
           </Link>
         </li>
         <li>
-          <Link href="#" className="link">
+          <Link href="/pharmacist/stock" className="link">
             <i className="bi bi-box"></i> Stock
           </Link>
         </li>

@@ -17,6 +17,7 @@ import medicineReducer from "@/lib/features/medicineSlice/medicineSlice";
 import buyerReducer from "@/lib/features/buyerSlice/buyerSlice";
 import purchaseReducer from "@/lib/features/purchaseStockSlice/purchaseStockSlice";
 import healthBagReducer from "@/lib/features/healthBagSlice/healthBagSlice";
+import healthBagPharmacistReducer from "@/lib/features/healthBagPharmacistSlice/healthBagPharmacistSlice";
 import addressReducer from "@/lib/features/addressSlice/addressSlice";
 import prescriptionReducer from "@/lib/features/prescriptionSlice/prescriptionSlice";
 import pharmacistPrescriptionReducer from "@/lib/features/pharmacistPrescriptionSlice/pharmacistPrescriptionSlice";
@@ -79,6 +80,7 @@ export const store = configureStore({
     address: addressReducer,
     prescription: prescriptionReducer,
     pharmacistPrescription: pharmacistPrescriptionReducer,
+    healthBagPharmacist: healthBagPharmacistReducer,
   },
   preloadedState: loadState(), // ✅ instant load on refresh
 });
