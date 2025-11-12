@@ -1,46 +1,35 @@
-// app/api/proxy/route.ts
 import { NextResponse } from "next/server";
 
-export const runtime = "nodejs";
-
 export async function GET(req: Request) {
-  // Only allow in development
   if (process.env.NODE_ENV !== "development") {
     return NextResponse.json(
-      { error: "Proxy route is only allowed in development" },
+      { error: "Proxy route should not be used in production!" },
       { status: 403 }
     );
   }
 
+  const url = new URL(req.url).searchParams.get("url");
+  if (!url) {
+    return NextResponse.json(
+      { error: "Missing URL parameter" },
+      { status: 400 }
+    );
+  }
+
   try {
-    const { searchParams } = new URL(req.url);
-    const fileUrl = searchParams.get("url");
+    const res = await fetch(url);
+    const buffer = await res.arrayBuffer();
 
-    if (!fileUrl) {
-      return NextResponse.json({ error: "Missing URL" }, { status: 400 });
-    }
-
-    const response = await fetch(fileUrl);
-
-    if (!response.ok || !response.body) {
-      return NextResponse.json(
-        { error: "Failed to fetch remote file", status: response.status },
-        { status: response.status }
-      );
-    }
-
-    return new NextResponse(response.body, {
+    return new Response(buffer, {
+      status: res.status,
       headers: {
         "Content-Type":
-          response.headers.get("Content-Type") || "application/pdf",
-        "Access-Control-Allow-Origin": "*",
-        "Content-Disposition": `inline; filename="${fileUrl.split("/").pop()}"`,
+          res.headers.get("Content-Type") || "application/octet-stream",
       },
     });
-  } catch (error) {
-    console.error("Proxy Error:", error);
+  } catch (err) {
     return NextResponse.json(
-      { error: "Proxy Failed", details: error },
+      { error: "Failed to fetch file" },
       { status: 500 }
     );
   }
