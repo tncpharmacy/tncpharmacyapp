@@ -1,28 +1,68 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { Button, Modal } from "react-bootstrap";
 import "../css/pharmacy-style.css";
 import SideNav from "@/app/pharmacist/components/SideNav/page";
 import Header from "@/app/pharmacist/components/Header/page";
 import { useAppDispatch, useAppSelector } from "@/lib/hooks";
-import {
-  fetchPharmacist,
-  editPharmacist,
-  togglePharmacistStatus,
-} from "@/lib/features/pharmacistSlice/pharmacistSlice";
-import type { Pharmacist, PharmaciesResponse } from "@/types/pharmacist";
+import type { Pharmacist } from "@/types/pharmacist";
 import { useRouter } from "next/navigation";
 import { formatDateTime, formatDateOnly } from "@/utils/dateFormatter";
 import InfiniteScroll from "@/app/components/InfiniteScroll/InfiniteScroll";
-import Link from "next/link";
 import TableLoader from "@/app/components/TableLoader/TableLoader";
-import Input from "@/app/components/Input/Input";
-import { fetchPharmacy } from "@/lib/features/pharmacySlice/pharmacySlice";
-import toast from "react-hot-toast";
 import { StockItem } from "@/types/stock";
 import { getPharmacyStock } from "@/lib/features/purchaseStockSlice/purchaseStockSlice";
 import { getUser } from "@/lib/auth/auth";
+import { Archive, CheckCircle, AlertTriangle } from "lucide-react";
+
+type FilterType = "All" | "LowStock" | "AvailableStock";
+type StockItemKey = keyof StockItem;
+
+const getButtonStyles = (
+  variant: "primary" | "success" | "danger",
+  isActive: boolean
+): { className: string; style: React.CSSProperties } => {
+  // Minimal Tailwind classes for layout/typography/transition (inline CSS se mushkil)
+  const baseClassName =
+    "flex items-center space-x-2 px-3 py-2 m-1 text-sm md:text-base font-semibold transition duration-300 ease-in-out transform rounded-lg focus:outline-none";
+
+  let backgroundColor = "";
+  let activeRingColor = "";
+
+  switch (variant) {
+    case "primary": // All Stock List (Blue)
+      backgroundColor = "#3B82F6"; // Blue
+      activeRingColor = "rgba(59, 130, 246, 0.7)"; // Blue ring
+      break;
+    case "success": // Available Stock List (Green)
+      backgroundColor = "#10B981"; // Green
+      activeRingColor = "rgba(16, 185, 129, 0.7)"; // Green ring
+      break;
+    case "danger": // Minimum Stock List (Red)
+      backgroundColor = "#EF4444"; // Red
+      activeRingColor = "rgba(239, 68, 68, 0.7)"; // Red ring
+      break;
+    default:
+      break;
+  }
+
+  // Pure inline CSS for color, shadows, and active state
+  const style: React.CSSProperties = {
+    backgroundColor: backgroundColor,
+    color: "white",
+    // Inline box shadow for professional look
+    boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+    // Active state ring/outline using inline CSS
+    outline: isActive ? `3px solid ${activeRingColor}` : "none",
+    outlineOffset: "2px",
+    opacity: isActive ? 1 : 0.9,
+    // Agar hover color support karna hota to external CSS use karna padta,
+    // lekin user ki request inline CSS ki hai.
+  };
+
+  return { className: baseClassName, style };
+};
 
 export default function StockList() {
   const dispatch = useAppDispatch();
@@ -32,6 +72,9 @@ export default function StockList() {
   const pharmacist_id = userPharmacy?.id || 0;
   // const { list, loading } = useAppSelector((state) => state.pharmacist);
   const { items: stockData } = useAppSelector((state) => state.purchaseStock);
+
+  // --- NEW STATE FOR FILTERING ---
+  const [filterType, setFilterType] = useState<FilterType>("All");
 
   const [showFullMedicine, setShowFullMedicine] = useState(false);
   const [showFullManufacturer, setShowFullManufacturer] = useState(false);
@@ -54,9 +97,16 @@ export default function StockList() {
   // Fetch all pharmacies once
   useEffect(() => {
     dispatch(getPharmacyStock(pharmacy_id));
-  }, [dispatch]);
+  }, [dispatch, pharmacy_id]);
 
-  console.log("stockData", stockData);
+  // Helper function to check Low Stock status
+  const isItemLowStock = (item: StockItem): boolean => {
+    const available = Number(item.AvailableQty);
+    const minimum = Number(item.MinStockLevel);
+    if (isNaN(available) || isNaN(minimum)) return false;
+    return available <= minimum;
+  };
+
   // filtered records by search box + status filter
   useEffect(() => {
     let data: StockItem[] = stockData || [];
@@ -71,8 +121,19 @@ export default function StockList() {
         });
       });
     }
-    setFilteredData(data);
-  }, [searchTerm, stockData]);
+
+    let finalData = data;
+    if (filterType === "LowStock") {
+      finalData = data.filter(isItemLowStock);
+    } else if (filterType === "AvailableStock") {
+      finalData = data.filter((item) => !isItemLowStock(item));
+    }
+    setFilteredData(finalData);
+    setVisibleCount(10);
+  }, [searchTerm, stockData, filterType]);
+
+  const lowStockCount = stockData.filter(isItemLowStock).length;
+  const availableStockCount = stockData.length - lowStockCount;
 
   const loadMore = () => {
     if (loadings || visibleCount >= stockData.length) return;
@@ -88,6 +149,18 @@ export default function StockList() {
     if (text.length <= maxLength) return text;
     return text.slice(0, maxLength) + "...";
   };
+  // Function to handle filter selection
+  const handleFilterSelect = (key: FilterType) => {
+    setFilterType(key);
+  };
+
+  // Get styles for each button
+  const allStyles = getButtonStyles("primary", filterType === "All");
+  const availableStyles = getButtonStyles(
+    "success",
+    filterType === "AvailableStock"
+  );
+  const minimumStyles = getButtonStyles("danger", filterType === "LowStock");
   return (
     <>
       <Header />
@@ -105,7 +178,7 @@ export default function StockList() {
             <div className="main_content">
               <div className="col-sm-12">
                 <div className="row">
-                  <div className="col-md-12">
+                  <div className="col-md-6">
                     <div className="txt_col">
                       <span className="lbl1">Search</span>
                       <input
@@ -114,11 +187,46 @@ export default function StockList() {
                         className="txt1 rounded"
                         value={searchTerm}
                         onChange={(e) => {
-                          console.log("Search input:", e.target.value); // check karega kya aa raha hai
+                          console.log("Search input:", e.target.value);
                           setSearchTerm(e.target.value);
                         }}
                       />
                     </div>
+                  </div>
+                  {/* ✅ Replaced Dropdown with Three Professional Buttons, applying inline styles */}
+                  <div className="col-md-6" style={{ marginTop: "20px" }}>
+                    {/* 1. All Stock List - Primary (Blue) */}
+                    <button
+                      className="btn btn-primary me-3"
+                      style={allStyles.style}
+                      onClick={() => handleFilterSelect("All")}
+                      aria-pressed={filterType === "All"}
+                    >
+                      <Archive size={18} style={{ marginRight: "5px" }} />
+                      <span>All Stock ({stockData.length})</span>
+                    </button>
+
+                    {/* 2. Available Stock List - Success (Green) */}
+                    <button
+                      className="btn btn-success me-3"
+                      style={availableStyles.style}
+                      onClick={() => handleFilterSelect("AvailableStock")}
+                      aria-pressed={filterType === "AvailableStock"}
+                    >
+                      <CheckCircle size={18} style={{ marginRight: "5px" }} />
+                      <span>Available Stock ({availableStockCount})</span>
+                    </button>
+
+                    {/* 3. Minimum Stock List - Danger (Red) */}
+                    <button
+                      className="btn btn-danger"
+                      style={minimumStyles.style}
+                      onClick={() => handleFilterSelect("LowStock")}
+                      aria-pressed={filterType === "LowStock"}
+                    >
+                      <AlertTriangle size={18} style={{ marginRight: "5px" }} />
+                      <span>Minimum Stock ({lowStockCount})</span>
+                    </button>
                   </div>
                 </div>
                 {/* Table */}
@@ -126,10 +234,13 @@ export default function StockList() {
                   <table className="table cust_table1">
                     <thead className="fw-bold text-dark">
                       <tr>
-                        <th className="fw-bold text-start">Sr. No.</th>
-                        <th className="fw-bold text-start">Medicine</th>
+                        <th
+                          className="fw-bold text-start"
+                          style={{ paddingLeft: "20px" }}
+                        >
+                          Medicine
+                        </th>
                         <th className="fw-bold text-start">Manufacturer</th>
-                        <th className="fw-bold text-start">Pharmacy</th>
                         <th className="fw-bold text-start">Stock</th>
                         <th className="fw-bold text-start">Location</th>
                       </tr>
@@ -148,49 +259,14 @@ export default function StockList() {
 
                           return (
                             <tr key={index + 1}>
-                              <td className="text-start">{index + 1}</td>
-                              <td className="text-start">
-                                {p.MedicineName.length > 20
-                                  ? showFullMedicine
-                                    ? p.MedicineName
-                                    : truncateText(p.MedicineName, 20)
-                                  : p.MedicineName}
-                                {p.MedicineName.length > 20 && (
-                                  <span
-                                    style={{
-                                      color: "blue",
-                                      cursor: "pointer",
-                                      marginLeft: 5,
-                                    }}
-                                    onClick={toggleMedicine}
-                                  >
-                                    {showFullMedicine ? "See Less" : "See More"}
-                                  </span>
-                                )}
+                              <td
+                                className="text-start"
+                                style={{ paddingLeft: "20px" }}
+                              >
+                                {p.MedicineName ?? ""}
                               </td>
                               <td className="text-start">
-                                {p.Manufacturer.length > 20
-                                  ? showFullManufacturer
-                                    ? p.Manufacturer
-                                    : truncateText(p.Manufacturer, 20)
-                                  : p.Manufacturer}
-                                {p.Manufacturer.length > 20 && (
-                                  <span
-                                    style={{
-                                      color: "blue",
-                                      cursor: "pointer",
-                                      marginLeft: 5,
-                                    }}
-                                    onClick={toggleManufacturer}
-                                  >
-                                    {showFullManufacturer
-                                      ? "See Less"
-                                      : "See More"}
-                                  </span>
-                                )}
-                              </td>
-                              <td className="text-start">
-                                {p.PharmacyName ?? "-"}
+                                {p.Manufacturer ?? ""}
                               </td>
                               <td
                                 className={`text-start ${
@@ -199,7 +275,23 @@ export default function StockList() {
                                     : "text-success fw-bold"
                                 }`}
                               >
-                                {p.AvailableQty ?? "-"}
+                                <span
+                                  style={{
+                                    border: `2px solid ${
+                                      isLowStock ? "red" : "green"
+                                    }`,
+                                    borderRadius: "35px",
+                                    padding: "4px 8px",
+                                    backgroundColor: isLowStock
+                                      ? "red"
+                                      : "green",
+                                    color: "white",
+                                    fontWeight: "bold",
+                                    display: "inline-block",
+                                  }}
+                                >
+                                  {p.AvailableQty ?? "-"}
+                                </span>
                               </td>
                               <td className="text-start">
                                 {p.location ?? "N/A"}

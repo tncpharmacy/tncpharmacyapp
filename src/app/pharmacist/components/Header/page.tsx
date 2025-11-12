@@ -34,7 +34,7 @@ export default function Header() {
               <div className="user_info">
                 <HeaderProfilePic />
               </div>
-              <div style={{ marginRight: "15px" }}>
+              <div style={{ marginRight: "0px", marginLeft: "-30px" }}>
                 <NotificationBell />
               </div>
               <div className="user_dropdown">

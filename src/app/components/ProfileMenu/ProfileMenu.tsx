@@ -1,9 +1,13 @@
 "use client";
 
-import { useAppSelector } from "@/lib/hooks";
+import { fetchPharmacy } from "@/lib/features/pharmacySlice/pharmacySlice";
+import { useAppDispatch, useAppSelector } from "@/lib/hooks";
+import { useEffect } from "react";
 
 export default function ProfileMenu() {
+  const dispatch = useAppDispatch();
   const { user } = useAppSelector((state) => state.auth);
+  const { list } = useAppSelector((state) => state.pharmacy);
 
   // Helper to capitalize first letter
   const capitalize = (str: string) => {
@@ -14,8 +18,14 @@ export default function ProfileMenu() {
   const role = capitalize(user?.role_name ?? "N/A");
   const mobile = user?.login_id ?? "N/A";
   const email = user?.email_id ?? "N/A";
+  const pharmacyId = user?.pharmacy_id ?? "N/A";
   const pharmacyIdCode = user?.pharmacy_id_code ?? "N/A";
   const pharmacyName = user?.pharmacy_name ?? "N/A";
+
+  // useEffect(() => {
+  //   dispatch(fetchPharmacy());
+  // }, [dispatch]);
+  // console.log("list", list);
 
   return (
     <div

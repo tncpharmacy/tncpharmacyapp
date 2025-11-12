@@ -35,10 +35,10 @@ export default function HeaderProfilePic() {
           justifyContent: "center",
           alignItems: "center",
           borderRadius: "50%",
-          height: "48px",
-          width: "48px",
+          height: "30px",
+          width: "30px",
           fontWeight: "bold",
-          fontSize: "20px",
+          fontSize: "19px",
           flexShrink: 0,
         }}
       >
