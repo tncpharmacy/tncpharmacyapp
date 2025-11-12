@@ -1,7 +1,11 @@
 // app/api/proxy/route.ts
 import { NextResponse } from "next/server";
 
-// Correct runtime value
+// Only use in development
+if (process.env.NODE_ENV !== "development") {
+  throw new Error("Proxy route should not be used in production!");
+}
+
 export const runtime = "nodejs";
 
 export async function GET(req: Request) {
@@ -12,8 +16,6 @@ export async function GET(req: Request) {
     if (!fileUrl) {
       return NextResponse.json({ error: "Missing URL" }, { status: 400 });
     }
-
-    console.log("Proxy fetching:", fileUrl);
 
     const response = await fetch(fileUrl);
 

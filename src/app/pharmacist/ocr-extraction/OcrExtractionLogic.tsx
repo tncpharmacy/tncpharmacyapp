@@ -204,11 +204,8 @@ export default function OcrExtractionLogic({
 
   // ✅ Run OCR
   const runOCR = useCallback(async () => {
-    // 🎯 FIX 1: Ab yahan check karo ki productList ready hai ya nahi.
     if (productList.length === 0) {
-      // Agar product list empty hai, toh OCR chalaane ka koi fayda nahi.
-      // Yeh return kar dega aur agli baar chalaega jab list load ho jayegi (dependency ki wajah se).
-      setLoadings(true); // Loading on rakho
+      setLoadings(true);
       return;
     }
 
@@ -304,44 +301,6 @@ export default function OcrExtractionLogic({
     setItemToConfirm(null);
   }; // Final Add to Cart handler (From Qty Modal)
 
-  //   const handleSelectMedicine = (selectedOption: OptionType | null) => {
-  //     if (selectedOption) {
-  //       const selectedMedicines = productList.find(
-  //         (m) => m.id === selectedOption.value
-  //       );
-  //       if (
-  //         !selectedMedicine ||
-  //         typeof selectedMedicine.category_id === "undefined"
-  //       ) {
-  //         console.error("Selected medicine or category_id is missing.");
-  //         return;
-  //       }
-
-  //       const genericId = selectedMedicine.id;
-  //       const categoryId = selectedMedicine.category_id;
-  //       setSelectedGenericId(null);
-  //       setSelectedMedicines(selectedMedicines);
-  //       if (categoryId === 1) {
-  //         dispatch(getProductByGenericId(genericId));
-  //         setSelectedGenericId(genericId);
-  //       } else {
-  //         handleSkipGenericModal(selectedMedicines);
-  //       }
-  //     } else {
-  //       setSelectedGenericId(null);
-  //       setSelectedMedicines(null);
-  //       setIsModalOpen(false);
-  //       setIsQtyModalOpen(false);
-  //       setItemToConfirm(null);
-  //     }
-  //   };
-
-  // Final Add to Cart handler (From Qty Modal)
-  // Final Add to Cart handler (From Qty Modal)
-  // OcrExtractionLogic.tsx mein handleFinalAddToCart function ko aise update karo:
-
-  // OcrExtractionLogic.tsx mein handleFinalAddToCart function
-
   const handleFinalAddToCart = (
     item: Medicine,
     qty: number,
@@ -423,10 +382,6 @@ export default function OcrExtractionLogic({
     handleCloseHealthBag();
     handleOpenWhatsappWaitModal();
   };
-
-  // OcrExtractionLogic.tsx
-
-  // ... (other handlers like handleMedicineClick, handleSkipGenericModal) ...
 
   // ✅ New Handler for SingleSelectDropdown
   const handleSelectMedicine = (selectedOption: OptionType | null) => {

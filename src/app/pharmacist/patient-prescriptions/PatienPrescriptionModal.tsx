@@ -100,9 +100,13 @@ export default function PatientPrescriptionModal() {
 
     const realURL = `${mediaBase}/${mediaPath}`;
 
-    const proxiedFileUrl = `/api/proxy?url=${encodeURIComponent(realURL)}`;
+    // Environment-aware URL
+    const finalFileUrl =
+      process.env.NODE_ENV === "development"
+        ? `/api/proxy?url=${encodeURIComponent(realURL)}`
+        : realURL;
 
-    console.log("✅ FINAL PDF URL =", proxiedFileUrl);
+    console.log("✅ FINAL PDF URL =", finalFileUrl);
 
     try {
       await dispatch(
@@ -115,7 +119,7 @@ export default function PatientPrescriptionModal() {
       router.push(
         `/pharmacist/ocr-extraction?id=${
           prescription.id
-        }&imageUrl=${encodeURIComponent(proxiedFileUrl)}&buyerName=${
+        }&imageUrl=${encodeURIComponent(finalFileUrl)}&buyerName=${
           prescription.buyer_name
         }&buyerMobile=${prescription.buyer_number}&buyerId=${
           prescription.buyer
