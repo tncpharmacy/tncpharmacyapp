@@ -117,6 +117,9 @@ export const ENDPOINTS = {
   PRESCRIPTION_UPLOAD: {
     LOGIN_UPDATE: "/ocr/prescription/update-buyer/",
     PUBLIC_CREATE: "/ocr/prescription/upload/",
+    GET_PRESCRIPTION_LIST_PHARMACIST: "/ocr/prescriptions/active/",
+    PRESCRIPTION_RECEIVED_BY_PHARMACIST: (prescriptionId: number) =>
+      `/ocr/prescriptions/update/${prescriptionId}/`,
   },
 
   // medicines

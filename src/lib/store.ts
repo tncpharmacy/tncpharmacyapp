@@ -19,15 +19,19 @@ import purchaseReducer from "@/lib/features/purchaseStockSlice/purchaseStockSlic
 import healthBagReducer from "@/lib/features/healthBagSlice/healthBagSlice";
 import addressReducer from "@/lib/features/addressSlice/addressSlice";
 import prescriptionReducer from "@/lib/features/prescriptionSlice/prescriptionSlice";
+import pharmacistPrescriptionReducer from "@/lib/features/pharmacistPrescriptionSlice/pharmacistPrescriptionSlice";
 
 //
 // ✅ STEP 1 — Load preloaded state from localStorage
 //
 const loadState = () => {
+  // ✅ FIX: Prevent crash during SSR
+  if (typeof window === "undefined") return undefined;
+
   try {
-    const user = localStorage.getItem("user");
-    const accessToken = localStorage.getItem("accessToken");
-    const refreshToken = localStorage.getItem("refreshToken");
+    const user = window.localStorage.getItem("user");
+    const accessToken = window.localStorage.getItem("accessToken");
+    const refreshToken = window.localStorage.getItem("refreshToken");
 
     if (user && accessToken) {
       return {
@@ -74,6 +78,7 @@ export const store = configureStore({
     healthBag: healthBagReducer,
     address: addressReducer,
     prescription: prescriptionReducer,
+    pharmacistPrescription: pharmacistPrescriptionReducer,
   },
   preloadedState: loadState(), // ✅ instant load on refresh
 });

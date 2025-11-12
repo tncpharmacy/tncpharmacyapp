@@ -12,6 +12,10 @@ const nextConfig: NextConfig = {
   },
   async rewrites() {
     return [
+      {
+        source: "/media/:path*",
+        destination: "http://68.183.174.17:8081/media/:path*",
+      },
       //User routes
       {
         source: "/profile",
@@ -339,6 +343,10 @@ const nextConfig: NextConfig = {
       {
         source: "/pharmacist/add-medicine",
         destination: "/pharmacist/medicine/medicine-item/add",
+      },
+      {
+        source: "/patient-prescriptions",
+        destination: "/pharmacist/patient-prescriptions",
       },
       // {
       //   source: "/pharmacist/update-medicine",

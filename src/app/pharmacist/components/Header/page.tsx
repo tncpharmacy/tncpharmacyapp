@@ -8,6 +8,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import "../../css/pharmacy-style.css";
+import NotificationBell from "@/app/components/NotificationBell/NotificationBell";
 
 export default function Header() {
   const { user, accessToken } = useAppSelector((state) => state.auth);
@@ -31,6 +32,9 @@ export default function Header() {
             <div className="header-right">
               <div className="user_info">
                 <HeaderProfilePic />
+              </div>
+              <div style={{ marginRight: "15px" }}>
+                <NotificationBell />
               </div>
               <div className="user_dropdown">
                 <span className="dropbtn">

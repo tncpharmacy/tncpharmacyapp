@@ -7,14 +7,14 @@ import { PrescriptionItem } from "@/types/prescription";
 
 interface PrescriptionState {
   loading: boolean;
-  data: PrescriptionItem | null;
+  data: PrescriptionItem[];
   error: string | null;
   sessionId: string | null;
 }
 
 const initialState: PrescriptionState = {
   loading: false,
-  data: null,
+  data: [],
   error: null,
   sessionId: null,
 };
@@ -60,7 +60,7 @@ const prescriptionSlice = createSlice({
   reducers: {
     clearPrescriptionState: (state) => {
       state.loading = false;
-      state.data = null;
+      state.data = [];
       state.error = null;
       state.sessionId = null;
     },

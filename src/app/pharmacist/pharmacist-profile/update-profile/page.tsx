@@ -133,6 +133,7 @@ export default function UpdateProfile() {
       setFieldErrors({});
 
       if (err && typeof err === "object" && "errors" in err) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const backendError = err as { errors?: any; message?: string };
 
         if (backendError.errors) {
