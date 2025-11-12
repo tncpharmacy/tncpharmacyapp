@@ -126,12 +126,11 @@ export default function StockList() {
                   <table className="table cust_table1">
                     <thead className="fw-bold text-dark">
                       <tr>
-                        <th style={{ width: "0px" }}></th>
                         <th className="fw-bold text-start">Sr. No.</th>
                         <th className="fw-bold text-start">Medicine</th>
                         <th className="fw-bold text-start">Manufacturer</th>
                         <th className="fw-bold text-start">Pharmacy</th>
-                        <th className="fw-bold text-start">stock</th>
+                        <th className="fw-bold text-start">Stock</th>
                         <th className="fw-bold text-start">Location</th>
                       </tr>
                     </thead>
@@ -149,7 +148,6 @@ export default function StockList() {
 
                           return (
                             <tr key={index + 1}>
-                              <td></td>
                               <td className="text-start">{index + 1}</td>
                               <td className="text-start">
                                 {p.MedicineName.length > 20
