@@ -386,6 +386,50 @@ export default function ProductPage() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  interface ArrowProps {
+    onClick?: () => void;
+  }
+
+  const NextArrow: React.FC<ArrowProps> = ({ onClick }) => (
+    <div
+      className="slick-arrow slick-next"
+      onClick={onClick}
+      style={{
+        right: "-25px",
+        zIndex: 2,
+        cursor: "pointer",
+        position: "absolute",
+        top: "50%",
+        transform: "translateY(-50%)",
+      }}
+    >
+      <i
+        className="bi bi-chevron-right fs-6 text-dark"
+        style={{ color: "rgb(137 141 145) !important" }}
+      ></i>
+    </div>
+  );
+
+  const PrevArrow: React.FC<ArrowProps> = ({ onClick }) => (
+    <div
+      className="slick-arrow slick-prev"
+      onClick={onClick}
+      style={{
+        left: "-25px",
+        zIndex: 2,
+        cursor: "pointer",
+        position: "absolute",
+        top: "50%",
+        transform: "translateY(-50%)",
+      }}
+    >
+      <i
+        className="bi bi-chevron-left fs-6 text-dark"
+        style={{ color: "rgb(137 141 145) !important" }}
+      ></i>
+    </div>
+  );
+
   const singleImageSlider = {
     dots: true,
     infinite: true,
@@ -394,6 +438,8 @@ export default function ProductPage() {
     slidesToScroll: 1,
     arrows: true,
     initialSlide: selectedIndex,
+    nextArrow: <NextArrow />,
+    prevArrow: <PrevArrow />,
   };
 
   return (

@@ -78,6 +78,7 @@ export interface Medicine {
   Doses_form: string;
   Discount: string;
   DefaultImageURL: string;
+  default_image: string;
 }
 
 export interface MedicineResponse {

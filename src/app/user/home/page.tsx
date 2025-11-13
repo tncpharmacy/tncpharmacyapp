@@ -610,9 +610,9 @@ export default function HomePage() {
                   <span className="t1">- Upto 25% Off</span>
                   <h2 className="t2">100% Pure Hand Sanitizer</h2>
                   <div>
-                    <button className="btn-2">
+                    {/* <button className="btn-2">
                       Shop Now <i className="bi bi-chevron-right"></i>
-                    </button>
+                    </button> */}
                   </div>
                 </div>
               </div>
@@ -624,9 +624,9 @@ export default function HomePage() {
                   <span className="t1">- Upto 25% Off</span>
                   <h2 className="t2">100% Pure Hand Sanitizer</h2>
                   <div>
-                    <button className="btn-2">
+                    {/* <button className="btn-2">
                       Shop Now <i className="bi bi-chevron-right"></i>
-                    </button>
+                    </button> */}
                   </div>
                 </div>
               </div>
@@ -638,9 +638,9 @@ export default function HomePage() {
                   <span className="t1">- Upto 25% Off</span>
                   <h2 className="t2">100% Pure Hand Sanitizer</h2>
                   <div>
-                    <button className="btn-2">
+                    {/* <button className="btn-2">
                       Shop Now <i className="bi bi-chevron-right"></i>
-                    </button>
+                    </button> */}
                   </div>
                 </div>
               </div>

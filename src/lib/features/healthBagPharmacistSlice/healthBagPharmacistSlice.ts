@@ -3,11 +3,10 @@ import {
   fetchHealthBag,
   createHealthBag,
   deleteHealthBag,
-  fetchHealthBagAdmin,
   createHealthBagDTO,
   increaseQuantity,
   decreaseQuantity,
-} from "@/lib/api/healthBag";
+} from "@/lib/api/healthBagPharmacist";
 import { HealthBag, HealthBagResponse } from "@/types/healthBag";
 
 // ===============================

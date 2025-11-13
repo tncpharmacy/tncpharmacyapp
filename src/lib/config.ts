@@ -1,4 +1,3 @@
-import { Product } from "@/types/medicine";
 export const ENDPOINTS = {
   // 🔐 Auth
   LOGIN: "/user/login/",

@@ -343,44 +343,43 @@ export default function OcrExtractionLogic({
     setIsModalOpen(true);
   };
 
-  //   const handleProceedToHealthBag = async () => {
-  //     if (!buyerId) {
-  //       alert("Buyer ID is missing. Cannot proceed to patient bag.");
-  //       return;
-  //     }
-
-  //     // 1. API Payload तैयार करना
-  //     const payloads = cart.map((item) => ({
-  //       buyer_id: buyerId,
-  //       product_id: Number(item.id),
-  //       quantity: item.qty,
-  //       doses: item.dose_form,
-  //       flag: 1,
-  //       instruction: item.remarks,
-  //     }));
-
-  //     try {
-  //       console.log("Sending Payload to Health Bag API:", payloads);
-
-  //       // ✅ Redux thunk dispatch for each item
-  //       for (const payload of payloads) {
-  //         await dispatch(createHealthBagItem(payload)).unwrap();
-  //       }
-  //       toast.success(
-  //         `Successfully added ${cart.length} item(s) to Patient Bag.`
-  //       );
-  //       setCart([]);
-  //       handleCloseHealthBag();
-  //       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  //     } catch (error: any) {
-  //       console.error("Failed to add items to Health Bag:", error);
-  //       alert(error || "Failed to add items to Patient Bag. Please check API.");
-  //     }
-  //   };
-
   const handleProceedToHealthBag = async () => {
-    handleCloseHealthBag();
-    handleOpenWhatsappWaitModal();
+    if (!buyerId) {
+      alert("Buyer ID is missing. Cannot proceed to patient bag.");
+      return;
+    }
+    // 1️⃣ API Payload तैयार करना
+    const payloads = cart.map((item) => ({
+      buyer_id: buyerId,
+      product_id: Number(item.id),
+      quantity: item.qty,
+      doses: item.dose_form,
+      flag: 1,
+      instruction: item.remarks,
+    }));
+
+    try {
+      // console.log("Sending Payload to Health Bag API:", payloads);
+
+      // ✅ Redux thunk dispatch for each item
+      for (const payload of payloads) {
+        await dispatch(createHealthBagItem(payload)).unwrap();
+      }
+      // 2️⃣ Success actions
+      toast.success(
+        `Successfully added ${cart.length} item(s) to Patient Bag.`
+      );
+      // clear cart
+      setCart([]);
+      // close current modal
+      handleCloseHealthBag();
+      // 3️⃣ WhatsApp wait modal open
+      handleOpenWhatsappWaitModal();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (error: any) {
+      console.error("Failed to add items to Health Bag:", error);
+      alert(error || "Failed to add items to Patient Bag. Please check API.");
+    }
   };
 
   // ✅ New Handler for SingleSelectDropdown

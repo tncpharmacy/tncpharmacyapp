@@ -155,19 +155,19 @@ export default function AllGroupCare() {
                   <p>No products found.</p>
                 ) : (
                   filteredMedicines.map((item) => {
-                    const mrp = item.MRP
-                      ? parseFloat(item.MRP.toString())
+                    const mrp = item.mrp
+                      ? parseFloat(item.mrp.toString())
                       : Math.floor(Math.random() * (1000 - 100 + 1)) + 100;
 
-                    const discount = parseFloat(item.Discount) || 0;
+                    const discount = parseFloat(item.discount || "0");
                     const discountedPrice = Math.round(
                       mrp - (mrp * discount) / 100
                     );
 
-                    const imageUrl = item.DefaultImageURL
-                      ? item.DefaultImageURL.startsWith("http")
-                        ? item.DefaultImageURL
-                        : `${mediaBase}${item.DefaultImageURL}`
+                    const imageUrl = item.default_image
+                      ? item.default_image.startsWith("http")
+                        ? item.default_image
+                        : `${mediaBase}${item.default_image}`
                       : "/images/tnc-default.png";
 
                     const isInBag =
@@ -208,7 +208,7 @@ export default function AllGroupCare() {
                             {item.medicine_name || ""}
                           </h3>
                           <h6 className="pd-title fw-bold">
-                            {item.Manufacturer || ""}
+                            {item.manufacturer_name || ""}
                           </h6>
 
                           <div className="pd_price">
