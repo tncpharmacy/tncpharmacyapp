@@ -146,12 +146,7 @@ export default function PurchaseInvoiceImport() {
                         }))
                       }
                       options={[
-                        { value: "SS Pharma", label: "SS Pharma" },
-                        { value: "TSS Pharma", label: "TSS Pharma" },
-                        {
-                          value: "MLK Pharma",
-                          label: "MLK Pharma",
-                        },
+                        { value: "Ganga Pharmacy", label: "Ganga Pharmacy" },
                       ]}
                     />
                     <Input

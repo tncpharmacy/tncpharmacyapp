@@ -303,7 +303,7 @@ export default function HealthBags() {
   };
 
   // ✅ Calculate totals
-  const handlingCharges = 12;
+  // const handlingCharges = 12;
   const totals = mergedItems.reduce(
     (acc, item, index) => {
       const qty = quantities[index] ?? 1;
@@ -317,7 +317,7 @@ export default function HealthBags() {
     { totalMrp: 0, totalDiscount: 0, totalPay: 0 }
   );
 
-  const grandTotal = totals.totalPay + handlingCharges;
+  const grandTotal = totals.totalPay;
 
   const checkoutData = () => {
     if (!buyer?.id) {
@@ -521,11 +521,11 @@ export default function HealthBags() {
                   <span>Item total (MRP)</span>
                   <span>₹{totals.totalMrp.toLocaleString()}</span>
                 </div>
-
+                {/* 
                 <div className="d-flex justify-content-between mb-2 small">
                   <span>Handling charges</span>
                   <span>₹{handlingCharges}</span>
-                </div>
+                </div> */}
 
                 <div className="d-flex justify-content-between mb-2 small">
                   <span>Total discount</span>

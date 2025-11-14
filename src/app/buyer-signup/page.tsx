@@ -330,7 +330,12 @@ export default function BuyerSignupModal({
               {/* errors */}
               {formError && <p style={{ color: "red" }}>{formError}</p>}
               {error && <p style={{ color: "red" }}>{error}</p>}
-              {message && <p style={{ color: "green" }}>{message}</p>}
+              {/* {message && <p style={{ color: "green" }}>{message}</p>} */}
+              {serverOtp && (
+                <p className="text-muted mt-2" style={{ fontSize: "13px" }}>
+                  (Debug OTP: {serverOtp})
+                </p>
+              )}
             </div>
           </div>
         </div>

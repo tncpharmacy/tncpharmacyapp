@@ -24,18 +24,35 @@ export default function SideNav() {
           </Link>
         </li>
         <li>
+          <Link href="#" className="link">
+            <i className="bi bi-box-seam"></i> Stock
+          </Link>
+        </li>
+        <li>
           <Link href="/medicine" className="link">
             <i className="bi bi-box-seam"></i> Product Master
           </Link>
         </li>
         <li>
-          <Link href="purchase-invoice" className="link">
-            <i className="bi bi-receipt-cutoff"></i> Purchase Invoice
+          <Link href="/pharmacy" className="link">
+            <i className="bi bi-shop-window"></i> Pharmacy
+          </Link>
+        </li>
+
+        <li>
+          <Link href="/pharmacist" className="link">
+            <i className="bi bi-person-workspace"></i> Pharmacist
+          </Link>
+        </li>
+
+        <li>
+          <Link href="/buyer" className="link">
+            <i className="bi bi-person"></i> Buyer
           </Link>
         </li>
         <li>
-          <Link href="#" className="link">
-            <i className="bi bi-box-seam"></i> stock
+          <Link href="purchase-invoice" className="link">
+            <i className="bi bi-receipt-cutoff"></i> Purchase Invoice
           </Link>
         </li>
         {/* <li>
@@ -57,34 +74,6 @@ export default function SideNav() {
             </ul>
           )}
         </li> */}
-        <li>
-          <Link href="/clinic" className="link">
-            <i className="bi bi-hospital"></i> Hospital & Clinic
-          </Link>
-        </li>
-        <li>
-          <Link href="/doctors" className="link">
-            <i className="bi bi-person-badge"></i> Doctors
-          </Link>
-        </li>
-
-        <li>
-          <Link href="/pharmacy" className="link">
-            <i className="bi bi-shop-window"></i> Pharmacy
-          </Link>
-        </li>
-
-        <li>
-          <Link href="/pharmacist" className="link">
-            <i className="bi bi-person-workspace"></i> Pharmacist
-          </Link>
-        </li>
-
-        <li>
-          <Link href="/buyer" className="link">
-            <i className="bi bi-person"></i> Buyer
-          </Link>
-        </li>
 
         <li>
           <Link href="/supplier" className="link">
@@ -135,6 +124,16 @@ export default function SideNav() {
               </li>
             </ul>
           )}
+        </li>
+        <li>
+          <Link href="/clinic" className="link">
+            <i className="bi bi-hospital"></i> Hospital & Clinic
+          </Link>
+        </li>
+        <li>
+          <Link href="/doctors" className="link">
+            <i className="bi bi-person-badge"></i> Doctors
+          </Link>
         </li>
 
         <li>

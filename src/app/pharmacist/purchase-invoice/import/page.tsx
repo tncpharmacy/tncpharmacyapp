@@ -53,6 +53,7 @@ export default function PurchaseInvoiceImport() {
     mrp: "",
     purchase_rate: "",
     amount: "",
+    location: "",
   });
 
   // filtered records by search box + status filter
@@ -98,10 +99,38 @@ export default function PurchaseInvoiceImport() {
       const worksheet = workbook.Sheets[sheetName];
       const jsonData =
         XLSX.utils.sheet_to_json<Record<string, string | number>>(worksheet);
-      setExcelData(jsonData);
+
+      // 👇 Format expiry date properly
+      const formattedData = jsonData.map((row) => {
+        const expiry = row["Expiry Date"];
+        let formattedExpiry = expiry;
+
+        // Excel numeric date handling
+        if (typeof expiry === "number" && expiry > 40000) {
+          const jsDate = new Date((expiry - 25569) * 86400 * 1000);
+          const day = jsDate.getDate().toString().padStart(2, "0");
+          const month = (jsDate.getMonth() + 1).toString().padStart(2, "0");
+          const year = jsDate.getFullYear();
+          formattedExpiry = `${day}-${month}-${year}`; // ✅ dd-mm-yyyy format
+        }
+
+        // If Excel already had a text date
+        if (typeof expiry === "string" && expiry.includes("/")) {
+          formattedExpiry = expiry.replace(/\//g, "-");
+        }
+
+        return {
+          ...row,
+          "Expiry Date": formattedExpiry,
+        };
+      });
+
+      setExcelData(formattedData);
     };
+
     reader.readAsBinaryString(file);
   };
+
   const handleImportClick = () => {
     fileInputRef.current?.click(); // 👈 hidden input trigger
   };
@@ -127,6 +156,7 @@ export default function PurchaseInvoiceImport() {
       discount: row["Discount (%)"]?.toString() || "0",
       purchase_rate: row["Purchase Rate"]?.toString() || "0",
       amount: row["Amount"]?.toString() || "0",
+      // location: row["Location"]?.toString() || "0",
     }));
 
     // 🧱 3️⃣ Build Final Payload
@@ -193,12 +223,7 @@ export default function PurchaseInvoiceImport() {
                         }))
                       }
                       options={[
-                        { value: "SS Pharma", label: "SS Pharma" },
-                        { value: "TSS Pharma", label: "TSS Pharma" },
-                        {
-                          value: "MLK Pharma",
-                          label: "MLK Pharma",
-                        },
+                        { value: "Ganga Pharmacy", label: "Ganga Pharmacy" },
                       ]}
                     />
                     <Input

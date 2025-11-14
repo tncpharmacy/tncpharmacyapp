@@ -118,7 +118,7 @@ export default function PurchaseInvoice() {
                       <tr>
                         <td></td>
                         <td className="text-start">Tnc Pharmacy</td>
-                        <td className="text-start">Rena Care</td>
+                        <td className="text-start">Ganga Pharmacy</td>
                         <td className="text-start">10-10-2024</td>
                         <td className="text-start">54124578521589</td>
                         <td className="text-start">
@@ -133,7 +133,7 @@ export default function PurchaseInvoice() {
                       <tr>
                         <td></td>
                         <td className="text-start">Tnc Pharmacy</td>
-                        <td className="text-start">Rena Care</td>
+                        <td className="text-start">Ganga Pharmacy</td>
                         <td className="text-start">10-10-2024</td>
                         <td className="text-start">54124578521589</td>
                         <td className="text-start">
@@ -148,7 +148,7 @@ export default function PurchaseInvoice() {
                       <tr>
                         <td></td>
                         <td className="text-start">Tnc Pharmacy</td>
-                        <td className="text-start">Rena Care</td>
+                        <td className="text-start">Ganga Pharmacy</td>
                         <td className="text-start">10-10-2024</td>
                         <td className="text-start">54124578521589</td>
                         <td className="text-start">
@@ -163,7 +163,7 @@ export default function PurchaseInvoice() {
                       <tr>
                         <td></td>
                         <td className="text-start">Tnc Pharmacy</td>
-                        <td className="text-start">Rena Care</td>
+                        <td className="text-start">Ganga Pharmacy</td>
                         <td className="text-start">10-10-2024</td>
                         <td className="text-start">54124578521589</td>
                         <td className="text-start">
@@ -178,7 +178,7 @@ export default function PurchaseInvoice() {
                       <tr>
                         <td></td>
                         <td className="text-start">Tnc Pharmacy</td>
-                        <td className="text-start">Rena Care</td>
+                        <td className="text-start">Ganga Pharmacy</td>
                         <td className="text-start">10-10-2024</td>
                         <td className="text-start">54124578521589</td>
                         <td className="text-start">
@@ -193,7 +193,7 @@ export default function PurchaseInvoice() {
                       <tr>
                         <td></td>
                         <td className="text-start">Tnc Pharmacy</td>
-                        <td className="text-start">Rena Care</td>
+                        <td className="text-start">Ganga Pharmacy</td>
                         <td className="text-start">10-10-2024</td>
                         <td className="text-start">54124578521589</td>
                         <td className="text-start">
@@ -208,7 +208,7 @@ export default function PurchaseInvoice() {
                       <tr>
                         <td></td>
                         <td className="text-start">Tnc Pharmacy</td>
-                        <td className="text-start">Rena Care</td>
+                        <td className="text-start">Ganga Pharmacy</td>
                         <td className="text-start">10-10-2024</td>
                         <td className="text-start">54124578521589</td>
                         <td className="text-start">
@@ -223,7 +223,7 @@ export default function PurchaseInvoice() {
                       <tr>
                         <td></td>
                         <td className="text-start">Tnc Pharmacy</td>
-                        <td className="text-start">Rena Care</td>
+                        <td className="text-start">Ganga Pharmacy</td>
                         <td className="text-start">10-10-2024</td>
                         <td className="text-start">54124578521589</td>
                         <td className="text-start">
@@ -238,7 +238,7 @@ export default function PurchaseInvoice() {
                       <tr>
                         <td></td>
                         <td className="text-start">Tnc Pharmacy</td>
-                        <td className="text-start">Rena Care</td>
+                        <td className="text-start">Ganga Pharmacy</td>
                         <td className="text-start">10-10-2024</td>
                         <td className="text-start">54124578521589</td>
                         <td className="text-start">
@@ -253,7 +253,7 @@ export default function PurchaseInvoice() {
                       <tr>
                         <td></td>
                         <td className="text-start">Tnc Pharmacy</td>
-                        <td className="text-start">Rena Care</td>
+                        <td className="text-start">Ganga Pharmacy</td>
                         <td className="text-start">10-10-2024</td>
                         <td className="text-start">54124578521589</td>
                         <td className="text-start">
@@ -268,7 +268,7 @@ export default function PurchaseInvoice() {
                       <tr>
                         <td></td>
                         <td className="text-start">Tnc Pharmacy</td>
-                        <td className="text-start">Rena Care</td>
+                        <td className="text-start">Ganga Pharmacy</td>
                         <td className="text-start">10-10-2024</td>
                         <td className="text-start">54124578521589</td>
                         <td className="text-start">
@@ -309,7 +309,7 @@ export default function PurchaseInvoice() {
               <div className="col-md-4">
                 <p style={{ whiteSpace: "pre-wrap" }}>
                   <strong>Pharmacy:</strong> TnC Pharmacy{"\n"}
-                  <strong>Supplier:</strong> Rena Care
+                  <strong>Supplier:</strong> Ganga Pharmacy
                 </p>
               </div>
               <div className="col-md-3"></div>

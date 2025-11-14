@@ -169,6 +169,15 @@ export const ENDPOINTS = {
       `/cart/pharmacist/quantity/${cartId}/?quantity=Decrease`,
   },
 
+  PHARMACIST_ORDER: {
+    // 🔹 Added Order APIs
+    POST_ORDER: (buyerId: number) =>
+      `/order/pharmacist/create-order/${buyerId}/`,
+    GET_ORDER_BY_ORDERID: (orderId: number) =>
+      `/order/pharmacist/list/${orderId}/`,
+    GET_ORDER_LIST: "/order/list/",
+  },
+
   // address
   ADDRESS: {
     CREATE: "/address/create/",

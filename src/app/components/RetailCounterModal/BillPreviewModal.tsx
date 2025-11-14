@@ -4,6 +4,7 @@ import {
   buyerRegister,
   createBuyerOrder,
 } from "@/lib/features/buyerSlice/buyerSlice";
+import { createPharmacistOrder } from "@/lib/features/pharmacistOrderSlice/pharmacistOrderSlice";
 import { useAppDispatch } from "@/lib/hooks";
 import { useEffect, useRef, useState } from "react";
 import { Image, Modal } from "react-bootstrap";
@@ -226,72 +227,80 @@ const BillPreviewModal: React.FC<BillPreviewModalProps> = ({
   // --- End Translation Logic ---
 
   // --- Print Handler ---
+  // const handlePrint = async () => {
+  //   try {
+  //     let buyerId: number | null = null;
+
+  //     // 1) Buyer Check
+  //     const loginRes = await dispatch(
+  //       buyerLogin({ login_id: mobile })
+  //     ).unwrap();
+
+  //     if (loginRes?.data?.existing === true) {
+  //       buyerId = loginRes.data.id;
+  //     } else {
+  //       const regRes = await dispatch(
+  //         buyerRegister({
+  //           name: customerName,
+  //           email: "",
+  //           number: mobile,
+  //         })
+  //       ).unwrap();
+
+  //       buyerId = regRes.data.id;
+  //     }
+
+  //     if (!buyerId) {
+  //       toast.error("Unable to get buyer ID");
+  //       return;
+  //     }
+
+  //     // 2) Product Array
+  //     const products = (cart ?? []).map((item) => {
+  //       const discountAmt = (item.price * (item.Disc ?? 0)) / 100;
+  //       const finalRate = (item.price - discountAmt) * item.qty;
+
+  //       return {
+  //         product_id: item.id,
+  //         quantity: String(item.qty),
+  //         mrp: String(item.price),
+  //         discount: String(item.Disc ?? 0),
+  //         rate: String(finalRate),
+  //         doses: item.dose_form,
+  //         instruction: item.remarks,
+  //         status: "1",
+  //       };
+  //     });
+
+  //     // 3) Final Payload
+  //     const orderPayload = {
+  //       payment_mode: 1,
+  //       payment_status: "1",
+  //       amount: String(grandTotal),
+  //       order_type: 2, // IMPORTANT
+  //       pharmacy_id: pharmacy_id,
+  //       address_id: 0, // you confirm
+  //       status: "1",
+  //       products: products,
+  //     };
+
+  //     // 4) POST ORDER
+  //     await dispatch(
+  //       createPharmacistOrder({
+  //         buyerId,
+  //         payload: orderPayload,
+  //       })
+  //     ).unwrap();
+
+  //     // 5) Print
+  //     actuallyPrintBill();
+  //   } catch (error) {
+  //     console.error(error);
+  //     toast.error("Order failed!");
+  //   }
+  // };
   const handlePrint = async () => {
-    try {
-      let buyerId: number | null = null;
-
-      // ✅ 1) Buyer Check
-      const loginRes = await dispatch(
-        buyerLogin({ login_id: mobile })
-      ).unwrap();
-
-      if (loginRes?.data?.existing === true) {
-        buyerId = loginRes.data.id;
-      } else {
-        const regRes = await dispatch(
-          buyerRegister({
-            name: customerName,
-            email: "",
-            number: mobile,
-          })
-        ).unwrap();
-
-        buyerId = regRes.data.id;
-      }
-
-      if (!buyerId) {
-        toast.error("Unable to get buyer ID");
-        return;
-      }
-
-      // ✅ 2) Prepare Products Array EXACT BACKEND FORMAT
-      const products = (cart ?? []).map((item) => ({
-        product_id: item.id,
-        quantity: String(item.qty),
-        mrp: String(item.price), // if price = unit MRP
-        discount: String(item.Disc ?? 0),
-        rate: String(item.qty * item.price), // final rate after discount?
-        doses: item.dose_form,
-        instruction: item.remarks,
-        status: "1",
-      }));
-
-      // ✅ 3) Final Order Payload Exactly As Backend Wants
-      const orderPayload = {
-        payment_mode: 1,
-        payment_status: "1",
-        amount: String(grandTotal),
-        order_type: 1,
-        pharmacy_id: pharmacy_id,
-        address_id: 0, // ✅ YOU TELL ME — address id fixed or dynamic?
-        status: "1",
-        products: products,
-      };
-
-      // ✅ 4) POST ORDER
-      await dispatch(
-        createBuyerOrder({
-          buyerId: buyerId,
-          payload: orderPayload,
-        })
-      ).unwrap();
-
-      // ✅ 5) PRINT
-      actuallyPrintBill();
-    } catch (error) {
-      console.error(error);
-      toast.error("Order failed!");
-    }
+    actuallyPrintBill();
   };
 
   const actuallyPrintBill = () => {

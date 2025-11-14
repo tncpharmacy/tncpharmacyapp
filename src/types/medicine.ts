@@ -111,6 +111,7 @@ export interface Product {
   mrp: string;
   purchase_rate: string;
   amount: string;
+  location: string;
 }
 
 export type SafetyLabel = {

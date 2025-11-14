@@ -404,6 +404,10 @@ const nextConfig: NextConfig = {
         source: "/pharmacist/retail-counter",
         destination: "/pharmacist/retail-counter",
       },
+      {
+        source: "/pharmacist/retail-counter-prescription",
+        destination: "/pharmacist/retail-counter-prescription",
+      },
 
       // Doctor Routes
       {

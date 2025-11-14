@@ -211,11 +211,11 @@ export default function MedicineList() {
                       <tr>
                         {/* <th className="fw-bold text-start"></th> */}
                         <th className="fw-bold text-start">Medicine Name</th>
+                        <th className="fw-bold text-start">Pack Size</th>
                         <th className="fw-bold text-start">Unit</th>
                         <th className="fw-bold text-start">Manufacture</th>
-                        <th className="fw-bold text-start">Pack Size</th>
-                        <th className="fw-bold text-start">Status</th>
-                        <th className="fw-bold text-start">Action</th>
+                        <th className="fw-bold text-center">Status</th>
+                        <th className="fw-bold text-center">Action</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -229,16 +229,16 @@ export default function MedicineList() {
                                 <td className="text-start">
                                   {p.medicine_name ?? "-"}
                                 </td>
+                                <td className="text-start">
+                                  {p.pack_size ?? "-"}
+                                </td>
                                 <td className="text-start">{p.unit ?? "-"}</td>
                                 <td className="text-start">
                                   {p.manufacturer_name ?? "-"}
                                 </td>
-                                <td className="text-start">
-                                  {p.pack_size ?? "-"}
-                                </td>
                                 {/* <td>{p.discount ?? "-"}</td>
                               <td>{p.mrp ?? "-"}</td> */}
-                                <td>
+                                <td className="text-center">
                                   <span
                                     //onClick={() => handleToggleStatus(p.id)}
                                     className={`status ${
@@ -253,7 +253,7 @@ export default function MedicineList() {
                                       : "Inactive"}
                                   </span>
                                 </td>
-                                <td>
+                                <td className="text-center">
                                   <button
                                     className="btn btn-light btn-sm me-2"
                                     onClick={() =>

@@ -15,6 +15,8 @@ import { StockItem } from "@/types/stock";
 import { getPharmacyStock } from "@/lib/features/purchaseStockSlice/purchaseStockSlice";
 import { getUser } from "@/lib/auth/auth";
 import { Archive, CheckCircle, AlertTriangle } from "lucide-react";
+import Link from "next/link";
+import { FaArrowLeft } from "react-icons/fa";
 
 type FilterType = "All" | "LowStock" | "AvailableStock";
 type StockItemKey = keyof StockItem;
@@ -194,29 +196,31 @@ export default function StockList() {
                     </div>
                   </div>
                   {/* ✅ Replaced Dropdown with Three Professional Buttons, applying inline styles */}
-                  <div className="col-md-6" style={{ marginTop: "20px" }}>
+                  <div
+                    className="col-md-6 text-end"
+                    style={{ marginTop: "20px" }}
+                  >
                     {/* 1. All Stock List - Primary (Blue) */}
-                    <button
-                      className="btn btn-primary me-3"
-                      style={allStyles.style}
-                      onClick={() => handleFilterSelect("All")}
-                      aria-pressed={filterType === "All"}
-                    >
-                      <Archive size={18} style={{ marginRight: "5px" }} />
-                      <span>All Stock ({stockData.length})</span>
-                    </button>
-
+                    {/* 🔙 Back button – hidden until Minimum Stock is active */}
+                    {filterType === "LowStock" && (
+                      <button
+                        className="btn-style2 me-2"
+                        style={allStyles.style}
+                        onClick={() => handleFilterSelect("All")}
+                      >
+                        <i className="bi bi-arrow-left"></i> Back
+                      </button>
+                    )}
                     {/* 2. Available Stock List - Success (Green) */}
-                    <button
+                    {/* <button
                       className="btn btn-success me-3"
                       style={availableStyles.style}
                       onClick={() => handleFilterSelect("AvailableStock")}
                       aria-pressed={filterType === "AvailableStock"}
-                    >
+                    > 
                       <CheckCircle size={18} style={{ marginRight: "5px" }} />
                       <span>Available Stock ({availableStockCount})</span>
-                    </button>
-
+                    </button>*/}
                     {/* 3. Minimum Stock List - Danger (Red) */}
                     <button
                       className="btn btn-danger"
