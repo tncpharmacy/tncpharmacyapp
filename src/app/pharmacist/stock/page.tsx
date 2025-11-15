@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Button, Modal } from "react-bootstrap";
+import { Button, Image, Modal } from "react-bootstrap";
 import "../css/pharmacy-style.css";
 import SideNav from "@/app/pharmacist/components/SideNav/page";
 import Header from "@/app/pharmacist/components/Header/page";
@@ -17,6 +17,7 @@ import { getUser } from "@/lib/auth/auth";
 import { Archive, CheckCircle, AlertTriangle } from "lucide-react";
 import Link from "next/link";
 import { FaArrowLeft } from "react-icons/fa";
+import MinimumStockModal from "@/app/components/MinimumStockModal/MinimumStockModal";
 
 type FilterType = "All" | "LowStock" | "AvailableStock";
 type StockItemKey = keyof StockItem;
@@ -95,6 +96,9 @@ export default function StockList() {
   const [filteredData, setFilteredData] = useState<StockItem[]>([]);
   //status
   const [status, setStatus] = useState<string>("");
+
+  const [showMinimumModal, setShowMinimumModal] = useState(false);
+  const suppliers = [{ id: 1, name: "Ganga Pharmacy" }];
 
   // Fetch all pharmacies once
   useEffect(() => {
@@ -211,26 +215,41 @@ export default function StockList() {
                         <i className="bi bi-arrow-left"></i> Back
                       </button>
                     )}
-                    {/* 2. Available Stock List - Success (Green) */}
-                    {/* <button
-                      className="btn btn-success me-3"
-                      style={availableStyles.style}
-                      onClick={() => handleFilterSelect("AvailableStock")}
-                      aria-pressed={filterType === "AvailableStock"}
-                    > 
-                      <CheckCircle size={18} style={{ marginRight: "5px" }} />
-                      <span>Available Stock ({availableStockCount})</span>
-                    </button>*/}
-                    {/* 3. Minimum Stock List - Danger (Red) */}
                     <button
-                      className="btn btn-danger"
-                      style={minimumStyles.style}
-                      onClick={() => handleFilterSelect("LowStock")}
-                      aria-pressed={filterType === "LowStock"}
+                      className="btn"
+                      style={{
+                        ...minimumStyles.style,
+                        backgroundColor:
+                          lowStockCount === 0 ? "transparent" : "#EF4444",
+                        color: lowStockCount === 0 ? "#EF4444" : "white",
+                        border: "2px solid #EF4444",
+                        fontWeight: "bold",
+                      }}
+                      disabled={lowStockCount === 0} // optional: agar 0 ho to disable bhi kar skta h
+                      onClick={() => {
+                        if (lowStockCount > 0) setShowMinimumModal(true);
+                      }}
                     >
                       <AlertTriangle size={18} style={{ marginRight: "5px" }} />
                       <span>Minimum Stock ({lowStockCount})</span>
                     </button>
+
+                    <MinimumStockModal
+                      show={showMinimumModal}
+                      onHide={() => setShowMinimumModal(false)}
+                      data={filteredData
+                        .filter(
+                          (x) =>
+                            Number(x.AvailableQty) <= Number(x.MinStockLevel)
+                        )
+                        .map((x) => ({
+                          ...x,
+                          AvailableQty: Number(x.AvailableQty),
+                          MinStockLevel: Number(x.MinStockLevel),
+                          location: x.location,
+                        }))}
+                      suppliers={suppliers}
+                    />
                   </div>
                 </div>
                 {/* Table */}
@@ -255,12 +274,6 @@ export default function StockList() {
                         .map((p: StockItem, index) => {
                           const isLowStock =
                             Number(p.AvailableQty) <= Number(p.MinStockLevel);
-
-                          const toggleMedicine = () =>
-                            setShowFullMedicine(!showFullMedicine);
-                          const toggleManufacturer = () =>
-                            setShowFullManufacturer(!showFullManufacturer);
-
                           return (
                             <tr key={index + 1}>
                               <td
@@ -395,7 +408,7 @@ export default function StockList() {
                     {selectedPharmacy.documents &&
                     selectedPharmacy.documents.length > 0 ? (
                       selectedPharmacy.documents.map((doc) => (
-                        <img
+                        <Image
                           key={doc.id}
                           src={`http://68.183.174.17:8081${doc.document}`}
                           alt="Pharmacy Document"

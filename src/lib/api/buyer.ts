@@ -44,6 +44,11 @@ export const buyerCreateOrderApi = async (
 };
 
 // 🔹 GET Order List (new)
-export const buyerGetOrderListApi = async () => {
-  return axiosInstance.get(ENDPOINTS.BUYER.GET_ORDER);
+export const buyerGetOrderListApi = async (buyerId: number) => {
+  return axiosInstance.get(ENDPOINTS.BUYER.GET_ORDER_LIST(buyerId));
+};
+
+// 🔹 GET Order Details (new)
+export const buyerGetOrderDetailsApi = async (orderId: number) => {
+  return axiosInstance.get(ENDPOINTS.BUYER.GET_ORDER_DETAIL(orderId));
 };

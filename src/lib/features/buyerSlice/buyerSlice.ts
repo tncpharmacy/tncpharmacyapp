@@ -3,12 +3,18 @@ import {
   buyerCreateOrderApi,
   buyerDeleteApi,
   buyerGetApi,
+  buyerGetOrderDetailsApi,
   buyerGetOrderListApi,
   buyerLoginApi,
   buyerRegisterApi,
   buyerUpdateApi,
 } from "@/lib/api/buyer";
-import { BuyerApiResponse, BuyerState } from "@/types/buyer";
+import {
+  BuyerApiResponse,
+  BuyerOrderDetail,
+  BuyerOrderItem,
+  BuyerState,
+} from "@/types/buyer";
 import { loadBuyerFromToken } from "@/lib/utils/decodeToken";
 import { safeLocalStorage } from "@/lib/utils/safeLocalStorage";
 import toast from "react-hot-toast";
@@ -38,6 +44,8 @@ const initialState: BuyerState = {
   lastLoginResponse: null,
   orders: [],
   orderCreated: false,
+  list: [],
+  details: null,
 };
 
 //
@@ -194,16 +202,15 @@ export const createBuyerOrder = createAsyncThunk<
   }
 });
 
-// 8️⃣ Get Buyer Orders
-export const getBuyerOrders = createAsyncThunk<
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  any,
-  void,
+// 8️⃣ Get Buyer Orders list
+export const getBuyerOrdersList = createAsyncThunk<
+  BuyerOrderItem[], // return type
+  number, // buyerId
   { rejectValue: string }
->("buyer/getOrders", async (_, { rejectWithValue }) => {
+>("buyer/getOrdersList", async (buyerId, { rejectWithValue }) => {
   try {
-    const res = await buyerGetOrderListApi();
-    return res.data;
+    const res = await buyerGetOrderListApi(buyerId);
+    return res.data.data || res.data; // server structure
   } catch (err: unknown) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const e = err as any;
@@ -212,6 +219,25 @@ export const getBuyerOrders = createAsyncThunk<
     );
   }
 });
+
+// 8️⃣ Get Buyer Orders details
+export const getBuyerOrderDetails = createAsyncThunk<
+  BuyerOrderDetail, // return type
+  number, // orderId
+  { rejectValue: string }
+>("buyer/getOrderDetail", async (orderId, { rejectWithValue }) => {
+  try {
+    const res = await buyerGetOrderDetailsApi(orderId);
+    return res.data.data || res.data;
+  } catch (err: unknown) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const e = err as any;
+    return rejectWithValue(
+      e.response?.data?.message || "Failed to fetch order details"
+    );
+  }
+});
+
 //
 // 🔹 Slice
 //
@@ -253,7 +279,7 @@ const buyerSlice = createSlice({
         if (data?.otp) {
           state.otpCode = data.otp;
           state.otpSent = true;
-          toast.success(`OTP sent: ${data.otp}`);
+          //toast.success(`OTP sent: ${data.otp}`);
         }
       })
       .addCase(buyerLogin.rejected, (state, action) => {
@@ -276,7 +302,7 @@ const buyerSlice = createSlice({
         if (data?.otp) {
           state.otpCode = data.otp;
           state.otpSent = true;
-          toast.success(`OTP sent: ${data.otp}`);
+          // toast.success(`OTP sent: ${data.otp}`);
         }
       })
       .addCase(buyerRegister.rejected, (state, action) => {
@@ -392,20 +418,31 @@ const buyerSlice = createSlice({
         state.loading = false;
         state.error = action.payload ?? "Failed to create order";
       })
-
-      // 🔹 Get Buyer Orders
-      .addCase(getBuyerOrders.pending, (state) => {
+      // 🔹 Orders List
+      .addCase(getBuyerOrdersList.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
-      .addCase(getBuyerOrders.fulfilled, (state, action) => {
+      .addCase(getBuyerOrdersList.fulfilled, (state, action) => {
         state.loading = false;
-        state.orders = action.payload?.data || [];
-        toast.success("Orders fetched successfully!");
+        state.list = action.payload;
       })
-      .addCase(getBuyerOrders.rejected, (state, action) => {
+      .addCase(getBuyerOrdersList.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload ?? "Failed to fetch orders";
+        state.error = action.payload ?? "Error loading orders";
+      })
+      // 🔹 Order Details
+      .addCase(getBuyerOrderDetails.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(getBuyerOrderDetails.fulfilled, (state, action) => {
+        state.loading = false;
+        state.details = action.payload;
+      })
+      .addCase(getBuyerOrderDetails.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload ?? "Error loading order details";
       });
   },
 });

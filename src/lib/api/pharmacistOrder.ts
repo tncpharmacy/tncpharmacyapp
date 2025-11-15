@@ -1,7 +1,6 @@
 import api from "../axios";
 import { ENDPOINTS } from "../config";
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const createOrderApi = async (
   buyerId: number,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

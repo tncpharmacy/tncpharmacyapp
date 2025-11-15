@@ -156,7 +156,7 @@ export default function PurchaseInvoiceImport() {
       discount: row["Discount (%)"]?.toString() || "0",
       purchase_rate: row["Purchase Rate"]?.toString() || "0",
       amount: row["Amount"]?.toString() || "0",
-      // location: row["Location"]?.toString() || "0",
+      location: row["Location"]?.toString() || "0",
     }));
 
     // 🧱 3️⃣ Build Final Payload

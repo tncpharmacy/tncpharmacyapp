@@ -38,4 +38,28 @@ export interface BuyerState {
   lastLoginResponse: BuyerApiResponse | null;
   orders: [];
   orderCreated: boolean;
+
+  list: BuyerOrderItem[];
+  details: BuyerOrderDetail | null;
+}
+
+export interface BuyerOrderItem {
+  id: number;
+  order_no: string;
+  date: string;
+  total_amount: number;
+  status: string;
+}
+
+export interface BuyerOrderDetail {
+  id: number;
+  order_no: string;
+  items: Array<{
+    product_id: number;
+    name: string;
+    qty: number;
+    price: number;
+  }>;
+  total_amount: number;
+  date: string;
 }

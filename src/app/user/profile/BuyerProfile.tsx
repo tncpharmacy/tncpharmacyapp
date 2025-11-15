@@ -6,11 +6,8 @@ import "../css/user-style.css";
 import "bootstrap/dist/css/bootstrap.min.css";
 import SiteHeader from "@/app/user/components/header/header";
 import Footer from "@/app/user/components/footer/footer";
-import EditProfileModal from "@/app/components/BuyerProfileModal/EditProfileModal";
-import { FaEdit } from "react-icons/fa";
-import { FiPhone, FiMail } from "react-icons/fi";
 import OrderDetailsModal, {
-  OrderDetails,
+  OrderDetails as ModalOrderDetails,
 } from "@/app/components/BuyerProfileModal/OrderDetailsModal";
 import { Image } from "react-bootstrap";
 import { useAppDispatch, useAppSelector } from "@/lib/hooks";
@@ -22,38 +19,100 @@ import {
 import toast from "react-hot-toast";
 import ConfirmLocationModal from "@/app/components/address/ConfirmLocationModal";
 import { LocationDetails } from "@/types/address";
+import {
+  getBuyerOrderDetails,
+  getBuyerOrdersList,
+} from "@/lib/features/buyerSlice/buyerSlice";
+
+import { BuyerOrderItem, OrderDetails } from "@/types/order";
+
+// Mapped interface to fix type errors
+interface BuyerData {
+  id: number;
+  name: string;
+  number: string;
+  email: string;
+}
 
 export default function BuyerProfile() {
   const dispatch = useAppDispatch();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [activeTab, setActiveTab] = useState("profile");
   const [showModal, setShowModal] = useState(false);
-
-  // Order Details modal
   const [showOrderModal, setShowOrderModal] = useState(false);
-  const [selectedOrder, setSelectedOrder] = useState<OrderDetails | null>(null);
-  // redirect for active tab
-  const searchParams = useSearchParams();
-  // for buyer
-  const buyer = useAppSelector((state) => state.buyer.buyer);
-  const userId: number | null = buyer?.id || null;
+  const [selectedOrder, setSelectedOrder] = useState<ModalOrderDetails | null>(
+    null
+  );
   const [isClient, setIsClient] = useState(false);
-  // for order get
-  const getOrder = useAppSelector((state) => state.buyer.orders);
-  // for address
-  const activeAddresses = useAppSelector((state) => state.address.addresses);
-  // ✅ Filter only active addresses
-  const billingAddresses = activeAddresses?.filter(
+
+  // Redux state
+  const buyer: BuyerData | null =
+    useAppSelector((state) => state.buyer.buyer) || null;
+  const userId = buyer?.id ?? null;
+
+  // rawOrderList from slice (mapped to fix TS)
+  const rawOrderList = useAppSelector(
+    (state) => state.buyer.list
+  ) as unknown as BuyerOrderItem[];
+
+  // active addresses
+  const activeAddresses =
+    useAppSelector((state) => state.address.addresses) || [];
+  const billingAddresses = activeAddresses.filter(
     (addr) => addr.status === "Active"
   );
+
   const [selectedLocation, setSelectedLocation] =
     useState<LocationDetails | null>(null);
+  console.log("Raw orders:", rawOrderList);
 
-  // ✅ client check
+  // Convert slice data to modal-compatible OrderDetails
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const getOrderList: OrderDetails[] = (rawOrderList as unknown as any).map(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (o: any) => ({
+      orderId: o.orderId,
+      buyerName: o.buyerName,
+      orderDate: o.orderDate,
+      paymentStatus: o.paymentStatus,
+      amount: o.amount,
+      orderType: o.orderType,
+      paymentMode: o.paymentMode,
+      address: o.address,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      products: o.products.map((p: any) => ({
+        id: p.id,
+        productName: p.productName,
+        quantity: p.quantity,
+        mrp: p.mrp,
+        discount: p.discount,
+        rate: p.rate,
+        doses: p.doses,
+        instruction: p.instruction,
+        status: p.status,
+        manufacturer: p.manufacturer,
+      })),
+    })
+  );
+
+  // Fetch orders & addresses
   useEffect(() => {
-    setIsClient(true);
-  }, []);
+    if (userId !== null) {
+      dispatch(getBuyerOrdersList(userId));
+      dispatch(getAddress(userId));
+    }
+  }, [dispatch, userId]);
 
+  // Client check
+  useEffect(() => setIsClient(true), []);
+
+  // Redirect if not logged in
+  useEffect(() => {
+    if (isClient && !buyer) router.replace("/");
+  }, [isClient, buyer, router]);
+
+  // Tab from URL
   useEffect(() => {
     const tab = searchParams.get("tab");
     if (tab) setActiveTab(tab);
@@ -61,105 +120,47 @@ export default function BuyerProfile() {
 
   const handleTabChange = (tab: string) => {
     setActiveTab(tab);
-    router.replace(`?tab=${tab}`, { scroll: false }); // URL update without reload
+    router.replace(`?tab=${tab}`, { scroll: false });
   };
 
-  // ✅ Access protection
-  useEffect(() => {
-    if (isClient && (!buyer || !buyer.id)) {
-      router.replace("/");
-    }
-  }, [buyer, isClient, router]);
-
-  // useEffect(() => {
-  //   if (
-  //     tabFromURL === "order" ||
-  //     tabFromURL === "address" ||
-  //     tabFromURL === "profile"
-  //   ) {
-  //     setActiveTab(tabFromURL);
-  //   } else {
-  //     setActiveTab("profile");
-  //   }
-  // }, [tabFromURL]);
-
-  useEffect(() => {
-    if (userId) {
-      dispatch(getAddress(userId));
-    }
-  }, [dispatch, userId]);
-
-  if (!isClient) {
-    return <div style={{ height: "40px" }}></div>;
-  }
-
-  // agar login nahi hai to page render mat karo
-  if (!buyer || !buyer.id) return null;
-
-  // ✅ Remove handler
   const handleRemove = async (id: number) => {
     if (!window.confirm("Are you sure you want to remove this address?"))
       return;
-
     try {
-      console.log("Deleting address:", id);
-      const res = await dispatch(removeAddress(id)).unwrap();
+      await dispatch(removeAddress(id)).unwrap();
       toast.success("Address removed successfully!");
-      if (userId !== null) {
-        dispatch(getAddress(userId));
-      }
+      if (userId !== null) dispatch(getAddress(userId));
     } catch (err) {
       toast.error("Failed to remove address!");
-      console.error("Delete error:", err);
+      console.error(err);
     }
   };
 
-  const handleRefreshList = () => {
-    if (userId) {
-      dispatch(getAddress(userId));
+  const handleViewOrder = async (orderId: number) => {
+    try {
+      const details = await dispatch(getBuyerOrderDetails(orderId)).unwrap();
+      // cast to modal-compatible type
+      setSelectedOrder({
+        ...details,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        status: (details as any).paymentStatus,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        totalAmount: (details as any).amount,
+      } as unknown as ModalOrderDetails);
+
+      setShowOrderModal(true);
+    } catch (err) {
+      toast.error("Failed to fetch order details");
+      console.error(err);
     }
   };
 
-  // const handleUpdate = () => {
-  //   console.log("Updated profile:", profile);
-  //   setShowModal(false);
-  // };
-
-  // Dummy orders
-  const orders: OrderDetails[] = [
-    {
-      orderId: "12345",
-      status: "Delivered",
-      totalAmount: 599,
-      address: "Pulkit Sharma, 123 MG Road, Delhi",
-      products: [
-        { name: "Paracetamol 500mg", qty: 2, price: 199 },
-        { name: "Cough Syrup", qty: 1, price: 200 },
-        { name: "Vitamin C Tablets", qty: 1, price: 200 },
-      ],
-    },
-    {
-      orderId: "12346",
-      status: "Pending",
-      totalAmount: 1299,
-      address: "Pulkit Sharma, Sector 14, Gurgaon",
-      products: [
-        { name: "Protein Powder", qty: 1, price: 899 },
-        { name: "Pain Relief Spray", qty: 1, price: 400 },
-      ],
-    },
-  ];
-
-  const handleViewOrder = (order: OrderDetails) => {
-    setSelectedOrder(order);
-    setShowOrderModal(true);
-  };
+  if (!isClient || !buyer) return null;
 
   return (
     <>
       <div className="page-wrapper">
         <SiteHeader />
-
         <div className="container-fluid my-2">
           <div className="row justify-content-center">
             <div className="col-lg-12">
@@ -189,7 +190,7 @@ export default function BuyerProfile() {
                       backgroundPosition: "center",
                     }}
                   ></div>
-                  <h4 className="fw-bold mb-1">Welcome, Pulkit 👋</h4>
+                  <h4 className="fw-bold mb-1">Welcome, {buyer.name} 👋</h4>
                   <p className="mb-0 opacity-75">Your personal dashboard</p>
                 </div>
 
@@ -198,16 +199,12 @@ export default function BuyerProfile() {
                   className="d-flex text-center fw-semibold border"
                   style={{ borderColor: "#0a214aff" }}
                 >
-                  {[
-                    { id: "profile", label: "My Account" },
-                    { id: "address", label: "My Address" },
-                    { id: "order", label: "My Orders" },
-                  ].map((tab) => {
-                    const isActive = activeTab === tab.id;
+                  {["profile", "address", "order"].map((tab) => {
+                    const isActive = activeTab === tab;
                     return (
                       <button
-                        key={tab.id}
-                        onClick={() => handleTabChange(tab.id)}
+                        key={tab}
+                        onClick={() => handleTabChange(tab)}
                         className={`btn py-3 w-100 border-0 ${
                           isActive ? "text-white" : "text-secondary"
                         }`}
@@ -219,7 +216,11 @@ export default function BuyerProfile() {
                           transition: "all 0.3s ease",
                         }}
                       >
-                        {tab.label}
+                        {tab === "profile"
+                          ? "My Account"
+                          : tab === "address"
+                          ? "My Address"
+                          : "My Orders"}
                       </button>
                     );
                   })}
@@ -229,66 +230,50 @@ export default function BuyerProfile() {
                 <div className="p-4">
                   {activeTab === "profile" && (
                     <div className="p-3 position-relative border rounded bg-white shadow-sm">
-                      <div className="d-flex justify-content-between align-items-start">
+                      <h5 className="fw-bold mb-3">Hi there!</h5>
+                      <div className="mb-3 d-flex align-items-center">
+                        <Image
+                          src="/images/person-icon.png"
+                          width={45}
+                          height={45}
+                          className="me-4 opacity-75"
+                          alt="person"
+                        />
                         <div>
-                          <h5 className="fw-bold mb-1">Hi there!</h5>
+                          <label className="text-muted d-block">
+                            Patient Name
+                          </label>
+                          <strong>{buyer.name}</strong>
                         </div>
-                        {/* <FaEdit
-                          size={22}
-                          color="#264b8c"
-                          className="cursor-pointer"
-                          style={{ cursor: "pointer" }}
-                          onClick={() => setShowModal(true)}
-                        /> */}
                       </div>
-                      <hr />
-                      <div className="mt-3">
-                        <div className="mb-3 d-flex align-items-center">
-                          <Image
-                            src="/images/person-icon.png"
-                            alt="phone"
-                            width={45}
-                            height={45}
-                            className="me-4 opacity-75"
-                          />
-                          <div>
-                            <label className="text-muted d-block">
-                              Patient Name
-                            </label>
-                            <strong>{buyer?.name || "N/A"}</strong>
-                          </div>
+                      <div className="mb-3 d-flex align-items-center">
+                        <Image
+                          src="/images/mobile-icon.png"
+                          width={45}
+                          height={45}
+                          className="me-4 opacity-75"
+                          alt="phone"
+                        />
+                        <div>
+                          <label className="text-muted d-block">
+                            Mobile Number
+                          </label>
+                          <strong>{buyer.number}</strong>
                         </div>
-                        <hr />
-                        <div className="mb-3 d-flex align-items-center">
-                          <Image
-                            src="/images/mobile-icon.png"
-                            alt="phone"
-                            width={45}
-                            height={45}
-                            className="me-4 opacity-75"
-                          />
-                          <div>
-                            <label className="text-muted d-block">
-                              Mobile Number
-                            </label>
-                            <strong>{buyer?.number || "N/A"}</strong>
-                          </div>
-                        </div>
-                        <hr />
-                        <div className="mb-3 d-flex align-items-center">
-                          <Image
-                            src="/images/email-icon.png"
-                            alt="phone"
-                            width={45}
-                            height={45}
-                            className="me-4 opacity-75"
-                          />
-                          <div>
-                            <label className="text-muted d-block">
-                              Primary Email address
-                            </label>
-                            <strong>{buyer?.email || "N/A"}</strong>
-                          </div>
+                      </div>
+                      <div className="mb-3 d-flex align-items-center">
+                        <Image
+                          src="/images/email-icon.png"
+                          width={45}
+                          height={45}
+                          className="me-4 opacity-75"
+                          alt="email"
+                        />
+                        <div>
+                          <label className="text-muted d-block">
+                            Primary Email address
+                          </label>
+                          <strong>{buyer.email}</strong>
                         </div>
                       </div>
                     </div>
@@ -298,9 +283,6 @@ export default function BuyerProfile() {
                     <div>
                       <div className="d-flex justify-content-between align-items-center mb-3">
                         <h5 className="fw-bold mb-0">My Address</h5>
-                        {/* <button type="button" className="btn btn-primary">
-                          + Add New Address
-                        </button> */}
                         <button
                           className="btn btn-primary"
                           onClick={() => setShowModal(true)}
@@ -308,23 +290,20 @@ export default function BuyerProfile() {
                         >
                           + Add New Address
                         </button>
-                        {userId !== null && (
+                        {userId && (
                           <ConfirmLocationModal
                             show={showModal}
                             onClose={() => setShowModal(false)}
                             locationDetails={selectedLocation || {}}
-                            onSubmit={handleRefreshList}
+                            onSubmit={() =>
+                              userId && dispatch(getAddress(userId))
+                            }
                             userId={userId}
-                            //isEditMode={true}
                           />
                         )}
                       </div>
-
-                      {billingAddresses.map((addr, index) => (
-                        <div key={index} className="border rounded p-3 mb-3">
-                          {/* <h6 className="mb-1">
-                            {addr.address_type_id || "Home"}
-                          </h6> */}
+                      {billingAddresses.map((addr, idx) => (
+                        <div key={idx} className="border rounded p-3 mb-3">
                           <label
                             className="fw-semibold mb-0"
                             style={{ fontSize: "15px", color: "#212121" }}
@@ -342,26 +321,11 @@ export default function BuyerProfile() {
                           </p>
                           <p className="text-muted mb-2">{addr.mobile}</p>
                           <button
-                            className="btn btn-link p-0 fw-semibold"
-                            style={{
-                              fontSize: "13px",
-                              color: "#e53935",
-                              textDecoration: "none",
-                            }}
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              if (!addr.id) {
-                                toast.error("Invalid address ID");
-                                return;
-                              }
-                              handleRemove(addr.id);
-                            }}
+                            className="btn btn-link p-0 fw-semibold text-danger"
+                            style={{ fontSize: "13px" }}
+                            onClick={() => addr.id && handleRemove(addr.id)}
                           >
-                            <i
-                              className="bi bi-trash text-danger"
-                              style={{ fontSize: "16px" }}
-                            ></i>
+                            Remove
                           </button>
                         </div>
                       ))}
@@ -371,43 +335,47 @@ export default function BuyerProfile() {
                   {activeTab === "order" && (
                     <div>
                       <h5 className="fw-bold mb-3">My Orders</h5>
-
-                      {orders.map((order) => (
-                        <div
-                          key={order.orderId}
-                          className="border rounded p-3 mb-3"
-                        >
-                          <div className="d-flex justify-content-between align-items-center">
-                            <div>
-                              <h6 className="mb-1">Order #{order.orderId}</h6>
-                              <p className="mb-0 text-muted">
-                                Status:{" "}
-                                <span
-                                  className={
-                                    order.status === "Delivered"
-                                      ? "text-success"
-                                      : "text-warning"
-                                  }
-                                >
-                                  {order.status}
-                                </span>
-                              </p>
-                            </div>
-
-                            <div className="d-flex align-items-center">
-                              <span className="fw-bold text-primary me-3">
-                                ₹{order.totalAmount}
-                              </span>
+                      {getOrderList.length > 0 ? (
+                        getOrderList.map((order) => (
+                          <div
+                            key={order.orderId}
+                            className="border rounded p-3 mb-3"
+                          >
+                            <div className="d-flex justify-content-between align-items-center">
+                              <div>
+                                <h6 className="mb-1">Order #{order.orderId}</h6>
+                                <p className="mb-0 text-muted">
+                                  Status:{" "}
+                                  <span
+                                    className={
+                                      order.paymentStatus === "Buy"
+                                        ? "text-success"
+                                        : "text-warning"
+                                    }
+                                  >
+                                    {order.paymentStatus}
+                                  </span>
+                                </p>
+                                <p className="mb-0 text-muted">
+                                  Amount: ₹{order.amount} | Type:{" "}
+                                  {order.orderType}
+                                </p>
+                                <p className="mb-0 text-muted">
+                                  {order.address}
+                                </p>
+                              </div>
                               <button
                                 className="btn btn-outline-primary btn-sm"
-                                onClick={() => handleViewOrder(order)}
+                                onClick={() => handleViewOrder(order.orderId)}
                               >
-                                <i className="bi bi-eye"></i> View
+                                View
                               </button>
                             </div>
                           </div>
-                        </div>
-                      ))}
+                        ))
+                      ) : (
+                        <p>No orders found.</p>
+                      )}
                     </div>
                   )}
                 </div>
@@ -416,22 +384,13 @@ export default function BuyerProfile() {
           </div>
         </div>
       </div>
-      {/* EditProfileModal */}
-      {/* <EditProfileModal
-        show={showModal}
-        handleClose={() => setShowModal(false)}
-        profile={profile}
-        setProfile={setProfile}
-        handleUpdate={handleUpdate}
-      /> */}
+
       {/* OrderDetailsModal */}
       <OrderDetailsModal
         show={showOrderModal}
         onClose={() => setShowOrderModal(false)}
         order={selectedOrder}
       />
-
-      {/* ...footer code... */}
       <Footer />
     </>
   );
