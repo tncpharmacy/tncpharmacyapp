@@ -18,7 +18,7 @@ export interface MinimumStockItem {
   MinStockLevel: number;
   location: string;
   PharmacyName: string;
-  product_id?: number;
+  medicine_id?: number;
   price?: number;
   quantity?: number;
   requiredQty?: number; // optional kar do
@@ -88,7 +88,7 @@ export default function MinimumStockModal({
         })
       )
       .map((item) => ({
-        Id: item.id ?? "-",
+        Id: item.medicine_id ?? "-",
         Product: item.MedicineName ?? "-",
         "Pack Size": item.pack_size ?? "-",
         Manufacture: item.Manufacturer ?? "-",
