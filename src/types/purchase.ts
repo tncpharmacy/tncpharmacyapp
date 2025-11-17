@@ -4,7 +4,7 @@ export interface PurchaseDetail {
   pharmacy_id: string | number;
   product_id: number;
   quantity: string;
-  available_quantity: string;
+  //available_quantity: string;
   batch: string;
   expiry_date: string;
   mrp: string;

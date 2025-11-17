@@ -3,7 +3,7 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Modal } from "react-bootstrap";
 import { useAppDispatch, useAppSelector } from "@/lib/hooks";
-import { loginUser } from "@/lib/features/authSlice/authSlice";
+import { clearState, loginUser } from "@/lib/features/authSlice/authSlice";
 import "../styles/style-login.css";
 
 interface LoginFormProps {
@@ -64,6 +64,8 @@ export default function Login({ show, handleClose }: LoginFormProps) {
   }, [restoreComplete, user, redirectUser]);
 
   const handleLogin = async () => {
+    // 🔥 Clear previous errors, user & flags BEFORE login request
+    dispatch(clearState());
     const res = await dispatch(loginUser({ login_id, password }));
     if (loginUser.fulfilled.match(res)) {
       redirectUser(res.payload.user.user_type);

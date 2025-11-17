@@ -3,6 +3,7 @@ import { PrescriptionItem } from "@/types/prescription";
 import {
   fetchPrescriptionListPharmacist,
   receivePrescriptionByPharmacist,
+  uploadPrescriptionByPharmacist,
 } from "@/lib/api/pharmacistPrescription";
 
 interface PharmacistPrescriptionState {
@@ -13,6 +14,10 @@ interface PharmacistPrescriptionState {
   receiveLoading: boolean;
   receiveError: string | null;
   lastReceived: PrescriptionItem | null;
+
+  uploadLoading: boolean;
+  uploadError: string | null;
+  lastUploaded: PrescriptionItem | null;
 }
 
 const initialState: PharmacistPrescriptionState = {
@@ -23,6 +28,10 @@ const initialState: PharmacistPrescriptionState = {
   receiveLoading: false,
   receiveError: null,
   lastReceived: null,
+
+  uploadLoading: false,
+  uploadError: null,
+  lastUploaded: null,
 };
 
 // 🔹 Thunks
@@ -30,7 +39,7 @@ export const getPrescriptionListPharmacistThunk = createAsyncThunk<
   PrescriptionItem[],
   void,
   { rejectValue: string }
->("prescription/getList", async (_, { rejectWithValue }) => {
+>("pharmacistPrescription/getList", async (_, { rejectWithValue }) => {
   try {
     const data = await fetchPrescriptionListPharmacist();
     return data;
@@ -47,7 +56,7 @@ export const receivePrescriptionThunk = createAsyncThunk<
   { prescriptionId: number; pharmacistId: number },
   { rejectValue: string }
 >(
-  "prescription/receive",
+  "pharmacistPrescription/receive",
   async ({ prescriptionId, pharmacistId }, { rejectWithValue }) => {
     try {
       const data = await receivePrescriptionByPharmacist(
@@ -59,6 +68,29 @@ export const receivePrescriptionThunk = createAsyncThunk<
     } catch (err: any) {
       return rejectWithValue(
         err.response?.data?.message || "Failed to mark as received"
+      );
+    }
+  }
+);
+
+// 🔹 Upload Prescription (after Excel import)
+export const uploadPrescriptionPharmacistThunk = createAsyncThunk<
+  PrescriptionItem,
+  {
+    pharmacistId: number;
+    payload: FormData;
+  },
+  { rejectValue: string }
+>(
+  "pharmacistPrescription/upload",
+  async ({ pharmacistId, payload }, { rejectWithValue }) => {
+    try {
+      const data = await uploadPrescriptionByPharmacist(pharmacistId, payload);
+      return data;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (err: any) {
+      return rejectWithValue(
+        err.response?.data?.message || "Failed to upload prescription"
       );
     }
   }
@@ -117,6 +149,26 @@ const pharmacistPrescriptionSlice = createSlice({
       .addCase(receivePrescriptionThunk.rejected, (state, action) => {
         state.receiveLoading = false;
         state.receiveError = action.payload || "Error receiving prescription";
+      });
+    // 🔹 Upload prescription
+    builder
+      .addCase(uploadPrescriptionPharmacistThunk.pending, (state) => {
+        state.uploadLoading = true;
+        state.uploadError = null;
+      })
+      .addCase(uploadPrescriptionPharmacistThunk.fulfilled, (state, action) => {
+        state.uploadLoading = false;
+        state.lastUploaded = action.payload;
+
+        // Update list item after upload
+        const index = state.list.findIndex((p) => p.id === action.payload.id);
+        if (index !== -1) {
+          state.list[index] = action.payload;
+        }
+      })
+      .addCase(uploadPrescriptionPharmacistThunk.rejected, (state, action) => {
+        state.uploadLoading = false;
+        state.uploadError = action.payload || "Error uploading prescription";
       });
   },
 });

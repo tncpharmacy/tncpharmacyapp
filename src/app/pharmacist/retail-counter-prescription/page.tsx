@@ -13,22 +13,30 @@ import { getPharmacy } from "@/lib/api/pharmacySelf";
 import Input from "@/app/components/Input/InputColSm";
 import { Image } from "react-bootstrap";
 import dynamic from "next/dynamic";
+import { uploadPrescriptionPharmacistThunk } from "@/lib/features/pharmacistPrescriptionSlice/pharmacistPrescriptionSlice";
+import { useRouter } from "next/navigation";
+import {
+  buyerLogin,
+  buyerRegister,
+} from "@/lib/features/buyerSlice/buyerSlice";
+import { BuyerApiResponse } from "@/types/buyer";
+import { PayloadAction } from "@reduxjs/toolkit";
 const PreviewBox = dynamic(() => import("./PreviewBox"), {
   ssr: false,
 });
 
 export default function RetailCounter() {
-  const userPharmacy = getUser();
-  const pharmacy_id = Number(userPharmacy?.pharmacy_id) || 0;
+  const router = useRouter();
   const dispatch = useAppDispatch();
+
+  const userPharmacy = getUser();
+  const pharmacist_id = Number(userPharmacy?.id) || 0;
+  const pharmacy_id = Number(userPharmacy?.pharmacy_id) || 0;
+
   const [customerName, setCustomerName] = useState("");
   const [mobile, setMobile] = useState("");
   const [prescriptionFile, setPrescriptionFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string>("");
-
-  const [prescriptionPreview, setPrescriptionPreview] = useState("");
-  const [doctorName, setDoctorName] = useState("");
-  const [prescriptionNote, setPrescriptionNote] = useState("");
 
   const handlePrescriptionUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -41,58 +49,65 @@ export default function RetailCounter() {
     setPreviewUrl(url);
   };
 
-  const handleSubmit = async () => {
-    toast.error("We’re working on this feature. It will be available soon.");
-    // if (!customerName || !mobile) {
-    //   toast.error("Customer name & mobile required!");
-    //   return;
-    // }
+  const handleSubmit = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
 
-    // try {
-    //   // 1️⃣ First API → Create Buyer
-    //   const buyerRes: any = await dispatch(
-    //     buyerRegister({
-    //       name: customerName,
-    //       mobile: mobile,
-    //       email: "", // blank as required
-    //     })
-    //   );
+    try {
+      if (!mobile || !customerName || !prescriptionFile) {
+        toast.error("Please fill all fields");
+        return;
+      }
 
-    //   if (!buyerRes?.payload?.buyerId) {
-    //     toast.error("Buyer registration failed!");
-    //     return;
-    //   }
+      let buyer_id: number | null = null;
 
-    //   const buyerId = buyerRes.payload.buyerId;
+      const loginRes = await dispatch(
+        buyerLogin({ login_id: mobile })
+      ).unwrap();
 
-    //   // 2️⃣ Get Required Vars
-    //   const user = getUser();
-    //   const sessionId = user?.sessionId;
-    //   const token = user?.token;
+      if (loginRes?.data?.id) {
+        buyer_id = loginRes.data.id;
+      }
+      if (!buyer_id) {
+        const registerPayload = {
+          name: customerName,
+          email: "",
+          number: mobile,
+        };
+        const regRes = await dispatch(buyerRegister(registerPayload)).unwrap();
+        buyer_id = regRes?.data?.id;
+      }
 
-    //   if (!sessionId || !token) {
-    //     toast.error("Session expired!");
-    //     return;
-    //   }
+      if (!buyer_id) {
+        toast.error("Buyer ID missing");
+        return;
+      }
 
-    //   // 3️⃣ Second API → Link Buyer
-    //   const linkRes: any = await dispatch(
-    //     linkBuyerThunk({
-    //       sessionId,
-    //       buyerId,
-    //       token,
-    //     })
-    //   );
+      // The REAL CORRECT form-data
+      const formData = new FormData();
+      formData.append("buyer_id", String(buyer_id));
+      formData.append(
+        "prescription_pic",
+        prescriptionFile,
+        prescriptionFile.name
+      );
 
-    //   if (linkRes?.payload?.success) {
-    //     toast.success("Buyer linked successfully!");
-    //   } else {
-    //     toast.error("Buyer linking failed!");
-    //   }
-    // } catch (err) {
-    //   console.error(err);
-    //   toast.error("Something went wrong!");
-    // }
+      const uploadRes = await dispatch(
+        uploadPrescriptionPharmacistThunk({
+          pharmacistId: pharmacist_id,
+          payload: formData,
+        })
+      ).unwrap();
+      toast.success("Prescription uploaded!");
+
+      window.location.href = `/pharmacist/ocr/${uploadRes?.id}`;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (err: any) {
+      console.error("Upload Rejection Details:", err); // Log the full error object
+      // 💡 Thunk rejection payload is often nested in err.payload
+      const rejectMessage =
+        err.payload || err.message || "Failed to upload prescription";
+      toast.error("Error: " + rejectMessage);
+    }
   };
 
   return (

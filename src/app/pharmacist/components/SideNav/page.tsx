@@ -22,11 +22,11 @@ export default function SideNav() {
             <i className="bi bi-receipt-cutoff"></i> Retail Counter
           </Link>
         </li>
-        {/* <li>
+        <li>
           <Link href="/pharmacist/retail-counter-prescription" className="link">
             <i className="bi bi-file-medical"></i> Patient Prescriptions
           </Link>
-        </li> */}
+        </li>
         <li>
           <Link href="/pharmacist/orders" className="link">
             <i className="bi bi-cart-plus-fill"></i> Order
@@ -42,7 +42,7 @@ export default function SideNav() {
             <i className="bi bi-box"></i> Stock
           </Link>
         </li>
-        <li>
+        {/* <li>
           <div onClick={() => toggleMenu("product")} className="link arrow">
             <i className="bi bi-box-seam"></i> Product Master
           </div>
@@ -60,7 +60,7 @@ export default function SideNav() {
               </li>
             </ul>
           )}
-        </li>
+        </li> */}
         {/* <li
           className={`${openMenu === "Prescription-Handling" ? "active" : ""}`}
         >

@@ -92,44 +92,114 @@ export default function PurchaseInvoiceImport() {
     if (!file) return;
 
     const reader = new FileReader();
+
     reader.onload = (evt) => {
-      const data = evt.target?.result;
-      const workbook = XLSX.read(data, { type: "binary" });
-      const sheetName = workbook.SheetNames[0];
-      const worksheet = workbook.Sheets[sheetName];
-      const jsonData =
-        XLSX.utils.sheet_to_json<Record<string, string | number>>(worksheet);
+      const binaryStr = evt.target?.result;
 
-      // 👇 Format expiry date properly
-      const formattedData = jsonData.map((row) => {
-        const expiry = row["Expiry Date"];
-        let formattedExpiry = expiry;
+      const workbook = XLSX.read(binaryStr, {
+        type: "binary",
+        cellStyles: true,
+      });
+      const sheet = workbook.Sheets[workbook.SheetNames[0]];
 
-        // Excel numeric date handling
-        if (typeof expiry === "number" && expiry > 40000) {
-          const jsDate = new Date((expiry - 25569) * 86400 * 1000);
-          const day = jsDate.getDate().toString().padStart(2, "0");
-          const month = (jsDate.getMonth() + 1).toString().padStart(2, "0");
-          const year = jsDate.getFullYear();
-          formattedExpiry = `${day}-${month}-${year}`; // ✅ dd-mm-yyyy format
+      const csv = XLSX.utils.sheet_to_csv(sheet);
+
+      // SAFE CSV PARSER (Fixes "Rack 4, A5")
+      const parseCSVLine = (line: string) => {
+        const result: string[] = [];
+        let current = "";
+        let insideQuotes = false;
+
+        for (const char of line) {
+          if (char === '"') {
+            insideQuotes = !insideQuotes;
+          } else if (char === "," && !insideQuotes) {
+            result.push(current);
+            current = "";
+          } else {
+            current += char;
+          }
         }
+        result.push(current);
+        return result;
+      };
 
-        // If Excel already had a text date
-        if (typeof expiry === "string" && expiry.includes("/")) {
-          formattedExpiry = expiry.replace(/\//g, "-");
-        }
+      const rows = csv
+        .split("\n")
+        .map((line) => parseCSVLine(line))
+        .filter((r) => r.some((c) => c.trim() !== ""));
 
-        return {
-          ...row,
-          "Expiry Date": formattedExpiry,
-        };
+      const headerIndex = rows.findIndex((r) =>
+        r.some((cell) => cell.trim().toLowerCase() === "product")
+      );
+
+      if (headerIndex === -1) {
+        alert("Header row not found!");
+        return;
+      }
+
+      const header = rows[headerIndex];
+      const body = rows.slice(headerIndex + 1);
+
+      const jsonData = body.map((r) => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const obj: any = {};
+        header.forEach((h, i) => {
+          obj[h.trim()] = r[i] ?? "";
+        });
+        return obj;
       });
 
-      setExcelData(formattedData);
+      setExcelData(jsonData);
     };
 
     reader.readAsBinaryString(file);
   };
+
+  // const handleExcelUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  //   const file = e.target.files?.[0];
+  //   if (!file) return;
+
+  //   const reader = new FileReader();
+
+  //   reader.onload = (evt) => {
+  //     const bstr = evt.target?.result;
+  //     const workbook = XLSX.read(bstr, { type: "binary" });
+
+  //     const sheetName = workbook.SheetNames[0];
+  //     const sheet = workbook.Sheets[sheetName];
+
+  //     // STEP 1: Read Sheet (Row wise)
+  //     const rows: any[][] = XLSX.utils.sheet_to_json(sheet, {
+  //       header: 1, // <-- First row will be header
+  //       defval: "", // remove undefined values
+  //       raw: false,
+  //     });
+
+  //     if (rows.length === 0) return;
+
+  //     const headers = rows[0]; // First row
+  //     const dataRows = rows.slice(1); // Remaining data
+
+  //     // STEP 2: Convert rows to JSON using excel headers
+  //     const finalData = dataRows.map((row) => {
+  //       const obj: Record<string, any> = {};
+
+  //       headers.forEach((h: string, columnIndex: number) => {
+  //         obj[h] = row[columnIndex] ?? "";
+  //       });
+
+  //       return obj;
+  //     });
+
+  //     console.log("FINAL DATA:", finalData);
+
+  //     // STEP 3: Save to State
+  //     setExcelData(finalData);
+  //   };
+
+  //   reader.readAsBinaryString(file);
+  // };
 
   const handleImportClick = () => {
     fileInputRef.current?.click(); // 👈 hidden input trigger
@@ -148,8 +218,8 @@ export default function PurchaseInvoiceImport() {
     const purchaseDetails = excelData.map((row, i) => ({
       pharmacy_id: pharmacy_id,
       product_id: Number(row["Id"]) || 0, // ✅ Excel ka Id hi product_id hai
-      quantity: row["QTY"]?.toString() || "0",
-      available_quantity: row["QTY"]?.toString() || "0",
+      quantity: row["Required QTY"]?.toString() || "0",
+      // available_quantity: row["QTY"]?.toString() || "0",
       batch: row["Batch"]?.toString() || `BATCH-${i + 1}`,
       expiry_date: parseExcelDate(Number(row["Expiry Date"])),
       mrp: row["MRP"]?.toString() || "0",
@@ -171,8 +241,8 @@ export default function PurchaseInvoiceImport() {
       purchase_details: purchaseDetails,
     };
 
-    console.log("📦 Final Payload to API:", payload);
-    console.log("🧾 purchase_details:", purchaseDetails);
+    // console.log("📦 Final Payload to API:", payload);
+    // console.log("🧾 purchase_details:", purchaseDetails);
 
     // 🚀 4️⃣ Dispatch to Redux Thunk
     dispatch(createPurchaseStock(payload))
@@ -180,6 +250,28 @@ export default function PurchaseInvoiceImport() {
       .then((res) => {
         console.log("✅ Purchase Created Successfully:", res);
         toast.success("Purchase Invoice Imported Successfully!");
+        // ⭐⭐ Final Submit Ke Baad Table Clear Kar Do
+        setExcelData([]);
+        if (fileInputRef.current) fileInputRef.current.value = "";
+
+        // ⭐ Form Reset (optional but recommended)
+        setFormData({
+          id: pharmacist_id,
+          supplier: "",
+          medicine_name: "",
+          pack_size: "",
+          purchase_date: "",
+          invoice_number: "",
+          manufacturer_name: "",
+          qty: "",
+          batch: "",
+          expiry_date: "",
+          discount: "",
+          mrp: "",
+          purchase_rate: "",
+          amount: "",
+          location: "",
+        });
       })
       .catch((err) => {
         console.error("❌ Failed to create purchase:", err);

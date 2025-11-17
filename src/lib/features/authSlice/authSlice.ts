@@ -75,6 +75,10 @@ const authSlice = createSlice({
     markRestoreComplete: (state) => {
       state.restoreComplete = true;
     },
+    // 👇👇 Add this reducer
+    clearState: (state) => {
+      Object.assign(state, initialState);
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -98,6 +102,6 @@ const authSlice = createSlice({
   },
 });
 
-export const { setCredentials, logout, markRestoreComplete } =
+export const { setCredentials, logout, markRestoreComplete, clearState } =
   authSlice.actions;
 export default authSlice.reducer;

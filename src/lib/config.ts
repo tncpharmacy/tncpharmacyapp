@@ -120,6 +120,8 @@ export const ENDPOINTS = {
     GET_PRESCRIPTION_LIST_PHARMACIST: "/ocr/prescriptions/active/",
     PRESCRIPTION_RECEIVED_BY_PHARMACIST: (prescriptionId: number) =>
       `/ocr/prescriptions/update/${prescriptionId}/`,
+    PRESCRIPTION_UPLOAD_BY_PHARMACIST: (pharmacistId: number) =>
+      `/ocr/pharmacist/prescription/upload/${pharmacistId}/`,
   },
 
   // medicines

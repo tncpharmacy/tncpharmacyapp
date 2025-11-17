@@ -9,6 +9,7 @@ export interface BuyerData {
   id: number;
   name: string;
   number: string;
+  buyer_id?: number;
   email: string;
   otp?: string;
   tokens?: BuyerTokens;

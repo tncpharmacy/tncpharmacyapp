@@ -150,11 +150,6 @@ export default function StockList() {
     }, 3000); // spinner for 3 sec
   };
 
-  const truncateText = (text: string, maxLength: number): string => {
-    if (!text) return "-";
-    if (text.length <= maxLength) return text;
-    return text.slice(0, maxLength) + "...";
-  };
   // Function to handle filter selection
   const handleFilterSelect = (key: FilterType) => {
     setFilterType(key);
@@ -162,10 +157,15 @@ export default function StockList() {
 
   // Get styles for each button
   const allStyles = getButtonStyles("primary", filterType === "All");
-  const availableStyles = getButtonStyles(
-    "success",
-    filterType === "AvailableStock"
-  );
+  // const truncateText = (text: string, maxLength: number): string => {
+  //   if (!text) return "-";
+  //   if (text.length <= maxLength) return text;
+  //   return text.slice(0, maxLength) + "...";
+  // };
+  // const availableStyles = getButtonStyles(
+  //   "success",
+  //   filterType === "AvailableStock"
+  // );
   const minimumStyles = getButtonStyles("danger", filterType === "LowStock");
   return (
     <>

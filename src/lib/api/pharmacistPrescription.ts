@@ -29,3 +29,33 @@ export const receivePrescriptionByPharmacist = async (
 
   return response.data.data; // backend response
 };
+
+// ✅ Upload prescription by pharmacist
+export const uploadPrescriptionByPharmacist = async (
+  pharmacistId: number,
+  payload: FormData
+): Promise<PrescriptionItem> => {
+  const response = await api.post(
+    ENDPOINTS.PRESCRIPTION_UPLOAD.PRESCRIPTION_UPLOAD_BY_PHARMACIST(
+      pharmacistId
+    ),
+    payload,
+    {
+      headers: {
+        "Content-Type": undefined,
+      },
+      transformResponse: [
+        (data, headers) => {
+          if (!data && headers && headers["content-length"] === "0") {
+            return { data: { id: 0 } };
+          }
+          return JSON.parse(data);
+        },
+      ],
+      validateStatus: function (status) {
+        return status >= 200 && status < 300;
+      },
+    }
+  );
+  return response.data.data;
+};

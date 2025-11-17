@@ -6,22 +6,23 @@ import { Medicine } from "@/types/medicine";
 import { useAppSelector } from "@/lib/hooks";
 
 interface MedicineListProps {
-  medicines: Medicine[];
+  medicines: Medicine[] | undefined | null;
   loading: boolean;
 }
 
 const MedicineList: React.FC<MedicineListProps> = ({ medicines, loading }) => {
   const [searchTerm, setSearchTerm] = useState("");
-  // Filter the medicines based on the search term
+  // Ensure medicines is ALWAYS an array
+  const safeMedicines = Array.isArray(medicines) ? medicines : [];
+
   const filteredMedicines = useMemo(() => {
-    if (!searchTerm) {
-      return medicines;
-    }
-    const lowerCaseSearchTerm = searchTerm.toLowerCase();
-    return medicines.filter((med) =>
-      med.medicine_name.toLowerCase().includes(lowerCaseSearchTerm)
+    if (!searchTerm) return safeMedicines;
+
+    const lowerSearch = searchTerm.toLowerCase();
+    return safeMedicines.filter((med) =>
+      med?.medicine_name?.toLowerCase().includes(lowerSearch)
     );
-  }, [medicines, searchTerm]);
+  }, [safeMedicines, searchTerm]);
 
   return (
     <>
@@ -36,9 +37,8 @@ const MedicineList: React.FC<MedicineListProps> = ({ medicines, loading }) => {
             </a>
             <input
               type="text"
-              className="txt1 my-box" // Bootstrap
+              className="txt1 my-box"
               placeholder="Search medicines..."
-              // 2. Add value and onChange handler
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />

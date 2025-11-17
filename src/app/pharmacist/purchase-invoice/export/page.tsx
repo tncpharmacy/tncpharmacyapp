@@ -151,6 +151,9 @@ export default function PurchaseInvoiceExport() {
         Location: "",
       }));
     exportToExcel(exportData, fileName, "Medicines", selectedSupplier || "N/A");
+    // ⭐⭐ EXPORT COMPLETE → CLEAR RIGHT SIDE TABLE & UNCHECK ALL
+    setSelectedMedicines([]);
+    setSelectAll(false);
   };
 
   useEffect(() => {
