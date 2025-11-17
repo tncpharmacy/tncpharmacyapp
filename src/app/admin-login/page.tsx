@@ -64,8 +64,11 @@ export default function Login({ show, handleClose }: LoginFormProps) {
   }, [restoreComplete, user, redirectUser]);
 
   const handleLogin = async () => {
-    // 🔥 Clear previous errors, user & flags BEFORE login request
+    localStorage.removeItem("user");
+    localStorage.removeItem("accessToken");
+    localStorage.removeItem("refreshToken");
     dispatch(clearState());
+
     const res = await dispatch(loginUser({ login_id, password }));
     if (loginUser.fulfilled.match(res)) {
       redirectUser(res.payload.user.user_type);
