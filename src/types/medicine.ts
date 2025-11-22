@@ -47,6 +47,7 @@ export interface Medicine {
   dose_form?: string;
   pack_size?: string;
   prescription_required?: number;
+  Disc?: string | number;
   discount?: string;
   status?: string;
   category_id: number;

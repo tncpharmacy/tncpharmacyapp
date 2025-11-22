@@ -176,8 +176,9 @@ export const ENDPOINTS = {
     // 🔹 Added Order APIs
     POST_ORDER: (buyerId: number) =>
       `/order/pharmacist/create-order/${buyerId}/`,
-    GET_ORDER_BY_ORDERID: (orderId: number) =>
-      `/order/pharmacist/list/${orderId}/`,
+    GET_ORDER_BY_BUYER_ID: (buyerId: number) =>
+      `/order/pharmacist/list/${buyerId}/`,
+    GET_ORDER_BY_ORDERID: (orderId: number) => `/order/detail/${orderId}/`,
     GET_ORDER_LIST: "/order/list/",
   },
 
@@ -196,5 +197,7 @@ export const ENDPOINTS = {
     CREATE: "/stock/purchase/create/",
     GET_STOCK_LIST_PHARMACY: (id: number) =>
       `/stock/pharmacy/${id}/stock-details/`,
+    GET_PHARMACIST_LIST: "/stock/purchase/",
+    GET_PHARMACIST_BY_ID: (id: number) => `/stock/purchase/${id}`,
   },
 };

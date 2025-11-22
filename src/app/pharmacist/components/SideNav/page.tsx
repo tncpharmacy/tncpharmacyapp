@@ -28,7 +28,7 @@ export default function SideNav() {
           </Link>
         </li>
         <li>
-          <Link href="/pharmacist/orders" className="link">
+          <Link href="/pharmacist/order" className="link">
             <i className="bi bi-cart-plus-fill"></i> Order
           </Link>
         </li>

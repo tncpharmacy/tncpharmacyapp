@@ -6,6 +6,7 @@ import toast from "react-hot-toast";
 // ===============================
 import {
   createOrderApi,
+  getOrderByBuyerIdApi,
   getOrderByIdApi,
   getOrderListApi,
 } from "@/lib/api/pharmacistOrder";
@@ -21,6 +22,7 @@ const initialState: PharmacistOrderState = {
   error: null,
   order: null,
   orders: [],
+  buyerOrderList: [],
   orderCreated: false,
 };
 
@@ -49,6 +51,24 @@ export const createPharmacistOrder = createAsyncThunk<
     }
   }
 );
+
+// 2️⃣ Get Order by Buyer ID
+export const getPharmacistOrderByBuyerId = createAsyncThunk<
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  any,
+  { buyerId: number },
+  { rejectValue: string }
+>("pharmacistOrder/getByBuyerId", async ({ buyerId }, { rejectWithValue }) => {
+  try {
+    const res = await getOrderByBuyerIdApi(buyerId);
+    return res.data;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } catch (err: any) {
+    return rejectWithValue(
+      err.response?.data?.message || "Failed to fetch order"
+    );
+  }
+});
 
 // 2️⃣ Get Order by ID
 export const getPharmacistOrderById = createAsyncThunk<
@@ -134,6 +154,21 @@ const pharmacistOrderSlice = createSlice({
         toast.success("Order fetched successfully!");
       })
       .addCase(getPharmacistOrderById.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload || "Failed to fetch order";
+      })
+
+      // GET ORDER BY BUYER ID
+      .addCase(getPharmacistOrderByBuyerId.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(getPharmacistOrderByBuyerId.fulfilled, (state, action) => {
+        state.loading = false;
+        state.buyerOrderList = action.payload?.data || null;
+        toast.success("Order fetched successfully!");
+      })
+      .addCase(getPharmacistOrderByBuyerId.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload || "Failed to fetch order";
       })

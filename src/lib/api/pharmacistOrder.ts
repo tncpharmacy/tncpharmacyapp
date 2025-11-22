@@ -9,6 +9,10 @@ export const createOrderApi = async (
   return api.post(ENDPOINTS.PHARMACIST_ORDER.POST_ORDER(buyerId), payload);
 };
 
+export const getOrderByBuyerIdApi = (buyerId: number) => {
+  return api.get(ENDPOINTS.PHARMACIST_ORDER.GET_ORDER_BY_BUYER_ID(buyerId));
+};
+
 export const getOrderByIdApi = (orderId: number) => {
   return api.get(ENDPOINTS.PHARMACIST_ORDER.GET_ORDER_BY_ORDERID(orderId));
 };

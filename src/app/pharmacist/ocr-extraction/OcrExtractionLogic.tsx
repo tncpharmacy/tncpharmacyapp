@@ -296,11 +296,21 @@ export default function OcrExtractionLogic({
     setItemToConfirm(itemWithGeneric);
     setIsQtyModalOpen(true);
   };
+
+  // Update handleSelectAlternative (Must call handleCloseQtyModal to close first modal)
+  const handleSelectAlternative = (item: Medicine) => {
+    console.log("📦 handleSelectAlternative (from GenericOptionsModal):", item);
+    setIsModalOpen(false);
+    setItemToConfirm(item); // item should already include generic_name after fix #1
+    setIsQtyModalOpen(true);
+  };
+
   const handleCloseQtyModal = () => {
     setIsQtyModalOpen(false);
     setItemToConfirm(null);
-  }; // Final Add to Cart handler (From Qty Modal)
+  };
 
+  // Final Add to Cart handler (From Qty Modal)
   const handleFinalAddToCart = (
     item: Medicine,
     qty: number,
@@ -328,14 +338,6 @@ export default function OcrExtractionLogic({
     handleCloseQtyModal();
     setSelectedMedicine(null);
     handleOpenHealthBag();
-  };
-
-  // Update handleSelectAlternative (Must call handleCloseQtyModal to close first modal)
-  const handleSelectAlternative = (item: Medicine) => {
-    console.log("📦 handleSelectAlternative (from GenericOptionsModal):", item);
-    setIsModalOpen(false);
-    setItemToConfirm(item); // item should already include generic_name after fix #1
-    setIsQtyModalOpen(true);
   };
 
   const handleBackToGeneric = () => {

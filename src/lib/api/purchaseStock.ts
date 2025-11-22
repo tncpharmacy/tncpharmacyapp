@@ -46,3 +46,11 @@ export const fetchPharmacyStock = async (
   );
   return res.data;
 };
+
+export const getPharmacistByIdApi = (id: number) => {
+  return api.get(ENDPOINTS.PURCHASE_STOCK.GET_PHARMACIST_BY_ID(id));
+};
+
+export const getPharmacistListApi = () => {
+  return api.get(ENDPOINTS.PURCHASE_STOCK.GET_PHARMACIST_LIST);
+};

@@ -380,10 +380,10 @@ const nextConfig: NextConfig = {
         source: "/pharmacist/update-profile",
         destination: "/pharmacist/pharmacist-profile/update-profile",
       },
-      {
-        source: "/pharmacist/orders",
-        destination: "/pharmacist/order/order-list",
-      },
+      // {
+      //   source: "/pharmacist/orders",
+      //   destination: "/pharmacist/order/order-list",
+      // },
       {
         source: "/pharmacist/purchase-invoice",
         destination: "/pharmacist/purchase-invoice",
@@ -407,6 +407,10 @@ const nextConfig: NextConfig = {
       {
         source: "/pharmacist/retail-counter-prescription",
         destination: "/pharmacist/retail-counter-prescription",
+      },
+      {
+        source: "/pharmacist/orders",
+        destination: "/pharmacist/order",
       },
 
       // Doctor Routes

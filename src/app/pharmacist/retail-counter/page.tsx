@@ -19,8 +19,15 @@ import BillPreviewModal from "@/app/components/RetailCounterModal/BillPreviewMod
 import toast from "react-hot-toast";
 import { getUser } from "@/lib/auth/auth";
 import { getPharmacy } from "@/lib/api/pharmacySelf";
+import { useRouter } from "next/navigation";
+import {
+  buyerLogin,
+  buyerRegister,
+} from "@/lib/features/buyerSlice/buyerSlice";
+import { createPharmacistOrder } from "@/lib/features/pharmacistOrderSlice/pharmacistOrderSlice";
 
 export default function RetailCounter() {
+  const router = useRouter();
   const userPharmacy = getUser();
   const pharmacy_id = Number(userPharmacy?.pharmacy_id) || 0;
   const dispatch = useAppDispatch();
@@ -50,26 +57,6 @@ export default function RetailCounter() {
   const [customerName, setCustomerName] = useState("");
   const [mobile, setMobile] = useState("");
 
-  const handleGenerateBill = () => {
-    if (!customerName.trim() || !mobile.trim()) {
-      toast.error(
-        "Please fill Customer Name and Mobile No. before generating bill."
-      );
-      return;
-    }
-    const mobileRegex = /^\d{10}$/;
-
-    if (!customerName.trim()) {
-      toast.error("Please enter Customer Name.");
-      return;
-    }
-
-    if (!mobileRegex.test(mobile)) {
-      toast.error("Please enter a valid 10-digit Mobile Number.");
-      return;
-    }
-    setIsBillModalOpen(true);
-  };
   // Initial product list fetch
   useEffect(() => {
     dispatch(getProductList());
@@ -169,7 +156,6 @@ export default function RetailCounter() {
       generic_name: item.generic_name || item.GenericName || "N/A",
       pack_size: item.pack_size || "N/A",
     };
-    console.log("🧾 handleFinalAddToCart itemToAdd:", itemToAdd);
     setCart((prevCart) => {
       return [...prevCart, itemToAdd];
     });
@@ -186,6 +172,109 @@ export default function RetailCounter() {
       setIsModalOpen(true);
     }
   }, [selectedGenericId, loading, productListByGeneric.length]);
+  const goToRetailCounterPrescription = async () => {
+    router.push("/pharmacist/retail-counter-prescription");
+  };
+
+  const handleCreateOrder = async () => {
+    try {
+      let buyerId = null;
+
+      // 1) Buyer Login
+      const loginRes = await dispatch(
+        buyerLogin({ login_id: mobile })
+      ).unwrap();
+
+      if (loginRes?.data?.existing === true) {
+        buyerId = loginRes.data.id;
+      } else {
+        const regRes = await dispatch(
+          buyerRegister({
+            name: customerName,
+            email: "",
+            number: mobile,
+          })
+        ).unwrap();
+
+        buyerId = regRes.data.id;
+      }
+
+      if (!buyerId) {
+        toast.error("Unable to fetch Buyer ID");
+        return false;
+      }
+
+      // 2) Product Array
+      const products = cart.map((item) => {
+        const discountAmt = (item.price * (item.Disc ?? 0)) / 100;
+        const finalRate = (item.price - discountAmt) * item.qty;
+
+        return {
+          product_id: item.id,
+          quantity: String(item.qty),
+          mrp: String(item.price),
+          discount: String(item.Disc ?? 0),
+          rate: String(finalRate),
+          doses: item.dose_form,
+          instruction: item.remarks,
+          status: "1",
+        };
+      });
+
+      // 3) Calculate Total
+      const grandTotal = cart.reduce((acc, item) => {
+        const total = item.qty * item.price;
+        const discountAmount = (total * item.Disc) / 100;
+        return acc + (total - discountAmount);
+      }, 0);
+
+      // 4) Final Order Payload
+      const orderPayload = {
+        payment_mode: 1,
+        payment_status: "1",
+        amount: String(grandTotal),
+        order_type: 2,
+        pharmacy_id: pharmacy_id,
+        address_id: 1,
+        status: "1",
+        products,
+      };
+
+      // 5) POST ORDER
+      await dispatch(
+        createPharmacistOrder({
+          buyerId,
+          payload: orderPayload,
+        })
+      ).unwrap();
+
+      toast.success("Order Created Successfully! 🧾✨");
+      return true;
+    } catch (err) {
+      toast.error("Order Creation Failed!");
+      return false;
+    }
+  };
+
+  const handleGenerateBill = async () => {
+    if (!customerName.trim() || !mobile.trim()) {
+      toast.error("Please fill Customer Name and Mobile No.");
+      return;
+    }
+
+    const mobileRegex = /^\d{10}$/;
+    if (!mobileRegex.test(mobile)) {
+      toast.error("Please enter valid 10-digit Mobile Number.");
+      return;
+    }
+
+    // ORDER FIRST
+    const orderSuccess = await handleCreateOrder();
+
+    if (orderSuccess) {
+      setIsBillModalOpen(true); // Now modal opens only after order success
+    }
+  };
 
   return (
     <>
@@ -221,13 +310,14 @@ export default function RetailCounter() {
                   </div>
                   <div className="col-md-4 text-end">
                     <div className="txt_col">
-                      {/* <button
+                      <button
                         className="btn-style1"
-                        // onClick={handleExportToExcel}
+                        onClick={goToRetailCounterPrescription}
                         // disabled={selectedMedicines.length === 0}
                       >
-                        <i className="bi bi-upload"></i> Upload Prescription
-                      </button> */}
+                        Upload Prescription
+                        {/* <i className="bi bi-upload"></i>  */}
+                      </button>
                     </div>
                   </div>
                 </div>

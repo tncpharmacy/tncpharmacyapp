@@ -1,22 +1,12 @@
 "use client";
-import {
-  buyerLogin,
-  buyerRegister,
-  createBuyerOrder,
-} from "@/lib/features/buyerSlice/buyerSlice";
-import { createPharmacistOrder } from "@/lib/features/pharmacistOrderSlice/pharmacistOrderSlice";
 import { useAppDispatch } from "@/lib/hooks";
 import { useEffect, useRef, useState } from "react";
 import { Image, Modal } from "react-bootstrap";
-import toast from "react-hot-toast";
-// Note: next/image is not used; standard image tag is used.
 
-// Mock style object since the user did not provide the actual styles file content
+// Mock style object
 const styles = {
   modalContentWrapper: "p-4 border rounded",
-  billHeader: "border-bottom pb-2",
   customerInfo: "mb-4 p-3 bg-light rounded",
-  borderDashed: "border-top pt-2 border-dashed",
 };
 
 interface CartItem {
@@ -31,10 +21,10 @@ interface CartItem {
   Disc: number;
   remarks: string;
 }
+
 interface BillPreviewModalProps {
   show: boolean;
   onClose: () => void;
-  // Cart prop can sometimes be undefined during initial render, hence the fix.
   cart: CartItem[] | undefined;
   customerName: string;
   mobile: string;
@@ -47,418 +37,170 @@ const BillPreviewModal: React.FC<BillPreviewModalProps> = ({
   cart,
   customerName,
   mobile,
-  pharmacy_id,
 }) => {
   const printRef = useRef<HTMLDivElement>(null);
   const dispatch = useAppDispatch();
-  // --- Translation State and Logic ---
+
   const [language, setLanguage] = useState("en");
   const [translatedCart, setTranslatedCart] = useState<CartItem[]>(cart || []);
   const [isTranslating, setIsTranslating] = useState(false);
-  // State to show API access warning on UI
   const [apiError, setApiError] = useState<string | null>(null);
 
-  // Available languages
-  const languageOptions = [
-    { code: "en", name: "English" },
-    { code: "es", name: "Spanish" },
-    { code: "fr", name: "French" },
-    { code: "hi", name: "Hindi" },
-    { code: "gu", name: "Gujarati" },
-    { code: "mr", name: "Marathi" },
-    { code: "ta", name: "Tamil" },
-  ];
-
-  // Reset/Set cart content on modal open/cart update
   useEffect(() => {
     if (!show) return;
     setTranslatedCart(cart || []);
-    setLanguage("en"); // Reset language to default when reopening
-    setApiError(null); // Clear previous errors
+    setLanguage("en");
+    setApiError(null);
   }, [show, cart]);
 
-  // google api for translating language
-  const apiKey = "AIzaSyDgglnyLRjpHWHRNE8WEacdjnx0XKYyR4w"; // <--- APNI KEY YAHAN PASTE KAREIN
-  const modelName = "gemini-2.5-flash-preview-09-2025";
-  const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
+  // 🔵 PRINT BILL — ONLY BILL SECTION
+  const handlePrintBill = () => {
+    const bill = printRef.current;
+    if (!bill) return;
 
-  // Helper function for reliable fetching with exponential backoff
-  const exponentialBackoffFetch = async (
-    url: string,
-    options: RequestInit,
-    maxRetries = 5
-  ) => {
-    for (let i = 0; i < maxRetries; i++) {
-      try {
-        const response = await fetch(url, options);
+    const billHtml = bill.querySelector(".bill-section")?.innerHTML || "";
 
-        if (response.status === 403) {
-          // Throw specific error for 403
-          throw new Error(
-            "API Access Forbidden (403). Check API Key/Permissions."
-          );
+    const win = window.open("", "_blank", "width=800,height=1000");
+    if (!win) return; // <-- FIX
+
+    win.document.write(`
+    <html>
+      <head>
+        <title>Bill</title>
+        <style>
+          body { font-family: Arial; padding: 10px; }
+          table, th, td { border:1px solid #000; border-collapse: collapse; }
+          th, td { padding:6px; }
+          @page { size: A4; margin:10mm; }
+        </style>
+      </head>
+      <body>
+        ${billHtml}
+      </body>
+    </html>
+  `);
+
+    win.document.close();
+    win.print();
+    win.close();
+  };
+
+  // 🟡 PRINT LABEL — ONLY CARD SECTION
+  const handlePrintLabel = () => {
+    const bill = printRef.current;
+    if (!bill) return;
+
+    const cardHtml = bill.querySelector(".card-section")?.innerHTML || "";
+
+    const win = window.open("", "_blank", "width=400,height=600");
+    if (!win) return;
+
+    win.document.write(`
+    <html>
+    <head>
+      <title>Label</title>
+      <style>
+        * {
+          margin: 0;
+          padding: 0;
+          box-sizing: border-box;
         }
 
-        if (response.status === 429) {
-          // Rate limit
-          throw new Error("Rate limit exceeded");
+        html, body {
+          width: 60mm !important;
+          height: 50mm !important;
+          padding: 0;
+          margin: 0 !important;
+          background: #fff !important;
         }
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
+
+        /* Remove all outer container shadow/margins */
+        body > div, body > * {
+          margin: 0 !important;
+          padding: 0 !important;
+          border: none !important;
+          box-shadow: none !important;
+          background: #fff !important;
         }
-        return response;
-      } catch (error) {
-        if (i < maxRetries - 1) {
-          const delay = Math.pow(2, i) * 1000 + Math.random() * 1000;
-          await new Promise((resolve) => setTimeout(resolve, delay));
-        } else {
-          // If 403 error, throw immediately (no retry needed)
-          if (error instanceof Error && error.message.includes("403")) {
-            throw error;
-          }
-          throw error;
+
+        .print-card {
+          width: 60mm !important;
+          height: 50mm !important;
+          padding: 2px 3px !important;
+          display: flex;
+          flex-direction: column;
+          justify-content: space-between;
+          overflow: hidden;
+          page-break-inside: avoid !important;
+          break-inside: avoid-page !important;
+          border: none !important;
+          box-shadow: none !important;
+          background: #fff !important;
         }
-      }
-    }
-    // This line is unreachable but satisfies TS
-    throw new Error("Fetch failed after all retries.");
+
+        .label-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+        }
+
+        .header-line {
+          border-top: 1px solid #000;
+          margin: 1px 0 2px 0;
+        }
+
+        p {
+          font-size: 8px !important;
+          line-height: 1.05 !important;
+          margin: 1px 0 !important;
+        }
+
+        .date-text {
+          font-size: 7px !important;
+        }
+
+        .footer-line {
+          border-top: 1px solid #000;
+          margin: 2px 0 1px 0 !important;
+        }
+
+        .footer-website,
+        .footer-support {
+          font-size: 9px !important;
+          text-align: center;
+          line-height: 1 !important;
+          margin: 0 !important;
+        }
+
+        .footer-wish {
+          font-size: 8px !important;
+          text-align: center;
+          font-style: italic;
+          margin: 0 !important;
+        }
+
+        @page {
+          size: 60mm 50mm;
+          margin: 0;
+        }
+      </style>
+    </head>
+
+    <body>
+      <div class="print-card">
+        ${cardHtml}
+      </div>
+    </body>
+    </html>
+  `);
+
+    win.document.close();
+    setTimeout(() => {
+      win.print();
+      win.close();
+    }, 300);
   };
 
-  // Translation Logic using Gemini API
-  const translateText = async (text: string, targetLang: string) => {
-    if (!text || targetLang === "en") return text;
-
-    // Check if API key is still the default placeholder (now removed, but good practice to keep similar checks)
-    // if (!apiKey || apiKey === "PASTE_YOUR_GEMINI_API_KEY_HERE") {
-    //   setApiError("Translation failed: API Key is missing or invalid.");
-    //   console.error("🔴 API Key is missing. Cannot proceed with translation.");
-    //   return text; // Fallback
-    // }
-
-    try {
-      setApiError(null); // Clear previous UI error on new attempt
-      const targetLanguageName =
-        languageOptions.find((l) => l.code === targetLang)?.name || targetLang;
-
-      const systemPrompt = `You are an expert translator. Your task is to accurately translate the provided English text into the target language. Respond ONLY with the translated text, without any introductory phrases, explanations, or quotes.`;
-      const userQuery = `Translate the following phrase into ${targetLanguageName}: "${text}"`;
-
-      const payload = {
-        contents: [{ parts: [{ text: userQuery }] }],
-        systemInstruction: { parts: [{ text: systemPrompt }] },
-      };
-
-      const response = await exponentialBackoffFetch(apiUrl, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-
-      const result = await response.json();
-      const translatedText = result.candidates?.[0]?.content?.parts?.[0]?.text;
-
-      if (translatedText) {
-        // Clean up any stray quotation marks or newlines added by the model
-        return translatedText.trim().replace(/^['"]|['"]$/g, "");
-      }
-
-      console.error("Gemini Translation failed: No text received", result);
-      return text; // Fallback to original text
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : "Unknown error";
-
-      // If 403 error, set UI error state
-      if (errorMessage.includes("403")) {
-        setApiError(
-          `Translation failed: ${errorMessage} Please check your Gemini API status.`
-        );
-      }
-
-      console.error(`🔴 Translation failed due to API Error: ${errorMessage}`);
-      return text; // Fallback to original text on API error
-    }
-  };
-
-  // 🔄 Handle language change and trigger translation
-  const handleLanguageChange = async (lang: string) => {
-    setLanguage(lang);
-    setApiError(null); // Clear error when trying new lang
-
-    if (lang === "en") {
-      setTranslatedCart(cart || []);
-      return;
-    }
-
-    // // Check key again before starting translation
-    // if (!apiKey || apiKey === "PASTE_YOUR_GEMINI_API_KEY_HERE") {
-    //   setApiError("Translation failed: API Key is missing or invalid.");
-    //   return;
-    // }
-
-    setIsTranslating(true);
-    const itemsToTranslate = cart || [];
-
-    // Using Promise.allSettled to ensure that one failure doesn't stop others
-    const translationResults = await Promise.allSettled(
-      itemsToTranslate.map(async (item) => {
-        // FIX 1: Translate medicine_name
-        const translatedName = await translateText(item.medicine_name, lang);
-
-        // FIX 2: Removed translation for dose_form (keeping it as original numeric string)
-        const translatedRemarks = await translateText(item.remarks, lang);
-
-        return {
-          ...item,
-          medicine_name: item.medicine_name, // Use translated name
-          dose_form: item.dose_form, // Use original dose form (numeric)
-          remarks: translatedRemarks,
-        };
-      })
-    );
-
-    const successfulTranslations = translationResults.map(
-      (result) =>
-        result.status === "fulfilled" ? result.value : itemsToTranslate[0] // Use first item as a generic fallback if promise fails
-    );
-
-    setTranslatedCart(successfulTranslations as CartItem[]);
-    setIsTranslating(false);
-  };
-  // --- End Translation Logic ---
-
-  // --- Print Handler ---
-  const handlePrint = async () => {
-    try {
-      let buyerId: number | null = null;
-
-      // 1) Buyer Check
-      const loginRes = await dispatch(
-        buyerLogin({ login_id: mobile })
-      ).unwrap();
-
-      if (loginRes?.data?.existing === true) {
-        buyerId = loginRes.data.id;
-      } else {
-        const regRes = await dispatch(
-          buyerRegister({
-            name: customerName,
-            email: "",
-            number: mobile,
-          })
-        ).unwrap();
-
-        buyerId = regRes.data.id;
-      }
-
-      if (!buyerId) {
-        toast.error("Unable to get buyer ID");
-        return;
-      }
-
-      // 2) Product Array
-      const products = (cart ?? []).map((item) => {
-        const discountAmt = (item.price * (item.Disc ?? 0)) / 100;
-        const finalRate = (item.price - discountAmt) * item.qty;
-
-        return {
-          product_id: item.id,
-          quantity: String(item.qty),
-          mrp: String(item.price),
-          discount: String(item.Disc ?? 0),
-          rate: String(finalRate),
-          doses: item.dose_form,
-          instruction: item.remarks,
-          status: "1",
-        };
-      });
-
-      // 3) Final Payload
-      const orderPayload = {
-        payment_mode: 1,
-        payment_status: "1",
-        amount: String(grandTotal),
-        order_type: 2, // IMPORTANT
-        pharmacy_id: pharmacy_id,
-        address_id: 1, // you confirm
-        status: "1",
-        products: products,
-      };
-
-      // 4) POST ORDER
-      await dispatch(
-        createPharmacistOrder({
-          buyerId,
-          payload: orderPayload,
-        })
-      ).unwrap();
-      // 👉 Success Toast
-      toast.success("Order successfully Submitted! 🧾✨");
-      // 5) Print
-      actuallyPrintBill();
-    } catch (error) {
-      console.error(error);
-      toast.error("Order failed!");
-    }
-  };
-  // const handlePrint = async () => {
-  //   actuallyPrintBill();
-  // };
-
-  const actuallyPrintBill = () => {
-    const printContents = printRef.current?.innerHTML;
-    if (!printContents) return;
-
-    const printWindow = window.open("", "_blank", "width=800,height=1000");
-
-    if (printWindow) {
-      printWindow.document.write(`
-      <html>
-        <head>
-          <title>Pharmacy Bill</title>
-          <style>
-            @page {
-              size: A4;
-              margin: 10mm;
-            }
-
-            body {
-              font-family: 'Segoe UI', sans-serif;
-              font-size: 12px;
-              color: #000;
-              background: #fff;
-            }
-
-            h3, h4 {
-              display: block
-              text-align: center;
-            }
-
-            table {
-              width: 100%;
-              border-collapse: collapse;
-              margin-bottom: 10px;
-            }
-
-            th, td {
-              border: 1px solid #000;
-              padding: 6px;
-              text-align: center;
-            }
-
-            th {
-              background-color: #f2f2f2;
-            }
-
-            .print-hide {
-              display: none !important;
-            }
-
-            /* ✅ Doses Section */
-            .dose-container {
-              display: block;
-              margin-top: 13px;         
-              gap: 10px;
-            }
-
-            .print-card {
-              page-break-inside: avoid;
-              border: 1px solid #ccc;
-              border-radius: 1px;
-              box-shadow: 0 0 2px rgba(0,0,0,0.1);
-              background: #fff;
-              width: 35% !important;
-              border-radius: 1px;
-              font-size: 10px;
-              height: 100%;
-            }
-
-            .print-card img {
-              object-fit: contain;
-            }
-            .print-card p {
-              margin: 0px;
-              font-size: 8px;
-              line-height: 1;
-            }
-            .card-getWell {
-              font-size: 6px;
-            }
-            .card-webMob {
-              font-size: 3px;
-            }
-            .card-footer {
-              border-top: 1px solid #ccc;
-              text-align: center;
-              font-size: 8px;
-            }
-
-            .card-footer p {
-              font-family: cursive;
-              font-size: 8px;
-            }
-
-            @media print {
-              body, html {
-                margin: 0;
-                padding: 0;
-              }
-
-              .print-card {
-              margin: 0 0 10px 0 !important;  
-                padding: 10px 15px;
-                box-sizing: border-box;
-                page-break-inside: avoid;
-              }
-
-              .print-card .footer {
-                margin: 0;
-                padding: 0;
-                line-height: 1;
-              }
-
-              /* ✅ Remove any extra white space under footer */
-              .print-card .footer > div:last-child {
-                margin-top: 1px !important;
-                margin-bottom: 0 !important;
-                padding-bottom: 0 !important;
-                line-height: 1 !important;          
-                font-size: 7px !important;
-                font-style: italic !important;
-              }
-
-              .print-card:last-child {
-                margin-bottom: 0 !important;
-                padding-bottom: 0 !important;
-              }
-
-              /* ✅ Remove Chrome auto spacing after elements */
-              img, p, div {
-                line-height: 1 !important;
-                font-size: 7px;
-              }
-
-              /* Just in case Chrome adds print padding */
-              @page {
-                margin: 10mm 10mm 5mm 10mm;
-              }
-            }
-
-
-          </style>
-        </head>
-        <body>
-          ${printContents}
-        </body>
-      </html>
-`);
-      printWindow.document.close();
-      printWindow.print();
-      printWindow.close();
-    }
-  };
-  // --- End Print Handler ---
-
-  // FIX: Ensure cart is an array before calling reduce
   const grandTotal = (cart || []).reduce((acc, item) => {
     const total = item.qty * item.price;
     const discountAmount = item.Disc ? (total * item.Disc) / 100 : 0;
@@ -477,75 +219,67 @@ const BillPreviewModal: React.FC<BillPreviewModalProps> = ({
 
       <Modal.Body>
         <div className={styles.modalContentWrapper} ref={printRef}>
-          {/* Header */}
-          {/* Header */}
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "flex-start",
-              marginBottom: "20px",
-              borderBottom: "2px solid #007bff",
-              paddingBottom: "8px",
-            }}
-          >
-            {/* Left: Logo */}
-            <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-              <Image
-                src="/images/logo.png"
-                alt="TnC Pharmacy"
-                style={{
-                  height: 90,
-                  width: 200,
-                  objectFit: "contain",
-                }}
-              />
-            </div>
-
-            {/* Right: Address */}
+          {/* ---------------- BILL SECTION (ONLY FOR PRINT BILL) ---------------- */}
+          <div className="bill-section">
+            {/* Header */}
             <div
               style={{
-                textAlign: "right",
-                fontSize: "12px",
-                color: "#333",
-                lineHeight: "1.4",
-                maxWidth: "220px",
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "flex-start",
+                marginBottom: "20px",
+                borderBottom: "2px solid #007bff",
+                paddingBottom: "8px",
               }}
             >
-              <strong style={{ fontSize: "13px", color: "#007bff" }}>
-                TnC Pharmacy
-              </strong>
-              <br />
-              123 Main Street, City - 000000 <br />
-              Ph: +91-9999999999 <br />
-              Email: support@tncpharmacy.in
-            </div>
-          </div>
+              <div
+                style={{ display: "flex", alignItems: "center", gap: "10px" }}
+              >
+                <Image
+                  src="/images/logo.png"
+                  alt="TnC Pharmacy"
+                  style={{ height: 90, width: 200, objectFit: "contain" }}
+                />
+              </div>
 
-          {/* Customer Info */}
-          <div className={styles.customerInfo}>
-            <div className="d-flex justify-content-between">
-              <div>
-                <strong>Customer Name:</strong> {customerName || "-"}
-              </div>
-              <div>
-                <strong>Mobile No.:</strong> {mobile || "-"}
+              <div
+                style={{
+                  textAlign: "right",
+                  fontSize: "12px",
+                  color: "#333",
+                  lineHeight: "1.4",
+                  maxWidth: "220px",
+                }}
+              >
+                <strong style={{ fontSize: "13px", color: "#007bff" }}>
+                  TnC Pharmacy
+                </strong>
+                <br />
+                123 Main Street, City - 000000 <br />
+                Ph: +91-9999999999 <br />
+                Email: support@tncpharmacy.in
               </div>
             </div>
-          </div>
-          {/* ✅ Billing Summary (visible both in screen + print) */}
-          <section>
+
+            {/* Customer Info */}
+            <div className={styles.customerInfo}>
+              <div className="d-flex justify-content-between">
+                <div>
+                  <strong>Customer Name:</strong> {customerName || "-"}
+                </div>
+                <div>
+                  <strong>Mobile No.:</strong> {mobile || "-"}
+                </div>
+              </div>
+            </div>
+
+            {/* Billing Table */}
             <h3
               style={{
                 fontSize: "16px",
                 fontWeight: "700",
                 color: "#007bff",
-                paddingBottom: "4px",
                 marginBottom: "10px",
-                marginTop: "20px",
-                textTransform: "uppercase",
-                WebkitPrintColorAdjust: "exact",
-                display: "block",
               }}
             >
               Billing Summary
@@ -565,23 +299,23 @@ const BillPreviewModal: React.FC<BillPreviewModalProps> = ({
                 </tr>
               </thead>
               <tbody>
-                {translatedCart.map((translatedItem, idx) => {
-                  const total = translatedItem.qty * translatedItem.price;
-                  const discountAmount = translatedItem.Disc
-                    ? (total * translatedItem.Disc) / 100
+                {translatedCart.map((item, idx) => {
+                  const total = item.qty * item.price;
+                  const discountAmount = item.Disc
+                    ? (total * item.Disc) / 100
                     : 0;
                   const subtotal = total - discountAmount;
 
                   return (
                     <tr key={idx}>
-                      <td>{translatedItem.medicine_name}</td>
+                      <td>{item.medicine_name}</td>
                       <td>
-                        {translatedItem.pack_size
-                          ? `${translatedItem.pack_size} × ${translatedItem.qty}`
-                          : translatedItem.qty}
+                        {item.pack_size
+                          ? `${item.pack_size} × ${item.qty}`
+                          : item.qty}
                       </td>
-                      <td>{translatedItem.price}</td>
-                      <td>{translatedItem.Disc}</td>
+                      <td>{item.price}</td>
+                      <td>{item.Disc}</td>
                       <td>{subtotal.toFixed(2)}</td>
                     </tr>
                   );
@@ -596,212 +330,105 @@ const BillPreviewModal: React.FC<BillPreviewModalProps> = ({
                 </tr>
               </tfoot>
             </table>
-          </section>
-
-          {/* Page Break for print only */}
-          <div style={{ pageBreakBefore: "always" }}></div>
-
-          {/* 🌐 Language Dropdown (Visible on Screen, Hidden during Print) */}
-          <div className="d-flex justify-content-between align-items-center mb-3 print-hide">
-            {apiError && (
-              <small className="text-danger fw-semibold me-3">{apiError}</small>
-            )}
-            <select
-              className="form-select w-auto ms-auto" // ms-auto to push to right if error is shown
-              value={language}
-              onChange={(e) => handleLanguageChange(e.target.value)}
-              disabled={isTranslating}
-            >
-              {languageOptions.map((lang) => (
-                <option key={lang.code} value={lang.code}>
-                  {lang.name}
-                </option>
-              ))}
-            </select>
           </div>
 
-          {isTranslating ? (
-            <div className="text-center text-muted py-5">
-              Translating to{" "}
-              {languageOptions.find((l) => l.code === language)?.name} (Please
-              ensure your API key is valid)...
-            </div>
-          ) : (
-            <>
-              {/* Doses & Remarks Section: Print-friendly layout */}
-              <section className="print-only" style={{ marginTop: "20px" }}>
-                <h3
+          {/* PAGE BREAK */}
+          <div style={{ pageBreakBefore: "always" }}></div>
+
+          {/* ---------------- CARD SECTION (ONLY FOR PRINT LABEL) ---------------- */}
+          <div className="card-section" style={{ marginTop: 24 }}>
+            {translatedCart.map((item, idx) => (
+              <div
+                key={idx}
+                // SCREEN styling — border visible in modal. For print we inject CSS that removes border.
+                style={{
+                  width: 220, // purely for modal visual scale
+                  border: "1px solid #ccc",
+                  padding: 12,
+                  marginBottom: 12,
+                  borderRadius: 4,
+                  background: "#fff",
+                  display: "inline-block",
+                }}
+              >
+                {/* header (modal) */}
+                <div
                   style={{
-                    fontSize: "16px",
-                    fontWeight: "700",
-                    color: "#007bff",
-                    paddingBottom: "4px",
-                    marginTop: "25px",
-                    marginBottom: "10px",
-                    textTransform: "uppercase",
-                    WebkitPrintColorAdjust: "exact",
-                    display: "contents",
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
                   }}
                 >
-                  Doses & Remarks
-                  {language !== "en" && (
-                    <span className="text-primary">
-                      {" "}
-                      (in{" "}
-                      {languageOptions.find((l) => l.code === language)?.name})
-                    </span>
-                  )}
-                </h3>
-
-                <div
-                  className="dose-container"
-                  style={{ display: "block", marginTop: "13px" }}
-                >
-                  {translatedCart.map((item, idx) => (
-                    <div
-                      key={idx}
-                      className="print-card"
-                      style={{
-                        lineHeight: "1",
-                        height: "100%",
-                        width: "35% !important",
-                        borderRadius: "1px",
-                        fontSize: "12px",
-                      }}
-                    >
-                      <div
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "space-between",
-                        }}
-                      >
-                        <span style={{ textAlign: "left" }}>
-                          <Image
-                            src="/images/logo-bw-h.png"
-                            alt=""
-                            width="100px"
-                            height="35px"
-                          />
-                        </span>
-                        <span style={{ textAlign: "center" }}></span>
-                        <span
-                          style={{
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "flex-end",
-                            gap: "5px",
-                            fontSize: "12px",
-                          }}
-                        >
-                          <p style={{ marginBottom: "7px" }}>
-                            <strong>Date:</strong>{" "}
-                            {new Date().toLocaleDateString("en-GB", {
-                              day: "2-digit",
-                              month: "short",
-                              year: "numeric",
-                            })}
-                          </p>
-                        </span>
-                      </div>
-                      <hr style={{ marginTop: "4px", marginBottom: "6px" }} />
-                      <p style={{ marginBottom: "7px" }}>
-                        <strong>Patient:</strong> {customerName || "-"}
-                      </p>
-                      <p style={{ marginBottom: "7px" }}>
-                        <strong>Medicine:</strong> {item.medicine_name}
-                      </p>
-                      {/* <p style={{ marginBottom: "7px" }}>
-                        <strong>Generic:</strong>{" "}
-                        {item.generic_name || item.GenericName || "N/A"}
-                      </p> */}
-                      <p style={{ marginBottom: "7px" }}>
-                        <strong>Dose:</strong> {item.dose_form || "N/A"}
-                      </p>
-                      <p style={{ marginBottom: "7px" }}>
-                        <strong>Instruction:</strong> {item.remarks || "N/A"}
-                      </p>
-                      <p style={{ marginBottom: "2px" }}>
-                        <strong>Qty:</strong>{" "}
-                        {item.qty
-                          ? `${item.pack_size || "N/A"} × ${item.qty}`
-                          : "N/A"}
-                      </p>
-                      <br />
-                      <div
-                        style={{
-                          borderTop: "1px solid #ccc",
-                          textAlign: "center",
-                          padding: "5px 0",
-                          backgroundColor: "#fff",
-                        }}
-                      >
-                        <div
-                          className="card-webMob"
-                          style={{ fontSize: "9px", fontWeight: "bold" }}
-                        >
-                          www.tncpharmacy.in
-                        </div>
-                        <div
-                          className="card-webMob"
-                          style={{
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            gap: "6px",
-                            fontSize: "9px",
-                            marginTop: "4px",
-                          }}
-                        >
-                          {/* <Image
-                            src="/images/mobile-icon.png"
-                            alt="Phone"
-                            style={{
-                              width: "12px",
-                              height: "12px",
-                              objectFit: "contain",
-                              verticalAlign: "middle",
-                            }}
-                          /> */}
-                          <span style={{ verticalAlign: "middle" }}>
-                            24*7 Pharmacist Support: 9578458754
-                          </span>
-                        </div>
-                        <div
-                          className="card-getWell"
-                          style={{
-                            textAlign: "center",
-                            fontSize: "8px",
-                            marginTop: "5px",
-                            marginBottom: "0",
-                            paddingBottom: "0",
-                            fontStyle: "italic",
-                            fontWeight: "normal",
-                          }}
-                        >
-                          Get Well Soon
-                        </div>
-                      </div>
-                    </div>
-                  ))}
+                  <Image
+                    src="/images/logo-bw-h.png"
+                    alt="logo-bw"
+                    width={90}
+                    height={30}
+                  />
+                  <p className="date-text" style={{ fontSize: 12, margin: 0 }}>
+                    <strong>Date:</strong>{" "}
+                    {new Date().toLocaleDateString("en-GB", {
+                      day: "2-digit",
+                      month: "short",
+                      year: "numeric",
+                    })}
+                  </p>
                 </div>
-              </section>
-            </>
-          )}
+
+                {/* header line (visible in both modal and print) */}
+                <div style={{ borderTop: "1px solid #000", margin: "8px 0" }} />
+
+                <p style={{ margin: "2px 0" }}>
+                  <strong>Patient:</strong> {customerName}
+                </p>
+                <p style={{ margin: "2px 0" }}>
+                  <strong>UHID:</strong> {"UHID0001"}
+                </p>
+                <p style={{ margin: "2px 0" }}>
+                  <strong>Medicine:</strong> {item.medicine_name}
+                </p>
+                <p style={{ margin: "2px 0" }}>
+                  <strong>Dose:</strong> {item.dose_form}
+                </p>
+                <p style={{ margin: "2px 0" }}>
+                  <strong>Instruction:</strong> {item.remarks}
+                </p>
+                <p style={{ margin: "2px 0" }}>
+                  <strong>Qty:</strong>{" "}
+                  {item.pack_size
+                    ? `${item.pack_size} × ${item.qty}`
+                    : item.qty}
+                </p>
+
+                {/* footer line (visible in both modal and print) */}
+                <div
+                  style={{ borderTop: "1px solid #000", margin: "8px 0 6px 0" }}
+                />
+
+                {/* footer compact & centered */}
+                <p className="footer-website">www.tncpharmacy.in</p>
+                <p className="footer-support">24×7 Support: 7042079595</p>
+                <p className="footer-wish">Get Well Soon</p>
+              </div>
+            ))}
+          </div>
         </div>
       </Modal.Body>
 
+      {/* ---------------- FOOTER ---------------- */}
       <Modal.Footer className="border-0 pt-0">
         <button className="btn btn-outline-secondary" onClick={onClose}>
           Close
         </button>
-        <button
-          className="btn btn-primary"
-          onClick={handlePrint}
-          disabled={isTranslating}
-        >
-          <i className="bi bi-printer"></i>{" "}
-          {isTranslating ? "Translating..." : "Print"}
+
+        {/* 🟡 PRINT LABEL BUTTON */}
+        <button className="btn btn-warning" onClick={handlePrintLabel}>
+          Print Label
+        </button>
+
+        {/* 🔵 PRINT BILL BUTTON */}
+        <button className="btn btn-primary" onClick={handlePrintBill}>
+          Print Bill
         </button>
       </Modal.Footer>
     </Modal>

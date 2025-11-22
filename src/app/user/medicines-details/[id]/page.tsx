@@ -546,6 +546,10 @@ export default function ProductPage() {
                       <div className="descr">{manufacturer_name}</div>
                     </div>
                     <div className="mb-3">
+                      <div className="title">Pack Size</div>
+                      <div className="descr">{pack_size}</div>
+                    </div>
+                    <div className="mb-3">
                       <div className="title">Storage</div>
                       <div className="descr">{storage}</div>
                     </div>

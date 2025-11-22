@@ -9,12 +9,17 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@google-cloud/documentai": "^9.5.0",
+    "@google-cloud/storage": "^7.17.3",
+    "@google-cloud/vision": "^5.3.4",
     "@reduxjs/toolkit": "^2.8.2",
     "@vitalets/google-translate-api": "^9.2.1",
+    "axios": "^1.13.2",
     "bootstrap": "^5.3.7",
     "bootstrap-icons": "^1.13.1",
     "chart.js": "^4.5.0",
     "file-saver": "^2.0.5",
+    "formidable": "^3.5.4",
     "jwt-decode": "^4.0.0",
     "lucide-react": "^0.544.0",
     "next": "^15.5.4",
@@ -40,6 +45,7 @@
   "devDependencies": {
     "@eslint/eslintrc": "^3",
     "@types/file-saver": "^2.0.7",
+    "@types/formidable": "^3.4.6",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
