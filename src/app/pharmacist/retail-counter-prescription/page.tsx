@@ -19,19 +19,10 @@ import {
   buyerLogin,
   buyerRegister,
 } from "@/lib/features/buyerSlice/buyerSlice";
-import { BuyerApiResponse } from "@/types/buyer";
-import { PayloadAction } from "@reduxjs/toolkit";
-import { cleanOCRText, extractMedicines } from "@/lib/ocr/extractMedicines";
-import {
-  extractTableMedicines,
-  extractMedicineSection,
-} from "@/lib/ocr/extractTableMedicines";
 import {
   getProductByGenericId,
   getProductList,
 } from "@/lib/features/medicineSlice/medicineSlice";
-import TableLoader from "@/app/components/TableLoader/TableLoader";
-import Spinner from "@/app/components/Sppiner/Sppiner";
 import SingleSelectDropdown from "@/app/components/Input/SingleSelectDropdown";
 import { Medicine } from "@/types/medicine";
 import { OptionType } from "@/types/input";
@@ -39,6 +30,8 @@ import GenericOptionsModal from "@/app/components/RetailCounterModal/GenericOpti
 import AddBillingItemModal from "@/app/components/RetailCounterModal/AddBillingItemModal";
 import HealthBagPrescriptionModal from "@/app/components/RetailCounterModal/HealthBaPrescriptionModal";
 import BillPreviewModal from "@/app/components/RetailCounterModal/BillPreviewModal";
+import CartPreviewModal from "@/app/components/RetailCounterModal/CartPreviewModal";
+import { createPharmacistOrder } from "@/lib/features/pharmacistOrderSlice/pharmacistOrderSlice";
 const PreviewBox = dynamic(() => import("./PreviewBox"), {
   ssr: false,
 });
@@ -65,6 +58,19 @@ interface BillPreviewData {
   pharmacy_id: number;
 }
 
+export interface OCRMedicine {
+  product_id: number;
+  medicine_name: string;
+  category_id: number;
+  matched_with?: string;
+  confidence?: number;
+}
+interface MatchedMedicine {
+  id: number;
+  name: string;
+  category_id: number;
+}
+
 export default function RetailCounter() {
   const router = useRouter();
   const dispatch = useAppDispatch();
@@ -74,9 +80,14 @@ export default function RetailCounter() {
   const pharmacy_id = Number(userPharmacy?.pharmacy_id) || 0;
 
   const [customerName, setCustomerName] = useState("");
+  const [uhId, setUhId] = useState("");
   const [mobile, setMobile] = useState("");
   const [prescriptionFile, setPrescriptionFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string>("");
+
+  const [mobileError, setMobileError] = useState("");
+  const [isUploadEnabled, setIsUploadEnabled] = useState(false);
+  const [isMobileChecking, setIsMobileChecking] = useState(false);
 
   const [uploadedUrl, setUploadedUrl] = useState("");
   const [ocrText, setOcrText] = useState("");
@@ -93,6 +104,10 @@ export default function RetailCounter() {
     genericAlternatives: productListByGeneric,
     loading,
   } = useAppSelector((state) => state.medicine);
+
+  const { prescription, productList: backendMedicines } = useAppSelector(
+    (state) => state.pharmacistPrescription
+  );
 
   // Component States
   // selectedMedicine can be either a full DB Medicine (when chosen from dropdown)
@@ -118,59 +133,36 @@ export default function RetailCounter() {
     pharmacy_id: pharmacy_id || 1, // pharmacy_id defined earlier in your component
   });
   const [cart, setCart] = useState<MedicineWithCartFields[]>([]);
+  const [showBagModal, setShowBagModal] = useState(false);
+  const [isBillModalOpen, setIsBillModalOpen] = useState(false);
 
-  /* ---------------------------------------------------
-     OCR MAIN FUNCTIONS
-  --------------------------------------------------- */
+  const checkMobileInDB = async (value: string) => {
+    if (value.length !== 10) return;
 
-  // 🔹 COMMON OCR CALLER
-  const callOCR = async (formData: FormData) => {
+    setIsMobileChecking(true);
+    setMobileError("");
+
     try {
-      setLoadingOCR(true);
+      const res = await dispatch(buyerLogin({ login_id: value })).unwrap();
 
-      const res = await fetch("/api/google-vision", {
-        method: "POST",
-        body: formData,
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) throw new Error(data.error || "OCR API failed");
-      setOcrText(data.text || "");
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (e: any) {
-      console.error("Client OCR Error:", e.message);
-      toast.error("OCR failed: " + e.message);
-    } finally {
-      setLoadingOCR(false);
+      if (res?.data?.id) {
+        // Buyer mil gaya
+        setCustomerName(res.data.name || "");
+        setUhId(res.data.uhid || "");
+        setIsUploadEnabled(true);
+        setMobileError("");
+      } else {
+        // Buyer nahi mila
+        setMobileError("Mobile number does not exist.");
+        setIsUploadEnabled(true);
+      }
+    } catch (e) {
+      // Buyer not found
+      setMobileError("Mobile number does not exist.");
+      setIsUploadEnabled(true);
     }
-  };
 
-  // 🔹 OCR for File
-  const runOCR_File = async (file: File) => {
-    const formData = new FormData();
-    formData.append("file", file);
-    await callOCR(formData);
-  };
-
-  // 🔹 OCR for URL
-  const runOCR_URL = async (fileURL: string) => {
-    try {
-      const res = await fetch("/api/google-vision", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url: fileURL }),
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) throw new Error(data.error || "URL OCR failed");
-
-      setOcrText(data.text);
-    } catch (err) {
-      console.error("URL OCR Error:", err);
-      toast.error("OCR failed for URL: " + err);
-    }
+    setIsMobileChecking(false);
   };
 
   /* ---------------------------------------------------
@@ -183,72 +175,12 @@ export default function RetailCounter() {
     if (!file) return;
 
     setPrescriptionFile(file);
-    await runOCR_File(file); // start OCR immediately
   };
 
   useEffect(() => {
     dispatch(getProductList());
   }, [dispatch]);
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  function matchOCRWithDB(ocrText: string, dbList: any[]) {
-    if (!ocrText || dbList.length === 0) return [];
-
-    const text = ocrText.toString().toLowerCase();
-
-    const results: { id: number; name: string }[] = [];
-
-    for (const item of dbList) {
-      const medName = item.medicine_name?.toString().toLowerCase();
-
-      if (!medName) continue;
-
-      // full + partial match
-      if (
-        text.includes(medName) ||
-        text.replace(/\s+/g, "").includes(medName.replace(/\s+/g, "")) ||
-        (medName.split(" ")[0].length > 3 &&
-          text.includes(medName.split(" ")[0]))
-      ) {
-        results.push({
-          id: item.id,
-          name: item.medicine_name?.toString() || `${item.id}`,
-        });
-      }
-    }
-
-    return results;
-  }
-
-  useEffect(() => {
-    if (!ocrText || productList.length === 0) return;
-
-    setLoadingMedicines(true); // spinner start
-    setMatchedMedicines(null); // indicate loading state
-
-    const matches = matchOCRWithDB(ocrText, productList);
-
-    setMatchedMedicines(matches); // set results
-    setLoadingMedicines(false); // spinner stop
-  }, [ocrText, productList]);
-
-  /* ---------------------------------------------------
-     PAGE RELOAD → LOAD SAVED URL → RUN OCR
-  --------------------------------------------------- */
-  useEffect(() => {
-    const savedUrl = localStorage.getItem("presc_url");
-    const savedName = localStorage.getItem("customerName");
-    const savedMobile = localStorage.getItem("mobile");
-
-    if (savedUrl) {
-      setUploadedUrl(savedUrl);
-      setShowForm(false);
-      runOCR_URL(savedUrl);
-    }
-
-    if (savedName) setCustomerName(savedName);
-    if (savedMobile) setMobile(savedMobile);
-  }, []);
   const handleSubmit = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
 
@@ -272,6 +204,7 @@ export default function RetailCounter() {
           name: customerName,
           email: "",
           number: mobile,
+          uhid: uhId,
         };
         const regRes = await dispatch(buyerRegister(registerPayload)).unwrap();
         buyer_id = regRes?.data?.id;
@@ -300,15 +233,27 @@ export default function RetailCounter() {
 
       toast.success("Prescription uploaded!");
 
-      const fullUrl = mediaBase + uploadRes?.prescription_pic;
-      localStorage.setItem("presc_url", fullUrl);
-      localStorage.setItem("customerName", customerName);
-      localStorage.setItem("mobile", mobile);
-      localStorage.setItem("buyer_id", String(buyer_id));
-
-      setShowForm(false);
+      // 🔹 STEP 5: Build full image/PDF URL
+      const picPath =
+        uploadRes?.data?.prescription_pic || uploadRes?.prescription_pic || "";
+      const fullUrl = picPath.startsWith("http")
+        ? picPath
+        : mediaBase + picPath;
       setUploadedUrl(fullUrl);
-      runOCR_URL(fullUrl);
+      setShowForm(false);
+      // 🟢 Use backend OCR (medicines)
+      if (uploadRes?.product_list?.medicines) {
+        const meds: MatchedMedicine[] = uploadRes.product_list.medicines.map(
+          (m: OCRMedicine): MatchedMedicine => ({
+            id: m.product_id,
+            name: m.medicine_name,
+            category_id: m.category_id,
+          })
+        );
+
+        setMatchedMedicines(meds);
+      }
+
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       console.error("Upload Rejection Details:", err); // Log the full error object
@@ -363,7 +308,11 @@ export default function RetailCounter() {
     setIsQtyModalOpen(true);
   };
 
-  const handleMedicineClick = async (med: { id: number; name: string }) => {
+  const handleMedicineClick = async (med: {
+    id: number;
+    name: string;
+    category_id: number;
+  }) => {
     // med is from matchedMedicines (OCR). store small object
     setSelectedMedicine(med); // store selected object (OCR)
 
@@ -471,7 +420,7 @@ export default function RetailCounter() {
       pharmacy_id: pharmacy_id || 1,
     }));
 
-    setIsBillPreviewOpen(true);
+    setShowBagModal(true);
   };
 
   const handleBackToGeneric = () => {
@@ -479,10 +428,114 @@ export default function RetailCounter() {
     setIsModalOpen(true);
   };
 
-  // Placeholder for opening the health-bag / cart UI
-  const handleOpenHealthBag = () => {
-    console.log("Opening Health Bag Modal...");
-    setIsBillPreviewOpen(true);
+  const openBagModal = () => {
+    if (cart.length === 0) {
+      toast.error("Cart is empty!");
+      return;
+    }
+    setShowBagModal(true);
+  };
+
+  const handleCreateOrder = async () => {
+    try {
+      let buyerId = null;
+
+      const loginRes = await dispatch(
+        buyerLogin({ login_id: mobile })
+      ).unwrap();
+
+      if (loginRes?.data?.existing === true) {
+        buyerId = loginRes.data.id;
+      } else {
+        const regRes = await dispatch(
+          buyerRegister({
+            name: customerName,
+            email: "",
+            number: mobile,
+            uhid: uhId ?? "",
+          })
+        ).unwrap();
+        buyerId = regRes.data.id;
+      }
+
+      if (!buyerId) {
+        toast.error("Unable to fetch Buyer ID");
+        return false;
+      }
+
+      const products = cart.map((item) => {
+        const discountAmt = (item.price * (item.Disc ?? 0)) / 100;
+        const finalRate = (item.price - discountAmt) * item.qty;
+
+        return {
+          product_id: item.id,
+          quantity: String(item.qty),
+          mrp: String(item.price),
+          discount: String(item.Disc ?? 0),
+          rate: String(finalRate),
+          doses: item.dose_form,
+          instruction: item.remarks,
+          status: "1",
+        };
+      });
+
+      const grandTotal = cart.reduce((acc, item) => {
+        const total = item.qty * item.price;
+        const discountAmount = (total * (item.Disc ?? 0)) / 100;
+        return acc + (total - discountAmount);
+      }, 0);
+
+      const orderPayload = {
+        payment_mode: 1,
+        payment_status: "1",
+        amount: String(grandTotal),
+        order_type: 2,
+        pharmacy_id,
+        address_id: null,
+        status: "1",
+        products,
+      };
+
+      await dispatch(
+        createPharmacistOrder({
+          buyerId,
+          payload: orderPayload,
+        })
+      ).unwrap();
+      return true;
+    } catch (err) {
+      console.log(err);
+      toast.error("Order Creation Failed!");
+      return false;
+    }
+  };
+
+  const handleOpenBillModal = async () => {
+    const success = await handleCreateOrder();
+    if (success) {
+      setShowBagModal(false); // close bag modal
+      setBillPreviewData({
+        cart: cart, // always latest cart
+        customerName,
+        mobile,
+        pharmacy_id,
+      });
+
+      setIsBillPreviewOpen(true);
+    }
+  };
+  const handleRemoveItem = (index: number) => {
+    setCart((prevCart) => {
+      const updated = prevCart.filter((_, i) => i !== index);
+
+      // Bill Preview data ko sync karo
+      setBillPreviewData((prev) => ({
+        ...prev,
+        cart: updated,
+      }));
+
+      return updated;
+    });
   };
 
   return (
@@ -499,38 +552,40 @@ export default function RetailCounter() {
 
             <div className="card shadow-sm mb-4">
               <div className="card-body">
-                <div className="row g-3 align-items-end">
-                  <div className="col-md-8">
-                    <div className="txt_col">
-                      <SingleSelectDropdown
-                        medicines={productList}
-                        selected={
-                          selectedMedicine &&
-                          "medicine_name" in selectedMedicine
-                            ? {
-                                label: (selectedMedicine as Medicine)
-                                  .medicine_name,
-                                value: (selectedMedicine as Medicine).id,
-                              }
-                            : null
-                        }
-                        onChange={handleSelectMedicine}
-                      />
+                {!showForm && (
+                  <div className="row g-3 align-items-end">
+                    <div className="col-md-8">
+                      <div className="txt_col">
+                        <SingleSelectDropdown
+                          medicines={productList}
+                          selected={
+                            selectedMedicine &&
+                            "medicine_name" in selectedMedicine
+                              ? {
+                                  label: (selectedMedicine as Medicine)
+                                    .medicine_name,
+                                  value: (selectedMedicine as Medicine).id,
+                                }
+                              : null
+                          }
+                          onChange={handleSelectMedicine}
+                        />
+                      </div>
+                    </div>
+                    <div className="col-md-4 text-end">
+                      <div className="txt_col">
+                        {/* 🎯 Health Bag Button */}
+                        <button
+                          className="btn btn-primary px-4 mb-2"
+                          onClick={openBagModal}
+                          disabled={cart.length === 0}
+                        >
+                          🛒 Health Bag ({cart.length})
+                        </button>
+                      </div>
                     </div>
                   </div>
-                  <div className="col-md-4 text-end">
-                    <div className="txt_col">
-                      {/* 🎯 Health Bag Button */}
-                      <button
-                        className="btn btn-primary px-4 mb-2"
-                        onClick={handleOpenHealthBag}
-                        disabled={cart.length === 0}
-                      >
-                        🛒 Health Bag ({cart.length})
-                      </button>
-                    </div>
-                  </div>
-                </div>
+                )}
                 {/* ===========================
                 SHOW FORM OR OCR RESULT
             ============================ */}
@@ -543,20 +598,6 @@ export default function RetailCounter() {
                           <div className="col-md-6">
                             <div className="col-md-12">
                               <div className="txt_col">
-                                <label className="lbl1">
-                                  Upload Prescription
-                                </label>
-                                <input
-                                  type="file"
-                                  accept="image/*,.pdf"
-                                  className="form-control"
-                                  onChange={handlePrescriptionUpload}
-                                />
-                              </div>
-                            </div>
-
-                            <div className="col-md-12">
-                              <div className="txt_col">
                                 <label className="lbl1">Mobile No.</label>
                                 <input
                                   type="text"
@@ -566,29 +607,65 @@ export default function RetailCounter() {
                                     const value = e.target.value;
                                     if (/^\d{0,10}$/.test(value)) {
                                       setMobile(value);
+                                      if (value.length === 10) {
+                                        checkMobileInDB(value);
+                                      } else {
+                                        setIsUploadEnabled(false);
+                                        setMobileError("");
+                                      }
                                     }
                                   }}
                                   maxLength={10}
                                   required
                                 />
+                                {mobileError && (
+                                  <small className="text-danger">
+                                    {mobileError}
+                                  </small>
+                                )}
                               </div>
                             </div>
-
                             <div className="col-md-12">
                               <div className="txt_col">
-                                <label className="lbl1">Customer Name</label>
+                                <label className="lbl1">Patient Name</label>
                                 <input
                                   type="text"
                                   className="form-control"
                                   value={customerName}
-                                  onChange={(e) =>
-                                    setCustomerName(e.target.value)
-                                  }
+                                  onChange={(e) => {
+                                    setCustomerName(e.target.value);
+                                    setMobileError("");
+                                  }}
                                   required
                                 />
                               </div>
                             </div>
-
+                            <div className="col-md-12">
+                              <div className="txt_col">
+                                <label className="lbl1">UHID</label>
+                                <input
+                                  type="text"
+                                  className="form-control"
+                                  value={uhId}
+                                  onChange={(e) => setUhId(e.target.value)}
+                                  required
+                                />
+                              </div>
+                            </div>
+                            <div className="col-md-12">
+                              <div className="txt_col">
+                                <label className="lbl1">
+                                  Upload Prescription
+                                </label>
+                                <input
+                                  type="file"
+                                  accept="image/*,.pdf"
+                                  className="form-control"
+                                  disabled={!isUploadEnabled}
+                                  onChange={handlePrescriptionUpload}
+                                />
+                              </div>
+                            </div>
                             <div className="col-md-12">
                               <div className="txt_col">
                                 <button
@@ -613,47 +690,41 @@ export default function RetailCounter() {
                   <div className="row">
                     {/* LEFT SIDE: PRESCRIPTION PREVIEW */}
                     <div className="col-md-6">
-                      <h5 className="mb-3">Extracted Text (OCR)</h5>
+                      <h6 className="mb-3 fw-bold">Extracted Text (OCR)</h6>
 
                       {/* 1️⃣ Spinner always first priority */}
-                      {matchedMedicines === null || loadingMedicines ? (
-                        <div style={{ textAlign: "center", padding: "40px 0" }}>
-                          <Spinner />
-                          <div className="mt-3">Matching medicines...</div>
-                        </div>
-                      ) : matchedMedicines.length > 0 ? (
-                        /* 2️⃣ If medicines matched */
+
+                      {backendMedicines && backendMedicines.length > 0 ? (
                         <ListGroup>
-                          {matchedMedicines.map((med) => (
+                          {backendMedicines.map((m) => (
                             <ListGroup.Item
                               action
-                              key={med.id}
-                              onClick={() => handleMedicineClick(med)}
+                              key={m.product_id}
+                              onClick={() =>
+                                handleMedicineClick({
+                                  id: m.product_id,
+                                  name: m.medicine_name,
+                                  category_id: m.category_id,
+                                })
+                              }
                             >
-                              {med.name}
+                              {m.medicine_name}
                             </ListGroup.Item>
                           ))}
                         </ListGroup>
                       ) : (
-                        /* 3️⃣ If no medicines AFTER loading */
-                        <p>No medicines found</p>
+                        <p>No medicines detected by OCR</p>
                       )}
                     </div>
                     {/* RIGHT SIDE: OCR OUTPUT */}
                     <div className="col-md-6">
-                      <h5 className="mb-3">Prescription Preview</h5>
-                      {uploadedUrl?.toLowerCase().endsWith(".pdf") ? (
+                      <h6 className="mb-3 fw-bold">Prescription Preview</h6>
+                      {uploadedUrl && (
                         <embed
-                          src={uploadedUrl}
+                          src={`${uploadedUrl}#toolbar=0&navpanes=0&scrollbar=0`}
                           type="application/pdf"
                           width="100%"
                           height="600px"
-                        />
-                      ) : (
-                        <Image
-                          src={uploadedUrl}
-                          style={{ width: "100%", borderRadius: 8 }}
-                          alt=""
                         />
                       )}
                     </div>
@@ -689,6 +760,13 @@ export default function RetailCounter() {
           toast.success("Items added to patient Health Bag!");
           setIsHealthBagModalOpen(false);
         }}
+      />
+      <CartPreviewModal
+        show={showBagModal}
+        onClose={() => setShowBagModal(false)}
+        cart={cart}
+        onGenerate={handleOpenBillModal}
+        onRemove={handleRemoveItem}
       />
       <BillPreviewModal
         show={isBillPreviewOpen}

@@ -20,6 +20,7 @@ interface CartItem {
   dose_form: string;
   Disc: number;
   remarks: string;
+  // duration: string;
 }
 
 interface BillPreviewModalProps {
@@ -40,18 +41,187 @@ const BillPreviewModal: React.FC<BillPreviewModalProps> = ({
 }) => {
   const printRef = useRef<HTMLDivElement>(null);
   const dispatch = useAppDispatch();
-
+  // --- Translation State and Logic ---
   const [language, setLanguage] = useState("en");
   const [translatedCart, setTranslatedCart] = useState<CartItem[]>(cart || []);
   const [isTranslating, setIsTranslating] = useState(false);
+  // State to show API access warning on UI
   const [apiError, setApiError] = useState<string | null>(null);
+
+  // Available languages
+  const languageOptions = [
+    { code: "en", name: "English" },
+    { code: "es", name: "Spanish" },
+    { code: "fr", name: "French" },
+    { code: "hi", name: "Hindi" },
+    { code: "gu", name: "Gujarati" },
+    { code: "mr", name: "Marathi" },
+    { code: "ta", name: "Tamil" },
+  ];
+  // google api for translating language
+  const apiKey = "AIzaSyDgglnyLRjpHWHRNE8WEacdjnx0XKYyR4w";
+  const modelName = "gemini-2.5-flash-preview-09-2025";
+  const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
 
   useEffect(() => {
     if (!show) return;
-    setTranslatedCart(cart || []);
+    const updatedCart = (cart || []).map((i) => ({
+      ...i,
+      //duration: i.duration || "3 days", // <-- DUMMY SET
+    }));
+
+    setTranslatedCart(updatedCart);
     setLanguage("en");
     setApiError(null);
   }, [show, cart]);
+
+  // Helper function for reliable fetching with exponential backoff
+  const exponentialBackoffFetch = async (
+    url: string,
+    options: RequestInit,
+    maxRetries = 5
+  ) => {
+    for (let i = 0; i < maxRetries; i++) {
+      try {
+        const response = await fetch(url, options);
+
+        if (response.status === 403) {
+          // Throw specific error for 403
+          throw new Error(
+            "API Access Forbidden (403). Check API Key/Permissions."
+          );
+        }
+
+        if (response.status === 429) {
+          // Rate limit
+          throw new Error("Rate limit exceeded");
+        }
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response;
+      } catch (error) {
+        if (i < maxRetries - 1) {
+          const delay = Math.pow(2, i) * 1000 + Math.random() * 1000;
+          await new Promise((resolve) => setTimeout(resolve, delay));
+        } else {
+          // If 403 error, throw immediately (no retry needed)
+          if (error instanceof Error && error.message.includes("403")) {
+            throw error;
+          }
+          throw error;
+        }
+      }
+    }
+    // This line is unreachable but satisfies TS
+    throw new Error("Fetch failed after all retries.");
+  };
+
+  // Translation Logic using Gemini API
+  const translateText = async (text: string, targetLang: string) => {
+    if (!text || targetLang === "en") return text;
+    try {
+      setApiError(null); // Clear previous UI error on new attempt
+      const targetLanguageName =
+        languageOptions.find((l) => l.code === targetLang)?.name || targetLang;
+
+      const systemPrompt = `You are an expert translator. Your task is to accurately translate the provided English text into the target language. Respond ONLY with the translated text, without any introductory phrases, explanations, or quotes.`;
+      const userQuery = `Translate the following phrase into ${targetLanguageName}: "${text}"`;
+
+      const payload = {
+        contents: [{ parts: [{ text: userQuery }] }],
+        systemInstruction: { parts: [{ text: systemPrompt }] },
+      };
+
+      const response = await exponentialBackoffFetch(apiUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      const result = await response.json();
+      const translatedText = result.candidates?.[0]?.content?.parts?.[0]?.text;
+
+      if (translatedText) {
+        // Clean up any stray quotation marks or newlines added by the model
+        return translatedText.trim().replace(/^['"]|['"]$/g, "");
+      }
+
+      console.error("Gemini Translation failed: No text received", result);
+      return text; // Fallback to original text
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : "Unknown error";
+
+      // If 403 error, set UI error state
+      if (errorMessage.includes("403")) {
+        setApiError(
+          `Translation failed: ${errorMessage} Please check your Gemini API status.`
+        );
+      }
+
+      console.error(`🔴 Translation failed due to API Error: ${errorMessage}`);
+      return text; // Fallback to original text on API error
+    }
+  };
+
+  // 🔄 Handle language change and trigger translation
+  const handleLanguageChange = async (lang: string) => {
+    setLanguage(lang);
+    setApiError(null); // Clear error when trying new lang
+
+    // If english selected, just revert to original cart (ensure default durations present)
+    if (lang === "en") {
+      // Ensure each item has a duration fallback (already set in useEffect on open)
+      setTranslatedCart(
+        (cart || []).map((i) => ({
+          ...i,
+          // duration: i.duration || "3 days",
+        }))
+      );
+      return;
+    }
+
+    setIsTranslating(true);
+
+    const itemsToTranslate = (cart || []).map((i) => ({
+      ...i,
+      //duration: i.duration || "3 days",
+    }));
+
+    // translate remarks + duration (medicine_name left unchanged if you only want remarks+duration)
+    const translationResults = await Promise.allSettled(
+      itemsToTranslate.map(async (item) => {
+        // translate only remarks & duration (leave medicine_name and dose_form unchanged)
+        const translatedRemarks = await translateText(item.remarks || "", lang);
+        // const translatedDuration = await translateText(
+        //   item.duration || "3 days",
+        //   lang
+        // );
+
+        return {
+          ...item,
+          // keep medicine_name and dose_form as original
+          medicine_name: item.medicine_name,
+          dose_form: item.dose_form,
+          // set translated fields
+          remarks: translatedRemarks || item.remarks,
+          //  duration: translatedDuration || item.duration,
+        } as CartItem;
+      })
+    );
+
+    // keep indices aligned so fallback uses correct item
+    const successfulTranslations = translationResults.map((res, idx) =>
+      res.status === "fulfilled"
+        ? (res as PromiseFulfilledResult<CartItem>).value
+        : itemsToTranslate[idx]
+    );
+
+    setTranslatedCart(successfulTranslations as CartItem[]);
+    setIsTranslating(false);
+  };
+
+  // --- End Translation Logic ---
 
   // 🔵 PRINT BILL — ONLY BILL SECTION
   const handlePrintBill = () => {
@@ -90,17 +260,25 @@ const BillPreviewModal: React.FC<BillPreviewModalProps> = ({
     const bill = printRef.current;
     if (!bill) return;
 
-    const cardHtml = bill.querySelector(".card-section")?.innerHTML || "";
+    const cardSection = bill.querySelector(".card-section");
+    if (!cardSection) return;
 
-    const win = window.open("", "_blank", "width=400,height=600");
+    const children = Array.from(cardSection.children);
+
+    const pagesHtml = children
+      .map((child) => {
+        return `<div class="print-card">${child.outerHTML}</div>`;
+      })
+      .join("");
+
+    const win = window.open("", "_blank", "width=600,height=800");
     if (!win) return;
 
     win.document.write(`
     <html>
     <head>
-      <title>Label</title>
       <style>
-        * {
+       * {
           margin: 0;
           padding: 0;
           box-sizing: border-box;
@@ -123,6 +301,8 @@ const BillPreviewModal: React.FC<BillPreviewModalProps> = ({
           background: #fff !important;
         }
 
+        @page { size: 60mm 50mm; margin: 0; }
+
         .print-card {
           width: 60mm !important;
           height: 50mm !important;
@@ -137,8 +317,7 @@ const BillPreviewModal: React.FC<BillPreviewModalProps> = ({
           box-shadow: none !important;
           background: #fff !important;
         }
-
-        .label-header {
+.label-header {
           display: flex;
           justify-content: space-between;
           align-items: center;
@@ -183,22 +362,30 @@ const BillPreviewModal: React.FC<BillPreviewModalProps> = ({
           size: 60mm 50mm;
           margin: 0;
         }
+        /* KEEP YOUR ORIGINAL DESIGN — do not override child styles */
+        body {
+          -webkit-print-color-adjust: exact;
+        }
+
       </style>
     </head>
 
     <body>
-      <div class="print-card">
-        ${cardHtml}
-      </div>
+      ${pagesHtml}
     </body>
     </html>
   `);
 
     win.document.close();
+
     setTimeout(() => {
+      win.focus();
       win.print();
-      win.close();
-    }, 300);
+      // 🟢 AUTO CLOSE AFTER PRINT DIALOG CLOSES (Cancel OR Print)
+      setTimeout(() => {
+        win.close();
+      }, 100);
+    }, 250);
   };
 
   const grandTotal = (cart || []).reduce((acc, item) => {
@@ -334,84 +521,123 @@ const BillPreviewModal: React.FC<BillPreviewModalProps> = ({
 
           {/* PAGE BREAK */}
           <div style={{ pageBreakBefore: "always" }}></div>
-
-          {/* ---------------- CARD SECTION (ONLY FOR PRINT LABEL) ---------------- */}
-          <div className="card-section" style={{ marginTop: 24 }}>
-            {translatedCart.map((item, idx) => (
-              <div
-                key={idx}
-                // SCREEN styling — border visible in modal. For print we inject CSS that removes border.
-                style={{
-                  width: 220, // purely for modal visual scale
-                  border: "1px solid #ccc",
-                  padding: 12,
-                  marginBottom: 12,
-                  borderRadius: 4,
-                  background: "#fff",
-                  display: "inline-block",
-                }}
-              >
-                {/* header (modal) */}
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                  }}
-                >
-                  <Image
-                    src="/images/logo-bw-h.png"
-                    alt="logo-bw"
-                    width={90}
-                    height={30}
-                  />
-                  <p className="date-text" style={{ fontSize: 12, margin: 0 }}>
-                    <strong>Date:</strong>{" "}
-                    {new Date().toLocaleDateString("en-GB", {
-                      day: "2-digit",
-                      month: "short",
-                      year: "numeric",
-                    })}
-                  </p>
-                </div>
-
-                {/* header line (visible in both modal and print) */}
-                <div style={{ borderTop: "1px solid #000", margin: "8px 0" }} />
-
-                <p style={{ margin: "2px 0" }}>
-                  <strong>Patient:</strong> {customerName}
-                </p>
-                <p style={{ margin: "2px 0" }}>
-                  <strong>UHID:</strong> {"UHID0001"}
-                </p>
-                <p style={{ margin: "2px 0" }}>
-                  <strong>Medicine:</strong> {item.medicine_name}
-                </p>
-                <p style={{ margin: "2px 0" }}>
-                  <strong>Dose:</strong> {item.dose_form}
-                </p>
-                <p style={{ margin: "2px 0" }}>
-                  <strong>Instruction:</strong> {item.remarks}
-                </p>
-                <p style={{ margin: "2px 0" }}>
-                  <strong>Qty:</strong>{" "}
-                  {item.pack_size
-                    ? `${item.pack_size} × ${item.qty}`
-                    : item.qty}
-                </p>
-
-                {/* footer line (visible in both modal and print) */}
-                <div
-                  style={{ borderTop: "1px solid #000", margin: "8px 0 6px 0" }}
-                />
-
-                {/* footer compact & centered */}
-                <p className="footer-website">www.tncpharmacy.in</p>
-                <p className="footer-support">24×7 Support: 7042079595</p>
-                <p className="footer-wish">Get Well Soon</p>
-              </div>
-            ))}
+          {/* 🌐 Language Dropdown (Visible on Screen, Hidden during Print) */}
+          <div className="d-flex justify-content-between align-items-center mb-3 print-hide">
+            {apiError && (
+              <small className="text-danger fw-semibold me-3">{apiError}</small>
+            )}
+            <select
+              className="form-select w-auto ms-auto" // ms-auto to push to right if error is shown
+              value={language}
+              onChange={(e) => handleLanguageChange(e.target.value)}
+              disabled={isTranslating}
+            >
+              {languageOptions.map((lang) => (
+                <option key={lang.code} value={lang.code}>
+                  {lang.name}
+                </option>
+              ))}
+            </select>
           </div>
+
+          {isTranslating ? (
+            <div className="text-center text-muted py-5">
+              Translating to{" "}
+              {languageOptions.find((l) => l.code === language)?.name} (Please
+              ensure your API key is valid)...
+            </div>
+          ) : (
+            <>
+              {/* ---------------- CARD SECTION (ONLY FOR PRINT LABEL) ---------------- */}
+              <div className="card-section" style={{ marginTop: 24 }}>
+                {translatedCart.map((item, idx) => (
+                  <div
+                    key={idx}
+                    style={{
+                      width: 220, // purely for modal visual scale
+                      border: "1px solid #ccc",
+                      padding: 12,
+                      marginBottom: 12,
+                      borderRadius: 4,
+                      background: "#fff",
+                      display: "inline-block",
+                    }}
+                  >
+                    {/* header (modal) */}
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                      }}
+                    >
+                      <Image
+                        src="/images/logo-bw-h.png"
+                        alt="logo-bw"
+                        width={90}
+                        height={30}
+                      />
+                      <p
+                        className="date-text"
+                        style={{ fontSize: 12, margin: 0 }}
+                      >
+                        <strong>Date:</strong>{" "}
+                        {new Date().toLocaleDateString("en-GB", {
+                          day: "2-digit",
+                          month: "short",
+                          year: "numeric",
+                        })}
+                      </p>
+                    </div>
+
+                    {/* header line (visible in both modal and print) */}
+                    <div
+                      style={{ borderTop: "1px solid #000", margin: "8px 0" }}
+                    />
+
+                    <p style={{ margin: "2px 0" }}>
+                      <strong>Patient:</strong> {customerName}
+                    </p>
+                    <p style={{ margin: "2px 0" }}>
+                      <strong>UHID:</strong> {"UHID0001"}
+                    </p>
+                    <p style={{ margin: "2px 0" }}>
+                      <strong>Medicine:</strong> {item.medicine_name}
+                    </p>
+                    <p style={{ margin: "2px 0" }}>
+                      <strong>Dose:</strong> {item.dose_form}
+                    </p>
+                    <p style={{ margin: "2px 0" }}>
+                      <strong>Instruction:</strong> {item.remarks}
+                    </p>
+                    <p style={{ margin: "2px 0" }}>
+                      <strong>Duration:</strong> {"item.duration"}
+                    </p>
+
+                    <p style={{ margin: "2px 0" }}>
+                      <strong>Qty:</strong>{" "}
+                      {item.pack_size
+                        ? `${item.pack_size} × ${item.qty}`
+                        : item.qty}
+                    </p>
+
+                    {/* footer line (visible in both modal and print) */}
+                    <div
+                      style={{
+                        borderTop: "1px solid #000",
+                        margin: "8px 0 6px 0",
+                      }}
+                    />
+
+                    {/* footer compact & centered */}
+                    <p className="footer-website">www.tncpharmacy.in</p>
+                    <p className="footer-support">24×7 Support: 7042079595</p>
+                    <p className="footer-wish">Get Well Soon</p>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
         </div>
       </Modal.Body>
 

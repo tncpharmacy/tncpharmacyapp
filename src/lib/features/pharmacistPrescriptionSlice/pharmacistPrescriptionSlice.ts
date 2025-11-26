@@ -3,6 +3,7 @@ import { PrescriptionItem } from "@/types/prescription";
 import {
   fetchPrescriptionListPharmacist,
   receivePrescriptionByPharmacist,
+  ReceivePrescriptionResponse,
   uploadPrescriptionByPharmacist,
 } from "@/lib/api/pharmacistPrescription";
 
@@ -18,6 +19,13 @@ interface PharmacistPrescriptionState {
   uploadLoading: boolean;
   uploadError: string | null;
   lastUploaded: PrescriptionItem | null;
+
+  loading: boolean;
+  error: string | null;
+  prescription: PrescriptionItem | null;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  productList: any[];
+  totalMedicinesFound: number;
 }
 
 const initialState: PharmacistPrescriptionState = {
@@ -32,6 +40,13 @@ const initialState: PharmacistPrescriptionState = {
   uploadLoading: false,
   uploadError: null,
   lastUploaded: null,
+
+  loading: false,
+  error: null,
+  prescription: null,
+  productList: [],
+
+  totalMedicinesFound: 0,
 };
 
 // 🔹 Thunks
@@ -52,18 +67,18 @@ export const getPrescriptionListPharmacistThunk = createAsyncThunk<
 });
 
 export const receivePrescriptionThunk = createAsyncThunk<
-  PrescriptionItem,
+  ReceivePrescriptionResponse,
   { prescriptionId: number; pharmacistId: number },
   { rejectValue: string }
 >(
   "pharmacistPrescription/receive",
   async ({ prescriptionId, pharmacistId }, { rejectWithValue }) => {
     try {
-      const data = await receivePrescriptionByPharmacist(
+      const res = await receivePrescriptionByPharmacist(
         prescriptionId,
         pharmacistId
       );
-      return data;
+      return res;
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       return rejectWithValue(
@@ -75,7 +90,8 @@ export const receivePrescriptionThunk = createAsyncThunk<
 
 // 🔹 Upload Prescription (after Excel import)
 export const uploadPrescriptionPharmacistThunk = createAsyncThunk<
-  PrescriptionItem,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  any,
   {
     pharmacistId: number;
     payload: FormData;
@@ -85,8 +101,8 @@ export const uploadPrescriptionPharmacistThunk = createAsyncThunk<
   "pharmacistPrescription/upload",
   async ({ pharmacistId, payload }, { rejectWithValue }) => {
     try {
-      const data = await uploadPrescriptionByPharmacist(pharmacistId, payload);
-      return data;
+      const res = await uploadPrescriptionByPharmacist(pharmacistId, payload);
+      return res;
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       return rejectWithValue(
@@ -131,40 +147,37 @@ const pharmacistPrescriptionSlice = createSlice({
       });
 
     // 🔹 Receive prescription
-    builder
-      .addCase(receivePrescriptionThunk.pending, (state) => {
-        state.receiveLoading = true;
-        state.receiveError = null;
-      })
-      .addCase(receivePrescriptionThunk.fulfilled, (state, action) => {
-        state.receiveLoading = false;
-        state.lastReceived = action.payload;
+    builder.addCase(receivePrescriptionThunk.fulfilled, (state, action) => {
+      state.receiveLoading = false;
 
-        // Update the item in the list
-        const index = state.list.findIndex((p) => p.id === action.payload.id);
-        if (index !== -1) {
-          state.list[index] = action.payload;
-        }
-      })
-      .addCase(receivePrescriptionThunk.rejected, (state, action) => {
-        state.receiveLoading = false;
-        state.receiveError = action.payload || "Error receiving prescription";
-      });
+      const received = action.payload.data;
+      const productList = action.payload.product_list.medicines;
+
+      // save received prescription
+      state.lastReceived = received;
+
+      // update list
+      const index = state.list.findIndex((p) => p.id === received.id);
+      if (index !== -1) {
+        state.list[index] = received;
+      }
+
+      // save product_list from OCR
+      state.productList = productList;
+      state.totalMedicinesFound =
+        action.payload.product_list.total_medicines_found;
+    });
     // 🔹 Upload prescription
+    builder.addCase(uploadPrescriptionPharmacistThunk.pending, (state) => {
+      state.uploadLoading = true;
+      state.uploadError = null;
+    });
     builder
-      .addCase(uploadPrescriptionPharmacistThunk.pending, (state) => {
-        state.uploadLoading = true;
-        state.uploadError = null;
-      })
       .addCase(uploadPrescriptionPharmacistThunk.fulfilled, (state, action) => {
-        state.uploadLoading = false;
-        state.lastUploaded = action.payload;
+        state.loading = false;
 
-        // Update list item after upload
-        const index = state.list.findIndex((p) => p.id === action.payload.id);
-        if (index !== -1) {
-          state.list[index] = action.payload;
-        }
+        state.prescription = action.payload.data; // prescription object
+        state.productList = action.payload.product_list?.medicines || []; // medicines list
       })
       .addCase(uploadPrescriptionPharmacistThunk.rejected, (state, action) => {
         state.uploadLoading = false;

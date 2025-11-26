@@ -12,6 +12,7 @@ export const buyerRegisterApi = async (payload: {
   name: string;
   email: string;
   number: string;
+  uhid: string;
 }) => {
   return axiosInstance.post(ENDPOINTS.BUYER.CREATE, payload);
 };

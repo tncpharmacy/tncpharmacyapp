@@ -56,12 +56,46 @@ export default function RetailCounter() {
 
   const [customerName, setCustomerName] = useState("");
   const [mobile, setMobile] = useState("");
+  const [uhId, setUhId] = useState("");
+
+  const [mobileError, setMobileError] = useState("");
+  const [isUploadEnabled, setIsUploadEnabled] = useState(false);
+  const [isMobileChecking, setIsMobileChecking] = useState(false);
 
   // Initial product list fetch
   useEffect(() => {
     dispatch(getProductList());
     //dispatch(getPharmacy());
   }, [dispatch]);
+
+  const checkMobileInDB = async (value: string) => {
+    if (value.length !== 10) return;
+
+    setIsMobileChecking(true);
+    setMobileError("");
+
+    try {
+      const res = await dispatch(buyerLogin({ login_id: value })).unwrap();
+
+      if (res?.data?.id) {
+        // Buyer mil gaya
+        setCustomerName(res.data.name || "");
+        setUhId(res.data.uhid || "");
+        setIsUploadEnabled(true);
+        setMobileError("");
+      } else {
+        // Buyer nahi mila
+        setMobileError("Mobile number does not exist.");
+        setIsUploadEnabled(true);
+      }
+    } catch (e) {
+      // Buyer not found
+      setMobileError("Mobile number does not exist.");
+      setIsUploadEnabled(true);
+    }
+
+    setIsMobileChecking(false);
+  };
 
   const handleSkipGenericModal = (item: Medicine) => {
     const itemWithGeneric = {
@@ -193,6 +227,7 @@ export default function RetailCounter() {
             name: customerName,
             email: "",
             number: mobile,
+            uhid: uhId,
           })
         ).unwrap();
 
@@ -235,7 +270,7 @@ export default function RetailCounter() {
         amount: String(grandTotal),
         order_type: 2,
         pharmacy_id: pharmacy_id,
-        address_id: 1,
+        address_id: null,
         status: "1",
         products,
       };
@@ -247,8 +282,6 @@ export default function RetailCounter() {
           payload: orderPayload,
         })
       ).unwrap();
-
-      toast.success("Order Created Successfully! 🧾✨");
       return true;
     } catch (err) {
       toast.error("Order Creation Failed!");
@@ -343,24 +376,47 @@ export default function RetailCounter() {
                             value={mobile}
                             onChange={(e) => {
                               const value = e.target.value;
-                              // Allow only digits and limit to 10
                               if (/^\d{0,10}$/.test(value)) {
                                 setMobile(value);
+                                if (value.length === 10) {
+                                  checkMobileInDB(value);
+                                } else {
+                                  setIsUploadEnabled(false);
+                                  setMobileError("");
+                                }
                               }
                             }}
                             maxLength={10}
+                            required
+                          />
+                          {mobileError && (
+                            <small className="text-danger">{mobileError}</small>
+                          )}
+                        </div>
+                      </div>
+                      <div className="col-md-4">
+                        <div className="txt_col">
+                          <label className="lbl1">Patient Name</label>
+                          <input
+                            type="text"
+                            className="form-control"
+                            value={customerName}
+                            onChange={(e) => {
+                              setCustomerName(e.target.value);
+                              setMobileError("");
+                            }}
                             required
                           />
                         </div>
                       </div>
                       <div className="col-md-4">
                         <div className="txt_col">
-                          <label className="lbl1">Customer Name</label>
+                          <label className="lbl1">UHID</label>
                           <input
                             type="text"
                             className="form-control"
-                            value={customerName}
-                            onChange={(e) => setCustomerName(e.target.value)}
+                            value={uhId}
+                            onChange={(e) => setUhId(e.target.value)}
                             required
                           />
                         </div>

@@ -104,52 +104,46 @@ export default function PatientPrescriptionModal({
   };
 
   const handleReceiveAndOCR = async (prescription: PrescriptionItem) => {
-    const originalPath = prescription.prescription_pic;
-
-    // Clean path from the backend
-    const mediaPath = originalPath.replace(/^\/+/, ""); // remove starting "/"
-
-    const realURL = `${mediaBase}/${mediaPath}`;
-
-    // Environment-aware URL
-    const finalFileUrl =
-      process.env.NODE_ENV === "development"
-        ? `/api/proxy?url=${encodeURIComponent(realURL)}`
-        : realURL;
-
-    console.log("✅ FINAL PDF URL =", finalFileUrl);
-
     try {
-      await dispatch(
+      const res = await dispatch(
         receivePrescriptionThunk({
           prescriptionId: prescription.id,
           pharmacistId: Number(pharmacistId),
         })
       ).unwrap();
 
-      if (onClose) {
-        onClose();
+      if (onClose) onClose();
+
+      // 🔥 1. Prescription pic from backend
+      const pic = res?.data?.prescription_pic || "";
+
+      // 🔥 2. Build full image URL using media base
+      const mediaBase = process.env.NEXT_PUBLIC_MEDIA_BASE_URL;
+
+      let fullImageUrl = "";
+      if (pic.startsWith("/")) {
+        fullImageUrl = `${mediaBase}${pic}`;
+      } else {
+        fullImageUrl = pic;
       }
 
+      // 🔥 3. Encode for safe URL
+      const encoded = encodeURIComponent(fullImageUrl);
+
+      // 🔥 4. Redirect
       router.push(
-        `/pharmacist/ocr-extraction?id=${
-          prescription.id
-        }&imageUrl=${encodeURIComponent(finalFileUrl)}&buyerName=${
-          prescription.buyer_name
-        }&buyerMobile=${prescription.buyer_number}&buyerId=${
-          prescription.buyer
-        }`
+        `/pharmacist/ocr-extraction?id=${prescription.id}&buyerId=${res.data.buyer}&imageUrl=${encoded}`
       );
     } catch (error) {
-      console.error("Receive/Navigation Failed:", error);
-      alert("Failed to receive prescription or initiate process.");
+      console.error("Receive Failed:", error);
+      alert("Failed to receive prescription.");
     }
   };
 
   return (
     <>
       <div className="pageTitle mb-2">
-        <i className="bi bi-receipt"></i> Patient Prescription Summary
+        <i className="bi bi-receipt"></i> Prescription Summary
       </div>
 
       <div className="row mb-3">

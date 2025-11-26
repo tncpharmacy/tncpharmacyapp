@@ -13,11 +13,26 @@ export const fetchPrescriptionListPharmacist = async (): Promise<
   return response.data.data; // backend response
 };
 
-// ✅ Mark prescription as received
+export interface OCRProduct {
+  product_id: number;
+  medicine_name: string;
+  category_id: number;
+  matched_with: string;
+  confidence: number;
+}
+
+export interface ReceivePrescriptionResponse {
+  data: PrescriptionItem;
+  product_list: {
+    total_medicines_found: number;
+    medicines: OCRProduct[];
+  };
+}
+
 export const receivePrescriptionByPharmacist = async (
   prescriptionId: number,
   pharmacistId: number
-): Promise<PrescriptionItem> => {
+): Promise<ReceivePrescriptionResponse> => {
   const response = await api.put(
     ENDPOINTS.PRESCRIPTION_UPLOAD.PRESCRIPTION_RECEIVED_BY_PHARMACIST(
       prescriptionId
@@ -27,14 +42,18 @@ export const receivePrescriptionByPharmacist = async (
     }
   );
 
-  return response.data.data; // backend response
+  return {
+    data: response.data.data,
+    product_list: response.data.product_list,
+  };
 };
 
 // ✅ Upload prescription by pharmacist
 export const uploadPrescriptionByPharmacist = async (
   pharmacistId: number,
   payload: FormData
-): Promise<PrescriptionItem> => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+): Promise<any> => {
   const response = await api.post(
     ENDPOINTS.PRESCRIPTION_UPLOAD.PRESCRIPTION_UPLOAD_BY_PHARMACIST(
       pharmacistId
@@ -52,10 +71,11 @@ export const uploadPrescriptionByPharmacist = async (
           return JSON.parse(data);
         },
       ],
-      validateStatus: function (status) {
-        return status >= 200 && status < 300;
-      },
+      validateStatus: (status) => status >= 200 && status < 300,
     }
   );
-  return response.data.data;
+
+  // ⛔ Wrong earlier: return response.data.data;
+  // ✅ Correct:
+  return response.data;
 };

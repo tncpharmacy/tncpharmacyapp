@@ -2,29 +2,47 @@
 
 import { useSearchParams } from "next/navigation";
 import dynamic from "next/dynamic";
-import { Container, Row, Col, Alert, Spinner, Card } from "react-bootstrap";
+import { Container, Row, Alert, Spinner } from "react-bootstrap";
 import Link from "next/link";
 import Header from "../components/Header/page";
 import SideNav from "../components/SideNav/page";
+import { useAppSelector } from "@/lib/hooks";
+import { useEffect, useState } from "react";
 
 const DynamicOcrLogic = dynamic(() => import("./OcrExtractionLogic"), {
   ssr: false,
   loading: () => (
     <div className="text-center mt-5">
       <Spinner animation="border" className="mb-2" />
-      <p>Initializing OCR Engine...</p>
+      <p>Loading Prescription...</p>
     </div>
   ),
 });
 
 const OcrExtractionPage: React.FC = () => {
   const searchParams = useSearchParams();
-  const imageUrl = searchParams.get("imageUrl");
   const prescriptionId = searchParams.get("id");
+
   const buyerId = searchParams.get("buyerId");
   const buyerName = searchParams.get("buyerName");
   const buyerMobile = searchParams.get("buyerMobile");
-  //const buyerEmail = searchParams.get("buyer_email");
+  const [buyer, setBuyer] = useState(null);
+
+  const mediaBase = process.env.NEXT_PUBLIC_MEDIA_BASE_URL;
+  const encodedUrl = searchParams.get("imageUrl");
+
+  let imageUrl = "";
+  if (encodedUrl) {
+    const decoded = decodeURIComponent(encodedUrl);
+
+    // If backend sent `/media/...`
+    if (decoded.startsWith("/")) {
+      imageUrl = `${mediaBase}${decoded}`;
+    } else {
+      // If full URL already
+      imageUrl = decoded;
+    }
+  }
 
   if (!imageUrl || !prescriptionId) {
     return (
@@ -35,7 +53,7 @@ const OcrExtractionPage: React.FC = () => {
           <div className="body_right">
             <Container className="mt-5">
               <Alert variant="danger">
-                Missing prescription image URL or ID in parameters.{" "}
+                Missing prescription URL or ID.{" "}
                 <Link href="/pharmacist/prescription">Go back</Link>
               </Alert>
             </Container>
@@ -55,37 +73,28 @@ const OcrExtractionPage: React.FC = () => {
             <div>
               <i className="bi bi-receipt"></i> Patient Prescription Summary
             </div>
-            <div className="d-flex justify-content-end align-items-center gap-4 me-3 mt-2 p-2 rounded shadow-sm bg-light border">
-              <div className="d-flex align-items-center text-primary fw-semibold">
-                <i className="bi bi-person-circle me-2"></i>
-                <span>
-                  Patient:{" "}
-                  <span className="text-dark">{buyerName || "N/A"}</span>
-                </span>
-              </div>
 
-              <div className="d-flex align-items-center text-success fw-semibold">
+            <div className="d-flex align-items-center gap-4 me-3 p-2 bg-light rounded shadow-sm">
+              <div className="text-primary fw-semibold">
+                <i className="bi bi-person-circle me-2"></i>
+                Patient: <span className="text-dark">{buyerName || "N/A"}</span>
+              </div>
+              <div className="text-success fw-semibold">
                 <i className="bi bi-telephone me-2"></i>
-                <span>
-                  Mobile:{" "}
-                  <span className="text-dark">{buyerMobile || "N/A"}</span>
-                </span>
+                Mobile:{" "}
+                <span className="text-dark">{buyerMobile || "N/A"}</span>
               </div>
             </div>
           </div>
+
           <div className="main_content">
-            {/* <Container> */}
-            {/* <Card className="p-3 shadow-sm"> */}
             <DynamicOcrLogic
-              imageUrl={imageUrl || ""}
-              prescriptionId={prescriptionId || ""}
-              buyerEmail={searchParams.get("buyer_email") || ""}
-              buyerName={searchParams.get("buyer_name") || ""}
-              buyerMobile={Number(searchParams.get("mobile") || 0)}
+              imageUrl={imageUrl}
+              prescriptionId={prescriptionId}
+              buyerName={buyerName || ""}
+              buyerMobile={Number(buyerMobile || 0)}
               buyerId={Number(buyerId || 0)}
             />
-            {/* </Card> */}
-            {/* </Container> */}
           </div>
         </div>
       </div>

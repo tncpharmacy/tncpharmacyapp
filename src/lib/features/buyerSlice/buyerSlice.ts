@@ -18,6 +18,7 @@ import {
 import { loadBuyerFromToken } from "@/lib/utils/decodeToken";
 import { safeLocalStorage } from "@/lib/utils/safeLocalStorage";
 import toast from "react-hot-toast";
+import { decode } from "punycode";
 
 //
 // 🔹 Initial Setup
@@ -31,6 +32,7 @@ const initialState: BuyerState = {
         name: decodedBuyer.name,
         email: decodedBuyer.email,
         number: decodedBuyer.number,
+        uhid: decodedBuyer.uhid,
       }
     : null,
   loading: false,
@@ -125,7 +127,7 @@ export const buyerLogin = createAsyncThunk<
 // 2️⃣ Buyer Register (send OTP)
 export const buyerRegister = createAsyncThunk<
   BuyerApiResponse,
-  { name: string; email: string; number: string },
+  { name: string; email: string; number: string; uhid: string },
   { rejectValue: string }
 >("buyer/register", async (payload, { rejectWithValue }) => {
   try {
@@ -331,6 +333,7 @@ const buyerSlice = createSlice({
               name: decoded.name,
               email: decoded.email,
               number: decoded.number,
+              uhid: decoded.uhid,
             };
           }
 
@@ -355,6 +358,7 @@ const buyerSlice = createSlice({
             name: buyerData.name,
             email: buyerData.email,
             number: buyerData.number,
+            uhid: buyerData.uhid,
           };
         }
         toast.success("Profile fetched successfully");

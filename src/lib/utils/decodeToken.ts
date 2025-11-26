@@ -6,6 +6,7 @@ interface BuyerTokenPayload {
   name: string;
   email: string;
   number: string;
+  uhid: string;
   exp: number; // expiry timestamp
 }
 

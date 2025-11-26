@@ -94,7 +94,7 @@ export default function BuyerSignupModal({
 
     try {
       const payload = await dispatch(
-        buyerRegister({ name, email, number: mobile })
+        buyerRegister({ name, email, number: mobile, uhid: "" })
       ).unwrap();
 
       // ✅ OTP aayi to OTP screen dikha do
