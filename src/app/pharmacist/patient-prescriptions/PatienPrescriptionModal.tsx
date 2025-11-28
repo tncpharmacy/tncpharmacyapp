@@ -183,10 +183,9 @@ export default function PatientPrescriptionModal({
             <tr>
               <th style={{ width: "0px" }}></th>
               <th className="fw-bold text-start">Prescription ID</th>
-              <th className="fw-bold text-start">Prescription Image</th>
+              <th className="fw-bold text-start">Prescription</th>
               <th className="fw-bold text-start">Patient Name</th>
               <th className="fw-bold text-start">Mobile</th>
-              <th className="fw-bold text-start">Email</th>
               <th className="fw-bold text-start">Prescription Date</th>
               <th className="fw-bold text-start">Action</th>
             </tr>
@@ -244,7 +243,6 @@ export default function PatientPrescriptionModal({
                     </td>
                     <td className="text-start">{p.buyer_name}</td>
                     <td className="text-start">{p.buyer_number}</td>
-                    <td className="text-start">{p.buyer_email}</td>
                     <td className="text-start">
                       {new Date(p.created_on).toLocaleDateString()}
                     </td>

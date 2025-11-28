@@ -107,6 +107,10 @@ export const ENDPOINTS = {
     GET: (id: number) => `/buyer/profile/${id}/`,
     PUT: (id: number) => `/buyer/profile/${id}/`,
 
+    GET_PHARMACY_PHARMACIST: (pharmacyId: number) =>
+      `/buyer/pharmacy_based/list/${pharmacyId}/`,
+    GET_SUPER_ADMIN: "/buyer/list/superadmin/",
+
     // 🔹 Added Order APIs
     POST_ORDER: (buyerId: number) => `/order/create-order/${buyerId}/`,
     GET_ORDER_LIST: (buyerId: number) => `/order/buyer/list/${buyerId}`,

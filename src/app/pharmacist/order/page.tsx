@@ -30,7 +30,7 @@ export default function OrderList() {
   const {
     buyerOrderList,
     order: pharmacistOrder,
-    orders: pharmacistByOrderId,
+    orders,
   } = useAppSelector((state) => state.pharmacistOrder);
 
   const { buyer } = useAppSelector((state) => state.buyer);
