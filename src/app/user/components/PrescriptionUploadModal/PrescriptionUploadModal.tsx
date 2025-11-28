@@ -37,10 +37,10 @@ export default function PrescriptionUploadModal({ show, handleClose }: Props) {
   const buyer = useAppSelector((state) => state.buyer.buyer);
 
   // // ✅ Logged-in user details (jaha se buyerId milega)
-  const buyerId =
-    typeof window !== "undefined"
-      ? Number(localStorage.getItem("LOGGED_IN_BUYER_ID"))
-      : null;
+  // const buyerId =
+  //   typeof window !== "undefined"
+  //     ? Number(localStorage.getItem("LOGGED_IN_BUYER_ID"))
+  //     : null;
 
   // const { loading } = useAppSelector((state) => state.prescription);
 
