@@ -138,7 +138,10 @@ export const healthBagBuyerByPharmacistSlice = createSlice({
 
     // Update Buyer
     builder.addCase(putBuyerById.fulfilled, (state, action) => {
-      state.buyer = action.payload;
+      const updatedBuyer = action.payload;
+      state.buyers = state.buyers.map((b) =>
+        b.id === updatedBuyer.id ? updatedBuyer : b
+      );
     });
 
     // Delete Buyer

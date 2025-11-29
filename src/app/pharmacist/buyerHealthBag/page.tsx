@@ -22,6 +22,7 @@ import { getUser } from "@/lib/auth/auth";
 import {
   getBuyerById,
   getBuyerList,
+  putBuyerById,
   removeBuyerById,
 } from "@/lib/features/healthBagBuyerByPharmacistSlice/healthBagBuyerByPharmacistSlice";
 import { BuyerData } from "@/types/buyer";
@@ -47,12 +48,7 @@ export default function OrderList() {
   const dispatch = useAppDispatch();
   const pharmacy = getUser();
   const pharmacyId = Number(pharmacy?.pharmacy_id) || 0;
-  const [showPrint, setShowPrint] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
-
-  const [showReport, setShowReport] = useState(false);
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
 
   // Infinite scroll state
   const [visibleCount, setVisibleCount] = useState(10);
@@ -61,12 +57,14 @@ export default function OrderList() {
   // filtered records by search box
   const [searchTerm, setSearchTerm] = useState("");
   const [filteredData, setFilteredData] = useState<BuyerData[]>([]);
-  //orderType
-  const [orderType, setOrderType] = useState<string>("");
-  const [selectedBuyer, setSelectedBuyer] = useState<number | "">("");
   const [modalLoading, setModalLoading] = useState(false);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [modalItems, setModalItems] = useState<any[]>([]);
+  const [editing, setEditing] = useState<{
+    id: number;
+    field: string;
+    value: string;
+  } | null>(null);
 
   const { buyers, buyer: buyerById } = useAppSelector(
     (state) => state.healthBagBuyerByPharmacist
@@ -137,8 +135,6 @@ export default function OrderList() {
     dispatch(getBuyerById(buyerID))
       .unwrap()
       .then((res) => {
-        console.log("API RESPONSE = ", res); // 🔥 Add this
-
         setModalItems(
           Array.isArray(res) ? res : Array.isArray(res?.data) ? res.data : []
         );
@@ -148,12 +144,32 @@ export default function OrderList() {
 
   const handleRemoveItem = (id: number) => {
     dispatch(removeBuyerById(id));
-
     setModalItems((prev) => {
-      console.log("Prev Modal Items =", prev); // 🔥 Add this
       if (!Array.isArray(prev)) return []; // Prevent error
       return prev.filter((item) => item.id !== id);
     });
+  };
+
+  const saveField = async (id: number, field: string, value: string) => {
+    try {
+      await dispatch(
+        putBuyerById({
+          id,
+          payload: { [field]: value },
+        })
+      ).unwrap();
+
+      // Local state update
+      setModalItems((prev) =>
+        prev.map((item) =>
+          item.id === id ? { ...item, [field]: value } : item
+        )
+      );
+
+      setEditing(null);
+    } catch (error) {
+      console.error("PUT Error:", error);
+    }
   };
 
   return (
@@ -205,40 +221,6 @@ export default function OrderList() {
                       />
                     </div>
                   </div>
-                  {/* <div className="col-md-3">
-                    <div className="txt_col">
-                      <span className="lbl1">Select Patient</span>
-                      <select
-                        className="txt1"
-                        value={selectedBuyer}
-                        onChange={handleBuyerChange}
-                      >
-                        <option value="">-Select Buyer-</option>
-                        {pharmacyBuyers?.data?.map((b) => (
-                          <option key={b.id} value={b.id}>
-                            {b.name}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  </div> */}
-
-                  {/* <div className="col-md-3">
-                    <div className="txt_col">
-                      <span className="lbl1">Order Type</span>
-                      <select
-                        className="txt1"
-                        name="orderType"
-                        value={orderType}
-                        onChange={(e) => setOrderType(e.target.value)}
-                        required
-                      >
-                        <option value="">-Select-</option>
-                        <option value={"Online"}>Online</option>
-                        <option value={"Offline"}>Offline</option>
-                      </select>
-                    </div>
-                  </div> */}
                 </div>
 
                 <div className="scroll_table">
@@ -337,23 +319,62 @@ export default function OrderList() {
         onHide={() => setShowHistory(false)}
         size="lg"
         centered
+        style={{
+          backdropFilter: "blur(4px)",
+        }}
       >
-        <Modal.Header closeButton>
-          <Modal.Title>
+        <Modal.Header
+          closeButton
+          style={{
+            padding: "18px 24px",
+            borderBottom: "1px solid #eaeaea",
+            background: "#f9f9f9",
+          }}
+        >
+          <Modal.Title style={{ fontSize: "20px", fontWeight: 700 }}>
             <i className="bi bi-cart"></i> Health Bag / Billing Cart{" "}
-            <span className="fw-bold">({buyerById?.length ?? 0} items)</span>
+            <span style={{ fontWeight: 700, color: "#555" }}>
+              ({buyerById?.length ?? 0} items)
+            </span>
           </Modal.Title>
         </Modal.Header>
 
-        <Modal.Body>
+        <Modal.Body
+          style={{
+            padding: "22px",
+            background: "#ffffff",
+            maxHeight: "70vh",
+            overflowY: "auto",
+          }}
+        >
           {modalLoading ? (
             <div className="text-center p-4">
               <div className="spinner-border text-primary"></div>
             </div>
           ) : (
-            <div className="table-responsive">
-              <table className="table table-bordered cust_table1">
-                <thead>
+            <div
+              className="table-responsive"
+              style={{
+                borderRadius: "10px",
+                overflow: "hidden",
+                border: "1px solid #e5e5e5",
+              }}
+            >
+              <table
+                className="table"
+                style={{
+                  margin: 0,
+                  fontSize: "14px",
+                  background: "white",
+                }}
+              >
+                <thead
+                  style={{
+                    background: "#f2f2f2",
+                    fontSize: "14px",
+                    fontWeight: 700,
+                  }}
+                >
                   <tr>
                     <th className="fw-bold text-start">Medicine Name</th>
                     <th className="fw-bold text-start">Qty</th>
@@ -371,10 +392,158 @@ export default function OrderList() {
                   {modalItems?.map((item: any) => (
                     <tr key={item.id}>
                       <td className="text-start">{item.productname ?? ""}</td>
-                      <td className="text-start">{item.qty ?? ""}</td>
-                      <td className="text-start">{item.doses ?? ""}</td>
-                      <td className="text-start">{item.instruction ?? ""}</td>
-                      <td className="text-start">{item.duration ?? ""}</td>
+                      {/* QTY */}
+                      <td
+                        className="text-start"
+                        onClick={() =>
+                          setEditing({
+                            id: item.id,
+                            field: "qty",
+                            value: item.qty ?? "",
+                          })
+                        }
+                      >
+                        {editing?.id === item.id && editing?.field === "qty" ? (
+                          <input
+                            autoFocus
+                            style={{
+                              width: "80px",
+                              padding: "4px 6px",
+                              border: "1px solid #ccc",
+                            }}
+                            value={editing.value}
+                            onChange={(e) =>
+                              setEditing({ ...editing, value: e.target.value })
+                            }
+                            onBlur={() =>
+                              saveField(item.id, "qty", editing.value)
+                            }
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") {
+                                saveField(item.id, "qty", editing.value);
+                              }
+                            }}
+                          />
+                        ) : (
+                          item.qty
+                        )}
+                      </td>
+                      {/* DOSES */}
+                      <td
+                        className="text-start"
+                        onClick={() =>
+                          setEditing({
+                            id: item.id,
+                            field: "doses",
+                            value: item.doses ?? "",
+                          })
+                        }
+                      >
+                        {editing?.id === item.id &&
+                        editing?.field === "doses" ? (
+                          <input
+                            autoFocus
+                            style={{
+                              width: "80px",
+                              padding: "4px 6px",
+                              border: "1px solid #ccc",
+                            }}
+                            value={editing.value}
+                            onChange={(e) =>
+                              setEditing({ ...editing, value: e.target.value })
+                            }
+                            onBlur={() =>
+                              saveField(item.id, "doses", editing.value)
+                            }
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") {
+                                saveField(item.id, "doses", editing.value);
+                              }
+                            }}
+                          />
+                        ) : (
+                          item.doses
+                        )}
+                      </td>
+                      {/* INSTRUCTION */}
+                      <td
+                        className="text-start"
+                        onClick={() =>
+                          setEditing({
+                            id: item.id,
+                            field: "instruction",
+                            value: item.instruction ?? "",
+                          })
+                        }
+                      >
+                        {editing?.id === item.id &&
+                        editing?.field === "instruction" ? (
+                          <input
+                            autoFocus
+                            style={{
+                              width: "80px",
+                              padding: "4px 6px",
+                              border: "1px solid #ccc",
+                            }}
+                            value={editing.value}
+                            onChange={(e) =>
+                              setEditing({ ...editing, value: e.target.value })
+                            }
+                            onBlur={() =>
+                              saveField(item.id, "instruction", editing.value)
+                            }
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") {
+                                saveField(
+                                  item.id,
+                                  "instruction",
+                                  editing.value
+                                );
+                              }
+                            }}
+                          />
+                        ) : (
+                          item.instruction
+                        )}
+                      </td>
+                      {/* DURATION */}
+                      <td
+                        className="text-start"
+                        onClick={() =>
+                          setEditing({
+                            id: item.id,
+                            field: "duration",
+                            value: item.duration ?? "",
+                          })
+                        }
+                      >
+                        {editing?.id === item.id &&
+                        editing?.field === "duration" ? (
+                          <input
+                            autoFocus
+                            style={{
+                              width: "80px",
+                              padding: "4px 6px",
+                              border: "1px solid #ccc",
+                            }}
+                            value={editing.value}
+                            onChange={(e) =>
+                              setEditing({ ...editing, value: e.target.value })
+                            }
+                            onBlur={() =>
+                              saveField(item.id, "duration", editing.value)
+                            }
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") {
+                                saveField(item.id, "duration", editing.value);
+                              }
+                            }}
+                          />
+                        ) : (
+                          item.duration
+                        )}
+                      </td>
+
                       <td className="text-start">
                         ₹{Number(item.mrp || 0).toFixed(2)}
                       </td>
