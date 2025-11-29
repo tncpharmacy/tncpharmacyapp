@@ -33,8 +33,12 @@ const initialState: BuyerState = {
         email: decodedBuyer.email,
         number: decodedBuyer.number,
         uhid: decodedBuyer.uhid,
+        // 🔥 Default values because token does not provide these fields
+        profile_pic: "",
+        status: "",
       }
     : null,
+
   loading: false,
   error: null,
   otpSent: false,
