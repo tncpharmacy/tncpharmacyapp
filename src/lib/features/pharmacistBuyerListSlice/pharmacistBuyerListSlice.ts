@@ -62,7 +62,7 @@ export const getSuperAdminBuyersThunk = createAsyncThunk<
   }
 });
 
-const buyerSlice = createSlice({
+const pharmacistBuyerListSlice = createSlice({
   name: "buyers",
   initialState,
   reducers: {},
@@ -97,4 +97,4 @@ const buyerSlice = createSlice({
   },
 });
 
-export default buyerSlice.reducer;
+export default pharmacistBuyerListSlice.reducer;

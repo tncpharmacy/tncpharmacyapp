@@ -190,10 +190,9 @@ export default function StockList() {
                       <input
                         type="text"
                         placeholder="Search..."
-                        className="txt1 rounded"
+                        className="txt1"
                         value={searchTerm}
                         onChange={(e) => {
-                          console.log("Search input:", e.target.value);
                           setSearchTerm(e.target.value);
                         }}
                       />

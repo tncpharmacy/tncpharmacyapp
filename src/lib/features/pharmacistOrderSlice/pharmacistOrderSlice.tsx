@@ -151,7 +151,6 @@ const pharmacistOrderSlice = createSlice({
       .addCase(getPharmacistOrderById.fulfilled, (state, action) => {
         state.loading = false;
         state.order = action.payload?.data || null;
-        toast.success("Order fetched successfully!");
       })
       .addCase(getPharmacistOrderById.rejected, (state, action) => {
         state.loading = false;
@@ -166,7 +165,6 @@ const pharmacistOrderSlice = createSlice({
       .addCase(getPharmacistOrderByBuyerId.fulfilled, (state, action) => {
         state.loading = false;
         state.buyerOrderList = action.payload?.data || null;
-        toast.success("Order fetched successfully!");
       })
       .addCase(getPharmacistOrderByBuyerId.rejected, (state, action) => {
         state.loading = false;
@@ -181,7 +179,6 @@ const pharmacistOrderSlice = createSlice({
       .addCase(getPharmacistOrders.fulfilled, (state, action) => {
         state.loading = false;
         state.orders = action.payload?.data || [];
-        toast.success("Orders fetched successfully!");
       })
       .addCase(getPharmacistOrders.rejected, (state, action) => {
         state.loading = false;

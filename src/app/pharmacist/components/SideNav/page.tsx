@@ -28,8 +28,13 @@ export default function SideNav() {
           </Link>
         </li>
         <li>
+          <Link href="/pharmacist/patient-health-bag" className="link">
+            <i className="bi bi-cart-plus-fill"></i> Patient HealthBag
+          </Link>
+        </li>
+        <li>
           <Link href="/pharmacist/order" className="link">
-            <i className="bi bi-cart-plus-fill"></i> Order
+            <i className="bi bi-clipboard-check"></i> Order
           </Link>
         </li>
         <li>

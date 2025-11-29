@@ -412,6 +412,10 @@ const nextConfig: NextConfig = {
         source: "/pharmacist/orders",
         destination: "/pharmacist/order",
       },
+      {
+        source: "/pharmacist/patient-health-bag",
+        destination: "/pharmacist/buyerHealthBag",
+      },
 
       // Doctor Routes
       {

@@ -1,0 +1,409 @@
+"use client";
+
+import Link from "next/link";
+import { useEffect, useState } from "react";
+import { Button, Image, Modal, OverlayTrigger, Tooltip } from "react-bootstrap";
+import "../css/pharmacy-style.css";
+import SideNav from "@/app/pharmacist/components/SideNav/page";
+import Header from "@/app/pharmacist/components/Header/page";
+import { useRouter } from "next/navigation";
+import Input from "@/app/components/Input/Input";
+import { useAppDispatch, useAppSelector } from "@/lib/hooks";
+import {
+  getPharmacistOrderByBuyerId,
+  getPharmacistOrderById,
+  getPharmacistOrders,
+} from "@/lib/features/pharmacistOrderSlice/pharmacistOrderSlice";
+import TableLoader from "@/app/components/TableLoader/TableLoader";
+import { PharmacistOrder } from "@/types/pharmacistOrder";
+import InfiniteScroll from "@/app/components/InfiniteScrollS/InfiniteScrollS";
+import { getPharmacyBuyersThunk } from "@/lib/features/pharmacistBuyerListSlice/pharmacistBuyerListSlice";
+import { getUser } from "@/lib/auth/auth";
+import {
+  getBuyerById,
+  getBuyerList,
+  removeBuyerById,
+} from "@/lib/features/healthBagBuyerByPharmacistSlice/healthBagBuyerByPharmacistSlice";
+import { BuyerData } from "@/types/buyer";
+const mediaBase = process.env.NEXT_PUBLIC_MEDIA_BASE_URL;
+type Buyer = {
+  id: number;
+  name: string;
+  number: string | null;
+  email: string | null;
+  uhid: string | null;
+};
+
+type PharmacyBuyerResponse = {
+  success: boolean;
+  statusCode: number;
+  message: string;
+  pharmacy_id: number;
+  data: Buyer[];
+};
+
+export default function OrderList() {
+  const router = useRouter();
+  const dispatch = useAppDispatch();
+  const pharmacy = getUser();
+  const pharmacyId = Number(pharmacy?.pharmacy_id) || 0;
+  const [showPrint, setShowPrint] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
+
+  const [showReport, setShowReport] = useState(false);
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
+
+  // Infinite scroll state
+  const [visibleCount, setVisibleCount] = useState(10);
+  const [loadings, setLoadings] = useState(false);
+
+  // filtered records by search box
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filteredData, setFilteredData] = useState<BuyerData[]>([]);
+  //orderType
+  const [orderType, setOrderType] = useState<string>("");
+  const [selectedBuyer, setSelectedBuyer] = useState<number | "">("");
+  const [modalLoading, setModalLoading] = useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [modalItems, setModalItems] = useState<any[]>([]);
+
+  const { buyers, buyer: buyerById } = useAppSelector(
+    (state) => state.healthBagBuyerByPharmacist
+  );
+  // UI filtering directly render ke time
+  useEffect(() => {
+    setFilteredData(buyers);
+  }, [buyers]);
+
+  useEffect(() => {
+    dispatch(getBuyerList());
+  }, []);
+
+  // filtered records by search box + status filter
+  useEffect(() => {
+    let data: BuyerData[] = buyers || [];
+
+    if (searchTerm) {
+      const lower = searchTerm.toLowerCase().trim();
+
+      data = data.filter((item: BuyerData) => {
+        return Object.keys(item).some((key) => {
+          const value = String(item[key as keyof BuyerData] ?? "")
+            .toLowerCase()
+            .trim();
+
+          if (key === "gender") {
+            // gender exact match hona chahiye
+            return value === lower;
+          }
+
+          // baaki fields substring match
+          return value.includes(lower);
+        });
+      });
+    }
+
+    setFilteredData(data);
+  }, [searchTerm, buyers]);
+  //infinte scroll records
+  const loadMore = () => {
+    if (loadings || visibleCount >= buyers.length) return;
+    setLoadings(true);
+    setTimeout(() => {
+      setVisibleCount((prev) => prev + 5);
+      setLoadings(false);
+    }, 3000); // spinner for 3 sec
+  };
+
+  //   const handleExport = () => {
+  //     if (!startDate || !endDate) {
+  //       alert("Please select both start and end dates.");
+  //       return;
+  //     }
+  //     if (new Date(startDate) > new Date(endDate)) {
+  //       alert("Start Date cannot be after End Date!");
+  //       return;
+  //     }
+  //     console.log("Generating report from", startDate, "to", endDate);
+  //     // 🔽 yahan export / API call logic likho
+  //     setShowReport(false);
+  //   };
+
+  const handleHistory = (buyerID: number) => {
+    setShowHistory(true);
+    setModalLoading(true);
+
+    dispatch(getBuyerById(buyerID))
+      .unwrap()
+      .then((res) => {
+        console.log("API RESPONSE = ", res); // 🔥 Add this
+
+        setModalItems(
+          Array.isArray(res) ? res : Array.isArray(res?.data) ? res.data : []
+        );
+      })
+      .finally(() => setModalLoading(false));
+  };
+
+  const handleRemoveItem = (id: number) => {
+    dispatch(removeBuyerById(id));
+
+    setModalItems((prev) => {
+      console.log("Prev Modal Items =", prev); // 🔥 Add this
+      if (!Array.isArray(prev)) return []; // Prevent error
+      return prev.filter((item) => item.id !== id);
+    });
+  };
+
+  return (
+    <>
+      <Header />
+      <div className="body_wrap">
+        <SideNav />
+        <div className="body_right">
+          <InfiniteScroll
+            loadMore={loadMore}
+            hasMore={visibleCount < filteredData.length}
+            // className="body_content"
+          >
+            <div style={{ overflowX: "hidden", width: "100%" }}>
+              <div
+                className="row align-items-center justify-content-between"
+                style={{ marginLeft: 0, marginRight: 0, width: "100%" }}
+              >
+                <div className="pageTitle col-md-6 col-12 text-start mt-2">
+                  <i className="bi bi-receipt"></i> Patient Summary
+                </div>
+
+                <div className="col-md-6 col-12 text-end mt-2 mb-2">
+                  {/* <Button
+                    variant="outline-primary"
+                    onClick={() => setShowReport(true)}
+                    className="btn-style1"
+                  >
+                    <i className="bi bi-file-earmark-text"></i> Generate Report
+                  </Button> */}
+                </div>
+              </div>
+            </div>
+
+            <div className="main_content">
+              <div className="col-sm-12">
+                <div className="row">
+                  <div className="col-md-8">
+                    <div className="txt_col">
+                      <span className="lbl1">Search</span>
+                      <input
+                        type="text"
+                        placeholder="Search..."
+                        className="txt1"
+                        value={searchTerm}
+                        onChange={(e) => {
+                          setSearchTerm(e.target.value);
+                        }}
+                      />
+                    </div>
+                  </div>
+                  {/* <div className="col-md-3">
+                    <div className="txt_col">
+                      <span className="lbl1">Select Patient</span>
+                      <select
+                        className="txt1"
+                        value={selectedBuyer}
+                        onChange={handleBuyerChange}
+                      >
+                        <option value="">-Select Buyer-</option>
+                        {pharmacyBuyers?.data?.map((b) => (
+                          <option key={b.id} value={b.id}>
+                            {b.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div> */}
+
+                  {/* <div className="col-md-3">
+                    <div className="txt_col">
+                      <span className="lbl1">Order Type</span>
+                      <select
+                        className="txt1"
+                        name="orderType"
+                        value={orderType}
+                        onChange={(e) => setOrderType(e.target.value)}
+                        required
+                      >
+                        <option value="">-Select-</option>
+                        <option value={"Online"}>Online</option>
+                        <option value={"Offline"}>Offline</option>
+                      </select>
+                    </div>
+                  </div> */}
+                </div>
+
+                <div className="scroll_table">
+                  <table className="table cust_table1">
+                    <thead>
+                      <tr>
+                        <th style={{ width: "0px" }}></th>
+                        <th className="fw-bold text-start">Id</th>
+                        <th className="fw-bold text-start">Profile Image</th>
+                        <th className="fw-bold text-start">Name</th>
+                        <th className="fw-bold text-start">Mobile</th>
+                        <th className="fw-bold text-start">Email</th>
+                        <th className="fw-bold text-start">UHID</th>
+                        <th className="fw-bold text-start">Status</th>
+                        <th className="fw-bold text-start">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {Array.isArray(filteredData) &&
+                        filteredData
+                          .slice(0, visibleCount)
+                          .map((p: BuyerData) => {
+                            return (
+                              <tr key={p.id}>
+                                <td></td>
+                                <td className="text-start">{p.id ?? ""}</td>
+
+                                <td className="text-start">
+                                  <Image
+                                    src={
+                                      p.profile_pic
+                                        ? `${mediaBase}${p.profile_pic}`
+                                        : "/images/default-profile.jpg"
+                                    }
+                                    onError={(e) => {
+                                      e.currentTarget.src =
+                                        "/images/default-profile.jpg";
+                                    }}
+                                    alt={p.name}
+                                    className="rounded-circle"
+                                    style={{
+                                      width: "40px",
+                                      height: "40px",
+                                      objectFit: "cover",
+                                      border: "1px solid #ddd",
+                                    }}
+                                  />
+                                </td>
+
+                                <td className="text-start">{p.name ?? ""}</td>
+                                <td className="text-start">{p.number ?? ""}</td>
+                                <td className="text-start">{p.email ?? ""}</td>
+                                <td className="text-start">{p.uhid ?? ""}</td>
+                                <td className="text-start">{p.status ?? ""}</td>
+                                <td className="text-start">
+                                  <button
+                                    className="btn-style1"
+                                    onClick={() => handleHistory(p.id)}
+                                  >
+                                    <i className="bi bi-card-list"></i> Patient
+                                    Details
+                                  </button>
+                                </td>
+                              </tr>
+                            );
+                          })}
+                      {/* Spinner row */}
+                      {loadings && (
+                        <TableLoader colSpan={9} text="Loading more..." />
+                      )}
+
+                      {/* No more records */}
+                      {!loadings && visibleCount >= buyers.length && (
+                        <tr>
+                          <td
+                            colSpan={9}
+                            className="text-center py-2 text-muted fw-bold fs-6"
+                          >
+                            No more records
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </InfiniteScroll>
+        </div>
+      </div>
+      {/* ===========================
+    PATIENT DETAILS MODAL
+=========================== */}
+      <Modal
+        show={showHistory}
+        onHide={() => setShowHistory(false)}
+        size="lg"
+        centered
+      >
+        <Modal.Header closeButton>
+          <Modal.Title>
+            <i className="bi bi-cart"></i> Health Bag / Billing Cart{" "}
+            <span className="fw-bold">({buyerById?.length ?? 0} items)</span>
+          </Modal.Title>
+        </Modal.Header>
+
+        <Modal.Body>
+          {modalLoading ? (
+            <div className="text-center p-4">
+              <div className="spinner-border text-primary"></div>
+            </div>
+          ) : (
+            <div className="table-responsive">
+              <table className="table table-bordered cust_table1">
+                <thead>
+                  <tr>
+                    <th className="fw-bold text-start">Medicine Name</th>
+                    <th className="fw-bold text-start">Qty</th>
+                    <th className="fw-bold text-start">Doses</th>
+                    <th className="fw-bold text-start">Instruction</th>
+                    <th className="fw-bold text-start">Duration</th>
+                    <th className="fw-bold text-start">MRP/Unit</th>
+                    <th className="fw-bold text-start">Total Price</th>
+                    <th></th>
+                  </tr>
+                </thead>
+
+                <tbody>
+                  {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+                  {modalItems?.map((item: any) => (
+                    <tr key={item.id}>
+                      <td className="text-start">{item.productname ?? ""}</td>
+                      <td className="text-start">{item.qty ?? ""}</td>
+                      <td className="text-start">{item.doses ?? ""}</td>
+                      <td className="text-start">{item.instruction ?? ""}</td>
+                      <td className="text-start">{item.duration ?? ""}</td>
+                      <td className="text-start">
+                        ₹{Number(item.mrp || 0).toFixed(2)}
+                      </td>
+                      <td className="text-start">
+                        ₹{(item.qty * item.mrp).toFixed(2)}
+                      </td>
+                      <td className="text-start">
+                        <button
+                          className="btn btn-sm btn-danger"
+                          onClick={() => handleRemoveItem(item.id)}
+                        >
+                          <i className="bi bi-trash"></i>
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </Modal.Body>
+
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowHistory(false)}>
+            Close
+          </Button>
+          {/* <Button variant="primary">Add To Patient HealthBag</Button> */}
+        </Modal.Footer>
+      </Modal>
+    </>
+  );
+}

@@ -12,6 +12,8 @@ export interface BuyerData {
   number: string;
   buyer_id?: number;
   email: string;
+  profile_pic: string;
+  status: string;
   otp?: string;
   tokens?: BuyerTokens;
   existing?: boolean;

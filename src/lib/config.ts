@@ -174,6 +174,16 @@ export const ENDPOINTS = {
       `/cart/pharmacist/quantity/${cartId}/?quantity=Increase`,
     QUANTITY_DECREASE: (cartId: number) =>
       `/cart/pharmacist/quantity/${cartId}/?quantity=Decrease`,
+
+    GET_BUYER_LIST: "/cart/buyer/list/",
+    GET_BUYER_LIST_BY_ID: (buyerId: number) =>
+      `/cart/pharmacist/view/buyer/${buyerId}/`,
+    PUT_BY_ID: (id: number) => `/cart/pharmacist/update/buyer/${id}/`,
+    DELETE_BY_ID: (id: number) => `/cart/pharmacist/delete/buyer/${id}/`,
+    BUYER_QUANTITY_INCREASE: (cartId: number) =>
+      `/cart/pharmacist/update/buyer/${cartId}/?quantity=Increase`,
+    BUYER_QUANTITY_DECREASE: (cartId: number) =>
+      `/cart/pharmacist/update/buyer/${cartId}/?quantity=Decrease`,
   },
 
   PHARMACIST_ORDER: {

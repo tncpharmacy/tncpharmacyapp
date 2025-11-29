@@ -131,15 +131,16 @@ export default function PurchaseInvoice() {
               <div className="col-sm-12">
                 <div className="row">
                   <div className="col-md-8">
-                    <div className="search_query">
-                      <a className="query_search_btn" href="javascript:void(0)">
-                        <i className="bi bi-search"></i>
-                      </a>
+                    <div className="txt_col">
+                      <span className="lbl1">Search</span>
                       <input
                         type="text"
+                        placeholder="Search..."
                         className="txt1"
-                        id=""
-                        placeholder="search by order id, name, mobile"
+                        value={searchTerm}
+                        onChange={(e) => {
+                          setSearchTerm(e.target.value);
+                        }}
                       />
                     </div>
                   </div>
