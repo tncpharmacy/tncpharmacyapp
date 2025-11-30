@@ -20,7 +20,7 @@ interface CartItem {
   dose_form: string;
   Disc: number;
   remarks: string;
-  // duration: string;
+  duration: string;
 }
 
 interface BillPreviewModalProps {
@@ -59,7 +59,7 @@ const BillPreviewModal: React.FC<BillPreviewModalProps> = ({
     { code: "ta", name: "Tamil" },
   ];
   // google api for translating language
-  const apiKey = "AIzaSyDgglnyLRjpHWHRNE8WEacdjnx0XKYyR4w";
+  const apiKey = "AIzaSyCnBwW1ctzmSl242gc3kyLzdGngiIRIPRs";
   const modelName = "gemini-2.5-flash-preview-09-2025";
   const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
 
@@ -149,18 +149,14 @@ const BillPreviewModal: React.FC<BillPreviewModalProps> = ({
 
       console.error("Gemini Translation failed: No text received", result);
       return text; // Fallback to original text
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : "Unknown error";
-
-      // If 403 error, set UI error state
-      if (errorMessage.includes("403")) {
-        setApiError(
-          `Translation failed: ${errorMessage} Please check your Gemini API status.`
-        );
+    } catch (error: any) {
+      if (error.response) {
+        console.log("Full API Error Response:", error.response.data);
+        console.log("Status:", error.response.status);
+        console.log("Headers:", error.response.headers);
+      } else {
+        console.log("Error Message:", error.message);
       }
-
-      console.error(`🔴 Translation failed due to API Error: ${errorMessage}`);
-      return text; // Fallback to original text on API error
     }
   };
 
@@ -193,10 +189,10 @@ const BillPreviewModal: React.FC<BillPreviewModalProps> = ({
       itemsToTranslate.map(async (item) => {
         // translate only remarks & duration (leave medicine_name and dose_form unchanged)
         const translatedRemarks = await translateText(item.remarks || "", lang);
-        // const translatedDuration = await translateText(
-        //   item.duration || "3 days",
-        //   lang
-        // );
+        const translatedDuration = await translateText(
+          item.duration || "3 days",
+          lang
+        );
 
         return {
           ...item,
@@ -205,7 +201,7 @@ const BillPreviewModal: React.FC<BillPreviewModalProps> = ({
           dose_form: item.dose_form,
           // set translated fields
           remarks: translatedRemarks || item.remarks,
-          //  duration: translatedDuration || item.duration,
+          duration: translatedDuration || item.duration,
         } as CartItem;
       })
     );
@@ -611,7 +607,7 @@ const BillPreviewModal: React.FC<BillPreviewModalProps> = ({
                       <strong>Instruction:</strong> {item.remarks}
                     </p>
                     <p style={{ margin: "2px 0" }}>
-                      <strong>Duration:</strong> {"item.duration"}
+                      <strong>Duration:</strong> {item.duration}
                     </p>
 
                     <p style={{ margin: "2px 0" }}>
