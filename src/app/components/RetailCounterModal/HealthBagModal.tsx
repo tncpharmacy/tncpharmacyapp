@@ -2,6 +2,7 @@
 
 import React from "react";
 import { Modal, Button, Table } from "react-bootstrap";
+import { FaTrash } from "react-icons/fa";
 
 interface HealthBagModalProps {
   isOpen: boolean;
@@ -9,6 +10,7 @@ interface HealthBagModalProps {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   cartItems: any[];
   onProceed: () => void;
+  onRemove: (index: number) => void;
 }
 
 const HealthBagModal: React.FC<HealthBagModalProps> = ({
@@ -16,6 +18,7 @@ const HealthBagModal: React.FC<HealthBagModalProps> = ({
   onClose,
   cartItems,
   onProceed,
+  onRemove,
 }) => {
   return (
     <Modal show={isOpen} onHide={onClose} size="xl">
@@ -40,9 +43,11 @@ const HealthBagModal: React.FC<HealthBagModalProps> = ({
                 {/* ✅ Naye Columns Add kiye */}
                 <th>Doses</th>
                 <th>Instruction</th>
+                <th>Duration</th>
                 {/* -------------------- */}
                 <th>MRP/Unit</th>
                 <th>Total Price</th>
+                <th></th>
               </tr>
             </thead>
             <tbody>
@@ -61,10 +66,22 @@ const HealthBagModal: React.FC<HealthBagModalProps> = ({
                     <td style={{ maxWidth: "200px", whiteSpace: "normal" }}>
                       {item.remarks || "N/A"}
                     </td>
+                    <td style={{ maxWidth: "200px", whiteSpace: "normal" }}>
+                      {item.duration || "N/A"}
+                    </td>
                     {/* ----------------- */}
 
                     <td>₹{unitPrice.toFixed(2)}</td>
                     <td>₹{totalPrice.toFixed(2)}</td>
+                    <td>
+                      <Button
+                        variant="danger"
+                        size="sm"
+                        onClick={() => onRemove(index)}
+                      >
+                        <FaTrash size={14} />
+                      </Button>
+                    </td>
                   </tr>
                 );
               })}

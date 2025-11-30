@@ -177,13 +177,15 @@ export default function RetailCounter() {
     item: Medicine,
     qty: number,
     doseForm: string,
-    remarks: string
+    remarks: string,
+    duration: string
   ) => {
     const itemToAdd = {
       ...item,
       dose_form: doseForm,
       qty: qty,
       remarks: remarks,
+      duration,
       // keep original MRP in item.mrp, but store unitPrice separately to avoid confusion:
       unitPrice: item.MRP || 0, // per unit price
       price: (item.MRP || 0) * qty, // total price for this line
@@ -252,6 +254,7 @@ export default function RetailCounter() {
           rate: String(finalRate),
           doses: item.dose_form,
           instruction: item.remarks,
+          duration: item.duration,
           status: "1",
         };
       });
@@ -432,6 +435,7 @@ export default function RetailCounter() {
                         <th>Qty</th>
                         <th>Doses</th>
                         <th>Instruction</th>
+                        <th>Duration</th>
                         <th>MRP (₹)</th>
                         <th>Discount (%)</th>
                         <th>Subtotal (₹)</th>
@@ -462,6 +466,7 @@ export default function RetailCounter() {
                               </td>
                               <td>{item.dose_form}</td>
                               <td>{item.remarks}</td>
+                              <td>{item.duration}</td>
                               <td>{item.price}</td>
                               <td>{item.Disc}</td>
                               <td>{subtotal}</td>

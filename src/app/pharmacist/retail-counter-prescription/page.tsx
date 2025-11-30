@@ -42,6 +42,7 @@ interface MedicineWithCartFields extends Omit<Medicine, "Disc"> {
   dose_form: string;
   qty: number;
   remarks: string;
+  duration: string;
   unitPrice: number;
   price: number;
   cartItemId: number;
@@ -379,7 +380,8 @@ export default function RetailCounter() {
     item: Medicine,
     qty: number,
     doseForm: string,
-    remarks: string
+    remarks: string,
+    duration: string
   ) => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const mrp = (item as any).MRP || 0;
@@ -398,6 +400,7 @@ export default function RetailCounter() {
       dose_form: doseForm,
       qty,
       remarks,
+      duration,
       unitPrice: mrp,
       price: mrp * qty,
       generic_name: item.generic_name || item.GenericName || "N/A",
@@ -475,6 +478,7 @@ export default function RetailCounter() {
           rate: String(finalRate),
           doses: item.dose_form,
           instruction: item.remarks,
+          duration: item.duration,
           status: "1",
         };
       });

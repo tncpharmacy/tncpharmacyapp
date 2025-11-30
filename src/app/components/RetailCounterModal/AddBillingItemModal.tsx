@@ -14,7 +14,8 @@ interface AddBillingItemModalProps {
     item: Medicine,
     qty: number,
     doseForm: string,
-    remarks: string
+    remarks: string,
+    duration: string
   ) => void;
 }
 const DOSE_INSTRUCTIONS = [
@@ -38,6 +39,7 @@ const AddBillingItemModal: React.FC<AddBillingItemModalProps> = ({
   const [qty, setQty] = useState(1);
   const [selectedDoseValue, setSelectedDoseValue] = useState("");
   const [remarks, setRemarks] = useState("");
+  const [duration, setDuration] = useState("");
 
   // AvailableQty Validation
   const availableQty = item?.AvailableQty || 0; // 🚨 Assuming your Medicine type has 'AvailableQty'
@@ -55,6 +57,7 @@ const AddBillingItemModal: React.FC<AddBillingItemModalProps> = ({
       }
       setSelectedDoseValue("");
       setRemarks("");
+      setDuration("");
     }
   }, [item, availableQty]);
 
@@ -62,44 +65,56 @@ const AddBillingItemModal: React.FC<AddBillingItemModalProps> = ({
 
   // Validation Handler
   const handleQtyChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = parseInt(e.target.value, 10);
+    const rawValue = e.target.value;
 
+    // Allow empty value "" (React number input me hota hi hai)
+    if (rawValue === "") {
+      setQty(0); // ⚠️ blank ko 0 treat karo taaki type mismatch na ho
+      return;
+    }
+
+    const value = Number(rawValue);
+
+    // Stock 0 → always 0
     if (availableQty === 0) {
-      // Stock 0 है तो कुछ नहीं करने दें
       setQty(0);
       return;
     }
 
-    if (isNaN(value) || value <= 0) {
-      // Invalid input है तो 1 या max स्टॉक सेट करें
-      setQty(availableQty > 0 ? 1 : 0);
-    } else if (value > availableQty) {
-      setQty(availableQty); // AvailableQty से ज़्यादा नहीं
-    } else {
-      setQty(value);
+    // Invalid input OR negative → do nothing
+    if (isNaN(value) || value < 0) {
+      return;
     }
+
+    // Allow 0 (remove ke liye)
+    if (value === 0) {
+      setQty(0);
+      return;
+    }
+
+    // More than available stock → set to availableQty
+    if (value > availableQty) {
+      setQty(availableQty);
+      return;
+    }
+
+    // Valid qty
+    setQty(value);
   };
 
   // 🚨 FIX 3: handleSubmit में Qty = 0 पर रोक
   const handleSubmit = () => {
-    // Qty = 0 है तो यहीं रोक दें
     if (qty <= 0) {
-      toast.error("Quantity must be greater than 0 to add to the bill.");
+      toast.error("Quantity must be greater than 0.");
       return;
     }
 
-    // Dose Instruction और Qty > 0 दोनों चेक करें
-    if (selectedDoseValue !== "") {
-      console.log(
-        "➡️ AddBillingItemModal handleSubmit - item:",
-        item,
-        "qty:",
-        qty
-      );
-      onConfirmAdd(item, qty, selectedDoseValue, remarks);
-    } else {
-      toast.error("Please select a Dose Instruction.");
+    if (!selectedDoseValue) {
+      toast.error("Please select a dose instruction.");
+      return;
     }
+
+    onConfirmAdd(item, qty, selectedDoseValue, remarks, duration);
   };
 
   return (
@@ -141,7 +156,9 @@ const AddBillingItemModal: React.FC<AddBillingItemModalProps> = ({
             <p>
               <strong>MRP:</strong> ₹{item.MRP || 0}
             </p>
-            <p className="text-danger">Available Stock: {availableQty}</p>
+            <p className="text-success color-green fw-bold">
+              Available Stock: {availableQty}
+            </p>
             <hr />
 
             {/* Qty Input */}
@@ -150,12 +167,11 @@ const AddBillingItemModal: React.FC<AddBillingItemModalProps> = ({
               <input
                 type="number"
                 className="form-control"
-                value={qty}
+                value={qty === 0 ? "" : qty} // 👈 input blank handle
                 onChange={handleQtyChange}
-                min="1"
                 max={availableQty}
-                required
               />
+
               {qty > availableQty && (
                 <div className="text-danger mt-1">
                   Error: Max available quantity is {availableQty}.
@@ -194,6 +210,16 @@ const AddBillingItemModal: React.FC<AddBillingItemModalProps> = ({
                 className="form-control"
                 value={remarks}
                 onChange={(e) => setRemarks(e.target.value)}
+              />
+            </div>
+            {/* Duration Input */}
+            <div className="mb-3">
+              <label className="form-label">Duration</label>
+              <input
+                type="text"
+                className="form-control"
+                value={duration}
+                onChange={(e) => setDuration(e.target.value)}
               />
             </div>
           </div>

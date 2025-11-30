@@ -7,6 +7,7 @@ interface CartItem {
   pack_size?: string | number; // ← FIX
   dose_form?: string;
   remarks?: string;
+  duration?: string;
   price: number;
   Disc?: number;
 }
@@ -48,6 +49,7 @@ const CartPreviewModal = ({
               <th>Qty</th>
               <th>Doses</th>
               <th>Instruction</th>
+              <th>Duration</th>
               <th>MRP</th>
               <th>Discount (%)</th>
               <th>Subtotal</th>
@@ -70,6 +72,7 @@ const CartPreviewModal = ({
                   </td>
                   <td>{item.dose_form}</td>
                   <td>{item.remarks}</td>
+                  <td>{item.duration}</td>
                   <td>{item.price}</td>
                   <td>{item.Disc ?? 0}</td>
                   <td>{subtotal}</td>

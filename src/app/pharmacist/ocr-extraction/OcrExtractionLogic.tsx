@@ -5,6 +5,7 @@ import AddBillingItemModal from "@/app/components/RetailCounterModal/AddBillingI
 import GenericOptionsModal from "@/app/components/RetailCounterModal/GenericOptionsModal";
 import HealthBagModal from "@/app/components/RetailCounterModal/HealthBagModal";
 import WhatsappWaitModal from "@/app/components/RetailCounterModal/WhatsappWaitModal";
+import { getUser } from "@/lib/auth/auth";
 
 import { createHealthBagItem } from "@/lib/features/healthBagPharmacistSlice/healthBagPharmacistSlice";
 import {
@@ -29,6 +30,40 @@ interface OcrLogicProps {
   buyerId?: number | null;
 }
 
+interface MedicineWithCartFields extends Omit<Medicine, "Disc"> {
+  dose_form: string;
+  qty: number;
+  remarks: string;
+  duration: string;
+  unitPrice: number;
+  price: number;
+  cartItemId: number;
+  pack_size?: string;
+  generic_name?: string;
+  Disc: number; // 👈 ALWAYS NUMBER (NO undefined)
+}
+
+// bill preview payload type
+interface BillPreviewData {
+  cart: MedicineWithCartFields[];
+  customerName: string;
+  mobile: string;
+  pharmacy_id: number;
+}
+
+export interface OCRMedicine {
+  product_id: number;
+  medicine_name: string;
+  category_id: number;
+  matched_with?: string;
+  confidence?: number;
+}
+interface MatchedMedicine {
+  id: number;
+  name: string;
+  category_id: number;
+}
+
 export default function OcrExtractionLogic({
   imageUrl,
   prescriptionId,
@@ -38,6 +73,10 @@ export default function OcrExtractionLogic({
   buyerId,
 }: OcrLogicProps) {
   const dispatch = useAppDispatch();
+
+  const userPharmacy = getUser();
+  const pharmacist_id = Number(userPharmacy?.id) || 0;
+  const pharmacy_id = Number(userPharmacy?.pharmacy_id) || 0;
 
   // 🧿 BACKEND PREDICTED MEDICINES
   const backendMeds = useAppSelector(
@@ -58,6 +97,12 @@ export default function OcrExtractionLogic({
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isQtyModalOpen, setIsQtyModalOpen] = useState(false);
   const [itemToConfirm, setItemToConfirm] = useState<Medicine | null>(null);
+  const [billPreviewData, setBillPreviewData] = useState<BillPreviewData>({
+    cart: [],
+    customerName: "",
+    mobile: "",
+    pharmacy_id: pharmacy_id || 1, // pharmacy_id defined earlier in your component
+  });
 
   const [isHealthBagOpen, setIsHealthBagOpen] = useState(false);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -123,7 +168,8 @@ export default function OcrExtractionLogic({
     item: Medicine,
     qty: number,
     doseForm: string,
-    remarks: string
+    remarks: string,
+    duration: string
   ) => {
     const mrp = item.MRP || 0;
 
@@ -132,6 +178,7 @@ export default function OcrExtractionLogic({
       qty,
       dose_form: doseForm,
       remarks,
+      duration,
       unitPrice: mrp,
       price: mrp * qty,
       generic_name: item.generic_name || item.GenericName || "N/A",
@@ -142,7 +189,7 @@ export default function OcrExtractionLogic({
     setCart((prev) => [...prev, cartItem]);
     closeQtyModal();
     setSelectedProduct(null);
-    setIsHealthBagOpen(true);
+    toast.success("Item Added To Your HealthBag ");
   };
 
   const handleBackToGeneric = () => {
@@ -163,6 +210,7 @@ export default function OcrExtractionLogic({
       doses: item.dose_form,
       flag: 1,
       instruction: item.remarks,
+      duration: item.duration,
     }));
 
     try {
@@ -178,6 +226,19 @@ export default function OcrExtractionLogic({
       alert("Failed to add to Patient Bag");
       console.error(err);
     }
+  };
+
+  const handleRemoveItem = (index: number) => {
+    setCart((prevCart) => {
+      const updated = prevCart.filter((_, i) => i !== index);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      setBillPreviewData((prev: any) => ({
+        ...prev,
+        cart: updated,
+      }));
+
+      return updated;
+    });
   };
 
   // -------------------------------------------------------------------
@@ -291,6 +352,7 @@ export default function OcrExtractionLogic({
         onClose={() => setIsHealthBagOpen(false)}
         cartItems={cart}
         onProceed={handleProceedToHealthBag}
+        onRemove={handleRemoveItem}
       />
 
       <WhatsappWaitModal
