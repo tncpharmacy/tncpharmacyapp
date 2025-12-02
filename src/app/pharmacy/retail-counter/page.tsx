@@ -371,13 +371,13 @@ export default function RetailCounter() {
         onConfirmAdd={handleFinalAddToCart}
         onBack={handleBackToGeneric}
       />
-      <BillPreviewModal
+      {/* <BillPreviewModal
         show={isBillModalOpen}
         onClose={() => setIsBillModalOpen(false)}
         cart={cart}
         customerName={customerName}
         mobile={mobile}
-      />
+      /> */}
     </>
   );
 }
