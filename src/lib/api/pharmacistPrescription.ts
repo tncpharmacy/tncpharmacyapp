@@ -74,8 +74,22 @@ export const uploadPrescriptionByPharmacist = async (
       validateStatus: (status) => status >= 200 && status < 300,
     }
   );
+  return response.data;
+};
 
-  // ⛔ Wrong earlier: return response.data.data;
-  // ✅ Correct:
+// 🔥 Update Prescription Status by Pharmacist
+export const updatePrescriptionStatusPharmacist = async (
+  prescriptionId: number,
+  pharmacistId: number
+) => {
+  const response = await api.put(
+    ENDPOINTS.PRESCRIPTION_UPLOAD.PRESCRIPTION_STATUS_UPDATED_PHARMACIST(
+      prescriptionId
+    ),
+    {
+      pharmacist_id: pharmacistId,
+    }
+  );
+
   return response.data;
 };

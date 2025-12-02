@@ -109,6 +109,10 @@ export const ENDPOINTS = {
 
     GET_PHARMACY_PHARMACIST: (pharmacyId: number) =>
       `/buyer/pharmacy_based/list/${pharmacyId}/`,
+    PHARMACIST_GET_BY_BUYER_ID: (buyerId: number) =>
+      `/buyer/profile/${buyerId}/pharmacist/`,
+    PUT_BUYER_FOR_PHARMACIST: (buyerId: number) =>
+      `/buyer/profile/update/${buyerId}/pharmacist/`,
     GET_SUPER_ADMIN: "/buyer/list/superadmin/",
 
     // 🔹 Added Order APIs
@@ -126,6 +130,8 @@ export const ENDPOINTS = {
       `/ocr/prescriptions/update/${prescriptionId}/`,
     PRESCRIPTION_UPLOAD_BY_PHARMACIST: (pharmacistId: number) =>
       `/ocr/pharmacist/prescription/upload/${pharmacistId}/`,
+    PRESCRIPTION_STATUS_UPDATED_PHARMACIST: (prescriptionId: number) =>
+      `/ocr/update/prescription/${prescriptionId}/`,
   },
 
   // medicines

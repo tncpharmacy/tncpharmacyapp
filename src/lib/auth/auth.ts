@@ -12,6 +12,11 @@ export interface DecodedToken {
   user_id: string;
   id: number;
   pharmacy_name?: string;
+  pharmacy_email_id?: string;
+  pharmacy_login_id?: string;
+  pharmacy_address?: string;
+  pharmacy_district?: string;
+  pharmacy_pincode?: string;
   pharmacy_id?: string;
   last_login: string;
   is_superuser: boolean;

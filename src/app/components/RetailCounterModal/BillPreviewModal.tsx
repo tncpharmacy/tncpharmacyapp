@@ -1,5 +1,7 @@
 "use client";
+import { getUser } from "@/lib/auth/auth";
 import { useAppDispatch } from "@/lib/hooks";
+import { formatAmount } from "@/lib/utils/formatAmount";
 import { useEffect, useRef, useState } from "react";
 import { Image, Modal } from "react-bootstrap";
 
@@ -29,7 +31,9 @@ interface BillPreviewModalProps {
   cart: CartItem[] | undefined;
   customerName: string;
   mobile: string;
+  uhid: string;
   pharmacy_id?: number;
+  additionalDiscount: string;
 }
 
 const BillPreviewModal: React.FC<BillPreviewModalProps> = ({
@@ -38,9 +42,20 @@ const BillPreviewModal: React.FC<BillPreviewModalProps> = ({
   cart,
   customerName,
   mobile,
+  uhid,
+  additionalDiscount,
 }) => {
   const printRef = useRef<HTMLDivElement>(null);
   const dispatch = useAppDispatch();
+  const userPharmacy = getUser();
+  const pharmacist_id = Number(userPharmacy?.id) || 0;
+  const pharmacy_name = userPharmacy?.pharmacy_name || "";
+  const pharmacy_email_id = userPharmacy?.pharmacy_email_id || "";
+  const pharmacy_login_id = userPharmacy?.pharmacy_login_id || "";
+  const pharmacy_address = userPharmacy?.pharmacy_address || "";
+  const pharmacy_district = userPharmacy?.pharmacy_district || "";
+  const pharmacy_pincode = userPharmacy?.pharmacy_pincode || "";
+
   // --- Translation State and Logic ---
   const [language, setLanguage] = useState("en");
   const [translatedCart, setTranslatedCart] = useState<CartItem[]>(cart || []);
@@ -148,7 +163,8 @@ const BillPreviewModal: React.FC<BillPreviewModalProps> = ({
       }
 
       console.error("Gemini Translation failed: No text received", result);
-      return text; // Fallback to original text
+      return text;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       if (error.response) {
         console.log("Full API Error Response:", error.response.data);
@@ -435,12 +451,13 @@ const BillPreviewModal: React.FC<BillPreviewModalProps> = ({
                 }}
               >
                 <strong style={{ fontSize: "13px", color: "#007bff" }}>
-                  TnC Pharmacy
+                  {pharmacy_name}
                 </strong>
                 <br />
-                123 Main Street, City - 000000 <br />
-                Ph: +91-9999999999 <br />
-                Email: support@tncpharmacy.in
+                {pharmacy_address}, {pharmacy_district} - {pharmacy_pincode}{" "}
+                <br />
+                Ph: +91-{pharmacy_login_id} <br />
+                Email: {pharmacy_email_id}
               </div>
             </div>
 
@@ -499,17 +516,50 @@ const BillPreviewModal: React.FC<BillPreviewModalProps> = ({
                       </td>
                       <td>{item.price}</td>
                       <td>{item.Disc}</td>
-                      <td>{subtotal.toFixed(2)}</td>
+                      <td>{formatAmount(subtotal)}</td>
                     </tr>
                   );
                 })}
               </tbody>
               <tfoot>
                 <tr style={{ backgroundColor: "#f8f9fa" }}>
-                  <th colSpan={4} className="text-end">
+                  <th
+                    colSpan={4}
+                    className="text-end "
+                    style={{ color: "red" }}
+                  >
+                    Total Amount
+                  </th>
+                  <th style={{ color: "red" }}>{formatAmount(grandTotal)}</th>
+                </tr>
+                {Number(additionalDiscount) > 0 && (
+                  <tr style={{ backgroundColor: "#f8f9fa" }}>
+                    <th
+                      colSpan={4}
+                      className="text-end"
+                      style={{ color: "green" }}
+                    >
+                      Additional Discount (%)
+                    </th>
+                    <th style={{ color: "green" }}>
+                      {additionalDiscount ?? "0"}
+                    </th>
+                  </tr>
+                )}
+                <tr style={{ backgroundColor: "#f8f9fa" }}>
+                  <th
+                    colSpan={4}
+                    className="text-end"
+                    style={{ color: "#007bff" }}
+                  >
                     Grand Total
                   </th>
-                  <th style={{ color: "#007bff" }}>{grandTotal.toFixed(2)}</th>
+                  <th style={{ color: "#007bff" }}>
+                    {formatAmount(
+                      grandTotal -
+                        (grandTotal * Number(additionalDiscount)) / 100
+                    )}
+                  </th>
                 </tr>
               </tfoot>
             </table>
@@ -595,7 +645,7 @@ const BillPreviewModal: React.FC<BillPreviewModalProps> = ({
                       <strong>Patient:</strong> {customerName}
                     </p>
                     <p style={{ margin: "2px 0" }}>
-                      <strong>UHID:</strong> {"UHID0001"}
+                      <strong>UHID:</strong> {uhid}
                     </p>
                     <p style={{ margin: "2px 0" }}>
                       <strong>Medicine:</strong> {item.medicine_name}

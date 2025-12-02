@@ -25,6 +25,8 @@ import {
   buyerRegister,
 } from "@/lib/features/buyerSlice/buyerSlice";
 import { createPharmacistOrder } from "@/lib/features/pharmacistOrderSlice/pharmacistOrderSlice";
+import { updateBuyerForPharmacistThunk } from "@/lib/features/pharmacistBuyerListSlice/pharmacistBuyerListSlice";
+import { formatAmount } from "@/lib/utils/formatAmount";
 
 export default function RetailCounter() {
   const router = useRouter();
@@ -61,6 +63,7 @@ export default function RetailCounter() {
   const [mobileError, setMobileError] = useState("");
   const [isUploadEnabled, setIsUploadEnabled] = useState(false);
   const [isMobileChecking, setIsMobileChecking] = useState(false);
+  const [additionalDiscount, setAdditionalDiscount] = useState<string>("0");
 
   // Initial product list fetch
   useEffect(() => {
@@ -223,6 +226,17 @@ export default function RetailCounter() {
 
       if (loginRes?.data?.existing === true) {
         buyerId = loginRes.data.id;
+        if (
+          (!loginRes.data.uhid || loginRes.data.uhid === "") &&
+          uhId.trim() !== ""
+        ) {
+          await dispatch(
+            updateBuyerForPharmacistThunk({
+              buyerId: buyerId,
+              payload: { uhid: uhId },
+            })
+          ).unwrap();
+        }
       } else {
         const regRes = await dispatch(
           buyerRegister({
@@ -274,6 +288,7 @@ export default function RetailCounter() {
         order_type: 2,
         pharmacy_id: pharmacy_id,
         address_id: null,
+        additional_discount: additionalDiscount,
         status: "1",
         products,
       };
@@ -311,6 +326,18 @@ export default function RetailCounter() {
       setIsBillModalOpen(true); // Now modal opens only after order success
     }
   };
+
+  // Total calculation
+  const totalAmount = cart.reduce((acc, item) => {
+    const total = item.qty * item.price;
+    const discountAmount = (total * item.Disc) / 100;
+    const subTotal = total - discountAmount;
+    return acc + subTotal;
+  }, 0);
+
+  // Final after Additional Discount
+  const finalAmount =
+    totalAmount - (totalAmount * Number(additionalDiscount)) / 100;
 
   return (
     <>
@@ -445,7 +472,7 @@ export default function RetailCounter() {
                     <tbody>
                       {cart.length === 0 ? (
                         <tr>
-                          <td colSpan={6} className="text-center text-muted">
+                          <td colSpan={9} className="text-center text-muted">
                             No items added yet
                           </td>
                         </tr>
@@ -469,7 +496,7 @@ export default function RetailCounter() {
                               <td>{item.duration}</td>
                               <td>{item.price}</td>
                               <td>{item.Disc}</td>
-                              <td>{subtotal}</td>
+                              <td>{formatAmount(subtotal)}</td>
                               <td>
                                 <button
                                   className="btn btn-sm btn-danger"
@@ -485,24 +512,65 @@ export default function RetailCounter() {
                     </tbody>
                   </table>
                 </div>
-                {/* Total and Actions */}
-                <div className="d-flex justify-content-between align-items-center mt-3">
-                  <h5 className="fw-bold mb-0">
-                    Total: ₹
-                    {cart.reduce((acc, item) => {
-                      const total = item.qty * item.price;
-                      const discountAmount = (total * item.Disc) / 100;
-                      const subTotal = total - discountAmount;
-                      return acc + subTotal;
-                    }, 0)}
-                  </h5>
-                  <button
-                    className="btn btn-primary px-4"
-                    onClick={handleGenerateBill}
+                {/* RIGHT SIDE BOX */}
+                <div className="d-flex justify-content-end">
+                  <div
+                    className="p-3 border rounded shadow-sm"
+                    style={{
+                      width: "300px",
+                      background: "#F8FBFF",
+                      marginTop: "-10px",
+                      textAlign: "left", // ⬅⬅ Box ke andar ka text LEFT align
+                    }}
                   >
-                    <i className="bi bi-file-earmark-text me-1"></i>
-                    Generate Bill
-                  </button>
+                    <h6
+                      className="fw-bold mb-2"
+                      style={{ color: "red", whiteSpace: "nowrap" }}
+                    >
+                      Total: ₹{formatAmount(totalAmount)}
+                    </h6>
+
+                    <div className="mb-2">
+                      <div
+                        className="d-flex align-items-center mb-2"
+                        style={{ gap: "8px" }}
+                      >
+                        <span
+                          className="fw-semibold"
+                          style={{ color: "green", whiteSpace: "nowrap" }}
+                        >
+                          Additional Discount:
+                        </span>
+
+                        <input
+                          type="text"
+                          className="form-control"
+                          style={{ width: "60px" }}
+                          maxLength={2}
+                          value={additionalDiscount}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            if (/^\d{0,2}$/.test(val))
+                              setAdditionalDiscount(val);
+                          }}
+                        />
+
+                        <span className="fw-bold">(%)</span>
+                      </div>
+                    </div>
+
+                    <h5 className="fw-bold text-primary mb-3">
+                      Grand Total: ₹{formatAmount(finalAmount)}
+                    </h5>
+
+                    <button
+                      className="btn btn-primary w-100"
+                      onClick={handleGenerateBill}
+                    >
+                      <i className="bi bi-file-earmark-text me-1"></i>
+                      Generate Bill
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -533,7 +601,9 @@ export default function RetailCounter() {
         cart={cart}
         customerName={customerName}
         mobile={mobile}
+        uhid={uhId}
         pharmacy_id={pharmacy_id}
+        additionalDiscount={additionalDiscount}
       />
     </>
   );

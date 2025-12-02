@@ -162,8 +162,8 @@ const AddBillingItemModal: React.FC<AddBillingItemModalProps> = ({
             <hr />
 
             {/* Qty Input */}
-            <div className="mb-3">
-              <label className="form-label">Quantity</label>
+            <div className="txt_col">
+              <label className="lbl1 fw-bold">Quantity</label>
               <input
                 type="number"
                 className="form-control"
@@ -180,8 +180,8 @@ const AddBillingItemModal: React.FC<AddBillingItemModalProps> = ({
             </div>
 
             {/* Dose Form Input (Select/Input based on your requirement) */}
-            <div className="mb-3">
-              <label className="form-label">Doses Instruction</label>
+            <div className="txt_col">
+              <label className="lbl1 fw-bold">Doses Instruction</label>
               <select
                 className="form-control" // Bootstrap class
                 value={selectedDoseValue}
@@ -201,10 +201,9 @@ const AddBillingItemModal: React.FC<AddBillingItemModalProps> = ({
                 ))}
               </select>
             </div>
-
             {/* Remarks Input */}
-            <div className="mb-3">
-              <label className="form-label">Instruction</label>
+            <div className="txt_col">
+              <label className="lbl1 fw-bold">Instruction</label>
               <input
                 type="text"
                 className="form-control"
@@ -213,8 +212,8 @@ const AddBillingItemModal: React.FC<AddBillingItemModalProps> = ({
               />
             </div>
             {/* Duration Input */}
-            <div className="mb-3">
-              <label className="form-label">Duration</label>
+            <div className="txt_col">
+              <label className="lbl1 fw-bold">Duration</label>
               <input
                 type="text"
                 className="form-control"

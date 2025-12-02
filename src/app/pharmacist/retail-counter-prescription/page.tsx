@@ -32,6 +32,10 @@ import HealthBagPrescriptionModal from "@/app/components/RetailCounterModal/Heal
 import BillPreviewModal from "@/app/components/RetailCounterModal/BillPreviewModal";
 import CartPreviewModal from "@/app/components/RetailCounterModal/CartPreviewModal";
 import { createPharmacistOrder } from "@/lib/features/pharmacistOrderSlice/pharmacistOrderSlice";
+import {
+  getPharmacistBuyerByIdThunk,
+  updateBuyerForPharmacistThunk,
+} from "@/lib/features/pharmacistBuyerListSlice/pharmacistBuyerListSlice";
 const PreviewBox = dynamic(() => import("./PreviewBox"), {
   ssr: false,
 });
@@ -56,6 +60,7 @@ interface BillPreviewData {
   cart: MedicineWithCartFields[];
   customerName: string;
   mobile: string;
+  uhId: string;
   pharmacy_id: number;
 }
 
@@ -131,11 +136,19 @@ export default function RetailCounter() {
     cart: [],
     customerName: "",
     mobile: "",
+    uhId: "",
     pharmacy_id: pharmacy_id || 1, // pharmacy_id defined earlier in your component
   });
   const [cart, setCart] = useState<MedicineWithCartFields[]>([]);
   const [showBagModal, setShowBagModal] = useState(false);
-  const [isBillModalOpen, setIsBillModalOpen] = useState(false);
+  const [additionalDiscount, setAdditionalDiscount] = useState<string>("0");
+
+  const [buyerId, setBuyerId] = useState<number | null>(null);
+
+  const { pharmacyBuyersById } = useAppSelector(
+    (state) => state.pharmacistBuyerList
+  );
+  console.log("pharmacyBuyersById", pharmacyBuyersById);
 
   const checkMobileInDB = async (value: string) => {
     if (value.length !== 10) return;
@@ -199,6 +212,19 @@ export default function RetailCounter() {
 
       if (loginRes?.data?.id) {
         buyer_id = loginRes.data.id;
+        setBuyerId(buyer_id);
+        // ⭐ If buyer exists but UHID missing → update UHID
+        if (
+          (!loginRes.data.uhid || loginRes.data.uhid === "") &&
+          uhId.trim() !== ""
+        ) {
+          await dispatch(
+            updateBuyerForPharmacistThunk({
+              buyerId: buyer_id,
+              payload: { uhid: uhId },
+            })
+          ).unwrap();
+        }
       }
       if (!buyer_id) {
         const registerPayload = {
@@ -209,6 +235,7 @@ export default function RetailCounter() {
         };
         const regRes = await dispatch(buyerRegister(registerPayload)).unwrap();
         buyer_id = regRes?.data?.id;
+        setBuyerId(buyer_id);
       }
 
       if (!buyer_id) {
@@ -264,6 +291,12 @@ export default function RetailCounter() {
       toast.error("Error: " + rejectMessage);
     }
   };
+
+  useEffect(() => {
+    if (buyerId) {
+      dispatch(getPharmacistBuyerByIdThunk(Number(buyerId)));
+    }
+  }, [buyerId]);
 
   // Dropdown Change Handler: Dispatch API call and set the active ID
   const handleSelectMedicine = (selectedOption: OptionType | null) => {
@@ -420,6 +453,7 @@ export default function RetailCounter() {
       cart: [...prev.cart, itemToAdd],
       customerName,
       mobile,
+      uhId,
       pharmacy_id: pharmacy_id || 1,
     }));
 
@@ -495,6 +529,7 @@ export default function RetailCounter() {
         amount: String(grandTotal),
         order_type: 2,
         pharmacy_id,
+        additionalDiscount,
         address_id: null,
         status: "1",
         products,
@@ -522,6 +557,7 @@ export default function RetailCounter() {
         cart: cart, // always latest cart
         customerName,
         mobile,
+        uhId,
         pharmacy_id,
       });
 
@@ -547,13 +583,30 @@ export default function RetailCounter() {
       <Header />
       <div className="body_wrap">
         <SideNav />
-        <div className="body_right p-4">
+        <div className="body_right">
           <div className="container-fluid retail-counter">
-            <h4 className="mb-4">
-              <i className="bi bi-file-earmark-medical me-2"></i>
-              Prescription Details
-            </h4>
+            <div className="pageTitle ms-2 mt-2 d-flex justify-content-between align-items-center">
+              <div>
+                <i className="bi bi-receipt"></i> Patient Prescription Summary
+              </div>
 
+              <div className="d-flex align-items-center gap-4 me-3 p-2 bg-light rounded shadow-sm">
+                <div className="text-primary fw-semibold">
+                  <i className="bi bi-person-circle me-2"></i>
+                  Patient:{" "}
+                  <span className="text-dark">
+                    {pharmacyBuyersById?.data?.name || "N/A"}
+                  </span>
+                </div>
+                <div className="text-success fw-semibold">
+                  <i className="bi bi-telephone me-2"></i>
+                  Mobile:{" "}
+                  <span className="text-dark">
+                    {pharmacyBuyersById?.data?.number || "N/A"}
+                  </span>
+                </div>
+              </div>
+            </div>
             <div className="card shadow-sm mb-4">
               <div className="card-body">
                 {!showForm && (
@@ -694,7 +747,9 @@ export default function RetailCounter() {
                   <div className="row">
                     {/* LEFT SIDE: PRESCRIPTION PREVIEW */}
                     <div className="col-md-6">
-                      <h6 className="mb-3 fw-bold">Extracted Text (OCR)</h6>
+                      <h6 className="mb-3 fw-bold">
+                        Extracted Medicine ({backendMedicines.length})
+                      </h6>
 
                       {/* 1️⃣ Spinner always first priority */}
 
@@ -771,6 +826,8 @@ export default function RetailCounter() {
         cart={cart}
         onGenerate={handleOpenBillModal}
         onRemove={handleRemoveItem}
+        additionalDiscount={additionalDiscount}
+        onDiscountChange={(v) => setAdditionalDiscount(v)}
       />
       <BillPreviewModal
         show={isBillPreviewOpen}
@@ -778,7 +835,9 @@ export default function RetailCounter() {
         cart={billPreviewData.cart}
         customerName={billPreviewData.customerName}
         mobile={billPreviewData.mobile}
+        uhid={billPreviewData.uhId}
         pharmacy_id={billPreviewData.pharmacy_id}
+        additionalDiscount={additionalDiscount}
       />
     </>
   );

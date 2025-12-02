@@ -12,6 +12,7 @@ import {
   getProductByGenericId,
   getProductList,
 } from "@/lib/features/medicineSlice/medicineSlice";
+import { updatePrescriptionStatusPharmacistThunk } from "@/lib/features/pharmacistPrescriptionSlice/pharmacistPrescriptionSlice";
 
 import { useAppDispatch, useAppSelector } from "@/lib/hooks";
 import { OptionType } from "@/types/input";
@@ -73,7 +74,6 @@ export default function OcrExtractionLogic({
   buyerId,
 }: OcrLogicProps) {
   const dispatch = useAppDispatch();
-
   const userPharmacy = getUser();
   const pharmacist_id = Number(userPharmacy?.id) || 0;
   const pharmacy_id = Number(userPharmacy?.pharmacy_id) || 0;
@@ -217,6 +217,14 @@ export default function OcrExtractionLogic({
       for (const p of payloads) {
         await dispatch(createHealthBagItem(p)).unwrap();
       }
+
+      // 🔹 Step 2: SUCCESS —> Now Update Prescription Status
+      await dispatch(
+        updatePrescriptionStatusPharmacistThunk({
+          prescriptionId: Number(prescriptionId), // URL param
+          pharmacistId: pharmacist_id, // BODY param
+        })
+      ).unwrap();
 
       toast.success(`Added ${cart.length} item(s) to Patient Bag.`);
       setCart([]);

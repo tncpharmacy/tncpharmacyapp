@@ -280,8 +280,8 @@ export default function OrderList() {
                                     className="btn-style1"
                                     onClick={() => handleHistory(p.id)}
                                   >
-                                    <i className="bi bi-card-list"></i> Patient
-                                    Details
+                                    <i className="bi bi-cart-plus-fill"></i>{" "}
+                                    HealthBag
                                   </button>
                                 </td>
                               </tr>

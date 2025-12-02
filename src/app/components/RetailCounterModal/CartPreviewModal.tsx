@@ -1,3 +1,5 @@
+import { formatAmount } from "@/lib/utils/formatAmount";
+import { useState } from "react";
 import { Modal, Table, Button } from "react-bootstrap";
 import { FaTrash } from "react-icons/fa";
 
@@ -18,6 +20,8 @@ interface CartPreviewModalProps {
   cart: CartItem[];
   onGenerate: () => void;
   onRemove: (index: number) => void;
+  additionalDiscount: string;
+  onDiscountChange: (v: string) => void;
 }
 
 const CartPreviewModal = ({
@@ -26,7 +30,10 @@ const CartPreviewModal = ({
   cart,
   onGenerate,
   onRemove,
+  onDiscountChange,
+  additionalDiscount,
 }: CartPreviewModalProps) => {
+  //const [additionalDiscount, setAdditionalDiscount] = useState<string>("0");
   if (!show) return null;
 
   const total = cart.reduce((acc, item) => {
@@ -34,7 +41,8 @@ const CartPreviewModal = ({
       item.qty * item.price - (item.price * (item.Disc ?? 0)) / 100;
     return acc + subtotal;
   }, 0);
-
+  // Final after Additional Discount
+  const finalAmount = total - (total * Number(additionalDiscount)) / 100;
   return (
     <Modal show={show} onHide={onClose} size="lg" centered>
       <Modal.Header closeButton>
@@ -90,10 +98,59 @@ const CartPreviewModal = ({
             })}
           </tbody>
         </Table>
+        <div className="d-flex justify-content-end">
+          <div
+            className="p-3 border rounded shadow-sm"
+            style={{
+              width: "300px",
+              background: "#F8FBFF",
+              marginTop: "-10px",
+              textAlign: "left", // ⬅⬅ Box ke andar ka text LEFT align
+            }}
+          >
+            <h6
+              className="fw-bold mb-2"
+              style={{ color: "red", whiteSpace: "nowrap" }}
+            >
+              Total: ₹{formatAmount(total)}
+            </h6>
 
-        <h4 className="mt-3">
-          Total: <strong>₹{total}</strong>
-        </h4>
+            <div className="mb-2">
+              <div
+                className="d-flex align-items-center mb-2"
+                style={{ gap: "8px" }}
+              >
+                <span
+                  className="fw-semibold"
+                  style={{ color: "green", whiteSpace: "nowrap" }}
+                >
+                  Additional Discount:
+                </span>
+
+                <input
+                  type="text"
+                  className="form-control"
+                  style={{ width: "60px" }}
+                  maxLength={2}
+                  value={String(additionalDiscount)}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    if (/^\d{0,2}$/.test(val)) {
+                      // local update — yeh tumhara rakhna zaroori hai
+                      onDiscountChange(val); // parent ko bhej diya
+                    }
+                  }}
+                />
+
+                <span className="fw-bold">(%)</span>
+              </div>
+            </div>
+
+            <h5 className="fw-bold text-primary mb-3">
+              Grand Total: ₹{formatAmount(finalAmount)}
+            </h5>
+          </div>
+        </div>
       </Modal.Body>
 
       <Modal.Footer>

@@ -6,8 +6,9 @@ import { Container, Row, Alert, Spinner } from "react-bootstrap";
 import Link from "next/link";
 import Header from "../components/Header/page";
 import SideNav from "../components/SideNav/page";
-import { useAppSelector } from "@/lib/hooks";
+import { useAppDispatch, useAppSelector } from "@/lib/hooks";
 import { useEffect, useState } from "react";
+import { getPharmacistBuyerByIdThunk } from "@/lib/features/pharmacistBuyerListSlice/pharmacistBuyerListSlice";
 
 const DynamicOcrLogic = dynamic(() => import("./OcrExtractionLogic"), {
   ssr: false,
@@ -20,6 +21,7 @@ const DynamicOcrLogic = dynamic(() => import("./OcrExtractionLogic"), {
 });
 
 const OcrExtractionPage: React.FC = () => {
+  const dispatch = useAppDispatch();
   const searchParams = useSearchParams();
   const prescriptionId = searchParams.get("id");
 
@@ -27,9 +29,16 @@ const OcrExtractionPage: React.FC = () => {
   const buyerName = searchParams.get("buyerName");
   const buyerMobile = searchParams.get("buyerMobile");
   const [buyer, setBuyer] = useState(null);
-
   const mediaBase = process.env.NEXT_PUBLIC_MEDIA_BASE_URL;
   const encodedUrl = searchParams.get("imageUrl");
+  const { pharmacyBuyersById } = useAppSelector(
+    (state) => state.pharmacistBuyerList
+  );
+  useEffect(() => {
+    if (buyerId) {
+      dispatch(getPharmacistBuyerByIdThunk(Number(buyerId)));
+    }
+  }, [dispatch, buyerId]);
 
   let imageUrl = "";
   if (encodedUrl) {
@@ -77,12 +86,17 @@ const OcrExtractionPage: React.FC = () => {
             <div className="d-flex align-items-center gap-4 me-3 p-2 bg-light rounded shadow-sm">
               <div className="text-primary fw-semibold">
                 <i className="bi bi-person-circle me-2"></i>
-                Patient: <span className="text-dark">{buyerName || "N/A"}</span>
+                Patient:{" "}
+                <span className="text-dark">
+                  {pharmacyBuyersById?.data?.name || "N/A"}
+                </span>
               </div>
               <div className="text-success fw-semibold">
                 <i className="bi bi-telephone me-2"></i>
                 Mobile:{" "}
-                <span className="text-dark">{buyerMobile || "N/A"}</span>
+                <span className="text-dark">
+                  {pharmacyBuyersById?.data?.number || "N/A"}
+                </span>
               </div>
             </div>
           </div>

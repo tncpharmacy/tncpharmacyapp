@@ -4,6 +4,7 @@ import {
   fetchPrescriptionListPharmacist,
   receivePrescriptionByPharmacist,
   ReceivePrescriptionResponse,
+  updatePrescriptionStatusPharmacist,
   uploadPrescriptionByPharmacist,
 } from "@/lib/api/pharmacistPrescription";
 
@@ -26,6 +27,9 @@ interface PharmacistPrescriptionState {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   productList: any[];
   totalMedicinesFound: number;
+
+  statusUpdateLoading?: boolean;
+  statusUpdateError?: string | null;
 }
 
 const initialState: PharmacistPrescriptionState = {
@@ -45,6 +49,9 @@ const initialState: PharmacistPrescriptionState = {
   error: null,
   prescription: null,
   productList: [],
+
+  statusUpdateLoading: false,
+  statusUpdateError: null,
 
   totalMedicinesFound: 0,
 };
@@ -107,6 +114,29 @@ export const uploadPrescriptionPharmacistThunk = createAsyncThunk<
     } catch (err: any) {
       return rejectWithValue(
         err.response?.data?.message || "Failed to upload prescription"
+      );
+    }
+  }
+);
+
+export const updatePrescriptionStatusPharmacistThunk = createAsyncThunk<
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  any,
+  { prescriptionId: number; pharmacistId: number },
+  { rejectValue: string }
+>(
+  "pharmacistPrescription/updateStatus",
+  async ({ prescriptionId, pharmacistId }, { rejectWithValue }) => {
+    try {
+      const res = await updatePrescriptionStatusPharmacist(
+        prescriptionId,
+        pharmacistId
+      );
+      return res;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (err: any) {
+      return rejectWithValue(
+        err.response?.data?.message || "Failed to update prescription status"
       );
     }
   }
@@ -183,6 +213,34 @@ const pharmacistPrescriptionSlice = createSlice({
         state.uploadLoading = false;
         state.uploadError = action.payload || "Error uploading prescription";
       });
+    builder
+      .addCase(updatePrescriptionStatusPharmacistThunk.pending, (state) => {
+        state.statusUpdateLoading = true;
+        state.statusUpdateError = null;
+      })
+      .addCase(
+        updatePrescriptionStatusPharmacistThunk.fulfilled,
+        (state, action) => {
+          state.statusUpdateLoading = false;
+
+          // 🔥 backend agar updated prescription send kare
+          if (action.payload?.data) {
+            const updated = action.payload.data;
+            const index = state.list.findIndex((p) => p.id === updated.id);
+            if (index !== -1) {
+              state.list[index] = updated;
+            }
+          }
+        }
+      )
+      .addCase(
+        updatePrescriptionStatusPharmacistThunk.rejected,
+        (state, action) => {
+          state.statusUpdateLoading = false;
+          state.statusUpdateError =
+            action.payload || "Failed to update prescription status";
+        }
+      );
   },
 });
 

@@ -19,6 +19,13 @@ import { PharmacistOrder } from "@/types/pharmacistOrder";
 import InfiniteScroll from "@/app/components/InfiniteScrollS/InfiniteScrollS";
 import { getPharmacyBuyersThunk } from "@/lib/features/pharmacistBuyerListSlice/pharmacistBuyerListSlice";
 import { getUser } from "@/lib/auth/auth";
+import { formatAmount } from "@/lib/utils/formatAmount";
+import BillPreviewModal from "@/app/components/RetailCounterModal/BillPreviewModal";
+import ExcelJS from "exceljs";
+import { saveAs } from "file-saver";
+//import * as XLSX from "xlsx";
+// import XLSX from "xlsx-style";
+
 type Buyer = {
   id: number;
   name: string;
@@ -58,6 +65,18 @@ export default function OrderList() {
   const [orderType, setOrderType] = useState<string>("");
   const [selectedBuyer, setSelectedBuyer] = useState<number | "">("");
   const [modalLoading, setModalLoading] = useState(false);
+  // export loading
+  const [exportLoading, setExportLoading] = useState(false);
+  // bill print state
+  const [isBillPreviewOpen, setIsBillPreviewOpen] = useState(false);
+  const [billPreviewData, setBillPreviewData] = useState({
+    cart: [],
+    customerName: "",
+    mobile: "",
+    uhId: "",
+    pharmacy_id: pharmacyId,
+  });
+  const [additionalDiscount, setAdditionalDiscount] = useState<string>("0");
 
   const {
     buyerOrderList,
@@ -147,23 +166,149 @@ export default function OrderList() {
 
   // 🗓️ Aaj ki date (YYYY-MM-DD)
   const today = new Date().toISOString().split("T")[0];
-  const handleExport = () => {
+  //  EXPORT / REPORT LOGIC
+  const handleExport = async () => {
     if (!startDate || !endDate) {
       alert("Please select both start and end dates.");
       return;
     }
-    if (new Date(startDate) > new Date(endDate)) {
-      alert("Start Date cannot be after End Date!");
-      return;
+
+    const start = new Date(`${startDate}T00:00:00`);
+    const end = new Date(`${endDate}T23:59:59.999`);
+
+    try {
+      setExportLoading(true);
+
+      const allOrders = Array.isArray(orders) ? orders : [];
+
+      const filteredOrders = allOrders.filter((o) => {
+        if (!o?.orderDate) return false;
+        const od = new Date(o.orderDate.replace(" ", "T"));
+        return od >= start && od <= end;
+      });
+
+      if (!filteredOrders.length) {
+        alert("No orders found for selected date range.");
+        setShowReport(false);
+        return;
+      }
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const rows: any[] = [];
+      let serial = 1; // 🔥 START SERIAL NUMBER
+
+      for (const ord of filteredOrders) {
+        const res = await dispatch(
+          getPharmacistOrderById({ orderId: ord.orderId })
+        ).unwrap();
+
+        const orderDetails =
+          Array.isArray(res?.data) && res.data.length ? res.data[0] : null;
+
+        if (!orderDetails) continue;
+
+        const base = {
+          "Sr. No.": "",
+          "Order Id": orderDetails.orderId ?? "",
+          "Patient Name": orderDetails.buyerName ?? "",
+          Mobile: orderDetails.buyerNumber ?? "",
+          Email: orderDetails.buyerEmail ?? "",
+          UHID: orderDetails.buyer_uhid ?? "",
+          "Order Date": orderDetails.orderDate ?? "",
+          "Payment Status": orderDetails.paymentStatus ?? "",
+          Amount: formatAmount(orderDetails.amount ?? ""),
+          "Order Type": orderDetails.orderType ?? "",
+          "Payment Mode": orderDetails.paymentMode ?? "",
+          "Additional Discount": orderDetails.additional_discount ?? "",
+        };
+
+        const products = orderDetails.products ?? [];
+
+        if (products.length) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          products.forEach((p: any) => {
+            rows.push({
+              ...base,
+              "Sr. No.": serial++,
+              "Medicine Name": p.medicine_name ?? "",
+              Manufacturer: p.manufacturer ?? "",
+              Quantity: p.quantity ?? "",
+              MRP: p.mrp ?? "",
+              Discount: p.discount ?? "",
+              Rate: p.rate ?? "",
+            });
+          });
+        } else {
+          rows.push({
+            ...base,
+            "Medicine Name": "",
+            Manufacturer: "",
+            Quantity: "",
+            MRP: "",
+            Discount: "",
+            Rate: "",
+          });
+        }
+      }
+
+      // ====== CREATE WORKBOOK ======
+      const workbook = new ExcelJS.Workbook();
+      const worksheet = workbook.addWorksheet("Orders");
+
+      // Set header row
+      const header = Object.keys(rows[0]);
+      worksheet.addRow(header);
+
+      // Add data rows
+      rows.forEach((r) => worksheet.addRow(Object.values(r)));
+
+      // ===== HEADER STYLING =====
+      const headerRow = worksheet.getRow(1);
+      headerRow.eachCell((cell) => {
+        cell.font = { bold: true, color: { argb: "000000" } };
+        cell.fill = {
+          type: "pattern",
+          pattern: "solid",
+          fgColor: { argb: "B4C4E0" }, // light blue
+        };
+        cell.alignment = { horizontal: "center", vertical: "middle" };
+        cell.border = {
+          top: { style: "thin" },
+          left: { style: "thin" },
+          right: { style: "thin" },
+          bottom: { style: "thin" },
+        };
+      });
+
+      // ===== BORDER FOR ALL DATA CELLS =====
+      worksheet.eachRow((row, rowNum) => {
+        row.eachCell((cell) => {
+          cell.border = {
+            top: { style: "thin" },
+            left: { style: "thin" },
+            right: { style: "thin" },
+            bottom: { style: "thin" },
+          };
+        });
+      });
+
+      // ===== DOWNLOAD FILE =====
+      const buffer = await workbook.xlsx.writeBuffer();
+      saveAs(
+        new Blob([buffer], { type: "application/octet-stream" }),
+        `orders_${startDate}_to_${endDate}.xlsx`
+      );
+
+      setShowReport(false);
+    } catch (e) {
+      console.error(e);
+      alert("Export error");
+    } finally {
+      setExportLoading(false);
     }
-    console.log("Generating report from", startDate, "to", endDate);
-    // 🔽 yahan export / API call logic likho
-    setShowReport(false);
   };
 
-  const handleBook = () => {
-    router.push(`/doctor/appointment/bookAppointment`);
-  };
+  //END EXPORT / REPORT LOGIC
+
   const handleHistory = (orderId: number) => {
     setShowHistory(true); // Modal OPEN
     setModalLoading(true); // Loading START
@@ -182,6 +327,40 @@ export default function OrderList() {
       month: "short",
       year: "numeric",
     });
+  };
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const handleReprint = (order: any) => {
+    const cartItems =
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      order.products?.map((p: any) => ({
+        medicine_name: p.medicine_name,
+        price: Number(p.mrp),
+        qty: Number(p.quantity),
+        Disc: Number(p.discount),
+        total: Number(p.rate),
+        dose_form: p.doses,
+        remarks: p.remark,
+        duration: p.duration,
+      })) || [];
+
+    setBillPreviewData({
+      cart: cartItems,
+      customerName: order.buyerName || "",
+      mobile: order.buyerNumber || "",
+      uhId: order.buyer_uhid || "",
+      pharmacy_id: pharmacyId,
+    });
+    setAdditionalDiscount(String(order.additional_discount || "0"));
+    setIsBillPreviewOpen(true);
+  };
+  const handleReprintFromTable = async (orderId: number) => {
+    const full = await dispatch(getPharmacistOrderById({ orderId })).unwrap();
+
+    const order = Array.isArray(full?.data) ? full.data[0] : null;
+
+    if (!order) return;
+
+    handleReprint(order);
   };
 
   return (
@@ -288,6 +467,12 @@ export default function OrderList() {
                     </thead>
                     <tbody>
                       {filteredData
+                        .slice()
+                        .sort(
+                          (a, b) =>
+                            new Date(b.orderDate).getTime() -
+                            new Date(a.orderDate).getTime()
+                        )
                         .slice(0, visibleCount)
                         .map((p: PharmacistOrder) => {
                           return (
@@ -301,7 +486,9 @@ export default function OrderList() {
                               {/* <td className="text-start">
                                 {p.gst_number ?? ""}
                               </td> */}
-                              <td className="text-start">{p.amount ?? ""}</td>
+                              <td className="text-start">
+                                {formatAmount(Number(p.amount))}
+                              </td>
                               <td className="text-start">
                                 {p.orderType ?? ""}
                               </td>
@@ -321,6 +508,14 @@ export default function OrderList() {
                                 >
                                   <i className="bi bi-card-list"></i> Order
                                   Details
+                                </button>
+                                <button
+                                  className="btn-style1 ms-2"
+                                  onClick={() =>
+                                    handleReprintFromTable(p.orderId)
+                                  }
+                                >
+                                  <i className="bi bi-printer-fill"></i> Reprint
                                 </button>
                               </td>
                             </tr>
@@ -358,96 +553,166 @@ export default function OrderList() {
         size="lg"
         centered
       >
-        <Modal.Header closeButton>
-          <Modal.Title>
-            <i className="bi bi-person-vcard"></i> Patient Details
+        <Modal.Header
+          closeButton
+          className="text-white"
+          style={{
+            background: "linear-gradient(90deg, #007bff, #0056d6)",
+            borderBottom: "none",
+          }}
+        >
+          <Modal.Title className="fw-semibold">
+            <i className="bi bi-receipt-cutoff me-2"></i> Order Details
           </Modal.Title>
         </Modal.Header>
 
-        <Modal.Body>
-          {/* ====== LOADING STATE ====== */}
+        <Modal.Body style={{ background: "#f4f6f9", padding: "25px" }}>
           {modalLoading && (
             <div className="d-flex justify-content-center py-5">
-              <div className="spinner-border text-primary" role="status">
-                <span className="visually-hidden">Loading...</span>
-              </div>
+              <div className="spinner-border text-primary" role="status" />
             </div>
           )}
-          {!modalLoading && orderData.length > 0 && (
-            <div className="container-fluid">
-              {/* SHORTCUT */}
-              {(() => {
-                const o = orderData[0];
 
-                return (
-                  <>
-                    {/* Patient Info */}
-                    <div className="row">
-                      <div className="col-md-4">
+          {!modalLoading &&
+            orderData.length > 0 &&
+            (() => {
+              const o = orderData[0];
+              // -------------------- BILLING CALCULATIONS --------------------
+              const totalAmount = o.products?.reduce(
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                (sum: any, p: any) => sum + Number(p.rate || 0),
+                0
+              );
+              const additionalDiscount = Number(o.additional_discount || 0);
+              const netAmount =
+                totalAmount - (totalAmount * Number(additionalDiscount)) / 100;
+              // --------------------------------------------------------------
+              return (
+                <>
+                  {/* TOP 2 CARDS */}
+                  <div className="row g-4 mb-4 d-flex align-items-stretch">
+                    {/* PATIENT CARD */}
+                    <div className="col-md-6 d-flex">
+                      <div
+                        className="p-4 bg-white flex-fill"
+                        style={{
+                          borderRadius: "14px",
+                          border: "1px solid #e4e7ec",
+                          boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
+                          fontSize: "14px",
+                        }}
+                      >
+                        <h5
+                          className="fw-bold mb-3 d-flex align-items-center"
+                          style={{ fontSize: "16px" }}
+                        >
+                          <i className="bi bi-person-badge me-2 text-primary"></i>
+                          Patient Details
+                        </h5>
+
                         <p>
-                          <strong>Name:</strong> {o.buyerName || "N/A"}
+                          <strong>Name:</strong> {o.buyerName}
                         </p>
-                      </div>
-
-                      <div className="col-md-4">
                         <p>
-                          <strong>Contact No:</strong> {o.buyerMobile || "N/A"}
+                          <strong>Mobile:</strong> {o.buyerNumber}
                         </p>
-                      </div>
-
-                      <div className="col-md-4">
                         <p>
-                          <strong>Email:</strong> {o.buyerEmail || "N/A"}
+                          <strong>Email:</strong> {o.buyerEmail}
+                        </p>
+                        <p>
+                          <strong>UHID:</strong> {o.buyer_uhid}
                         </p>
                       </div>
                     </div>
 
-                    <br />
-                    <Modal.Title>
-                      <i className="bi bi-card-list"></i> Order Details
-                    </Modal.Title>
-                    <hr />
+                    {/* BILLING CARD */}
+                    <div className="col-md-6 d-flex">
+                      <div
+                        className="p-4 bg-white flex-fill"
+                        style={{
+                          borderRadius: "14px",
+                          border: "1px solid #e4e7ec",
+                          boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
+                          fontSize: "14px",
+                        }}
+                      >
+                        <h5
+                          className="fw-bold mb-3 d-flex align-items-center"
+                          style={{ fontSize: "16px" }}
+                        >
+                          <i className="bi bi-geo-alt me-2 text-primary"></i>
+                          Billing Address
+                        </h5>
 
-                    {/* Medical Details */}
-                    <div className="row">
-                      <div className="col-md-4">
-                        <p style={{ whiteSpace: "pre-wrap" }}>
-                          <strong>Order ID:</strong> {o.orderId}
-                          {"\n"}
-                          <strong>Order Date:</strong> {formatDate(o.orderDate)}
+                        <p>
+                          <strong>Name:</strong> {o.recipient_name}
                         </p>
-                      </div>
-
-                      <div className="col-md-3">
-                        <p style={{ whiteSpace: "pre-wrap" }}>
-                          <strong>Order Type:</strong> {"\n"}
-                          {o.orderType}
+                        <p>
+                          <strong>Mobile:</strong> {o.recipient_mobile}
                         </p>
-                      </div>
-
-                      <div className="col-md-5">
-                        <p style={{ whiteSpace: "pre-wrap" }}>
-                          <strong>Billing Address:</strong>
-                          {"\n"}
-                          {o.address}
-                          {"\n"}
+                        <p>
+                          <strong>Address:</strong> {o.address}
+                        </p>
+                        <p>
+                          <strong>Location:</strong> {o.location || "N/A"}
+                        </p>
+                        <p>
                           <strong>Pincode:</strong> {o.pincode}
                         </p>
                       </div>
                     </div>
+                  </div>
 
-                    <hr />
+                  {/* ORDER INFO */}
+                  <div
+                    className="p-4 mb-4 bg-white"
+                    style={{
+                      borderRadius: "14px",
+                      border: "1px solid #e4e7ec",
+                      boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
+                    }}
+                  >
+                    <h5 className="fw-bold mb-3 d-flex align-items-center">
+                      <i className="bi bi-card-checklist me-2 text-primary"></i>
+                      Order Information
+                    </h5>
 
-                    {/* Prescription Table */}
-                    <h5 className="fw-bold">Prescription</h5>
-                    <table className="table table-bordered table-sm">
-                      <thead>
+                    <div className="row">
+                      <div className="col-md-4 mb-2">
+                        <strong>Order ID:</strong> {o.orderId}
+                      </div>
+                      <div className="col-md-4 mb-2">
+                        <strong>Order Date:</strong> {formatDate(o.orderDate)}
+                      </div>
+                      <div className="col-md-4 mb-2">
+                        <strong>Order Type:</strong> {o.orderType}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* PRESCRIPTION TABLE */}
+                  <div
+                    className="p-4 mb-4 bg-white"
+                    style={{
+                      borderRadius: "14px",
+                      border: "1px solid #e4e7ec",
+                      boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
+                    }}
+                  >
+                    <h5 className="fw-bold mb-3">Prescription</h5>
+
+                    <table
+                      className="table table-bordered table-sm"
+                      style={{ borderRadius: "10px", overflow: "hidden" }}
+                    >
+                      <thead className="table-light">
                         <tr>
                           <th>Medicine</th>
                           <th>Manufacture</th>
-                          <th>Dosage</th>
-                          <th>Quantity</th>
-                          <th>Remark</th>
+                          <th>Doses</th>
+                          <th>Instruction</th>
+                          <th>Duration</th>
+                          <th>Qty</th>
                           <th>Price</th>
                           <th>Discount</th>
                           <th>Total</th>
@@ -456,76 +721,77 @@ export default function OrderList() {
 
                       <tbody>
                         {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                        {o.products?.map((prod: any) => (
-                          <tr key={prod.id}>
-                            <td>{prod.medicine_name || ""}</td>
-                            <td>{prod.manufacturer || ""}</td>
-                            <td>{prod.doses || "-"}</td>
-                            <td>{prod.quantity}</td>
-                            <td>{prod.remark || "-"}</td>
-                            <td>{prod.mrp}</td>
-                            <td>{prod.discount}</td>
-                            <td>{prod.rate}</td>
+                        {o.products?.map((p: any) => (
+                          <tr key={p.id}>
+                            <td>{p.medicine_name}</td>
+                            <td>{p.manufacturer}</td>
+                            <td>{p.doses || "-"}</td>
+                            <td>{p.remark || "-"}</td>
+                            <td>{p.duration || "-"}</td>
+                            <td>{p.quantity}</td>
+                            <td>{p.mrp}</td>
+                            <td>{p.discount}</td>
+                            <td>{formatAmount(p.rate)}</td>
                           </tr>
                         ))}
                       </tbody>
                     </table>
+                  </div>
 
-                    {/* Billing Summary */}
-                    <div
-                      style={{
-                        marginTop: "20px",
-                        border: "1px solid #ddd",
-                        borderRadius: "10px",
-                        padding: "15px 20px",
-                        background: "#f8f9fa",
-                        maxWidth: "300px",
-                        marginLeft: "auto",
-                        boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
-                      }}
-                    >
-                      <h5
-                        style={{
-                          textAlign: "center",
-                          marginBottom: "15px",
-                        }}
-                      >
-                        Billing Summary
-                      </h5>
+                  {/* BILLING SUMMARY */}
+                  <div
+                    className="p-4 bg-white"
+                    style={{
+                      borderRadius: "14px",
+                      border: "1px solid #e4e7ec",
+                      boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
+                      maxWidth: "330px",
+                      marginLeft: "auto",
+                    }}
+                  >
+                    <h5 className="fw-bold text-center mb-3">
+                      Billing Summary
+                    </h5>
 
-                      <div className="d-flex justify-content-between mb-2">
-                        <span>Total Amount:</span>
-                        <strong>₹{o.amount}</strong>
-                      </div>
-
-                      <hr />
-
-                      <div
-                        className="d-flex justify-content-between"
-                        style={{
-                          fontSize: "1.2rem",
-                          fontWeight: "bold",
-                          color: "#007bff",
-                        }}
-                      >
-                        <span>Net Amount:</span>
-                        <span>₹{o.amount}</span>
-                      </div>
+                    <div className="d-flex justify-content-between text-danger mb-2 fw-bold">
+                      <span>Total Amount:</span>
+                      <strong>₹{formatAmount(totalAmount)}</strong>
                     </div>
-                  </>
-                );
-              })()}
-            </div>
-          )}
+                    {Number(additionalDiscount) > 0 && (
+                      <div className="d-flex justify-content-between text-success mb-2 fw-bold">
+                        <span>Additional Discount:</span>
+                        <strong>₹{formatAmount(additionalDiscount)}</strong>
+                      </div>
+                    )}
+
+                    <hr />
+
+                    <div className="d-flex justify-content-between text-primary fw-bold fs-5">
+                      <span>Grand Total:</span>
+
+                      <span>₹{formatAmount(netAmount)}</span>
+                    </div>
+                  </div>
+                </>
+              );
+            })()}
         </Modal.Body>
 
-        <Modal.Footer>
+        <Modal.Footer style={{ borderTop: "none" }}>
           <Button variant="secondary" onClick={() => setShowHistory(false)}>
             Close
           </Button>
+          <Button
+            variant="success"
+            onClick={() => {
+              setShowHistory(false);
+              handleReprint(orderData[0]);
+            }}
+          >
+            <i className="bi bi-printer-fill"></i> Reprint
+          </Button>
         </Modal.Footer>
       </Modal>
-
       {/* Generate Report Modal */}
       <Modal
         show={showReport}
@@ -567,8 +833,22 @@ export default function OrderList() {
                   className="w-100 d-flex align-items-center justify-content-center gap-2"
                   style={{ height: "46px" }}
                   onClick={handleExport}
+                  disabled={exportLoading}
                 >
-                  <i className="bi bi-download"></i> Export Statement
+                  {exportLoading ? (
+                    <>
+                      <span
+                        className="spinner-border spinner-border-sm"
+                        role="status"
+                        aria-hidden="true"
+                      ></span>
+                      <span> Generating...</span>
+                    </>
+                  ) : (
+                    <>
+                      <i className="bi bi-download"></i> Export Statement
+                    </>
+                  )}
                 </Button>
               </div>
             </div>
@@ -581,6 +861,16 @@ export default function OrderList() {
           </Button>
         </Modal.Footer>
       </Modal>
+      <BillPreviewModal
+        show={isBillPreviewOpen}
+        onClose={() => setIsBillPreviewOpen(false)}
+        cart={billPreviewData.cart}
+        customerName={billPreviewData.customerName}
+        mobile={billPreviewData.mobile}
+        uhid={billPreviewData.uhId}
+        pharmacy_id={billPreviewData.pharmacy_id}
+        additionalDiscount={additionalDiscount}
+      />
     </>
   );
 }
