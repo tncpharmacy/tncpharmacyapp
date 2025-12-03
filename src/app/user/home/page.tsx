@@ -216,6 +216,49 @@ export default function HomePage() {
         </Carousel.Item>
       </Carousel>
 
+      {/* 🔥 TOP SCROLLING TEXT */}
+      <div
+        style={{
+          width: "100%",
+          overflow: "hidden",
+          whiteSpace: "nowrap",
+          padding: "4px 0",
+          background: "#fff",
+          position: "relative",
+          // textTransform: "uppercase",
+        }}
+      >
+        <span
+          style={{
+            display: "inline-block",
+            paddingLeft: "100%",
+            color: "blue",
+            fontSize: "14px",
+            fontWeight: "600",
+            animation: "scroll-right 30s linear infinite",
+          }}
+        >
+          <style>
+            {`
+              @keyframes scroll-right {
+                0% { transform: translateX(-100%); }
+                100% { transform: translateX(100%); }
+              }
+            `}
+          </style>
+          TNC PHARMACY AND LABS PRIVATE LIMITED
+        </span>
+
+        {/* Inline keyframes */}
+        <style>
+          {`
+      @keyframes scroll-left {
+        0% { transform: translateX(0); }
+        100% { transform: translateX(-100%); }
+      }
+    `}
+        </style>
+      </div>
       {/* Make sure to check if data exists before mapping */}
       <section className="category_sec">
         <div className="container">

@@ -141,12 +141,12 @@ const Footer = () => {
             <ul className="ftr_link">
               <li>
                 <i className="bi bi-headphones"></i>
-                <a href="#">+91 97178 XXXXX</a>
+                <a href="#">+91 7042079595 </a>
                 <span>(10:00 AM - 6:00 PM)</span>
               </li>
               <li>
                 <i className="bi bi-whatsapp"></i>
-                <a href="#">+91 97178 XXXXX</a>
+                <a href="#">+91 9625768741 </a>
                 <span>(24x7 hrs)</span>
               </li>
               <li>
@@ -174,30 +174,42 @@ const Footer = () => {
               <h5 className="ftr_title">We are social</h5>
               <ul className="ftr_sociallink">
                 <li>
-                  <Link href="#" className="facebook">
+                  <Link
+                    href="https://www.facebook.com/profile.php?id=61583886771534"
+                    className="facebook"
+                  >
                     <i className="bi bi-facebook"></i>
                   </Link>
                 </li>
                 <li>
-                  <Link href="#" className="twitter">
+                  <Link
+                    href="https://x.com/tncpharmacylabs"
+                    className="twitter"
+                  >
                     <i className="bi bi-twitter-x"></i>
                   </Link>
                 </li>
                 <li>
-                  <Link href="#" className="instagram">
+                  <Link
+                    href="https://www.instagram.com/tnc.pharmacy?igsh=djI4aWY3ZjdwYmRi"
+                    className="instagram"
+                  >
                     <i className="bi bi-instagram"></i>
                   </Link>
                 </li>
                 <li>
-                  <Link href="#" className="youtube">
+                  <Link
+                    href="https://www.youtube.com/@tncpharmacyandlabs"
+                    className="youtube"
+                  >
                     <i className="bi bi-youtube"></i>
                   </Link>
                 </li>
-                <li>
+                {/* <li>
                   <Link href="#" className="linkedin">
                     <i className="bi bi-linkedin"></i>
                   </Link>
-                </li>
+                </li> */}
               </ul>
             </div>
 

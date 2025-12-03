@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from "react";
 import "../../css/medicine.css";
-import Image from "next/image";
 import { Medicine } from "@/types/medicine";
 import { useRouter } from "next/navigation";
 import { encodeId } from "@/lib/utils/encodeDecode";
 import { useAppSelector } from "@/lib/hooks";
 import { useHealthBag } from "@/lib/hooks/useHealthBag";
 import { HealthBag } from "@/types/healthBag";
+import { Image } from "react-bootstrap";
 
 const mediaBase = process.env.NEXT_PUBLIC_MEDIA_BASE_URL;
 
@@ -156,7 +156,7 @@ export default function MedicineCard({
                   <Image
                     src={imageSrc}
                     alt={medicine_name}
-                    fill
+                    // fill
                     style={{
                       height: "100%",
                       objectFit: "contain",
