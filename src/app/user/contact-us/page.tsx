@@ -74,7 +74,7 @@ export default function ContactUs() {
                     </li>
                     <li className="mb-3">
                       <i className="bi bi-telephone-fill text-primary me-2"></i>
-                      <span>+91 97178 XXXXX</span>
+                      <span>+91 7042079595 (10:00 AM - 6:00 PM)</span>
                     </li>
                     <li className="mb-3">
                       <i className="bi bi-envelope-fill text-primary me-2"></i>
@@ -82,23 +82,35 @@ export default function ContactUs() {
                     </li>
                     <li>
                       <i className="bi bi-whatsapp text-success me-2"></i>
-                      <span>+91 97178 XXXXX (24x7 Support)</span>
+                      <span>+91 9625768741 (24x7 Support)</span>
                     </li>
                   </ul>
 
                   <div className="mt-4">
                     <h6 className="fw-semibold text-primary mb-2">Follow us</h6>
                     <div className="d-flex gap-3">
-                      <a href="#" className="text-dark fs-5">
+                      <a
+                        href="https://www.facebook.com/profile.php?id=61583886771534"
+                        className="text-dark fs-5"
+                      >
                         <i className="bi bi-facebook"></i>
                       </a>
-                      <a href="#" className="text-dark fs-5">
+                      <a
+                        href="https://www.instagram.com/tnc.pharmacy?igsh=djI4aWY3ZjdwYmRi"
+                        className="text-dark fs-5"
+                      >
                         <i className="bi bi-instagram"></i>
                       </a>
-                      <a href="#" className="text-dark fs-5">
+                      <a
+                        href="https://x.com/tncpharmacylabs"
+                        className="text-dark fs-5"
+                      >
                         <i className="bi bi-twitter-x"></i>
                       </a>
-                      <a href="#" className="text-dark fs-5">
+                      <a
+                        href="https://www.youtube.com/@tncpharmacyandlabs"
+                        className="text-dark fs-5"
+                      >
                         <i className="bi bi-linkedin"></i>
                       </a>
                     </div>
