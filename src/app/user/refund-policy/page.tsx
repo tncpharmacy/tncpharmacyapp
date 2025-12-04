@@ -58,10 +58,10 @@ export default function RefundPolicy() {
                     <p>
                       For refund-related concerns, email us at{" "}
                       <a
-                        href="mailto: support@tncpharmacy.in"
+                        href="mailto: care@tncpharmacy.in"
                         className="text-primary"
                       >
-                        support@tncpharmacy.in
+                        care@tncpharmacy.in
                       </a>
                       .
                     </p>

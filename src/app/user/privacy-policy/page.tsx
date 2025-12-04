@@ -58,10 +58,10 @@ export default function PrivacyPolicy() {
                     If you have any questions about these Terms, you can contact
                     our support team at{" "}
                     <a
-                      href="mailto: support@tncpharmacy.in"
+                      href="mailto: care@tncpharmacy.in"
                       className="text-primary"
                     >
-                      support@tncpharmacy.in
+                      care@tncpharmacy.in
                     </a>
                     .
                   </p>
