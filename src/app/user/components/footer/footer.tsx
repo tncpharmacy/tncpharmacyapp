@@ -155,10 +155,11 @@ const Footer = () => {
               </li>
               <li>
                 <span>
-                  <b className="fw-semibold">Address</b>
+                  <b className="fw-semibold ">Address</b>
                   <br />
-                  TnC Pharmacy, Ganga Shopping Complex, Sector 29, Noida, U.P. –
-                  201303
+                  TnC Pharmacy and Labs Pvt. Ltd. Shop No. 61, Ground Floor,
+                  Ganga Shopping Complex, Block 1, Sector 29, Noida, Uttar
+                  Pradesh – 201301
                 </span>
               </li>
             </ul>

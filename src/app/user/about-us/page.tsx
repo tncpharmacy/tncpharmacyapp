@@ -87,10 +87,18 @@ export default function AboutUs() {
                     care@tncpharmacy.in
                   </a>
                   <br />
-                  <strong>Phone:</strong> +91 97178 XXXXX
+                  <strong>Phone:</strong> +91 7042079595
                   <br />
-                  <strong>Address:</strong> TnC Pharmacy, Ganga Shopping
-                  Complex, Sector 29, Noida, U.P. – 201303
+                  <strong>Address:</strong>
+                  TnC Pharmacy and Labs Pvt. Ltd.
+                  <br />
+                  Shop No. 61, Ground Floor,
+                  <br />
+                  Ganga Shopping Complex, Block 1,
+                  <br />
+                  Sector 29, Noida,
+                  <br />
+                  Uttar Pradesh – 201301
                 </p>
 
                 <div className="text-center mt-5">

@@ -68,8 +68,15 @@ export default function ContactUs() {
                     <li className="mb-3">
                       <i className="bi bi-geo-alt-fill text-primary me-2"></i>
                       <span>
-                        TnC Pharmacy, Ganga Shopping Complex, Sector 29, Noida,
-                        U.P. – 201303
+                        TnC Pharmacy and Labs Pvt. Ltd.
+                        <br />
+                        Shop No. 61, Ground Floor,
+                        <br />
+                        Ganga Shopping Complex, Block 1,
+                        <br />
+                        Sector 29, Noida,
+                        <br />
+                        Uttar Pradesh – 201301
                       </span>
                     </li>
                     <li className="mb-3">
