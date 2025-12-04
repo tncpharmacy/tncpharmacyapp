@@ -36,9 +36,15 @@ export default function MedicineCard({
       maximumFractionDigits: 2,
     }).format(value);
 
-  const originalMrp = mrp ?? Math.floor(Math.random() * (5000 - 200 + 1)) + 200;
-  const discountPercent = parseFloat(discount || "0");
-  const discountedPrice = originalMrp - (originalMrp * discountPercent) / 100;
+  //const originalMrp = mrp ?? Math.floor(Math.random() * (5000 - 200 + 1)) + 200;
+  // const discountPercent = parseFloat(discount || "0");
+  // const discountedPrice = originalMrp - (originalMrp * discountPercent) / 100;
+  const originalMrp = mrp || 0;
+  const hasValidMrp = originalMrp > 0;
+  const discountPercent = hasValidMrp ? parseFloat(discount || "0") : 0;
+  const discountedPrice = hasValidMrp
+    ? originalMrp - (originalMrp * discountPercent) / 100
+    : 0;
 
   // start for increse header count code
   const buyer = useAppSelector((state) => state.buyer.buyer);
@@ -102,11 +108,15 @@ export default function MedicineCard({
     router.push(`/medicines-details/${encodeId(id)}`);
   };
 
-  const fullUrl = primary_image?.document || "";
-  const path = fullUrl ? new URL(fullUrl).pathname : "";
-  const imageSrc = primary_image
-    ? `${mediaBase}${path}`
-    : "/images/tnc-default.png";
+  let imageSrc = "/images/tnc-default.png";
+
+  if (primary_image?.document) {
+    // remove domain from URL
+    const cleaned = primary_image.document.replace(/^https?:\/\/[^/]+/i, "");
+    // ensure no double slash
+    const finalPath = cleaned.startsWith("/") ? cleaned : "/" + cleaned;
+    imageSrc = mediaBase + finalPath;
+  }
 
   const handleMouseEnter = (e: React.MouseEvent<HTMLDivElement>) => {
     if (imageSrc === "/images/tnc-default.png") return;
@@ -204,31 +214,41 @@ export default function MedicineCard({
 
         {/* Bottom section */}
         <div className="medicine-bottom">
-          {discountPercent > 0 ? (
-            <div className="d-flex flex-column align-items-start">
-              {/* Discounted Price */}
-              <p className="text-success fw-bold mb-1">
-                ₹{formatCurrency(discountedPrice)}
-              </p>
-
-              {/* Original MRP + Discount Percent */}
-              <p className="text-muted mb-0">
-                <span
-                  className="medicine-mrp text-muted mb-0"
-                  style={{ textDecoration: "line-through", fontSize: "13px" }}
-                >
-                  MRP ₹{formatCurrency(originalMrp)}
-                </span>{" "}
-                <span
-                  className="text-danger fw-bold"
-                  style={{ fontSize: "13px" }}
-                >
-                  ({discountPercent}% OFF)
-                </span>
-              </p>
-            </div>
+          {/* If no valid MRP => OUT OF STOCK */}
+          {!hasValidMrp ? (
+            <p className="text-danger fw-bold">OUT OF STOCK</p>
           ) : (
-            <p className="medicine-mrp">₹{formatCurrency(originalMrp)}</p>
+            <>
+              {discountPercent > 0 ? (
+                <div className="d-flex flex-column align-items-start">
+                  {/* Discounted Price */}
+                  <p className="text-success fw-bold mb-1">
+                    ₹{formatCurrency(discountedPrice)}
+                  </p>
+
+                  {/* Original MRP + Discount Percent */}
+                  <p className="text-muted mb-0">
+                    <span
+                      className="medicine-mrp text-muted mb-0"
+                      style={{
+                        textDecoration: "line-through",
+                        fontSize: "13px",
+                      }}
+                    >
+                      MRP ₹{formatCurrency(originalMrp)}
+                    </span>{" "}
+                    <span
+                      className="text-danger fw-bold"
+                      style={{ fontSize: "13px" }}
+                    >
+                      ({discountPercent}% OFF)
+                    </span>
+                  </p>
+                </div>
+              ) : (
+                <p className="medicine-mrp">₹{formatCurrency(originalMrp)}</p>
+              )}
+            </>
           )}
           {/* <p className="medicine-mrp">MRP ₹{formatCurrency(mrp)}</p>; */}
           <div className="text-end">

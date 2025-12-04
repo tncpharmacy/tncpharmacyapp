@@ -1,9 +1,7 @@
-import React, { useState, useMemo } from "react";
-// Import path corrected to refer to the new file in the same directory
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import MedicineCard from "./MedicineCard";
 import { Image } from "react-bootstrap";
 import { Medicine } from "@/types/medicine";
-import { useAppSelector } from "@/lib/hooks";
 
 interface MedicineListProps {
   medicines: Medicine[] | undefined | null;
@@ -12,27 +10,64 @@ interface MedicineListProps {
 
 const MedicineList: React.FC<MedicineListProps> = ({ medicines, loading }) => {
   const [searchTerm, setSearchTerm] = useState("");
-  // Ensure medicines is ALWAYS an array
+
+  const [visibleData, setVisibleData] = useState<Medicine[]>([]);
+  const [limit, setLimit] = useState(20);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+
+  const loadMoreRef = useRef<HTMLDivElement | null>(null);
+
   const safeMedicines = Array.isArray(medicines) ? medicines : [];
 
-  const filteredMedicines = useMemo(() => {
-    if (!searchTerm) return safeMedicines;
+  // Set initial visible items
+  useEffect(() => {
+    setVisibleData(safeMedicines.slice(0, limit));
+  }, [safeMedicines, limit]);
 
-    const lowerSearch = searchTerm.toLowerCase();
-    return safeMedicines.filter((med) =>
-      med?.medicine_name?.toLowerCase().includes(lowerSearch)
+  // Search logic
+  const filteredMedicines = useMemo(() => {
+    if (!searchTerm) return visibleData;
+    return visibleData.filter((m) =>
+      m.medicine_name?.toLowerCase().includes(searchTerm.toLowerCase())
     );
-  }, [safeMedicines, searchTerm]);
+  }, [visibleData, searchTerm]);
+
+  // ------------------------------
+  // 🔥 INTERSECTION OBSERVER LOGIC
+  // ------------------------------
+  useEffect(() => {
+    if (!loadMoreRef.current) return;
+
+    const container = document.querySelector(".body_contain");
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          setLimit((prev) => prev + 20);
+        }
+      },
+      {
+        root: container, // <<--- IMPORTANT
+        threshold: 1.0,
+      }
+    );
+
+    observer.observe(loadMoreRef.current);
+
+    return () => observer.disconnect();
+  }, []);
 
   return (
     <>
       <div className="pageTitle">
         <Image src={"/images/favicon.png"} alt="" /> Medicine
       </div>
+
+      {/* Search */}
       <div className="row">
         <div className="col-md-12">
           <div className="search_query">
-            <a className="query_search_btn" href="javascript:void(0)">
+            <a className="query_search_btn" href="#">
               <i className="bi bi-search"></i>
             </a>
             <input
@@ -45,18 +80,25 @@ const MedicineList: React.FC<MedicineListProps> = ({ medicines, loading }) => {
           </div>
         </div>
       </div>
+
+      {/* First time loader */}
+      {loading && (
+        <div className="text-center my-4">
+          <div className="spinner-border text-primary"></div>
+        </div>
+      )}
+      {/* Medicines */}
       <div className="medicine-grid">
-        {/* Use the filtered list for display */}
-        {loading ? (
-          <p>Loading products...</p>
-        ) : filteredMedicines.length === 0 ? (
-          <p>No products found.</p>
-        ) : (
-          filteredMedicines.map((med, idx) => (
-            <MedicineCard key={med.id || idx} {...med} />
-          ))
-        )}
+        {filteredMedicines.map((med, i) => (
+          <MedicineCard key={i} {...med} />
+        ))}
       </div>
+
+      {/* 👇 This div triggers infinite scroll */}
+      <div
+        ref={loadMoreRef}
+        style={{ height: "40px", marginTop: "20px" }}
+      ></div>
     </>
   );
 };

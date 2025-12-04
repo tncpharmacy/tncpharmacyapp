@@ -27,7 +27,10 @@ export default function AllMedicine() {
         <div className="body_wrap">
           {/* <FilterSidebar /> */}
           <div className="body_right">
-            <div className="body_content">
+            <div
+              className="body_content"
+              style={{ overflowY: "hidden", height: "calc(100vh - 100px)" }}
+            >
               {/* <Link href={"#"}> */}
               <MedicineList medicines={medicines || []} loading={loading} />
               {/* </Link> */}
