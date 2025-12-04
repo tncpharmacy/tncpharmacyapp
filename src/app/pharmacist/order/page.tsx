@@ -455,7 +455,7 @@ export default function OrderList() {
                         <th style={{ width: "0px" }}></th>
                         <th className="fw-bold text-start">Order Id</th>
                         <th className="fw-bold text-start">Name</th>
-                        <th className="fw-bold text-start">Email</th>
+                        <th className="fw-bold text-start">Mobile</th>
                         {/* <th className="fw-bold text-start">GST</th> */}
                         <th className="fw-bold text-start">Amount</th>
                         <th className="fw-bold text-start">Type</th>
@@ -482,7 +482,9 @@ export default function OrderList() {
                               <td className="text-start">
                                 {p.buyerName ?? ""}
                               </td>
-                              <td className="text-start">{p.email_id ?? ""}</td>
+                              <td className="text-start">
+                                {p.buyerNumber ?? ""}
+                              </td>
                               {/* <td className="text-start">
                                 {p.gst_number ?? ""}
                               </td> */}

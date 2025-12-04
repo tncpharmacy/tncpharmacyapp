@@ -17,6 +17,8 @@ import {
 } from "@/lib/features/purchaseStockSlice/purchaseStockSlice";
 import InfiniteScroll from "@/app/components/InfiniteScrollS/InfiniteScrollS";
 import TableLoader from "@/app/components/TableLoader/TableLoader";
+import { formatAmount } from "@/lib/utils/formatAmount";
+import { formatDateOnly } from "@/utils/dateFormatter";
 
 export default function PurchaseInvoice() {
   const router = useRouter();
@@ -124,8 +126,25 @@ export default function PurchaseInvoice() {
             hasMore={visibleCount < filteredData.length}
             // className="body_content"
           >
-            <div className="pageTitle">
-              <i className="bi bi-receipt"></i> Purchase Summary
+            <div style={{ overflowX: "hidden", width: "100%" }}>
+              <div
+                className="row align-items-center justify-content-between"
+                style={{ marginLeft: 0, marginRight: 0, width: "100%" }}
+              >
+                <div className="pageTitle col-md-6 col-12 text-start mt-2">
+                  <i className="bi bi-receipt"></i> Purchase Summary
+                </div>
+
+                <div className="col-md-6 col-12 text-end mb-2">
+                  {/* <Button
+                    variant="outline-primary"
+                    className="btn-style1"
+                    onClick={exportToExcel}
+                  >
+                    <i className="bi bi-file-earmark-text"></i> Generate Report
+                  </Button> */}
+                </div>
+              </div>
             </div>
             <div className="main_content">
               <div className="col-sm-12">
@@ -192,7 +211,14 @@ export default function PurchaseInvoice() {
                     </thead>
                     <tbody>
                       {filteredData
-                        .slice(0, visibleCount)
+                        ?.slice() // copy array
+                        .sort((a, b) => {
+                          return (
+                            new Date(b.purchase_date || "").getTime() -
+                            new Date(a.purchase_date || "").getTime()
+                          );
+                        }) // LATEST FIRST
+                        .slice(0, visibleCount) // visible limit
                         .map((p: StockItem) => {
                           return (
                             <tr key={p.id}>
@@ -204,7 +230,7 @@ export default function PurchaseInvoice() {
                                 {p.supplier_name ?? ""}
                               </td>
                               <td className="text-start">
-                                {p.purchase_date ?? ""}
+                                {formatDateOnly(p.purchase_date ?? "")}
                               </td>
                               <td className="text-start">
                                 {p.invoice_num ?? ""}
@@ -251,7 +277,7 @@ export default function PurchaseInvoice() {
       <Modal
         show={showHistory}
         onHide={() => setShowHistory(false)}
-        size="lg"
+        size="xl"
         centered
       >
         <Modal.Header closeButton>
@@ -292,39 +318,60 @@ export default function PurchaseInvoice() {
               </div>
 
               <hr />
-
-              {/* ITEMS TABLE */}
               <h6 className="mt-3 mb-2 fw-bold">Items Purchased</h6>
 
-              <table className="table table-bordered table-sm">
-                <thead>
-                  <tr>
-                    <th>Medicine</th>
-                    <th>Pack</th>
-                    <th>Batch</th>
-                    <th>Expiry</th>
-                    <th>Qty</th>
-                    <th>Rate</th>
-                    <th>Amount</th>
-                  </tr>
-                </thead>
-
-                <tbody>
-                  {purchaseStockById.items?.map((item) => (
-                    <tr key={item.id}>
-                      <td>{item.medicine_name}</td>
-                      <td>{item.pack_size}</td>
-                      <td>{item.batch}</td>
-                      <td>
-                        {new Date(item.expiry_date).toLocaleDateString("en-GB")}
-                      </td>
-                      <td>{item.quantity}</td>
-                      <td>₹{item.purchase_rate}</td>
-                      <td>₹{Number(item.amount).toFixed(2)}</td>
+              <div className="table-responsive" style={{ maxHeight: "450px" }}>
+                <table
+                  className="table table-bordered table-sm"
+                  style={{ whiteSpace: "nowrap", fontSize: "14px" }}
+                >
+                  <thead>
+                    <tr>
+                      <th style={{ minWidth: "100px" }}>Medicine</th>
+                      <th style={{ minWidth: "90px" }}>Pack</th>
+                      <th style={{ minWidth: "110px" }}>Batch</th>
+                      <th style={{ minWidth: "110px" }}>Expiry</th>
+                      <th style={{ minWidth: "70px" }}>Stock</th>
+                      <th style={{ minWidth: "70px" }}>Qty</th>
+                      <th className="text-end" style={{ minWidth: "90px" }}>
+                        MRP
+                      </th>
+                      <th className="text-end" style={{ minWidth: "110px" }}>
+                        Discount (%)
+                      </th>
+                      <th className="text-end" style={{ minWidth: "90px" }}>
+                        Rate
+                      </th>
+                      <th className="text-end" style={{ minWidth: "110px" }}>
+                        Amount
+                      </th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+
+                  <tbody>
+                    {purchaseStockById.items?.map((item) => (
+                      <tr key={item.id}>
+                        <td>{item.medicine_name}</td>
+                        <td>{item.pack_size}</td>
+                        <td>{item.batch}</td>
+                        <td>{formatDateOnly(item.expiry_date)}</td>
+                        <td>{item.available_quantity}</td>
+                        <td>{item.quantity}</td>
+                        <td className="text-end">
+                          {formatAmount(Number(item.mrp))}
+                        </td>
+                        <td className="text-end">{item.discount}</td>
+                        <td className="text-end">
+                          {formatAmount(Number(item.purchase_rate))}
+                        </td>
+                        <td className="text-end">
+                          {formatAmount(Number(item.amount))}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
 
               {/* BILLING SUMMARY */}
               <div
@@ -343,23 +390,23 @@ export default function PurchaseInvoice() {
                   Billing Summary
                 </h5>
 
-                <div className="d-flex justify-content-between mb-2">
-                  <span>Total Amount:</span>
+                <div className="d-flex justify-content-between mb-2 text-danger">
+                  <span className="fw-bold">Total Amount:</span>
                   <strong>
                     ₹
-                    {purchaseStockById.items
-                      ?.reduce(
+                    {formatAmount(
+                      purchaseStockById.items?.reduce(
                         (sum: number, item) => sum + Number(item.amount),
                         0
                       )
-                      .toFixed(2)}
+                    )}
                   </strong>
                 </div>
 
-                <div className="d-flex justify-content-between mb-2 text-success">
+                {/* <div className="d-flex justify-content-between mb-2 text-success">
                   <span>Discount:</span>
                   <strong>- ₹0</strong>
-                </div>
+                </div> */}
 
                 <hr />
 
@@ -374,12 +421,12 @@ export default function PurchaseInvoice() {
                   <span>Net Amount:</span>
                   <span>
                     ₹
-                    {purchaseStockById.items
-                      ?.reduce(
+                    {formatAmount(
+                      purchaseStockById.items?.reduce(
                         (sum: number, item) => sum + Number(item.amount),
                         0
                       )
-                      .toFixed(2)}
+                    )}
                   </span>
                 </div>
               </div>

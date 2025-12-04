@@ -308,6 +308,7 @@ export default function RetailCounter() {
   };
 
   const handleGenerateBill = async () => {
+    // 1) Basic Name & Mobile Validation
     if (!customerName.trim() || !mobile.trim()) {
       toast.error("Please fill Customer Name and Mobile No.");
       return;
@@ -319,12 +320,35 @@ export default function RetailCounter() {
       return;
     }
 
-    // ORDER FIRST
+    // 2) UHID check
+    if (!uhId.trim()) {
+      toast.error("Please enter UHID.");
+      return;
+    }
+
+    // 3) Table/cart check
+    if (cart.length === 0) {
+      toast.error("No items in table!");
+      return;
+    }
+
+    // 4) Create order
     const orderSuccess = await handleCreateOrder();
 
     if (orderSuccess) {
-      setIsBillModalOpen(true); // Now modal opens only after order success
+      setIsBillModalOpen(true);
     }
+  };
+
+  // Clear all records
+  const handleReset = () => {
+    setCustomerName("");
+    setMobile("");
+    setUhId("");
+    setCart([]);
+    setAdditionalDiscount("0");
+    setSelectedMedicine(null);
+    toast.success("Form & Items Reset Successfully!");
   };
 
   // Total calculation
@@ -388,192 +412,209 @@ export default function RetailCounter() {
             </div>
 
             {/* Bill Table */}
-            <div className="card shadow-sm mb-4">
-              <div className="card-body">
-                <h6 className="mb-3">
-                  <i className="bi bi-cart-check me-2"></i>Billing Items
-                </h6>
-                {/* Customer Details Section */}
-                <div className="card shadow-sm mb-4">
-                  <div className="card-body">
-                    <div className="row g-3">
-                      <div className="col-md-4">
-                        <div className="txt_col">
-                          <label className="lbl1">Mobile No.</label>
-                          <input
-                            type="text"
-                            className="form-control"
-                            value={mobile}
-                            onChange={(e) => {
-                              const value = e.target.value;
-                              if (/^\d{0,10}$/.test(value)) {
-                                setMobile(value);
-                                if (value.length === 10) {
-                                  checkMobileInDB(value);
-                                } else {
-                                  setIsUploadEnabled(false);
-                                  setMobileError("");
+            {cart.length !== 0 && (
+              <div className="card shadow-sm mb-4">
+                <div className="card-body">
+                  <div className="d-flex justify-content-between align-items-center mb-3">
+                    <h6 className="m-0">
+                      <i className="bi bi-cart-check me-2"></i>Billing Items
+                    </h6>
+
+                    <button
+                      className="btn btn-sm btn-warning"
+                      onClick={handleReset}
+                    >
+                      <i className="bi bi-arrow-counterclockwise me-1"></i> New
+                      Billing
+                    </button>
+                  </div>
+
+                  {/* Customer Details Section */}
+                  <div className="card shadow-sm mb-4">
+                    <div className="card-body">
+                      <div className="row g-3">
+                        <div className="col-md-4">
+                          <div className="txt_col">
+                            <label className="lbl1">Mobile No.</label>
+                            <input
+                              type="text"
+                              className="form-control"
+                              value={mobile}
+                              onChange={(e) => {
+                                const value = e.target.value;
+                                if (/^\d{0,10}$/.test(value)) {
+                                  setMobile(value);
+                                  if (value.length === 10) {
+                                    checkMobileInDB(value);
+                                  } else {
+                                    setIsUploadEnabled(false);
+                                    setMobileError("");
+                                  }
                                 }
-                              }
-                            }}
-                            maxLength={10}
-                            required
-                          />
-                          {mobileError && (
-                            <small className="text-danger">{mobileError}</small>
-                          )}
+                              }}
+                              maxLength={10}
+                              required
+                            />
+                            {mobileError && (
+                              <small className="text-danger">
+                                {mobileError}
+                              </small>
+                            )}
+                          </div>
                         </div>
-                      </div>
-                      <div className="col-md-4">
-                        <div className="txt_col">
-                          <label className="lbl1">Patient Name</label>
-                          <input
-                            type="text"
-                            className="form-control"
-                            value={customerName}
-                            onChange={(e) => {
-                              setCustomerName(e.target.value);
-                              setMobileError("");
-                            }}
-                            required
-                          />
+                        <div className="col-md-4">
+                          <div className="txt_col">
+                            <label className="lbl1">Patient Name</label>
+                            <input
+                              type="text"
+                              className="form-control"
+                              value={customerName}
+                              onChange={(e) => {
+                                setCustomerName(e.target.value);
+                                setMobileError("");
+                              }}
+                              maxLength={25}
+                              required
+                            />
+                          </div>
                         </div>
-                      </div>
-                      <div className="col-md-4">
-                        <div className="txt_col">
-                          <label className="lbl1">UHID</label>
-                          <input
-                            type="text"
-                            className="form-control"
-                            value={uhId}
-                            onChange={(e) => setUhId(e.target.value)}
-                            required
-                          />
+                        <div className="col-md-4">
+                          <div className="txt_col">
+                            <label className="lbl1">UHID</label>
+                            <input
+                              type="text"
+                              className="form-control"
+                              value={uhId}
+                              onChange={(e) => setUhId(e.target.value)}
+                              maxLength={10}
+                              required
+                            />
+                          </div>
                         </div>
                       </div>
                     </div>
                   </div>
-                </div>
-                <div className="table-responsive">
-                  <table className="table table-bordered align-middle">
-                    <thead className="table-light">
-                      <tr>
-                        <th>Medicine</th>
-                        <th>Qty</th>
-                        <th>Doses</th>
-                        <th>Instruction</th>
-                        <th>Duration</th>
-                        <th>MRP (₹)</th>
-                        <th>Discount (%)</th>
-                        <th>Subtotal (₹)</th>
-                        <th></th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {cart.length === 0 ? (
+                  <div className="table-responsive">
+                    <table className="table table-bordered align-middle">
+                      <thead className="table-light">
                         <tr>
-                          <td colSpan={9} className="text-center text-muted">
-                            No items added yet
-                          </td>
+                          <th>Medicine</th>
+                          <th>Qty</th>
+                          <th>Doses</th>
+                          <th>Instruction</th>
+                          <th>Duration</th>
+                          <th>MRP (₹)</th>
+                          <th>Discount (%)</th>
+                          <th>Subtotal (₹)</th>
+                          <th></th>
                         </tr>
-                      ) : (
-                        cart.map((item, index) => {
-                          const total = item.qty * item.price;
-                          const discountAmount = item.Disc
-                            ? (total * item.Disc) / 100
-                            : 0;
-                          const subtotal = total - discountAmount;
-                          return (
-                            <tr key={index}>
-                              <td>{item.medicine_name}</td>
-                              <td>
-                                {item.pack_size
-                                  ? `${item.pack_size} × ${item.qty}`
-                                  : item.qty}
-                              </td>
-                              <td>{item.dose_form}</td>
-                              <td>{item.remarks}</td>
-                              <td>{item.duration}</td>
-                              <td>{item.price}</td>
-                              <td>{item.Disc}</td>
-                              <td>{formatAmount(subtotal)}</td>
-                              <td>
-                                <button
-                                  className="btn btn-sm btn-danger"
-                                  onClick={() => handleRemoveItem(item.id)}
-                                >
-                                  <i className="bi bi-trash"></i>
-                                </button>
-                              </td>
-                            </tr>
-                          );
-                        })
-                      )}
-                    </tbody>
-                  </table>
-                </div>
-                {/* RIGHT SIDE BOX */}
-                <div className="d-flex justify-content-end">
-                  <div
-                    className="p-3 border rounded shadow-sm"
-                    style={{
-                      width: "300px",
-                      background: "#F8FBFF",
-                      marginTop: "-10px",
-                      textAlign: "left", // ⬅⬅ Box ke andar ka text LEFT align
-                    }}
-                  >
-                    <h6
-                      className="fw-bold mb-2"
-                      style={{ color: "red", whiteSpace: "nowrap" }}
+                      </thead>
+                      <tbody>
+                        {cart.length === 0 ? (
+                          <tr>
+                            <td colSpan={9} className="text-center text-muted">
+                              No items added yet
+                            </td>
+                          </tr>
+                        ) : (
+                          cart.map((item, index) => {
+                            const total = item.qty * item.price;
+                            const discountAmount = item.Disc
+                              ? (total * item.Disc) / 100
+                              : 0;
+                            const subtotal = total - discountAmount;
+                            return (
+                              <tr key={index}>
+                                <td>{item.medicine_name}</td>
+                                <td>
+                                  {item.pack_size
+                                    ? `${item.pack_size} × ${item.qty}`
+                                    : item.qty}
+                                </td>
+                                <td>{item.dose_form}</td>
+                                <td>{item.remarks}</td>
+                                <td>{item.duration}</td>
+                                <td>{item.price}</td>
+                                <td>{item.Disc}</td>
+                                <td>{formatAmount(subtotal)}</td>
+                                <td>
+                                  <button
+                                    className="btn btn-sm btn-danger"
+                                    onClick={() => handleRemoveItem(item.id)}
+                                  >
+                                    <i className="bi bi-trash"></i>
+                                  </button>
+                                </td>
+                              </tr>
+                            );
+                          })
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                  {/* RIGHT SIDE BOX */}
+                  <div className="d-flex justify-content-end">
+                    <div
+                      className="p-3 border rounded shadow-sm"
+                      style={{
+                        width: "300px",
+                        background: "#F8FBFF",
+                        marginTop: "-10px",
+                        textAlign: "left", // ⬅⬅ Box ke andar ka text LEFT align
+                      }}
                     >
-                      Total: ₹{formatAmount(totalAmount)}
-                    </h6>
-
-                    <div className="mb-2">
-                      <div
-                        className="d-flex align-items-center mb-2"
-                        style={{ gap: "8px" }}
+                      <h6
+                        className="fw-bold mb-2"
+                        style={{ color: "red", whiteSpace: "nowrap" }}
                       >
-                        <span
-                          className="fw-semibold"
-                          style={{ color: "green", whiteSpace: "nowrap" }}
+                        Total: ₹{formatAmount(totalAmount)}
+                      </h6>
+
+                      <div className="mb-2">
+                        <div
+                          className="d-flex align-items-center mb-2"
+                          style={{ gap: "8px" }}
                         >
-                          Additional Discount:
-                        </span>
+                          <span
+                            className="fw-semibold"
+                            style={{ color: "green", whiteSpace: "nowrap" }}
+                          >
+                            Additional Discount:
+                          </span>
 
-                        <input
-                          type="text"
-                          className="form-control"
-                          style={{ width: "60px" }}
-                          maxLength={2}
-                          value={additionalDiscount}
-                          onChange={(e) => {
-                            const val = e.target.value;
-                            if (/^\d{0,2}$/.test(val))
-                              setAdditionalDiscount(val);
-                          }}
-                        />
+                          <input
+                            type="text"
+                            className="form-control"
+                            style={{ width: "60px" }}
+                            maxLength={2}
+                            value={additionalDiscount}
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              if (/^\d{0,2}$/.test(val))
+                                setAdditionalDiscount(val);
+                            }}
+                          />
 
-                        <span className="fw-bold">(%)</span>
+                          <span className="fw-bold">(%)</span>
+                        </div>
                       </div>
+
+                      <h5 className="fw-bold text-primary mb-3">
+                        Grand Total: ₹{formatAmount(finalAmount)}
+                      </h5>
+
+                      <button
+                        className="btn btn-primary w-100"
+                        onClick={handleGenerateBill}
+                      >
+                        <i className="bi bi-file-earmark-text me-1"></i>
+                        Generate Bill
+                      </button>
                     </div>
-
-                    <h5 className="fw-bold text-primary mb-3">
-                      Grand Total: ₹{formatAmount(finalAmount)}
-                    </h5>
-
-                    <button
-                      className="btn btn-primary w-100"
-                      onClick={handleGenerateBill}
-                    >
-                      <i className="bi bi-file-earmark-text me-1"></i>
-                      Generate Bill
-                    </button>
                   </div>
                 </div>
               </div>
-            </div>
+            )}
           </div>
         </div>
       </div>

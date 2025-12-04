@@ -18,6 +18,8 @@ import { Archive, CheckCircle, AlertTriangle } from "lucide-react";
 import Link from "next/link";
 import { FaArrowLeft } from "react-icons/fa";
 import MinimumStockModal from "@/app/components/MinimumStockModal/MinimumStockModal";
+import { saveAs } from "file-saver";
+import * as XLSX from "xlsx-js-style";
 
 type FilterType = "All" | "LowStock" | "AvailableStock";
 type StockItemKey = keyof StockItem;
@@ -167,6 +169,109 @@ export default function StockList() {
   //   filterType === "AvailableStock"
   // );
   const minimumStyles = getButtonStyles("danger", filterType === "LowStock");
+
+  const exportToExcel = () => {
+    if (!filteredData || filteredData.length === 0) {
+      alert("No data available to export");
+      return;
+    }
+
+    // ----------- DATE + FILENAME -------------
+    const today = new Date();
+    const yyyy = today.getFullYear();
+    const mm = String(today.getMonth() + 1).padStart(2, "0");
+    const dd = String(today.getDate()).padStart(2, "0");
+
+    const fileName = `${
+      userPharmacy?.pharmacy_name || "pharmacy"
+    }_${yyyy}-${mm}-${dd}.xlsx`;
+
+    // ----------- PREPARE DATA WITH SR NO --------------
+    const excelData = filteredData.map((item, index) => ({
+      "Sr No": index + 1,
+      "Medicine Name": item.MedicineName || "-",
+      Manufacturer: item.Manufacturer || "-",
+      "Available Qty": item.AvailableQty || "-",
+      "Min Stock Level": item.MinStockLevel || "-",
+      Location: item.location || "-",
+    }));
+
+    // ----------- CREATE SHEET --------------
+    const worksheet = XLSX.utils.json_to_sheet([]);
+
+    // ----------- HEADER ROW --------------
+    const header = [
+      "Sr No",
+      "Medicine Name",
+      "Manufacturer",
+      "Available Qty",
+      "Min Stock Level",
+      "Location",
+    ];
+
+    XLSX.utils.sheet_add_aoa(worksheet, [header], { origin: "A1" });
+
+    // ----------- DATA STARTING FROM A2 --------------
+    XLSX.utils.sheet_add_json(worksheet, excelData, {
+      origin: "A2",
+      skipHeader: true,
+    });
+
+    // ----------- SAFE REF FIX --------------
+    worksheet["!ref"] = worksheet["!ref"] || "A1:F1";
+
+    const headerRange = XLSX.utils.decode_range(worksheet["!ref"]);
+
+    // ----------- HEADER STYLING (BOLD + BG COLOR) --------------
+    header.forEach((_, colIndex) => {
+      const cellAddress = XLSX.utils.encode_cell({ r: 0, c: colIndex });
+      const cell = worksheet[cellAddress];
+      if (!cell) return;
+
+      cell.s = {
+        font: { bold: true, color: { rgb: "000000" } },
+        fill: {
+          patternType: "solid",
+          fgColor: { rgb: "B4C4E0" }, // Light Yellow
+        },
+        alignment: { horizontal: "center", vertical: "center" },
+        border: {
+          top: { style: "thin" },
+          bottom: { style: "thin" },
+          left: { style: "thin" },
+          right: { style: "thin" },
+        },
+      };
+    });
+
+    // ----------- COLUMN WIDTHS -----------
+    worksheet["!cols"] = [
+      { wpx: 50 }, // Sr No
+      { wpx: 200 }, // Medicine Name
+      { wpx: 180 }, // Manufacturer
+      { wpx: 110 }, // Available Qty
+      { wpx: 130 }, // Min Stock Level
+      { wpx: 120 }, // Location
+    ];
+
+    // ----------- WORKBOOK -------------
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Stock Report");
+
+    // ----------- SAVE FILE -------------
+    const excelBuffer = XLSX.write(workbook, {
+      bookType: "xlsx",
+      type: "array",
+      cellStyles: true,
+    });
+
+    const blob = new Blob([excelBuffer], {
+      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    });
+
+    saveAs(blob, fileName);
+  };
+
   return (
     <>
       <Header />
@@ -178,8 +283,25 @@ export default function StockList() {
             hasMore={visibleCount < filteredData.length}
             className="body_content"
           >
-            <div className="pageTitle">
-              <i className="bi bi-box"></i> Stock Summary
+            <div style={{ overflowX: "hidden", width: "100%" }}>
+              <div
+                className="row align-items-center justify-content-between"
+                style={{ marginLeft: 0, marginRight: 0, width: "100%" }}
+              >
+                <div className="pageTitle col-md-6 col-12 text-start">
+                  <i className="bi bi-box"></i> Stock Summary
+                </div>
+
+                <div className="col-md-6 col-12 text-end mb-2">
+                  <Button
+                    variant="outline-primary"
+                    className="btn-style1"
+                    onClick={exportToExcel}
+                  >
+                    <i className="bi bi-file-earmark-text"></i> Generate Report
+                  </Button>
+                </div>
+              </div>
             </div>
             <div className="main_content">
               <div className="col-sm-12">

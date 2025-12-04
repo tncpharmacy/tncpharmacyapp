@@ -693,6 +693,7 @@ export default function RetailCounter() {
                                     setCustomerName(e.target.value);
                                     setMobileError("");
                                   }}
+                                  maxLength={25}
                                   required
                                 />
                               </div>
@@ -705,6 +706,7 @@ export default function RetailCounter() {
                                   className="form-control"
                                   value={uhId}
                                   onChange={(e) => setUhId(e.target.value)}
+                                  maxLength={10}
                                   required
                                 />
                               </div>

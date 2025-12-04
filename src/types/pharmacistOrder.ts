@@ -78,7 +78,7 @@ export interface PharmacistOrder {
   orderId: number;
   buyerName: string;
   buyerEmail: string;
-  buyerMobile: string;
+  buyerNumber: string;
   address: string;
   orderDate: string;
   paymentStatus: string;
