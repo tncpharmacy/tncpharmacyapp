@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import "../css/site-style.css";
 import "../css/user-style.css";
 import "bootstrap/dist/css/bootstrap.min.css";
@@ -25,6 +25,8 @@ import {
 } from "@/lib/features/buyerSlice/buyerSlice";
 
 import { BuyerOrderItem, OrderDetails } from "@/types/order";
+import { formatDateOnly } from "@/utils/dateFormatter";
+import { formatAmount } from "@/lib/utils/formatAmount";
 
 // Mapped interface to fix type errors
 interface BuyerData {
@@ -46,6 +48,13 @@ export default function BuyerProfile() {
   );
   const [isClient, setIsClient] = useState(false);
 
+  // scroll / pagination state
+  const [visibleOrders, setVisibleOrders] = useState<OrderDetails[]>([]);
+  const [page, setPage] = useState(1);
+  const [loading, setLoading] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
+  const pageSize = 10;
+
   // Redux state
   const buyer: BuyerData | null =
     useAppSelector((state) => state.buyer.buyer) || null;
@@ -55,6 +64,8 @@ export default function BuyerProfile() {
   const rawOrderList = useAppSelector(
     (state) => state.buyer.list
   ) as unknown as BuyerOrderItem[];
+
+  const { details: buyerOrderDetails } = useAppSelector((state) => state.buyer);
 
   // active addresses
   const activeAddresses =
@@ -67,11 +78,13 @@ export default function BuyerProfile() {
     useState<LocationDetails | null>(null);
   console.log("Raw orders:", rawOrderList);
 
-  // Convert slice data to modal-compatible OrderDetails
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const getOrderList: OrderDetails[] = (rawOrderList as unknown as any).map(
+  // ------------------------------
+  // MEMOIZE allOrders (so reference is stable unless rawOrderList changes)
+  // ------------------------------
+  const allOrders: OrderDetails[] = useMemo(() => {
+    // map rawOrderList → OrderDetails only when rawOrderList changes
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (o: any) => ({
+    return (rawOrderList as unknown as any).map((o: any) => ({
       orderId: o.orderId,
       buyerName: o.buyerName,
       orderDate: o.orderDate,
@@ -80,21 +93,82 @@ export default function BuyerProfile() {
       orderType: o.orderType,
       paymentMode: o.paymentMode,
       address: o.address,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      products: o.products.map((p: any) => ({
-        id: p.id,
-        productName: p.productName,
-        quantity: p.quantity,
-        mrp: p.mrp,
-        discount: p.discount,
-        rate: p.rate,
-        doses: p.doses,
-        instruction: p.instruction,
-        status: p.status,
-        manufacturer: p.manufacturer,
-      })),
-    })
-  );
+      products:
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        o.products?.map((p: any) => ({
+          id: p.id,
+          productName: p.medicine_name,
+          manufacturer: p.manufacturer,
+          image: p.image,
+          quantity: p.quantity,
+          mrp: p.mrp,
+          discount: p.discount,
+          rate: p.rate,
+          doses: p.doses,
+          duration: p.duration,
+          remark: p.remark,
+          status: p.status,
+        })) || [],
+    }));
+    // only re-run when rawOrderList changes
+  }, [rawOrderList]);
+
+  // initial load when allOrders updates: reset pagination
+  useEffect(() => {
+    if (!allOrders || allOrders.length === 0) {
+      setVisibleOrders([]);
+      setPage(1);
+      setHasMore(false);
+      return;
+    }
+
+    // reset to first page
+    setVisibleOrders(allOrders.slice(0, pageSize));
+    setPage(1);
+    setHasMore(allOrders.length > pageSize);
+  }, [allOrders]);
+
+  // load more function (idempotent)
+  const loadMoreOrders = useCallback(() => {
+    if (loading || !hasMore) return;
+    setLoading(true);
+
+    // calculate next slice
+    const nextPage = page + 1;
+    const end = nextPage * pageSize;
+
+    // if nothing to add, mark hasMore false
+    if (visibleOrders.length >= allOrders.length) {
+      setHasMore(false);
+      setLoading(false);
+      return;
+    }
+
+    // slice up to 'end'
+    const newData = allOrders.slice(0, Math.min(end, allOrders.length));
+    setVisibleOrders(newData);
+    setPage(nextPage);
+
+    // update hasMore
+    setHasMore(newData.length < allOrders.length);
+
+    setLoading(false);
+  }, [allOrders, hasMore, loading, page, visibleOrders.length]);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      // near bottom of page
+      if (
+        window.innerHeight + window.scrollY >=
+        document.body.offsetHeight - 300
+      ) {
+        loadMoreOrders();
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [loadMoreOrders]);
 
   // Fetch orders & addresses
   useEffect(() => {
@@ -136,23 +210,16 @@ export default function BuyerProfile() {
     }
   };
 
-  const handleViewOrder = async (orderId: number) => {
-    try {
-      const details = await dispatch(getBuyerOrderDetails(orderId)).unwrap();
-      // cast to modal-compatible type
-      setSelectedOrder({
-        ...details,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        status: (details as any).paymentStatus,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        totalAmount: (details as any).amount,
-      } as unknown as ModalOrderDetails);
+  const handleViewOrder = (orderId: number) => {
+    dispatch(getBuyerOrderDetails(orderId)).then(() => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const details = (buyerOrderDetails as unknown as any[])?.[0];
 
-      setShowOrderModal(true);
-    } catch (err) {
-      toast.error("Failed to fetch order details");
-      console.error(err);
-    }
+      if (details) {
+        setSelectedOrder(details);
+        setShowOrderModal(true);
+      }
+    });
   };
 
   if (!isClient || !buyer) return null;
@@ -230,7 +297,7 @@ export default function BuyerProfile() {
                 <div className="p-4">
                   {activeTab === "profile" && (
                     <div className="p-3 position-relative border rounded bg-white shadow-sm">
-                      <h5 className="fw-bold mb-3">Hi there!</h5>
+                      <h5 className="fw-bold mb-3 text-primary">Hi there!</h5>
                       <div className="mb-3 d-flex align-items-center">
                         <Image
                           src="/images/person-icon.png"
@@ -282,7 +349,9 @@ export default function BuyerProfile() {
                   {activeTab === "address" && (
                     <div>
                       <div className="d-flex justify-content-between align-items-center mb-3">
-                        <h5 className="fw-bold mb-0">My Address</h5>
+                        <h5 className="fw-bold mb-0 text-primary">
+                          My Address
+                        </h5>
                         <button
                           className="btn btn-primary"
                           onClick={() => setShowModal(true)}
@@ -334,18 +403,20 @@ export default function BuyerProfile() {
 
                   {activeTab === "order" && (
                     <div>
-                      <h5 className="fw-bold mb-3">My Orders</h5>
-                      {getOrderList.length > 0 ? (
-                        getOrderList.map((order) => (
+                      <h5 className="fw-bold mb-3 text-primary">My Orders</h5>
+                      {visibleOrders.length > 0 ? (
+                        visibleOrders.map((order) => (
                           <div
                             key={order.orderId}
                             className="border rounded p-3 mb-3"
                           >
                             <div className="d-flex justify-content-between align-items-center">
                               <div>
-                                <h6 className="mb-1">Order #{order.orderId}</h6>
-                                <p className="mb-0 text-muted">
-                                  Status:{" "}
+                                <h6 className="mb-1 text-primary">
+                                  Order Number: {order.orderId}
+                                </h6>
+                                <p className="mb-0 text-success">
+                                  Payment Status:{" "}
                                   <span
                                     className={
                                       order.paymentStatus === "Buy"
@@ -356,9 +427,15 @@ export default function BuyerProfile() {
                                     {order.paymentStatus}
                                   </span>
                                 </p>
-                                <p className="mb-0 text-muted">
-                                  Amount: ₹{order.amount} | Type:{" "}
-                                  {order.orderType}
+                                <p className="mb-0 text-success">
+                                  Payment Mode: {order.paymentMode}
+                                </p>
+                                <p className="mb-0">
+                                  Order Date: {formatDateOnly(order.orderDate)}
+                                </p>
+                                <p className="mb-0 text-danger">
+                                  Amount: ₹{formatAmount(Number(order.amount))}{" "}
+                                  | Type: {order.orderType}
                                 </p>
                                 <p className="mb-0 text-muted">
                                   {order.address}

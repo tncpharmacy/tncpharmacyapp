@@ -1,118 +1,249 @@
-// components/OrderDetailsModal.tsx
-"use client";
+import { formatAmount } from "@/lib/utils/formatAmount";
+import { formatDateOnly } from "@/utils/dateFormatter";
 import React from "react";
-import { Modal, Button } from "react-bootstrap";
-
-export interface ProductDetail {
-  id: number;
-  productName?: string;
-  quantity: string;
-  mrp: string;
-  discount: string;
-  rate: string;
-  doses?: string;
-  instruction?: string;
-  status: string;
-  manufacturer?: string;
-}
-
-export interface AddressDetail {
-  name: string;
-  address: string;
-  location: string;
-  pincode: string;
-  mobile: string;
-}
-
+import { Modal, Button, Image } from "react-bootstrap";
+const mediaBase = process.env.NEXT_PUBLIC_MEDIA_BASE_URL;
 export interface OrderDetails {
-  orderId: string | number;
-  status: string;
-  totalAmount: number | string;
-  address: AddressDetail;
-  products: ProductDetail[];
+  orderId: number;
+  buyerName: string;
+  buyerNumber?: string;
+  buyerEmail?: string;
+  buyer_uhid?: string;
+  orderDate: string;
+  paymentStatus: string;
+  amount: string;
+  orderType: string;
+  paymentMode: string;
+  additional_discount?: string;
+  products: Array<{
+    id: number;
+    medicine_name: string;
+    manufacturer: string;
+    image: string | null;
+    quantity: string;
+    mrp: string;
+    discount: string;
+    rate: string;
+    doses: string;
+    duration: string;
+    remark: string | null;
+    status: string;
+  }>;
 }
 
-interface OrderDetailsModalProps {
-  show: boolean;
-  onClose: () => void;
-  order: OrderDetails | null;
-}
+// const DEFAULT_IMAGE = "https://cdn-icons-png.flaticon.com/512/6596/6596121.png";
 
-const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
+export default function OrderDetailsModal({
   show,
   onClose,
   order,
-}) => {
+}: {
+  show: boolean;
+  onClose: () => void;
+  order: OrderDetails | null;
+}) {
   if (!order) return null;
 
   return (
     <Modal show={show} onHide={onClose} size="lg" centered>
       <Modal.Header closeButton>
-        <Modal.Title>Order Details — #{order.orderId}</Modal.Title>
+        <Modal.Title className="fw-bold text-primary">
+          Order Details (#{order.orderId})
+        </Modal.Title>
       </Modal.Header>
-      <Modal.Body>
-        {/* Order Info */}
-        <div className="mb-3">
-          <h6>
-            Status: <span className="text-primary">{order.status}</span>
-          </h6>
-          <p>
-            <strong>Total:</strong> ₹{order.totalAmount}
-          </p>
+
+      <Modal.Body style={{ maxHeight: "70vh", overflowY: "auto" }}>
+        {/* Patient Details */}
+        <div className="mb-3 p-3 border rounded bg-light">
+          <h5 className="fw-semibold mb-3 text-primary">Patient Details</h5>
+
+          <div className="row">
+            {/* Left Column */}
+            <div className="col-6">
+              <p className="mb-2">
+                <strong>Name:</strong> {order.buyerName}
+              </p>
+              <p className="mb-2">
+                <strong>Mobile:</strong> {order.buyerNumber}
+              </p>
+            </div>
+
+            {/* Right Column */}
+            <div className="col-6">
+              <p className="mb-2">
+                <strong>Email:</strong> {order.buyerEmail}
+              </p>
+
+              {order.buyer_uhid && (
+                <p className="mb-2">
+                  <strong>UHID:</strong> {order.buyer_uhid}
+                </p>
+              )}
+            </div>
+          </div>
         </div>
 
-        <hr />
+        {/* Address Details */}
+        <div className="mb-3 p-3 border rounded bg-white">
+          <h5 className="fw-semibold mb-3 text-primary">Address Details</h5>
 
-        {/* Product Details */}
-        <h6>Product Details:</h6>
-        {order.products?.length > 0 ? (
-          <ul className="list-group mb-3">
-            {order.products.map((p, i) => (
-              <li
-                key={i}
-                className="list-group-item d-flex justify-content-between flex-column flex-md-row"
-              >
-                <div>
-                  <strong>{p.productName}</strong> <br />
-                  Qty: {p.quantity} | MRP: ₹{p.mrp} | Rate: ₹{p.rate} <br />
-                  Discount: {p.discount} | Status: {p.status} <br />
-                  {p.doses && (
-                    <>
-                      Doses: {p.doses} <br />
-                    </>
-                  )}
-                  {p.instruction && (
-                    <>
-                      Instruction: {p.instruction} <br />
-                    </>
-                  )}
-                  {p.manufacturer && <>Manufacturer: {p.manufacturer}</>}
-                </div>
-                <span className="mt-2 mt-md-0">₹{p.rate}</span>
-              </li>
-            ))}
-          </ul>
+          <div className="row">
+            {/* Left Column */}
+            <div className="col-6">
+              <p className="mb-2">
+                <strong>Recipient Name:</strong> {order.buyerName}
+              </p>
+
+              <p className="mb-2">
+                <strong>Recipient Mobile:</strong> {order.buyerNumber}
+              </p>
+            </div>
+
+            {/* Right Column */}
+            <div className="col-6">
+              <p className="mb-2">
+                <strong>Address:</strong> {"New Ashok Nagar, Block-A"}
+              </p>
+
+              <p className="mb-2">
+                <strong>Location:</strong> {"Near Noida Metro Station"}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Order Summary */}
+        <div className="mb-3 p-3 border rounded bg-white">
+          <h5 className="fw-semibold mb-3 text-primary">Order Summary</h5>
+
+          <div className="row">
+            {/* Left */}
+            <div className="col-6">
+              <p className="mb-2">
+                <strong>Order Number:</strong> #{order.orderId}
+              </p>
+
+              <p className="mb-2">
+                <strong>Order Date:</strong> {formatDateOnly(order.orderDate)}
+              </p>
+
+              {order.additional_discount && (
+                <p className="mb-2 text-success">
+                  <strong>Additional Discount:</strong>{" "}
+                  {order.additional_discount}%
+                </p>
+              )}
+
+              <p className="mb-2 text-danger">
+                <strong>Amount:</strong> ₹{formatAmount(Number(order.amount))}
+              </p>
+            </div>
+
+            {/* Right */}
+            <div className="col-6">
+              <p className="mb-2 text-success">
+                <strong>Payment Status:</strong>{" "}
+                <span
+                  className={
+                    order.paymentStatus === "Buy"
+                      ? "text-success"
+                      : "text-warning"
+                  }
+                >
+                  {order.paymentStatus}
+                </span>
+              </p>
+
+              <p className="mb-2 text-success">
+                <strong>Payment Mode:</strong> {order.paymentMode}
+              </p>
+
+              <p className="mb-2 text-success">
+                <strong>Order Type:</strong> {order.orderType}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Product List */}
+        <h5 className="fw-semibold mb-3 text-primary">Products</h5>
+
+        {order?.products?.length > 0 ? (
+          order.products.map((p, index) => (
+            <div
+              key={index}
+              className="d-flex border rounded p-3 mb-3 bg-white shadow-sm"
+            >
+              <Image
+                src={
+                  p.image
+                    ? (() => {
+                        // remove any domain
+                        const cleaned = p.image.replace(
+                          /^https?:\/\/[^/]+/i,
+                          ""
+                        );
+                        // prevent double slash
+                        const finalPath = cleaned.startsWith("/")
+                          ? cleaned
+                          : "/" + cleaned;
+                        return mediaBase + finalPath;
+                      })()
+                    : "/images/tnc-default.png"
+                }
+                rounded
+                width={100}
+                height={100}
+                style={{ objectFit: "cover" }}
+                className="me-3 border"
+                alt={p.medicine_name}
+              />
+
+              <div style={{ flex: 1 }}>
+                <h6 className="fw-bold mb-1">{p.medicine_name}</h6>
+                <p className="text-success small fw-semibold mb-1">
+                  {p.manufacturer}
+                </p>
+
+                <p className="mb-1">
+                  <strong>Qty:</strong> {p.quantity}
+                </p>
+                <p className="mb-1">
+                  <strong className="text-danger">
+                    MRP: ₹{formatAmount(Number(p.mrp))}{" "}
+                  </strong>
+                  |{" "}
+                  <strong className="text-success">
+                    Discount: {p.discount}%
+                  </strong>
+                </p>
+                <p className="mb-1 text-primary">
+                  <strong>Final Amount: ₹{formatAmount(Number(p.rate))}</strong>
+                </p>
+                {p.doses && (
+                  <p className="mb-1">
+                    <strong>Doses:</strong> {p.doses}
+                  </p>
+                )}
+                {p.remark && (
+                  <p className="mb-1">
+                    <strong>Instruction:</strong>
+                    {p.remark && <span className="ms-2">{p.remark}</span>}
+                  </p>
+                )}
+                {p.duration && (
+                  <p className="mb-1">
+                    <strong>Duration:</strong> {p.duration}
+                  </p>
+                )}
+              </div>
+            </div>
+          ))
         ) : (
           <p>No products found.</p>
         )}
-
-        <hr />
-
-        {/* Address Details */}
-        <h6>Delivery Address:</h6>
-        {order.address ? (
-          <div>
-            <p className="mb-0">{order.address.name}</p>
-            <p className="mb-0">{order.address.address}</p>
-            <p className="mb-0">
-              {order.address.location} - {order.address.pincode}
-            </p>
-            <p className="mb-0">Mobile: {order.address.mobile}</p>
-          </div>
-        ) : (
-          <p>No address found.</p>
-        )}
       </Modal.Body>
+
       <Modal.Footer>
         <Button variant="secondary" onClick={onClose}>
           Close
@@ -120,6 +251,4 @@ const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
       </Modal.Footer>
     </Modal>
   );
-};
-
-export default OrderDetailsModal;
+}

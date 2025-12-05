@@ -256,13 +256,10 @@ export default function HealthBags() {
       mrp,
       discount,
       discountMrp,
-      image:
-        product?.primary_image && product.primary_image.document
-          ? `${mediaBase}${product.primary_image.document.replace(
-              /^https?:\/\/68\.183\.174\.17/,
-              ""
-            )}`
-          : "/images/tnc-default.png",
+      image: product?.primary_image?.document
+        ? mediaBase +
+          product.primary_image.document.replace(/^https?:\/\/[^/]+/, "") // remove any domain
+        : "/images/tnc-default.png",
     };
   });
 
@@ -382,6 +379,7 @@ export default function HealthBags() {
     isSelecting.current = true;
     handleSelect(item);
   };
+
   return (
     <>
       <SiteHeader />

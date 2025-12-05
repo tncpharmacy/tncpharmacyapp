@@ -2,6 +2,8 @@
 "use client";
 import React from "react";
 import { OrderDetails } from "@/types/order";
+import { formatDateOnly } from "@/utils/dateFormatter";
+import { formatAmount } from "@/lib/utils/formatAmount";
 
 interface Props {
   orders: OrderDetails[];
@@ -17,7 +19,7 @@ export default function OrderList({ orders, onView }: Props) {
         <div key={order.orderId} className="border rounded p-3 mb-3">
           <div className="d-flex justify-content-between align-items-center">
             <div>
-              <h6 className="mb-1">Order #{order.orderId}</h6>
+              <h6 className="mb-1">Order Number: {order.orderId}</h6>
               <p className="mb-0 text-muted">
                 Status:{" "}
                 <span
@@ -31,7 +33,11 @@ export default function OrderList({ orders, onView }: Props) {
                 </span>
               </p>
               <p className="mb-0 text-muted">
-                Amount: ₹{order.amount} | Type: {order.orderType}
+                Order Date: {formatDateOnly(order.orderDate)}
+              </p>
+              <p className="mb-0 text-danger">
+                Amount: ₹{formatAmount(Number(order.amount))} | Type:{" "}
+                {order.orderType}
               </p>
               <p className="mb-0 text-muted">{order.address}</p>
             </div>

@@ -46,6 +46,11 @@ export interface OrderDetails {
   paymentMode: string;
   address: string;
   products: Product[];
+
+  additional_discount: string;
+  buyerEmail: string;
+  buyerNumber: string;
+  buyer_uhid: string;
 }
 
 export interface BuyerAddress {
@@ -58,7 +63,10 @@ export interface BuyerAddress {
   status: "Active" | "Inactive";
   address_type_id: number;
 }
-
+// State type
+export interface BuyerState {
+  details: OrderDetails[]; // <-- ARRAY kar do
+}
 export interface BuyerData {
   id: number;
   name: string;
