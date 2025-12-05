@@ -69,7 +69,7 @@ const HorizontalAccordionTabs: React.FC<IDProps> = ({ id }) => {
             aria-controls="collapseOne"
             style={headerButtonStyle}
           >
-            All Generic Strength
+            TnC Trusted Generic
           </button>
         </h2>
 

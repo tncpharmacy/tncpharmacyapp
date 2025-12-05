@@ -2,36 +2,9 @@ import { formatAmount } from "@/lib/utils/formatAmount";
 import { formatDateOnly } from "@/utils/dateFormatter";
 import React from "react";
 import { Modal, Button, Image } from "react-bootstrap";
-const mediaBase = process.env.NEXT_PUBLIC_MEDIA_BASE_URL;
-export interface OrderDetails {
-  orderId: number;
-  buyerName: string;
-  buyerNumber?: string;
-  buyerEmail?: string;
-  buyer_uhid?: string;
-  orderDate: string;
-  paymentStatus: string;
-  amount: string;
-  orderType: string;
-  paymentMode: string;
-  additional_discount?: string;
-  products: Array<{
-    id: number;
-    medicine_name: string;
-    manufacturer: string;
-    image: string | null;
-    quantity: string;
-    mrp: string;
-    discount: string;
-    rate: string;
-    doses: string;
-    duration: string;
-    remark: string | null;
-    status: string;
-  }>;
-}
+import type { OrderDetail } from "@/types/buyer";
 
-// const DEFAULT_IMAGE = "https://cdn-icons-png.flaticon.com/512/6596/6596121.png";
+const mediaBase = process.env.NEXT_PUBLIC_MEDIA_BASE_URL;
 
 export default function OrderDetailsModal({
   show,
@@ -40,8 +13,9 @@ export default function OrderDetailsModal({
 }: {
   show: boolean;
   onClose: () => void;
-  order: OrderDetails | null;
+  order: OrderDetail | null;
 }) {
+  console.log("orderrrrr", order);
   if (!order) return null;
 
   return (

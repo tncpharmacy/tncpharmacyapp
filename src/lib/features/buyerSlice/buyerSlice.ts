@@ -14,6 +14,7 @@ import {
   BuyerOrderDetail,
   BuyerOrderItem,
   BuyerState,
+  OrderDetail,
 } from "@/types/buyer";
 import { loadBuyerFromToken } from "@/lib/utils/decodeToken";
 import { safeLocalStorage } from "@/lib/utils/safeLocalStorage";
@@ -228,18 +229,21 @@ export const getBuyerOrdersList = createAsyncThunk<
 
 // 8️⃣ Get Buyer Orders details
 export const getBuyerOrderDetails = createAsyncThunk<
-  BuyerOrderDetail, // return type
-  number, // orderId
+  OrderDetail, // <--- FIXED
+  number,
   { rejectValue: string }
 >("buyer/getOrderDetail", async (orderId, { rejectWithValue }) => {
   try {
     const res = await buyerGetOrderDetailsApi(orderId);
-    return res.data.data || res.data;
-  } catch (err: unknown) {
+
+    // API returns array → we pick first one
+    const d = res.data.data[0] || res.data.data;
+
+    return d;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const e = err as any;
+  } catch (err: any) {
     return rejectWithValue(
-      e.response?.data?.message || "Failed to fetch order details"
+      err.response?.data?.message || "Failed to fetch order details"
     );
   }
 });

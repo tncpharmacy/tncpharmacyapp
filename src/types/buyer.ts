@@ -44,7 +44,7 @@ export interface BuyerState {
   orderCreated: boolean;
 
   list: BuyerOrderItem[];
-  details: BuyerOrderDetail | null;
+  details: OrderDetail | null;
 }
 
 export interface BuyerOrderItem {
@@ -66,4 +66,63 @@ export interface BuyerOrderDetail {
   }>;
   total_amount: number;
   date: string;
+
+  orderId: number;
+  buyerName: string;
+  buyerNumber?: string;
+  buyerEmail?: string;
+  buyer_uhid?: string;
+  orderDate: string;
+  paymentStatus: string;
+  amount: string;
+  orderType: string;
+  paymentMode: string;
+  additional_discount?: string;
+
+  address?: string; // <-- ADD THIS
+
+  products: Array<{
+    id: number;
+    medicine_name: string;
+    manufacturer: string;
+    image: string | null;
+    quantity: string;
+    mrp: string;
+    discount: string;
+    rate: string;
+    doses: string;
+    duration: string;
+    remark: string | null;
+    status: string;
+  }>;
+}
+
+export interface OrderDetail {
+  orderId: number;
+  buyerName: string;
+  buyerEmail?: string;
+  buyerNumber?: string;
+  buyer_uhid?: string;
+  orderDate: string;
+  paymentStatus: string;
+  amount: string;
+  orderType: string;
+  paymentMode: string;
+  additional_discount?: string;
+  address?: string;
+
+  products: Array<{
+    id: number;
+    medicine_name: string;
+    manufacturer: string;
+    image: string | null;
+    quantity: string;
+    mrp: string;
+    discount: string;
+    rate: string;
+    doses: string;
+    duration: string;
+    remark: string | null;
+    status: string;
+  }>;
 }

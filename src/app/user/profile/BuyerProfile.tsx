@@ -6,9 +6,7 @@ import "../css/user-style.css";
 import "bootstrap/dist/css/bootstrap.min.css";
 import SiteHeader from "@/app/user/components/header/header";
 import Footer from "@/app/user/components/footer/footer";
-import OrderDetailsModal, {
-  OrderDetails as ModalOrderDetails,
-} from "@/app/components/BuyerProfileModal/OrderDetailsModal";
+
 import { Image } from "react-bootstrap";
 import { useAppDispatch, useAppSelector } from "@/lib/hooks";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -27,6 +25,8 @@ import {
 import { BuyerOrderItem, OrderDetails } from "@/types/order";
 import { formatDateOnly } from "@/utils/dateFormatter";
 import { formatAmount } from "@/lib/utils/formatAmount";
+import { BuyerOrderDetail, OrderDetail } from "@/types/buyer";
+import OrderDetailsModal from "@/app/components/BuyerProfileModal/OrderDetailsModal";
 
 // Mapped interface to fix type errors
 interface BuyerData {
@@ -43,9 +43,8 @@ export default function BuyerProfile() {
   const [activeTab, setActiveTab] = useState("profile");
   const [showModal, setShowModal] = useState(false);
   const [showOrderModal, setShowOrderModal] = useState(false);
-  const [selectedOrder, setSelectedOrder] = useState<ModalOrderDetails | null>(
-    null
-  );
+  const [selectedOrder, setSelectedOrder] = useState<OrderDetail | null>(null);
+
   const [isClient, setIsClient] = useState(false);
 
   // scroll / pagination state
@@ -66,6 +65,7 @@ export default function BuyerProfile() {
   ) as unknown as BuyerOrderItem[];
 
   const { details: buyerOrderDetails } = useAppSelector((state) => state.buyer);
+  console.log("buyerOrderDetails", buyerOrderDetails);
 
   // active addresses
   const activeAddresses =
@@ -76,7 +76,33 @@ export default function BuyerProfile() {
 
   const [selectedLocation, setSelectedLocation] =
     useState<LocationDetails | null>(null);
-  console.log("Raw orders:", rawOrderList);
+
+  // const formatted: BuyerOrderDetail = {
+  //   id: d.orderId,
+  //   order_no: d.orderId.toString(),
+  //   items: d.products.map((p) => ({
+  //     product_id: p.id,
+  //     name: p.medicine_name,
+  //     qty: Number(p.quantity),
+  //     price: Number(p.rate),
+  //   })),
+  //   total_amount: Number(d.amount),
+  //   date: d.orderDate,
+
+  //   orderId: d.orderId,
+  //   buyerName: d.buyerName,
+  //   buyerEmail: d.buyerEmail,
+  //   buyerNumber: d.buyerNumber,
+  //   buyer_uhid: d.buyer_uhid,
+  //   orderDate: d.orderDate,
+  //   paymentStatus: d.paymentStatus,
+  //   amount: d.amount,
+  //   orderType: d.orderType,
+  //   paymentMode: d.paymentMode,
+  //   additional_discount: d.additional_discount,
+  //   address: d.address,
+  //   products: d.products,
+  // };
 
   // ------------------------------
   // MEMOIZE allOrders (so reference is stable unless rawOrderList changes)
@@ -209,17 +235,22 @@ export default function BuyerProfile() {
       console.error(err);
     }
   };
+  useEffect(() => {
+    if (buyerOrderDetails) {
+      setSelectedOrder(buyerOrderDetails);
+    }
+  }, [buyerOrderDetails]);
 
-  const handleViewOrder = (orderId: number) => {
-    dispatch(getBuyerOrderDetails(orderId)).then(() => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const details = (buyerOrderDetails as unknown as any[])?.[0];
+  const handleViewOrder = async (orderId: number) => {
+    setShowOrderModal(false);
+    setSelectedOrder(null);
 
-      if (details) {
-        setSelectedOrder(details);
-        setShowOrderModal(true);
-      }
-    });
+    const result = await dispatch(getBuyerOrderDetails(orderId)).unwrap();
+
+    if (result) {
+      setSelectedOrder(result as BuyerOrderDetail);
+      setShowOrderModal(true);
+    }
   };
 
   if (!isClient || !buyer) return null;
