@@ -126,10 +126,11 @@ export default function PurchaseInvoiceExport() {
       return;
     }
 
-    if (selectedMedicines.some((m) => !m.qty || m.qty.trim() === "")) {
-      alert("⚠ Please fill Qty for all selected products!");
-      return;
-    }
+    // if (selectedMedicines.some((m) => !m.qty || m.qty.trim() === "")) {
+    //   alert("⚠ Please fill Qty for all selected products!");
+    //   return;
+    // }
+
     const exportData = [...selectedMedicines]
       .sort((a, b) =>
         a.medicine_name.localeCompare(b.medicine_name, undefined, {
@@ -357,7 +358,7 @@ export default function PurchaseInvoiceExport() {
                                     <input
                                       type="number"
                                       className="form-control"
-                                      value={m.qty ?? ""}
+                                      value={m.qty ?? 0}
                                       onChange={(e) =>
                                         handleQtyChange(m.id, e.target.value)
                                       }
