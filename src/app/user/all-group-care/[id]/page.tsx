@@ -338,11 +338,11 @@ export default function AllGroupCare() {
                   })
                 )}
 
-                {isLoadingMore && (
+                {/* {isLoadingMore && (
                   <div className="text-center my-3">
                     <div className="spinner-border text-primary"></div>
                   </div>
-                )}
+                )} */}
 
                 <div style={{ height: "300px" }} />
                 <div ref={loadMoreRef} style={{ height: "20px" }}></div>
