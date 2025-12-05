@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import "../../css/site-style.css";
 import "../../css/user-style.css";
 import { useRouter } from "next/navigation";
@@ -21,6 +21,16 @@ const mediaBase = process.env.NEXT_PUBLIC_MEDIA_BASE_URL;
 
 export default function AllProduct() {
   const router = useRouter();
+
+  // Scrolling state
+  const [limit, setLimit] = useState(20);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [visibleList, setVisibleList] = useState<any[]>([]);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const loadMoreRef = useRef<HTMLDivElement | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const filteredRef = useRef<any[]>([]); // will hold latest filteredMedicines for observer
+
   const { id: params } = useParams();
   const dispatch = useAppDispatch();
   const decodedId = decodeId(params);
@@ -38,10 +48,30 @@ export default function AllProduct() {
 
   const { list: categories } = useAppSelector((state) => state.category);
 
-  const shuffledMedicines = useShuffledProduct(
+  // --- CALL SHUFFLE HOOK AT TOP-LEVEL (ESLINT SAFE) ---
+  const shuffledFromHook = useShuffledProduct(
     medicines,
     `product-page-category-${categoryIdNum}`
   );
+
+  // --- Freeze shuffled result once when medicines arrive ---
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const stableShuffledRef = useRef<any[]>([]);
+  useEffect(() => {
+    if (medicines.length > 0 && stableShuffledRef.current.length === 0) {
+      // freeze the shuffled array so it doesn't change on re-renders
+      stableShuffledRef.current = shuffledFromHook;
+    }
+    // if medicines become empty again (rare), we can clear
+    if (medicines.length === 0) {
+      stableShuffledRef.current = [];
+    }
+  }, [medicines, shuffledFromHook]);
+
+  const finalShuffledList =
+    stableShuffledRef.current.length > 0
+      ? stableShuffledRef.current
+      : shuffledFromHook;
 
   const categoryName =
     categories.find((cat) => cat.id === categoryIdNum)?.category_name ||
@@ -76,14 +106,25 @@ export default function AllProduct() {
     }
   }, [buyer?.id, mergeGuestCart]);
 
-  // --- Filter products ---
+  // --- Filter products (derived from stable finalShuffledList) ---
   const filteredMedicines = useMemo(() => {
-    if (!searchTerm) return shuffledMedicines;
+    if (!searchTerm) return finalShuffledList;
     const lower = searchTerm.toLowerCase();
-    return shuffledMedicines.filter((med) =>
+    return finalShuffledList.filter((med) =>
       (med.ProductName || "").toLowerCase().includes(lower)
     );
-  }, [shuffledMedicines, searchTerm]);
+  }, [finalShuffledList, searchTerm]);
+
+  // keep filteredRef in sync for observer checks
+  useEffect(() => {
+    filteredRef.current = filteredMedicines;
+    // when filtered list changes (new search or initial load), reset limit to 20
+    // BUT only if the filtered result is different and user hasn't manually increased limit.
+    // IMPORTANT: Do not reset limit if it's already > 20 to avoid jumping back while user scrolled.
+    if (filteredMedicines.length > 0 && limit === 0) {
+      setLimit(20);
+    }
+  }, [filteredMedicines, limit]);
 
   // --- Handlers ---
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -116,6 +157,51 @@ export default function AllProduct() {
     router.push(`/product-details/${encodeId(product_id)}`);
   };
 
+  // --- visibleList slice (controls what we render) ---
+  useEffect(() => {
+    setVisibleList(filteredMedicines.slice(0, limit));
+  }, [filteredMedicines, limit]);
+
+  // --- IntersectionObserver: create ONCE, read filteredRef.current inside callback ---
+  useEffect(() => {
+    if (!loadMoreRef.current) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const entry = entries[0];
+        if (!entry.isIntersecting) return;
+        if (isLoadingMore) return;
+
+        const total = filteredRef.current.length || 0;
+        if (limit >= total) return; // nothing to load
+
+        setIsLoadingMore(true);
+
+        // increment safely using latest filteredRef.current
+        setLimit((prev) => {
+          const next = Math.min(prev + 20, total);
+          return next;
+        });
+
+        // small debounce so observer doesn't immediately retrigger
+        setTimeout(() => {
+          setIsLoadingMore(false);
+        }, 350);
+      },
+      {
+        root: null, // window/body scroll (your screenshot showed body scroll)
+        threshold: 1.0,
+        rootMargin: "0px 0px -200px 0px",
+      }
+    );
+
+    observer.observe(loadMoreRef.current);
+
+    return () => observer.disconnect();
+    // we intentionally run this effect only once on mount
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   return (
     <>
       <div className="page-wrapper">
@@ -140,23 +226,34 @@ export default function AllProduct() {
                       className="txt1 my-box"
                       placeholder="Search product..."
                       value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
+                      onChange={(e) => {
+                        setSearchTerm(e.target.value);
+                        // when user searches, reset limit to initial so search results show from top
+                        setLimit(20);
+                      }}
                     />
                   </div>
                 </div>
               </div>
-
+              {/* First time loader */}
+              {loading && (
+                <div className="text-center my-4">
+                  <div className="spinner-border text-primary"></div>
+                </div>
+              )}
               <div className="pd_list">
                 {loading ? (
-                  <p>Loading products...</p>
-                ) : filteredMedicines.length === 0 ? (
+                  <p></p>
+                ) : visibleList.length === 0 ? (
                   <p>No products found.</p>
                 ) : (
-                  filteredMedicines.map((item) => {
-                    const mrp = item.MRP
-                      ? parseFloat(item.MRP.toString())
-                      : Math.floor(Math.random() * (1000 - 100 + 1)) + 100;
-
+                  visibleList.map((item) => {
+                    const mrp = item.MRP || 0;
+                    const hasValidMrp =
+                      mrp !== null &&
+                      mrp !== undefined &&
+                      mrp !== 0 &&
+                      Number(mrp) > 0;
                     const discount = parseFloat(item.Discount) || 0;
                     const discountedPrice = Math.round(
                       mrp - (mrp * discount) / 100
@@ -208,21 +305,32 @@ export default function AllProduct() {
                           <h6 className="pd-title fw-bold">
                             {item.Manufacturer || ""}
                           </h6>
-
-                          <div className="pd_price">
-                            <span className="new_price">
-                              ₹{discountedPrice}
-                            </span>
-                            <span className="old_price">
-                              <del>MRP ₹{mrp}</del> {discount}% off
-                            </span>
-                          </div>
+                          {!hasValidMrp ? (
+                            <p className="text-danger fw-bold">OUT OF STOCK</p>
+                          ) : (
+                            <div className="pd_price">
+                              <span className="new_price">
+                                ₹{discountedPrice}
+                              </span>
+                              <span className="old_price">
+                                <del>MRP ₹{mrp}</del> {discount}% off
+                              </span>
+                            </div>
+                          )}
 
                           <button
                             className={`btn-1 btn-HO ${
                               isInBag ? "remove" : "add"
                             }`}
-                            disabled={processingIds.includes(item.product_id)}
+                            disabled={
+                              !hasValidMrp ||
+                              processingIds.includes(item.product_id)
+                            }
+                            style={{
+                              opacity: !hasValidMrp ? 0.5 : 1,
+                              cursor: !hasValidMrp ? "not-allowed" : "pointer",
+                              pointerEvents: !hasValidMrp ? "none" : "auto",
+                            }}
                             onClick={() =>
                               isInBag
                                 ? handleRemove(item.product_id)
@@ -240,6 +348,15 @@ export default function AllProduct() {
                     );
                   })
                 )}
+
+                {isLoadingMore && (
+                  <div className="text-center my-3">
+                    <div className="spinner-border text-primary"></div>
+                  </div>
+                )}
+
+                <div style={{ height: "300px" }} />
+                <div ref={loadMoreRef} style={{ height: "20px" }}></div>
               </div>
             </div>
           </div>

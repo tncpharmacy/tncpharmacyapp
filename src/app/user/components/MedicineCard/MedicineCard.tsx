@@ -40,7 +40,11 @@ export default function MedicineCard({
   // const discountPercent = parseFloat(discount || "0");
   // const discountedPrice = originalMrp - (originalMrp * discountPercent) / 100;
   const originalMrp = mrp || 0;
-  const hasValidMrp = originalMrp > 0;
+  const hasValidMrp =
+    originalMrp !== null &&
+    originalMrp !== undefined &&
+    originalMrp !== 0 &&
+    Number(originalMrp) > 0;
   const discountPercent = hasValidMrp ? parseFloat(discount || "0") : 0;
   const discountedPrice = hasValidMrp
     ? originalMrp - (originalMrp * discountPercent) / 100
@@ -254,7 +258,12 @@ export default function MedicineCard({
           <div className="text-end">
             <button
               className={`btn-1 btn-HO ${isInBag ? "remove" : "add"}`}
-              disabled={processingIds.includes(id)}
+              disabled={!hasValidMrp || processingIds.includes(id)}
+              style={{
+                opacity: !hasValidMrp ? 0.5 : 1,
+                cursor: !hasValidMrp ? "not-allowed" : "pointer",
+                pointerEvents: !hasValidMrp ? "none" : "auto",
+              }}
               onClick={() => (isInBag ? handleRemove(id) : handleAdd(id))}
             >
               {processingIds.includes(id)
@@ -264,6 +273,7 @@ export default function MedicineCard({
                 : "ADD"}
             </button>
           </div>
+
           {/* {availability === "ADD" ? (
             <button className="medicine-btn">ADD</button>
           ) : (

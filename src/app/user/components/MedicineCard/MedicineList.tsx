@@ -89,7 +89,7 @@ const MedicineList: React.FC<MedicineListProps> = ({ medicines, loading }) => {
       )}
       {/* Medicines */}
       <div className="medicine-grid">
-        {filteredMedicines.map((med, i) => (
+        {visibleData.map((med, i) => (
           <MedicineCard key={i} {...med} />
         ))}
       </div>
