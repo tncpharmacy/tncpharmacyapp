@@ -2,9 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { Button, Image, Modal } from "react-bootstrap";
-import "../css/admin-style.css";
-import SideNav from "../components/SideNav/page";
-import Header from "../components/Header/page";
+import "../css/pharmacy-style.css";
+import SideNav from "@/app/pharmacist/components/SideNav/page";
+import Header from "@/app/pharmacist/components/Header/page";
 import { useAppDispatch, useAppSelector } from "@/lib/hooks";
 
 import type { Supplier } from "@/types/supplier";
