@@ -23,7 +23,7 @@ import { fetchPharmacist } from "@/lib/features/pharmacistSlice/pharmacistSlice"
 import PharmacyDropdown from "@/app/components/Input/PharmacyDropdown";
 import { fetchPharmacyList } from "@/lib/features/pharmacyListSlice/pharmacyListSlice";
 import { AppDispatch, RootState } from "@/lib/store";
-
+const mediaBase = process.env.NEXT_PUBLIC_MEDIA_BASE_URL;
 interface Props {
   id?: number; // agar edit mode hai to id milegi
 }
@@ -307,7 +307,7 @@ export default function PharmacistForm({ id }: Props) {
                   existing={formData.documents.map((d) => ({
                     url: d.document.startsWith("http")
                       ? d.document
-                      : `http://68.183.174.17:8081${d.document}`,
+                      : `${mediaBase}${d.document}`,
                     name: d.document.split("/").pop() || "file",
                     id: d.id,
                   }))}

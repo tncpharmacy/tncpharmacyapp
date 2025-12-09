@@ -33,7 +33,7 @@ const Footer = () => {
           <div className="col-sm-9">
             <div className="row">
               {/* About */}
-              <div className="col-sm-3">
+              <div className="col-6 col-sm-3">
                 <h5 className="ftr_title">About TnC Pharmacy</h5>
                 <ul className="ftr_link">
                   <li>
@@ -61,7 +61,7 @@ const Footer = () => {
               </div>
 
               {/* Policies */}
-              <div className="col-sm-3">
+              <div className="col-6 col-sm-3">
                 <h5 className="ftr_title">Our Policies</h5>
                 <ul className="ftr_link">
                   <li>
@@ -86,7 +86,7 @@ const Footer = () => {
               </div>
 
               {/* Product Categories 1 */}
-              <div className="col-sm-3">
+              <div className="col-6 col-sm-3">
                 <h5 className="ftr_title">Product Categories</h5>
                 <div className="row product-cat-row">
                   <div className="col-12">
@@ -110,7 +110,7 @@ const Footer = () => {
               </div>
 
               {/* Product Categories 2 */}
-              <div className="col-sm-3">
+              <div className="col-6 col-sm-3">
                 <h5 className="ftr_title">Product Categories</h5>
                 <div className="row product-cat-row">
                   <div className="col-12">
@@ -214,7 +214,7 @@ const Footer = () => {
               </ul>
             </div>
 
-            <div className="col-sm-6 text-end">
+            <div className="col-sm-6 text-center text-sm-end">
               <h5 className="ftr_title">Payment Accept</h5>
               <Image
                 src="/images/payment-option.png"

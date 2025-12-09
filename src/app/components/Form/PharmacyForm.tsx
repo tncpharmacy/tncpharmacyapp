@@ -20,7 +20,7 @@ import { fetchStates } from "@/lib/features/stateSlice/stateSlice";
 import toast from "react-hot-toast";
 import { AxiosError } from "axios";
 import { fetchPharmacy } from "@/lib/features/pharmacySlice/pharmacySlice";
-
+const mediaBase = process.env.NEXT_PUBLIC_MEDIA_BASE_URL;
 interface Props {
   id?: number; // agar edit mode hai to id milegi
 }
@@ -324,7 +324,7 @@ export default function PharmacyForm({ id }: Props) {
                   existing={formData.documents.map((d) => ({
                     url: d.document.startsWith("http")
                       ? d.document
-                      : `http://68.183.174.17:8081${d.document}`,
+                      : `${mediaBase}${d.document}`,
                     name: d.document.split("/").pop() || "file",
                     id: d.id,
                   }))}

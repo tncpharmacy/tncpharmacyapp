@@ -18,7 +18,7 @@ import {
   patchPharmacist,
 } from "@/lib/features/pharmacistSelfSlice/pharmacistSelfSlice";
 import toast from "react-hot-toast";
-
+const mediaBase = process.env.NEXT_PUBLIC_MEDIA_BASE_URL;
 type DocumentItem = {
   id?: number; // optional, kyunki naye uploaded files me id nahi hota
   document: string;
@@ -202,7 +202,7 @@ export default function UpdateProfile() {
                 <ProfileImageUpload
                   initialImage={
                     formData.profile_pic
-                      ? `http://68.183.174.17:8081${formData.profile_pic}`
+                      ? `${mediaBase}${formData.profile_pic}`
                       : ""
                   }
                   size={150}
@@ -299,7 +299,7 @@ export default function UpdateProfile() {
                   existing={formData.documents.map((d) => ({
                     url: d.document.startsWith("http")
                       ? d.document
-                      : `http://68.183.174.17:8081${d.document}`,
+                      : `${mediaBase}${d.document}`,
                     name: d.document.split("/").pop() || "file",
                     id: d.id,
                   }))}

@@ -72,15 +72,17 @@ export interface BuyerOrderDetail {
   buyerNumber?: string;
   buyerEmail?: string;
   buyer_uhid?: string;
+  recipient_name: string;
+  recipient_mobile: string;
+  address?: string;
+  location: string;
+  pincode?: number;
   orderDate: string;
   paymentStatus: string;
   amount: string;
   orderType: string;
   paymentMode: string;
   additional_discount?: string;
-
-  address?: string; // <-- ADD THIS
-
   products: Array<{
     id: number;
     medicine_name: string;
@@ -103,13 +105,17 @@ export interface OrderDetail {
   buyerEmail?: string;
   buyerNumber?: string;
   buyer_uhid?: string;
+  recipient_name: string;
+  recipient_mobile: string;
+  address?: string;
+  location: string;
+  pincode?: number;
   orderDate: string;
   paymentStatus: string;
   amount: string;
   orderType: string;
   paymentMode: string;
   additional_discount?: string;
-  address?: string;
 
   products: Array<{
     id: number;

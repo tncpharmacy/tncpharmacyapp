@@ -7,6 +7,8 @@ import SideNav from "@/app/pharmacy/components/SideNav/page";
 import Header from "@/app/pharmacy/components/Header/page";
 import { useAppDispatch, useAppSelector } from "@/lib/hooks";
 import { fetchPharmacySelf } from "@/lib/features/pharmacySelfSlice/pharmacySelfSlice";
+import { Image } from "react-bootstrap";
+const mediaBase = process.env.NEXT_PUBLIC_MEDIA_BASE_URL;
 
 export default function ViewProfile() {
   const dispatch = useAppDispatch();
@@ -116,8 +118,8 @@ export default function ViewProfile() {
                       <div className="d-flex flex-wrap gap-3">
                         {pharmacy.documents.map((doc) => (
                           <div key={doc.id}>
-                            <img
-                              src={`http://68.183.174.17:8081${doc.document}`}
+                            <Image
+                              src={`${mediaBase}${doc.document}`}
                               alt={`Document ${doc.id}`}
                               style={{
                                 width: "150px",

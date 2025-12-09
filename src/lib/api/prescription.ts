@@ -1,8 +1,9 @@
 import axios from "axios";
 import axiosInstance from "@/lib/axios";
 import { ENDPOINTS } from "@/lib/config";
+const mediaBase = process.env.NEXT_PUBLIC_MEDIA_BASE_URL;
 
-const publicAxios = axios.create({ baseURL: "http://68.183.174.17:8081/api" });
+const publicAxios = axios.create({ baseURL: mediaBase });
 
 export const uploadPrescription = async ({
   formData,

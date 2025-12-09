@@ -20,6 +20,7 @@ import {
   patchPharmacy,
 } from "@/lib/features/pharmacySelfSlice/pharmacySelfSlice";
 import toast from "react-hot-toast";
+const mediaBase = process.env.NEXT_PUBLIC_MEDIA_BASE_URL;
 
 interface Props {
   id?: number; // agar edit mode hai to id milegi
@@ -315,7 +316,7 @@ export default function UpdateProfile() {
                   existing={formData.documents.map((d) => ({
                     url: d.document.startsWith("http")
                       ? d.document
-                      : `http://68.183.174.17:8081${d.document}`,
+                      : `${mediaBase}${d.document}`,
                     name: d.document.split("/").pop() || "file",
                     id: d.id,
                   }))}

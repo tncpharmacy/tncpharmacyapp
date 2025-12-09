@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-
+const mediaBase = process.env.NEXT_PUBLIC_MEDIA_BASE_URL;
 interface ProfileImageUploadProps {
   initialImage?: string; // backend path ya full URL
   size?: number;
@@ -28,7 +28,7 @@ export default function ProfileImageUpload({
       setPreview(
         initialImage.startsWith("http")
           ? initialImage
-          : `http://68.183.174.17:8081${initialImage}`
+          : `${mediaBase}${initialImage}`
       );
     }
   }, [initialImage]);

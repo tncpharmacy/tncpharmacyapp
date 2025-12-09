@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Button, Modal } from "react-bootstrap";
+import { Button, Image, Modal } from "react-bootstrap";
 import "../css/style.css";
 import SideNav from "@/app/pharmacy/components/SideNav/page";
 import Header from "@/app/pharmacy/components/Header/page";
@@ -18,6 +18,7 @@ import Link from "next/link";
 import TableLoader from "@/app/components/TableLoader/TableLoader";
 import Input from "@/app/components/Input/Input";
 import { fetchPharmacy } from "@/lib/features/pharmacySlice/pharmacySlice";
+const mediaBase = process.env.NEXT_PUBLIC_MEDIA_BASE_URL;
 
 export default function Pharmacist() {
   const dispatch = useAppDispatch();
@@ -325,9 +326,9 @@ export default function Pharmacist() {
                     {selectedPharmacy.documents &&
                     selectedPharmacy.documents.length > 0 ? (
                       selectedPharmacy.documents.map((doc) => (
-                        <img
+                        <Image
                           key={doc.id}
-                          src={`http://68.183.174.17:8081${doc.document}`}
+                          src={`${mediaBase}${doc.document}`}
                           alt="Pharmacy Document"
                           style={{
                             width: "150px",

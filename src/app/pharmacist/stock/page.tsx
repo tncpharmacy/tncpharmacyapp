@@ -20,6 +20,7 @@ import { FaArrowLeft } from "react-icons/fa";
 import MinimumStockModal from "@/app/components/MinimumStockModal/MinimumStockModal";
 import { saveAs } from "file-saver";
 import * as XLSX from "xlsx-js-style";
+const mediaBase = process.env.NEXT_PUBLIC_MEDIA_BASE_URL;
 
 type FilterType = "All" | "LowStock" | "AvailableStock";
 type StockItemKey = keyof StockItem;
@@ -531,7 +532,7 @@ export default function StockList() {
                       selectedPharmacy.documents.map((doc) => (
                         <Image
                           key={doc.id}
-                          src={`http://68.183.174.17:8081${doc.document}`}
+                          src={`${mediaBase}${doc.document}`}
                           alt="Pharmacy Document"
                           style={{
                             width: "150px",

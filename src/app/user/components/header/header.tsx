@@ -444,6 +444,9 @@ const SiteHeader = () => {
                   </span>
                 </Link>
               </li>
+              <li className="mobileMenu">
+                <span className="micon"><i className="bi bi-grid-3x3-gap-fill"></i></span>
+              </li>
             </ul>
           </div>
         </div>

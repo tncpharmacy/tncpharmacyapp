@@ -8,6 +8,7 @@ import Header from "@/app/pharmacist/components/Header/page";
 import { useAppDispatch, useAppSelector } from "@/lib/hooks";
 import { fetchPharmacistSelf } from "@/lib/features/pharmacistSelfSlice/pharmacistSelfSlice";
 import Image from "next/image";
+const mediaBase = process.env.NEXT_PUBLIC_MEDIA_BASE_URL;
 
 export default function ViewProfile() {
   const dispatch = useAppDispatch();
@@ -36,7 +37,7 @@ export default function ViewProfile() {
                   <Image
                     src={
                       pharmacy?.profile_pic
-                        ? `http://68.183.174.17:8081${pharmacy.profile_pic}`
+                        ? `${mediaBase}${pharmacy.profile_pic}`
                         : "/images/default-profile.jpg"
                     }
                     alt="Profile"
@@ -119,8 +120,8 @@ export default function ViewProfile() {
                       <div className="d-flex flex-wrap gap-3">
                         {pharmacy.documents.map((doc) => (
                           <div key={doc.id}>
-                            <img
-                              src={`http://68.183.174.17:8081${doc.document}`}
+                            <Image
+                              src={`${mediaBase}${doc.document}`}
                               alt={`Document ${doc.id}`}
                               style={{
                                 width: "150px",

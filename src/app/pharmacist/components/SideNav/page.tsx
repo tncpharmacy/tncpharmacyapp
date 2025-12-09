@@ -86,7 +86,11 @@ export default function SideNav() {
             <i className="bi bi-basket"></i> Supplier
           </div>
         </li>
-
+        <li>
+          <Link href="/pharmacist/supplier" className="link">
+            <i className="bi bi-basket"></i> Supplier
+          </Link>
+        </li>
         <li>
           <div onClick={() => toggleMenu("settings")} className="link arrow">
             <i className="bi bi-gear-wide-connected"></i> Profile & Settings

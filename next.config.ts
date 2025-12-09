@@ -14,7 +14,7 @@ const nextConfig: NextConfig = {
     return [
       {
         source: "/media/:path*",
-        destination: "http://68.183.174.17:8081/media/:path*",
+        destination: "https://api.tncpharmacy.in/media/:path*",
       },
       //User routes
       {
@@ -415,6 +415,18 @@ const nextConfig: NextConfig = {
       {
         source: "/pharmacist/patient-health-bag",
         destination: "/pharmacist/buyerHealthBag",
+      },
+      {
+        source: "/pharmacist/add-supplier",
+        destination: "/pharmacist/supplier/add",
+      },
+      {
+        source: "/pharmacist/update-supplier/:id",
+        destination: "/pharmacist/supplier/add/:id",
+      },
+      {
+        source: "/pharmacist/supplier",
+        destination: "/pharmacist/supplier",
       },
 
       // Doctor Routes

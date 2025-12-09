@@ -34,7 +34,10 @@ export default function AddressList() {
   const [step, setStep] = useState<StepType>("none");
   const [selectedLocation, setSelectedLocation] =
     useState<LocationDetails | null>(null);
-  const [billingAddress, setBillingAddress] = useState(0);
+  // const [billingAddress, setBillingAddress] = useState(0);
+  const [selectedAddressId, setSelectedAddressId] = useState<number | null>(
+    null
+  );
 
   const activeAddresses = useAppSelector((state) => state.address.addresses);
   // ✅ Filter only active addresses
@@ -63,11 +66,11 @@ export default function AddressList() {
 
   useEffect(() => {
     if (billingAddresses.length > 0) {
-      const defaultIndex = billingAddresses.findIndex(
+      const defaultAddr = billingAddresses.find(
         (addr) => addr.default_address === 1
       );
-      if (defaultIndex !== -1) {
-        setBillingAddress(defaultIndex);
+      if (defaultAddr?.id) {
+        setSelectedAddressId(defaultAddr.id);
       }
     }
   }, [billingAddresses]);
@@ -106,14 +109,18 @@ export default function AddressList() {
   //   }
   // };
 
-  const handleSetDefaultAddress = async (address: Address, index: number) => {
-    if (!address.id) return;
+  const handleSetDefaultAddress = async (address: Address) => {
+    console.log("Setting default for address:", address);
+
+    if (!address.id) {
+      console.error("Address ID missing", address);
+      return;
+    }
+    // if (!address.id) return;
 
     try {
-      // UI select
-      setBillingAddress(index);
+      setSelectedAddressId(address.id);
 
-      // ✅ Only payload biz required
       await dispatch(
         editAddress({ id: address.id, data: { set_default: true } })
       ).unwrap();
@@ -163,9 +170,15 @@ export default function AddressList() {
             <div className="col-md-4 mb-4" key={index}>
               <div
                 className={`card ${
-                  billingAddress === index ? "border-danger" : "border-light"
+                  selectedAddressId === addr.id
+                    ? "border-danger"
+                    : "border-light"
                 } shadow-sm`}
-                onClick={() => setBillingAddress(index)}
+                onClick={() => {
+                  if (addr.id) {
+                    setSelectedAddressId(addr.id);
+                  }
+                }}
                 style={{
                   cursor: "pointer",
                   borderWidth: "2px",
@@ -179,14 +192,11 @@ export default function AddressList() {
                     <input
                       type="radio"
                       name="billingAddress"
-                      checked={billingAddress === index}
-                      onChange={() => handleSetDefaultAddress(addr, index)}
+                      checked={selectedAddressId === addr.id}
+                      onChange={() => handleSetDefaultAddress(addr)}
                       className="form-check-input me-2"
-                      style={{
-                        accentColor: "#e53935",
-                        transform: "scale(1.1)",
-                      }}
                     />
+
                     <label
                       className="fw-semibold mb-0"
                       style={{ fontSize: "15px", color: "#212121" }}

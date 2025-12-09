@@ -58,33 +58,46 @@ export default function OrderDetailsModal({
         </div>
 
         {/* Address Details */}
-        <div className="mb-3 p-3 border rounded bg-white">
-          <h5 className="fw-semibold mb-3 text-primary">Address Details</h5>
+        {order.recipient_name && (
+          <div className="mb-3 p-3 border rounded bg-white">
+            <h5 className="fw-semibold mb-3 text-primary">Address Details</h5>
 
-          <div className="row">
-            {/* Left Column */}
-            <div className="col-6">
-              <p className="mb-2">
-                <strong>Recipient Name:</strong> {order.buyerName}
-              </p>
+            <div className="row">
+              {/* Left Column */}
+              <div className="col-6">
+                {order.recipient_name && (
+                  <p className="mb-2">
+                    <strong>Recipient Name:</strong> {order.recipient_name}
+                  </p>
+                )}
+                {order.recipient_mobile && (
+                  <p className="mb-2">
+                    <strong>Recipient Mobile:</strong> {order.recipient_mobile}
+                  </p>
+                )}
+              </div>
 
-              <p className="mb-2">
-                <strong>Recipient Mobile:</strong> {order.buyerNumber}
-              </p>
-            </div>
-
-            {/* Right Column */}
-            <div className="col-6">
-              <p className="mb-2">
-                <strong>Address:</strong> {"New Ashok Nagar, Block-A"}
-              </p>
-
-              <p className="mb-2">
-                <strong>Location:</strong> {"Near Noida Metro Station"}
-              </p>
+              {/* Right Column */}
+              <div className="col-6">
+                {order.address && (
+                  <p className="mb-2">
+                    <strong>Address:</strong> {order.address}
+                  </p>
+                )}
+                {order.location && (
+                  <p className="mb-2">
+                    <strong>Location:</strong> {order.location}
+                  </p>
+                )}
+                {order.pincode && (
+                  <p className="mb-2">
+                    <strong>Pincode:</strong> {order.pincode}
+                  </p>
+                )}
+              </div>
             </div>
           </div>
-        </div>
+        )}
 
         {/* Order Summary */}
         <div className="mb-3 p-3 border rounded bg-white">

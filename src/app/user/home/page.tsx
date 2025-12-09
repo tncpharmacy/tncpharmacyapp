@@ -105,7 +105,28 @@ export default function HomePage() {
     speed: 500,
     slidesToShow: 5,
     slidesToScroll: 1,
+    initialSlide: 0,
     autoplay: true,
+    responsive: [
+      {
+        breakpoint: 1024,
+        settings: {
+         slidesToShow: 4
+        }
+      },
+      {
+        breakpoint: 700,
+        settings: {
+          slidesToShow: 3
+        }
+      },
+      {
+        breakpoint: 480,
+        settings: {
+         slidesToShow: 2
+        }
+      }
+    ]
   };
 
   // --- Sync localBag with Redux items ---
@@ -272,15 +293,12 @@ export default function HomePage() {
                 <div key={group.id}>
                   <div className="category_item">
                     <div
-                      className={`category_img ${
-                        BG_CLASSES[index % BG_CLASSES.length]
-                      }`}
+                      className={`category_img ${BG_CLASSES[index % BG_CLASSES.length]
+                        }`}
                     >
                       <Image
                         src={getIconPath(group.group_name)}
                         alt={`${group.group_name} Icon`}
-                        width={50}
-                        height={50}
                       />
                     </div>
                     <div>
@@ -380,9 +398,8 @@ export default function HomePage() {
 
                         <Button
                           size="sm"
-                          className={`btn-1 btn-HO ${
-                            isInBag ? "remove" : "add"
-                          }`}
+                          className={`btn-1 btn-HO ${isInBag ? "remove" : "add"
+                            }`}
                           style={{ borderRadius: "35px" }}
                           disabled={processingIds.includes(item.product_id)}
                           onClick={() =>
@@ -394,8 +411,8 @@ export default function HomePage() {
                           {processingIds.includes(item.product_id)
                             ? "Processing..."
                             : isInBag
-                            ? "REMOVE"
-                            : "ADD"}
+                              ? "REMOVE"
+                              : "ADD"}
                         </Button>
                       </div>
                     </div>
@@ -614,9 +631,8 @@ export default function HomePage() {
                         </div>
                         <Button
                           size="sm"
-                          className={`btn-1 btn-HO ${
-                            isInBag ? "remove" : "add"
-                          }`}
+                          className={`btn-1 btn-HO ${isInBag ? "remove" : "add"
+                            }`}
                           style={{ borderRadius: "35px" }}
                           disabled={processingIds.includes(item.product_id)}
                           onClick={() =>
@@ -628,8 +644,8 @@ export default function HomePage() {
                           {processingIds.includes(item.product_id)
                             ? "Processing..."
                             : isInBag
-                            ? "REMOVE"
-                            : "ADD"}
+                              ? "REMOVE"
+                              : "ADD"}
                         </Button>
                       </div>
                     </div>
@@ -770,9 +786,8 @@ export default function HomePage() {
 
                         <Button
                           size="sm"
-                          className={`btn-1 btn-HO ${
-                            isInBag ? "remove" : "add"
-                          }`}
+                          className={`btn-1 btn-HO ${isInBag ? "remove" : "add"
+                            }`}
                           style={{ borderRadius: "35px" }}
                           disabled={processingIds.includes(item.product_id)}
                           onClick={() =>
@@ -784,8 +799,8 @@ export default function HomePage() {
                           {processingIds.includes(item.product_id)
                             ? "Processing..."
                             : isInBag
-                            ? "REMOVE"
-                            : "ADD"}
+                              ? "REMOVE"
+                              : "ADD"}
                         </Button>
                       </div>
                     </div>
@@ -808,7 +823,7 @@ export default function HomePage() {
       <section className="why_section">
         <div className="container">
           <div className="row">
-            <div className="col-sm-3">
+            <div className="col-6 col-sm-3">
               <div className="why_box">
                 <div>
                   <Image src="images/icons/icon-shipping.svg" alt="" />
@@ -819,7 +834,7 @@ export default function HomePage() {
                 </div>
               </div>
             </div>
-            <div className="col-sm-3">
+            <div className="col-6 col-sm-3">
               <div className="why_box">
                 <div>
                   <Image src="images/icons/icon-money-bag.svg" alt="" />
@@ -830,7 +845,7 @@ export default function HomePage() {
                 </div>
               </div>
             </div>
-            <div className="col-sm-3">
+            <div className="col-6 col-sm-3">
               <div className="why_box">
                 <div>
                   <Image src="images/icons/icon-secure.svg" alt="" />
@@ -841,7 +856,7 @@ export default function HomePage() {
                 </div>
               </div>
             </div>
-            <div className="col-sm-3">
+            <div className="col-6 col-sm-3">
               <div className="why_box">
                 <div>
                   <Image src="images/icons/icon-discount.svg" alt="" />
