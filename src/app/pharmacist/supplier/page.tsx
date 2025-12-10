@@ -16,8 +16,9 @@ import TableLoader from "@/app/components/TableLoader/TableLoader";
 import Input from "@/app/components/Input/Input";
 import {
   fetchSupplier,
-  togglSupplierStatus,
+  toggleSupplierStatus,
 } from "@/lib/features/supplierSlice/supplierSlice";
+import toast from "react-hot-toast";
 const mediaBase = process.env.NEXT_PUBLIC_MEDIA_BASE_URL;
 
 export default function Supplier() {
@@ -81,9 +82,29 @@ export default function Supplier() {
     }, 3000); // spinner for 3 sec
   };
 
-  const handleDelete = (id: number) => {
-    if (confirm("Are you sure you want to change status of this pharmacy?")) {
-      dispatch(togglSupplierStatus(id));
+  const handleToggleStatus = async (id: number, currentStatus: string) => {
+    if (
+      confirm(
+        `Are you sure you want to ${
+          currentStatus === "Active" ? "Inactive" : "Active"
+        } this supplier?`
+      )
+    ) {
+      const res = await dispatch(toggleSupplierStatus(id));
+      const payload = res?.payload;
+
+      if (payload && typeof payload === "object" && "status" in payload) {
+        // Status successfully toggled
+        const newStatus = payload.status; // "Active" / "Inactive"
+
+        toast.success(
+          `Supplier has been ${
+            newStatus === "Active" ? "activated" : "deactivated"
+          } successfully!`
+        );
+      } else {
+        toast.error("Something went wrong!");
+      }
     }
   };
 
@@ -109,7 +130,7 @@ export default function Supplier() {
             className="body_content"
           >
             <div className="pageTitle">
-              <i className="bi bi-shop-window"></i> Pharmacy List
+              <i className="bi bi-shop-window"></i> Supplier List
             </div>
             <div className="main_content">
               <div className="col-sm-12">
@@ -163,7 +184,7 @@ export default function Supplier() {
                         <th className="fw-bold">License No.</th>
                         <th className="fw-bold">License Validity</th>
                         <th className="fw-bold">Email ID</th>
-                        <th className="fw-bold">Contact No</th>
+                        <th className="fw-bold">Mobile</th>
                         <th className="fw-bold">Address</th>
                         <th className="fw-bold">Status</th>
                         <th className="fw-bold">Action</th>
@@ -182,11 +203,11 @@ export default function Supplier() {
                           <td>{p.address ?? p.district ?? "-"}</td>
                           <td>
                             <span
-                              onClick={() => handleDelete(p.id)}
+                              onClick={() => handleToggleStatus(p.id, p.status)}
                               className={`status ${
                                 p.status === "Active"
                                   ? "status-active"
-                                  : "status-inactive"
+                                  : "status-deactive"
                               } cursor-pointer`}
                               title="Click to change status"
                             >
@@ -235,10 +256,18 @@ export default function Supplier() {
       </div>
 
       {/* View Modal */}
-      <Modal show={showModal} onHide={() => setShowModal(false)} centered>
-        <Modal.Header closeButton>
-          <Modal.Title>Pharmacy Details</Modal.Title>
+      <Modal
+        show={showModal}
+        onHide={() => setShowModal(false)}
+        centered
+        size="lg"
+      >
+        <Modal.Header closeButton className="border-0">
+          <Modal.Title className="fw-bold text-primary">
+            Supplier Details
+          </Modal.Title>
         </Modal.Header>
+
         <Modal.Body>
           {selectedSupplier ? (
             (() => {
@@ -250,57 +279,77 @@ export default function Supplier() {
               );
 
               return (
-                <div>
-                  <p>
-                    <strong>Pharmacy Id:</strong>{" "}
-                    {selectedSupplier.supplier_id_code || ""}
-                  </p>
-                  <p>
-                    <strong>Pharmacy Name:</strong>{" "}
-                    {selectedSupplier.supplier_name ?? "-"}
-                  </p>
-                  <p>
-                    <strong>Contact Person:</strong>{" "}
-                    {selectedSupplier.user_name ?? "-"}
-                  </p>
-                  <p>
-                    <strong>GST No.:</strong> {selectedSupplier.gst_number}
-                  </p>
-                  <p>
-                    <strong>License No.:</strong>{" "}
-                    {selectedSupplier.license_number}
-                  </p>
-                  <p>
-                    <strong>License Validity:</strong>{" "}
-                    {formatDateOnly(selectedSupplier.license_valid_upto)}
-                  </p>
-                  <p>
-                    <strong>Email:</strong> {selectedSupplier.email_id}
-                  </p>
-                  <p>
-                    <strong>Contact:</strong>{" "}
-                    {selectedSupplier.supplier_mobile ?? "-"}
-                  </p>
-                  <p>
-                    <strong>Address:</strong>{" "}
-                    {selectedSupplier.address ??
-                      selectedSupplier.district ??
-                      "-"}
-                  </p>
-                  <p>
-                    <strong>Pincode:</strong> {selectedSupplier.pincode}
-                  </p>
-                  <p>
-                    <strong>Created On:</strong> {createdDate} at {createdTime}
-                  </p>
-                  <p>
-                    <strong>Updated On:</strong> {updatedDate} at {updatedTime}
-                  </p>
-                  <p>
-                    <strong>Status:</strong> {selectedSupplier.status}
-                  </p>
+                <div className="p-2">
+                  {/* Profile Section */}
+                  <div className="d-flex align-items-center gap-3 mb-4">
+                    <Image
+                      src={
+                        selectedSupplier.profile_image
+                          ? `${mediaBase}${selectedSupplier.profile_image}`
+                          : "/images/default-profile.jpg" // default image
+                      }
+                      alt="Pharmacy"
+                      style={{
+                        width: "90px",
+                        height: "90px",
+                        borderRadius: "50%",
+                        objectFit: "cover",
+                        border: "2px solid #0d6efd",
+                      }}
+                    />
+
+                    <div>
+                      <h4 className="mb-1 text-capitalize text-primary">
+                        {selectedSupplier.supplier_name}
+                      </h4>
+                      <span
+                        className={`badge px-3 py-2 ${
+                          selectedSupplier.status === "Active"
+                            ? "bg-success"
+                            : "bg-danger"
+                        }`}
+                      >
+                        {selectedSupplier.status}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Details Grid */}
+                  <div className="row g-3 mb-3">
+                    {[
+                      ["Supplier Id", selectedSupplier.supplier_id_code],
+                      ["Contact Person", selectedSupplier.user_name ?? "-"],
+                      ["GST No.", selectedSupplier.gst_number],
+                      ["License No.", selectedSupplier.license_number],
+                      [
+                        "License Validity",
+                        formatDateOnly(selectedSupplier.license_valid_upto),
+                      ],
+                      ["Email", selectedSupplier.email_id],
+                      ["Mobile", selectedSupplier.supplier_mobile ?? "-"],
+                      [
+                        "Address",
+                        selectedSupplier.address ||
+                          selectedSupplier.district ||
+                          "-",
+                      ],
+                      ["Pincode", selectedSupplier.pincode],
+                      ["Created On", `${createdDate} at ${createdTime}`],
+                      ["Updated On", `${updatedDate} at ${updatedTime}`],
+                    ].map(([label, value], idx) => (
+                      <div key={idx} className="col-md-6">
+                        <div className="border rounded p-2 bg-light">
+                          <strong>{label}:</strong> <br />
+                          <span className="text-secondary">{value}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Documents Section */}
+                  <h5 className="mt-4 fw-bold">Documents</h5>
                   <hr />
-                  <h5>Documents:</h5>
+
                   <div
                     style={{ display: "flex", gap: "15px", flexWrap: "wrap" }}
                   >
@@ -312,16 +361,28 @@ export default function Supplier() {
                           src={`${mediaBase}${doc.document}`}
                           alt="Pharmacy Document"
                           style={{
-                            width: "150px",
-                            height: "150px",
+                            width: "140px",
+                            height: "140px",
                             objectFit: "cover",
-                            border: "1px solid #ccc",
-                            borderRadius: "8px",
+                            borderRadius: "10px",
+                            border: "1px solid #ddd",
                           }}
                         />
                       ))
                     ) : (
-                      <p>No documents uploaded.</p>
+                      <Image
+                        src="/images/tnc-default.png"
+                        alt="Default Pharmacy"
+                        style={{
+                          width: "140px",
+                          height: "140px",
+                          objectFit: "contain",
+                          borderRadius: "10px",
+                          border: "1px solid #ddd",
+                          background: "#f8f9fa",
+                          padding: "10px",
+                        }}
+                      />
                     )}
                   </div>
                 </div>
@@ -331,8 +392,12 @@ export default function Supplier() {
             <p>No details found.</p>
           )}
         </Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowModal(false)}>
+
+        <Modal.Footer className="border-0">
+          <Button
+            variant="outline-secondary"
+            onClick={() => setShowModal(false)}
+          >
             Close
           </Button>
         </Modal.Footer>

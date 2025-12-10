@@ -55,7 +55,7 @@ export const fetchSupplierById = createAsyncThunk<
 });
 
 // toggle status thunk
-export const togglSupplierStatus = createAsyncThunk<
+export const toggleSupplierStatus = createAsyncThunk<
   Supplier,
   number,
   { rejectValue: string }
@@ -156,18 +156,18 @@ const supplierSlice = createSlice({
       })
 
       // ✅ status
-      .addCase(togglSupplierStatus.fulfilled, (state, action) => {
+      .addCase(toggleSupplierStatus.fulfilled, (state, action) => {
         state.loading = false;
         const updated = action.payload;
         state.list = state.list.map((p) =>
           p.id === updated.id ? { ...p, status: updated.status } : p
         );
       })
-      .addCase(togglSupplierStatus.pending, (state) => {
+      .addCase(toggleSupplierStatus.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
-      .addCase(togglSupplierStatus.rejected, (state, action) => {
+      .addCase(toggleSupplierStatus.rejected, (state, action) => {
         state.loading = false;
         state.error = (action.payload as string) ?? "Status update failed";
       })

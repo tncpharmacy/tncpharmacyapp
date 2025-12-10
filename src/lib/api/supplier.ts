@@ -58,8 +58,8 @@ export const updateSupplierApi = async (
 export const toggleSupplierStatusApi = async (
   id: number
 ): Promise<Supplier> => {
-  const res = await api.delete<{ data: Supplier }>(
-    ENDPOINTS.SUPPLIER.DELETE_SUPPLIER(id)
+  const res = await api.put<{ data: Supplier }>(
+    ENDPOINTS.SUPPLIER.STATUS_SUPPLIER(id)
   );
   return res.data.data; // 👈 backend updated Supplier object return karta hai
 };

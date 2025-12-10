@@ -81,11 +81,6 @@ export default function SideNav() {
             <i className="bi bi-file-earmark-text"></i> Billing & Sales
           </div>
         </li> */}
-        <li className={`${openMenu === "Purchase-Supplier" ? "active" : ""}`}>
-          <div onClick={() => toggleMenu("Purchase-Supplier")} className="link">
-            <i className="bi bi-basket"></i> Supplier
-          </div>
-        </li>
         <li>
           <Link href="/pharmacist/supplier" className="link">
             <i className="bi bi-basket"></i> Supplier

@@ -216,7 +216,7 @@ export default function SupplierForm({ id }: Props) {
               <i className="bi bi-shop-window me-2"></i>
               {id ? "Update Pharmacy" : "Add New Pharmacy"}
               <button
-                onClick={() => router.push("/pharmacy")}
+                onClick={() => router.push("/pharmacist/supplier")}
                 className="btn-style2 float-end pe-4 ps-4"
               >
                 ← Back

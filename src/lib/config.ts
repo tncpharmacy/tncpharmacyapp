@@ -228,6 +228,6 @@ export const ENDPOINTS = {
     GET_SUPPLIER_BY_ID: (id: number | string) => `/supplier/view/${id}/`, // GET one
     CREATE_SUPPLIER: "/supplier/create/", // POST
     UPDATE_SUPPLIER: (id: number | string) => `/supplier/update/${id}/`, // PATCH
-    DELETE_SUPPLIER: (id: number | string) => `/supplier/status/${id}/`, // DELETE
+    STATUS_SUPPLIER: (id: number | string) => `/supplier/status/${id}/`, // DELETE
   },
 };

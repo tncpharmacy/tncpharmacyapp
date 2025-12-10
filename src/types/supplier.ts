@@ -23,6 +23,7 @@ export interface Supplier {
   updated_on: string;
   created_by: number;
   updated_by: number;
+  profile_image: string;
 }
 
 interface Document {
