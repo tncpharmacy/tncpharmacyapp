@@ -12,8 +12,8 @@ import {
 import { useRouter } from "next/navigation";
 import InputFile from "@/app/components/Input/InputFile";
 import Input from "@/app/components/Input/Input";
-import SideNav from "@/app/admin/components/SideNav/page";
-import Header from "@/app/admin/components/Header/page";
+import SideNav from "@/app/pharmacist/components/SideNav/page";
+import Header from "@/app/pharmacist/components/Header/page";
 import SelectInput from "@/app/components/Input/SelectInput";
 import { useAppDispatch, useAppSelector } from "@/lib/hooks";
 import { fetchStates } from "@/lib/features/stateSlice/stateSlice";
@@ -21,9 +21,12 @@ import toast from "react-hot-toast";
 import { AxiosError } from "axios";
 import { fetchPharmacy } from "@/lib/features/pharmacySlice/pharmacySlice";
 import {
+  addSupplier,
+  editSupplier,
   fetchSupplier,
   fetchSupplierById,
 } from "@/lib/features/supplierSlice/supplierSlice";
+import { updateSupplierApi } from "@/lib/api/supplier";
 
 interface Props {
   id?: number; // agar edit mode hai to id milegi
@@ -175,20 +178,20 @@ export default function SupplierForm({ id }: Props) {
 
     try {
       if (id) {
-        await updatePharmacyApi(id, formDataToSend);
-        toast.success("✅ Pharmacy successfully updated");
+        await dispatch(editSupplier({ id, data: formDataToSend })).unwrap();
+        toast.success("✅ Supplier successfully updated");
 
-        await dispatch(fetchPharmacy()).unwrap();
-        router.push("/admin/pharmacy");
+        await dispatch(fetchSupplier()).unwrap();
+        router.push("/pharmacist/supplier");
       } else {
-        const res = await createPharmacyApi(formDataToSend);
-        toast.success("✅ Pharmacy successfully added");
+        const res = await dispatch(addSupplier(formDataToSend)).unwrap();
+        toast.success("✅ Supplier successfully added");
 
-        await dispatch(fetchPharmacy()).unwrap();
+        await dispatch(fetchSupplier()).unwrap();
 
         setFormData((prev) => ({
           ...prev,
-          pharmacy_id_code: res.pharmacy_id_code ?? prev.supplier_id_code,
+          supplier_id_code: res.supplier_id_code ?? prev.supplier_id_code,
         }));
 
         router.push("/pharmacist/supplier");
@@ -214,7 +217,7 @@ export default function SupplierForm({ id }: Props) {
           <div className="body_content">
             <div className="pageTitle">
               <i className="bi bi-shop-window me-2"></i>
-              {id ? "Update Pharmacy" : "Add New Pharmacy"}
+              {id ? "Update Supplier" : "Add New Supplier"}
               <button
                 onClick={() => router.push("/pharmacist/supplier")}
                 className="btn-style2 float-end pe-4 ps-4"

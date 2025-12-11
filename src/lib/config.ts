@@ -230,4 +230,9 @@ export const ENDPOINTS = {
     UPDATE_SUPPLIER: (id: number | string) => `/supplier/update/${id}/`, // PATCH
     STATUS_SUPPLIER: (id: number | string) => `/supplier/status/${id}/`, // DELETE
   },
+
+  CHANGE_PASSWORD: {
+    PUT_PASSWORD: (userId: number, userTypeId: number) =>
+      `/user/reset-password/${userId}/${userTypeId}/`,
+  },
 };

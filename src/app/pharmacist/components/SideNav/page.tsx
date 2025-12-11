@@ -96,7 +96,7 @@ export default function SideNav() {
                 <Link href="/pharmacist/view-profile">Profile </Link>
               </li>
               <li>
-                <Link href="#">Reset Password</Link>
+                <Link href="/pharmacist/change-password">Change Password</Link>
               </li>
             </ul>
           )}

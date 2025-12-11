@@ -428,6 +428,10 @@ const nextConfig: NextConfig = {
         source: "/pharmacist/supplier",
         destination: "/pharmacist/supplier",
       },
+      {
+        source: "/pharmacist/change-password",
+        destination: "/pharmacist/change-password",
+      },
 
       // Doctor Routes
       {

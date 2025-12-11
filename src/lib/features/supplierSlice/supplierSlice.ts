@@ -7,6 +7,7 @@ import {
   toggleSupplierStatusApi,
 } from "@/lib/api/supplier";
 import { Supplier } from "@/types/supplier";
+import { AxiosError, AxiosResponse } from "axios";
 
 interface PharmacyState {
   list: Supplier[];
@@ -71,37 +72,37 @@ export const toggleSupplierStatus = createAsyncThunk<
   }
 });
 
-export const addSupplier = createAsyncThunk(
-  "supplier/add",
-  async (data: Partial<Supplier>, { rejectWithValue }) => {
-    try {
-      return await createSupplierApi(data);
-    } catch (err: unknown) {
-      if (err instanceof Error) {
-        return rejectWithValue(err.message);
-      }
-      return rejectWithValue("Data is not successfully added");
-    }
+export const addSupplier = createAsyncThunk<
+  Supplier, // return type
+  FormData // argument type
+>("supplier/add", async (formData, { rejectWithValue }) => {
+  try {
+    // ⬇️ Directly returns Supplier object (NO res.data needed)
+    const supplier = await createSupplierApi(formData);
+    return supplier;
+  } catch (err: unknown) {
+    const error = err as AxiosError<{ message?: string }>;
+    return rejectWithValue(
+      error.response?.data?.message ?? "Failed to add supplier"
+    );
   }
-);
+});
 
 // ✅ Update/Supplier thunk
-export const editSupplier = createAsyncThunk(
-  "supplier/edit",
-  async (
-    { id, data }: { id: number; data: Partial<Supplier> },
-    { rejectWithValue }
-  ) => {
-    try {
-      return await updateSupplierApi(id, data);
-    } catch (err: unknown) {
-      if (err instanceof Error) {
-        return rejectWithValue(err.message);
-      }
-      return rejectWithValue("Data is not successfully updated");
-    }
+export const editSupplier = createAsyncThunk<
+  Supplier,
+  { id: number; data: FormData }
+>("supplier/edit", async ({ id, data }, { rejectWithValue }) => {
+  try {
+    const supplier = await updateSupplierApi(id, data);
+    return supplier;
+  } catch (err: unknown) {
+    const error = err as AxiosError<{ message?: string }>;
+    return rejectWithValue(
+      error.response?.data?.message ?? "Failed to update supplier"
+    );
   }
-);
+});
 
 const supplierSlice = createSlice({
   name: "supplier",

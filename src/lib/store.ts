@@ -1,3 +1,4 @@
+import { changePassword } from "./features/changePasswordSlice/changePasswordSlice";
 import { configureStore } from "@reduxjs/toolkit";
 import authReducer from "@/lib/features/authSlice/authSlice";
 import pharmacyReducer from "@/lib/features/pharmacySlice/pharmacySlice";
@@ -25,6 +26,7 @@ import pharmacistOrderReducer from "@/lib/features/pharmacistOrderSlice/pharmaci
 import pharmacistBuyerListReducer from "@/lib/features/pharmacistBuyerListSlice/pharmacistBuyerListSlice";
 import healthBagBuyerByPharmacistReducer from "@/lib/features/healthBagBuyerByPharmacistSlice/healthBagBuyerByPharmacistSlice";
 import supplierReducer from "@/lib/features/supplierSlice/supplierSlice";
+import changePasswordReducer from "@/lib/features/changePasswordSlice/changePasswordSlice";
 
 //
 // ✅ STEP 1 — Load preloaded state from localStorage
@@ -89,6 +91,7 @@ export const store = configureStore({
     pharmacistBuyerList: pharmacistBuyerListReducer,
     healthBagBuyerByPharmacist: healthBagBuyerByPharmacistReducer,
     supplier: supplierReducer,
+    changePassword: changePasswordReducer,
   },
   preloadedState: loadState(), // ✅ instant load on refresh
 });
