@@ -67,9 +67,9 @@ export default function HomePage() {
   const shuffled9 = useShuffledOnce("category9", medicineMenuByCategory9);
   //console.log("medicineMenuByCategory5", medicineMenuByCategory5);
 
-  const Slider = dynamic(() => import("react-slick"), {
-    ssr: false,
-  });
+  // const Slider = dynamic(() => import("react-slick"), {
+  //   ssr: false,
+  // });
   const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
