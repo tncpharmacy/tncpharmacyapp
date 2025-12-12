@@ -31,8 +31,9 @@ header {
 
 /* Header ke neeche page content hide na ho isliye padding add */
 body {
-  padding-top: 120px !important; /* header total height */
+  padding-top: 120px !important;
 }
+
 
 html, body {
     height: auto !important;

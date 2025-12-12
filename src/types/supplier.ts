@@ -7,7 +7,7 @@ export interface Supplier {
   license_valid_upto: string; // ISO date string
   gst_number: string;
   email_id: string;
-  supplier_mobile: string; // <-- added
+  mobile_number: string; // <-- added
   login_id: string;
   // contact_person: string; // <-- added
   pincode: string;

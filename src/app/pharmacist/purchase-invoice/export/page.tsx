@@ -13,6 +13,7 @@ import SelectMedicineDropdown from "@/app/components/Input/SelectMedicineDropdow
 import { useExportExcel } from "@/lib/hooks/useExportExcel";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
+import { fetchSupplier } from "@/lib/features/supplierSlice/supplierSlice";
 interface Supplier {
   id: number;
   name: string;
@@ -22,7 +23,7 @@ export default function PurchaseInvoiceExport() {
   const router = useRouter();
   const { exportToExcel } = useExportExcel();
   const { medicines: getMedicine } = useAppSelector((state) => state.medicine);
-
+  const { list: supplierList } = useAppSelector((state) => state.supplier);
   const [visibleCount, setVisibleCount] = useState(10);
   const [loadings, setLoadings] = useState(false);
   const [selectedMedicines, setSelectedMedicines] = useState<
@@ -31,13 +32,16 @@ export default function PurchaseInvoiceExport() {
   const [selectAll, setSelectAll] = useState(false);
 
   // ⭐ Supplier dropdown
-  const [suppliers] = useState<Supplier[]>([{ id: 1, name: "Ganga Pharmacy" }]);
   const [selectedSupplier, setSelectedSupplier] = useState("");
   const today = new Date().toISOString().split("T")[0];
   const fileName = `${selectedSupplier || "NoSupplier"}_${today}`;
 
   useEffect(() => {
     dispatch(getMedicinesList());
+  }, [dispatch]);
+
+  useEffect(() => {
+    dispatch(fetchSupplier());
   }, [dispatch]);
 
   const loadMore = () => {
@@ -210,9 +214,9 @@ export default function PurchaseInvoiceExport() {
                         onChange={(e) => setSelectedSupplier(e.target.value)}
                       >
                         <option value="">Select Supplier</option>
-                        {suppliers.map((s) => (
-                          <option key={s.id} value={s.name}>
-                            {s.name}
+                        {supplierList.map((s) => (
+                          <option key={s.id} value={s.supplier_name}>
+                            {s.supplier_name}
                           </option>
                         ))}
                       </select>

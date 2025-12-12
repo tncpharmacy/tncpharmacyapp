@@ -27,6 +27,7 @@ import { useHealthBag } from "@/lib/hooks/useHealthBag";
 import Footer from "@/app/user/components/footer/footer";
 import { useShuffledOnce } from "@/lib/hooks/useShuffledOnce";
 import { HealthBag } from "@/types/healthBag";
+import dynamic from "next/dynamic";
 const mediaBase = process.env.NEXT_PUBLIC_MEDIA_BASE_URL;
 
 export default function HomePage() {
@@ -65,6 +66,16 @@ export default function HomePage() {
   const shuffled7 = useShuffledOnce("category7", medicineMenuByCategory7);
   const shuffled9 = useShuffledOnce("category9", medicineMenuByCategory9);
   //console.log("medicineMenuByCategory5", medicineMenuByCategory5);
+
+  const Slider = dynamic(() => import("react-slick"), {
+    ssr: false,
+  });
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
   useEffect(() => {
     despatch(getGroupCare());
     despatch(getCategories());
@@ -99,37 +110,38 @@ export default function HomePage() {
     return () => clearTimeout(timeout);
   }, []);
 
+  const [slides, setSlides] = useState(5);
+
+  useEffect(() => {
+    const updateSlides = () => {
+      const w = window.innerWidth;
+
+      if (w <= 360) setSlides(1);
+      else if (w <= 480) setSlides(2);
+      else if (w <= 768) setSlides(2);
+      else if (w <= 1024) setSlides(3);
+      else if (w <= 1120) setSlides(4);
+      else setSlides(5); // desktop
+    };
+
+    updateSlides(); // run on load
+    window.addEventListener("resize", updateSlides);
+
+    return () => window.removeEventListener("resize", updateSlides);
+  }, []);
+
   const settings = {
     dots: true,
+    arrows: true,
     infinite: true,
     speed: 500,
-    slidesToShow: 5,
+    slidesToShow: slides, // 👈 NOW DYNAMIC
     slidesToScroll: 1,
-    initialSlide: 0,
     autoplay: true,
-    responsive: [
-      {
-        breakpoint: 1024,
-        settings: {
-         slidesToShow: 4
-        }
-      },
-      {
-        breakpoint: 700,
-        settings: {
-          slidesToShow: 3
-        }
-      },
-      {
-        breakpoint: 480,
-        settings: {
-         slidesToShow: 2
-        }
-      }
-    ]
+    autoplaySpeed: 2000,
+    swipeToSlide: true,
   };
 
-  // --- Sync localBag with Redux items ---
   useEffect(() => {
     if (items?.length) {
       setLocalBag(items.map((i) => i.productid)); // ✅ correct key
@@ -179,6 +191,7 @@ export default function HomePage() {
   return (
     <>
       <SiteHeader />
+
       <Carousel
         fade
         controls={true}
@@ -187,7 +200,7 @@ export default function HomePage() {
         pause={false}
       >
         <Carousel.Item>
-          <img
+          <Image
             src="images/main-banner-1.jpg"
             className="d-block w-100"
             alt="..."
@@ -204,7 +217,7 @@ export default function HomePage() {
           </div>
         </Carousel.Item>
         <Carousel.Item>
-          <img
+          <Image
             src="images/main-banner-2.jpg"
             className="d-block w-100"
             alt="..."
@@ -221,7 +234,7 @@ export default function HomePage() {
           </div>
         </Carousel.Item>
         <Carousel.Item>
-          <img
+          <Image
             src="images/main-banner-3.jpg"
             className="d-block w-100"
             alt="..."
@@ -288,35 +301,38 @@ export default function HomePage() {
           </h2>
           <div className="slider-container">
             {/*Slider Implementation */}
-            <Slider {...settings}>
-              {groupCare?.map((group, index) => (
-                <div key={group.id}>
-                  <div className="category_item">
-                    <div
-                      className={`category_img ${BG_CLASSES[index % BG_CLASSES.length]
+            {isClient && (
+              <Slider {...settings}>
+                {groupCare?.map((group, index) => (
+                  <div key={group.id}>
+                    <div className="category_item">
+                      <div
+                        className={`category_img ${
+                          BG_CLASSES[index % BG_CLASSES.length]
                         }`}
-                    >
-                      <Image
-                        src={getIconPath(group.group_name)}
-                        alt={`${group.group_name} Icon`}
-                      />
-                    </div>
-                    <div>
-                      {/* ✅ Group Name Dynamic */}
-                      <h2 className="category_title">{group.group_name}</h2>
-                      <span
-                        className="category_link"
-                        onClick={() =>
-                          router.push(`/all-group-care/${encodeId(group.id)}`)
-                        }
                       >
-                        View Now<i className="bi bi-arrow-right-short"></i>
-                      </span>
+                        <Image
+                          src={getIconPath(group.group_name)}
+                          alt={`${group.group_name} Icon`}
+                        />
+                      </div>
+                      <div>
+                        {/* ✅ Group Name Dynamic */}
+                        <h2 className="category_title">{group.group_name}</h2>
+                        <span
+                          className="category_link"
+                          onClick={() =>
+                            router.push(`/all-group-care/${encodeId(group.id)}`)
+                          }
+                        >
+                          View Now<i className="bi bi-arrow-right-short"></i>
+                        </span>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
-            </Slider>
+                ))}
+              </Slider>
+            )}
           </div>
         </div>
       </section>
@@ -398,8 +414,9 @@ export default function HomePage() {
 
                         <Button
                           size="sm"
-                          className={`btn-1 btn-HO ${isInBag ? "remove" : "add"
-                            }`}
+                          className={`btn-1 btn-HO ${
+                            isInBag ? "remove" : "add"
+                          }`}
                           style={{ borderRadius: "35px" }}
                           disabled={processingIds.includes(item.product_id)}
                           onClick={() =>
@@ -411,8 +428,8 @@ export default function HomePage() {
                           {processingIds.includes(item.product_id)
                             ? "Processing..."
                             : isInBag
-                              ? "REMOVE"
-                              : "ADD"}
+                            ? "REMOVE"
+                            : "ADD"}
                         </Button>
                       </div>
                     </div>
@@ -631,8 +648,9 @@ export default function HomePage() {
                         </div>
                         <Button
                           size="sm"
-                          className={`btn-1 btn-HO ${isInBag ? "remove" : "add"
-                            }`}
+                          className={`btn-1 btn-HO ${
+                            isInBag ? "remove" : "add"
+                          }`}
                           style={{ borderRadius: "35px" }}
                           disabled={processingIds.includes(item.product_id)}
                           onClick={() =>
@@ -644,8 +662,8 @@ export default function HomePage() {
                           {processingIds.includes(item.product_id)
                             ? "Processing..."
                             : isInBag
-                              ? "REMOVE"
-                              : "ADD"}
+                            ? "REMOVE"
+                            : "ADD"}
                         </Button>
                       </div>
                     </div>
@@ -786,8 +804,9 @@ export default function HomePage() {
 
                         <Button
                           size="sm"
-                          className={`btn-1 btn-HO ${isInBag ? "remove" : "add"
-                            }`}
+                          className={`btn-1 btn-HO ${
+                            isInBag ? "remove" : "add"
+                          }`}
                           style={{ borderRadius: "35px" }}
                           disabled={processingIds.includes(item.product_id)}
                           onClick={() =>
@@ -799,8 +818,8 @@ export default function HomePage() {
                           {processingIds.includes(item.product_id)
                             ? "Processing..."
                             : isInBag
-                              ? "REMOVE"
-                              : "ADD"}
+                            ? "REMOVE"
+                            : "ADD"}
                         </Button>
                       </div>
                     </div>

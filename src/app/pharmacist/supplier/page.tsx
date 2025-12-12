@@ -199,7 +199,7 @@ export default function Supplier() {
                           <td>{p.license_number}</td>
                           <td>{p.license_valid_upto}</td>
                           <td>{p.email_id}</td>
-                          <td>{p.supplier_mobile ?? "-"}</td>
+                          <td>{p.login_id ?? "-"}</td>
                           <td>{p.address ?? p.district ?? "-"}</td>
                           <td>
                             <span
@@ -326,7 +326,7 @@ export default function Supplier() {
                         formatDateOnly(selectedSupplier.license_valid_upto),
                       ],
                       ["Email", selectedSupplier.email_id],
-                      ["Mobile", selectedSupplier.supplier_mobile ?? "-"],
+                      ["Mobile", selectedSupplier.login_id ?? "-"],
                       [
                         "Address",
                         selectedSupplier.address ||

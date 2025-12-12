@@ -4,12 +4,12 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import ToastProvider from "@/components/ToastProvider/ToastProvider";
 import Providers from "./Provider";
 
-// 🔹 Axios circular-safe logout setup
+// Axios setup
 import { setUnauthorizedHandler } from "@/lib/axios";
 import { store } from "@/lib/store";
 import { logout } from "@/lib/features/authSlice/authSlice";
 
-// setup once at app start
+// run 1 time on app start
 setUnauthorizedHandler(() => {
   store.dispatch(logout());
   window.location.href = "/";
@@ -33,10 +33,9 @@ export default function RootLayout({
           href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
         />
       </head>
+
       <body>
         <Providers>{children}</Providers>
-
-        {/* Toast Container */}
         <ToastProvider />
       </body>
     </html>

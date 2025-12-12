@@ -1,5 +1,6 @@
 body {
     background: #e6f0ff;
+    padding-top: 0 !important;
 }
 .custom-table-header {
     background-color: #dde7f1 !important; /* !important इसे ओवरराइड होने से रोकेगा */

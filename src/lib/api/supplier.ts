@@ -41,7 +41,7 @@ export const updateSupplierApi = async (
   id: number | string,
   data: Partial<Supplier> | FormData
 ): Promise<Supplier> => {
-  const res = await api.patch<Supplier>(
+  const res = await api.put<Supplier>(
     ENDPOINTS.SUPPLIER.UPDATE_SUPPLIER(id),
     data,
     {

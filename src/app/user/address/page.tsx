@@ -16,6 +16,7 @@ import {
   editAddress,
   getAddress,
   getAddressById,
+  makeDefaultAddress,
   removeAddress,
 } from "@/lib/features/addressSlice/addressSlice";
 
@@ -35,14 +36,20 @@ export default function AddressList() {
   const [selectedLocation, setSelectedLocation] =
     useState<LocationDetails | null>(null);
   // const [billingAddress, setBillingAddress] = useState(0);
+
   const [selectedAddressId, setSelectedAddressId] = useState<number | null>(
     null
   );
+  const [pendingDefaultId, setPendingDefaultId] = useState<number | null>(null);
 
   const activeAddresses = useAppSelector((state) => state.address.addresses);
   // ✅ Filter only active addresses
   const billingAddresses = activeAddresses?.filter(
     (addr) => addr.status === "Active"
+  );
+  // ✅ FIX: Keep addresses in a stable order (stop backend reordering)
+  const sortedBillingAddresses = [...billingAddresses].sort(
+    (a, b) => (a.id ?? 0) - (b.id ?? 0)
   );
 
   useEffect(() => {
@@ -64,16 +71,17 @@ export default function AddressList() {
     }
   }, [dispatch, userId]);
 
+  // Set selected only on FIRST load, not after every update
   useEffect(() => {
-    if (billingAddresses.length > 0) {
-      const defaultAddr = billingAddresses.find(
+    if (sortedBillingAddresses.length > 0 && selectedAddressId === null) {
+      const defaultAddr = sortedBillingAddresses.find(
         (addr) => addr.default_address === 1
       );
       if (defaultAddr?.id) {
         setSelectedAddressId(defaultAddr.id);
       }
     }
-  }, [billingAddresses]);
+  }, [sortedBillingAddresses, selectedAddressId]);
 
   // ✅ Prevent hydration mismatch
   if (!isClient || !buyer?.id) return null;
@@ -97,9 +105,9 @@ export default function AddressList() {
   };
 
   const handleRefreshList = () => {
-    if (userId) {
-      dispatch(getAddress(userId));
-    }
+    // if (userId) {
+    //   dispatch(getAddress(userId));
+    // }
   };
 
   // const handleEdit = (addressId: number) => {
@@ -110,30 +118,27 @@ export default function AddressList() {
   // };
 
   const handleSetDefaultAddress = async (address: Address) => {
-    console.log("Setting default for address:", address);
-
-    if (!address.id) {
-      console.error("Address ID missing", address);
-      return;
-    }
-    // if (!address.id) return;
+    if (!address.id) return;
 
     try {
+      // UI instantly updates
       setSelectedAddressId(address.id);
+      setPendingDefaultId(address.id);
 
-      await dispatch(
-        editAddress({ id: address.id, data: { set_default: true } })
-      ).unwrap();
+      await dispatch(makeDefaultAddress({ addressId: address.id })).unwrap();
 
       toast.success("Default address updated!");
 
-      if (userId) {
-        dispatch(getAddress(userId));
-      }
+      // STOP causing flicker (NO RELOAD HERE)
+      // if (userId) dispatch(getAddress(userId));
 
-      router.push("/health-bag");
-    } catch (err) {
-      console.error(err);
+      // After update, allow UI to stay stable
+      setTimeout(() => {
+        setPendingDefaultId(null);
+        router.push("/health-bag");
+      }, 500);
+    } catch (error) {
+      console.error(error);
       toast.error("Failed to set default address");
     }
   };
@@ -166,85 +171,83 @@ export default function AddressList() {
         </div>
         <hr style={{ border: "2px solid #000" }} />
         <div className="row">
-          {billingAddresses.map((addr, index) => (
-            <div className="col-md-4 mb-4" key={index}>
-              <div
-                className={`card ${
-                  selectedAddressId === addr.id
-                    ? "border-danger"
-                    : "border-light"
-                } shadow-sm`}
-                onClick={() => {
-                  if (addr.id) {
-                    setSelectedAddressId(addr.id);
-                  }
-                }}
-                style={{
-                  cursor: "pointer",
-                  borderWidth: "2px",
-                  borderRadius: "8px",
-                  transition: "all 0.2s ease-in-out",
-                  fontFamily: "'Inter', 'Segoe UI', sans-serif",
-                }}
-              >
-                <div className="card-body p-3">
-                  <div className="d-flex align-items-center mb-2">
-                    <input
-                      type="radio"
-                      name="billingAddress"
-                      checked={selectedAddressId === addr.id}
-                      onChange={() => handleSetDefaultAddress(addr)}
-                      className="form-check-input me-2"
-                    />
+          {sortedBillingAddresses.map((addr, index) => {
+            const isSelected =
+              selectedAddressId === addr.id || pendingDefaultId === addr.id;
 
-                    <label
-                      className="fw-semibold mb-0"
-                      style={{ fontSize: "15px", color: "#212121" }}
-                    >
-                      {addr.address_type_id === 1
-                        ? "Home"
-                        : addr.address_type_id === 2
-                        ? "Office"
-                        : "Other"}
-                    </label>
-                  </div>
+            return (
+              <div className="col-md-4 mb-4" key={index}>
+                <div
+                  className={`card ${
+                    isSelected ? "border-danger" : "border-light"
+                  } shadow-sm`}
+                  onClick={() => setSelectedAddressId(addr.id!)}
+                  style={{
+                    cursor: "pointer",
+                    borderWidth: "2px",
+                    borderRadius: "8px",
+                    transition: "all 0.2s ease-in-out",
+                    fontFamily: "'Inter', 'Segoe UI', sans-serif",
+                  }}
+                >
+                  <div className="card-body p-3">
+                    <div className="d-flex align-items-center mb-2">
+                      <input
+                        type="radio"
+                        name="billingAddress"
+                        checked={isSelected}
+                        onChange={() => handleSetDefaultAddress(addr)}
+                        className="form-check-input me-2"
+                      />
 
-                  <div className="ps-4">
-                    <p
-                      className="mb-1"
-                      style={{
-                        fontSize: "13px",
-                        color: "#555",
-                        lineHeight: "1",
-                      }}
-                    >
-                      {addr.address}
-                    </p>
-                    <p
-                      className="mb-3"
-                      style={{
-                        fontSize: "13px",
-                        color: "#555",
-                        lineHeight: "1",
-                      }}
-                    >
-                      {addr.location} ({addr.pincode})
-                    </p>
-                    <p
-                      className="mb-0 fw-semibold"
-                      style={{ fontSize: "13.5px", color: "#212121" }}
-                    >
-                      {addr.name}
-                    </p>
-                    <p
-                      className="mb-2"
-                      style={{ fontSize: "13px", color: "#757575" }}
-                    >
-                      {addr.mobile}
-                    </p>
+                      <label
+                        className="fw-semibold mb-0"
+                        style={{ fontSize: "15px", color: "#212121" }}
+                      >
+                        {addr.address_type_id === 1
+                          ? "Home"
+                          : addr.address_type_id === 2
+                          ? "Office"
+                          : "Other"}
+                      </label>
+                    </div>
 
-                    <div className="d-flex gap-3 ps-1">
-                      {/* <button
+                    <div className="ps-4">
+                      <p
+                        className="mb-1"
+                        style={{
+                          fontSize: "13px",
+                          color: "#555",
+                          lineHeight: "1",
+                        }}
+                      >
+                        {addr.address}
+                      </p>
+                      <p
+                        className="mb-3"
+                        style={{
+                          fontSize: "13px",
+                          color: "#555",
+                          lineHeight: "1",
+                        }}
+                      >
+                        {addr.location} ({addr.pincode})
+                      </p>
+                      <p
+                        className="mb-0 fw-semibold"
+                        style={{ fontSize: "13.5px", color: "#212121" }}
+                      >
+                        {addr.name}
+                      </p>
+                      <p
+                        className="mb-2"
+                        style={{ fontSize: "13px", color: "#757575" }}
+                      >
+                        {addr.mobile}
+                      </p>
+
+                      <div className="d-flex gap-3 ps-1">
+                        {/* <button
                         className="btn btn-link p-0 fw-semibold"
                         style={{
                           fontSize: "13px",
@@ -263,34 +266,47 @@ export default function AddressList() {
                       >
                         Edit
                       </button> */}
-                      <button
-                        className="btn btn-link p-0 fw-semibold"
-                        style={{
-                          fontSize: "13px",
-                          color: "#e53935",
-                          textDecoration: "none",
-                        }}
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          if (!addr.id) {
-                            toast.error("Invalid address ID");
-                            return;
-                          }
-                          handleRemove(addr.id);
-                        }}
-                      >
-                        <i
-                          className="bi bi-trash text-danger"
-                          style={{ fontSize: "16px" }}
-                        ></i>
-                      </button>
+                        <button
+                          className="btn btn-link p-0 fw-semibold"
+                          style={{
+                            fontSize: "13px",
+                            color:
+                              addr.default_address === 1 ? "#999" : "#e53935",
+                            textDecoration: "none",
+                            cursor:
+                              addr.default_address === 1
+                                ? "not-allowed"
+                                : "pointer",
+                          }}
+                          type="button"
+                          disabled={addr.default_address === 1}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (addr.default_address === 1) return; // safety
+
+                            if (!addr.id) {
+                              toast.error("Invalid address ID");
+                              return;
+                            }
+                            handleRemove(addr.id);
+                          }}
+                        >
+                          <i
+                            className="bi bi-trash"
+                            style={{
+                              fontSize: "16px",
+                              color:
+                                addr.default_address === 1 ? "#999" : "red",
+                            }}
+                          ></i>
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </>

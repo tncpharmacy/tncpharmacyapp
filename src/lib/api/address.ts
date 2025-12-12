@@ -39,11 +39,26 @@ export const createAddress = async (data: Address): Promise<Address> => {
 // UPDATE Address (BUYER)
 // =========================
 export const updateAddress = async (
-  id: number,
+  addressId: number,
   data: Partial<Address> | { set_default: boolean }
 ): Promise<Address> => {
   const res = await axiosInstance.put<Address>(
-    ENDPOINTS.ADDRESS.UPDATE(id),
+    ENDPOINTS.ADDRESS.UPDATE(addressId),
+    data
+  );
+  return res.data;
+};
+
+// =========================
+// DEFAULT Address (BUYER)
+// =========================
+export const setDefaultAddress = async (
+  // <-- NAME CHANGE HERE
+  addressId: number,
+  data: { set_default: boolean }
+): Promise<Address> => {
+  const res = await axiosInstance.put<Address>(
+    ENDPOINTS.ADDRESS.DEFAULT_ADDRESS(addressId),
     data
   );
   return res.data;

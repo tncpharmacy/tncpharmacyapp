@@ -190,6 +190,13 @@ const SiteHeader = () => {
       console.error("Error navigating:", error);
     }
   };
+  useEffect(() => {
+    const header = document.getElementById("header");
+    if (!header) return;
+
+    const h = header.offsetHeight;
+    document.body.style.paddingTop = h + "px";
+  }, []);
 
   // ---------- RENDER ----------
   return (
@@ -445,7 +452,9 @@ const SiteHeader = () => {
                 </Link>
               </li>
               <li className="mobileMenu">
-                <span className="micon"><i className="bi bi-grid-3x3-gap-fill"></i></span>
+                <span className="micon">
+                  <i className="bi bi-grid-3x3-gap-fill"></i>
+                </span>
               </li>
             </ul>
           </div>

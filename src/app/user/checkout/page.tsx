@@ -9,7 +9,6 @@ import SiteHeader from "@/app/user/components/header/header";
 import Footer from "@/app/user/components/footer/footer";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
-import { FaCheckCircle } from "react-icons/fa";
 import { useAppDispatch, useAppSelector } from "@/lib/hooks";
 import { safeLocalStorage } from "@/lib/utils/safeLocalStorage";
 import { createBuyerOrder } from "@/lib/features/buyerSlice/buyerSlice";
@@ -19,13 +18,24 @@ import { useHealthBag } from "@/lib/hooks/useHealthBag";
 export default function Checkout() {
   const dispatch = useAppDispatch();
   const router = useRouter();
+
   const [checkoutData, setCheckoutData] = useState<OrderPayload | null>(null);
   const [showSuccess, setShowSuccess] = useState(false);
+
   const { buyer, loading, token } = useAppSelector((state) => state.buyer);
   const { removeItem, items: healthBagItems } = useHealthBag({
     userId: buyer?.id || null,
   });
-  const [isClient, setIsClient] = useState(false); // ✅ ensure client render only
+
+  const [isClient, setIsClient] = useState(false);
+
+  // Payment Selection: "qr" or "cod"
+  const [paymentType, setPaymentType] = useState<"qr" | "cod">("qr");
+
+  // COD Captcha states
+  const [captchaQ, setCaptchaQ] = useState({ a: 0, b: 0 });
+  const [captchaAns, setCaptchaAns] = useState("");
+
   useEffect(() => {
     setIsClient(true);
   }, []);
@@ -34,15 +44,12 @@ export default function Checkout() {
     if (!isClient) return;
 
     const token = localStorage.getItem("buyerAccessToken");
-
-    // agar login nahi hai
-    if (!token || !buyer || !buyer.id) {
-      //toast.error("Please login to access checkout!");
+    if (!token || !buyer?.id) {
       router.replace("/");
     }
   }, [isClient, buyer, router]);
 
-  // ✅ Load checkout data from LocalStorage
+  // Load checkout data
   useEffect(() => {
     const data = safeLocalStorage.getItem("checkoutData");
     if (data) {
@@ -53,26 +60,44 @@ export default function Checkout() {
     }
   }, [router]);
 
+  // Generate Captcha on load + when payment changes
+  useEffect(() => {
+    setCaptchaQ({
+      a: Math.floor(Math.random() * 9) + 1,
+      b: Math.floor(Math.random() * 9) + 1,
+    });
+  }, [paymentType]);
+
   if (!isClient || !buyer?.id) return null;
 
-  // 🔙 Back button
+  // Back button
   const handleBack = () => {
     safeLocalStorage.removeItem("checkoutData");
-    router.push("/health-bag"); // or /healthBag
+    router.push("/health-bag");
   };
 
-  // ✅ Continue (Create Order)
+  // Continue → Order creation logic
   const handleContinue = async () => {
     if (!buyer || !token) {
-      toast.error("Please login to continue!");
+      toast.error("Login required!");
       return;
     }
 
     if (!checkoutData) return;
 
+    // If COD → verify captcha
+    if (paymentType === "cod") {
+      const correct = captchaQ.a + captchaQ.b;
+      if (Number(captchaAns) !== correct) {
+        toast.error("Captcha incorrect!");
+        return;
+      }
+    }
+
     const orderPayload: OrderPayload = {
       ...checkoutData,
-      payment_mode: checkoutData.payment_mode || 1,
+      //payment_mode: checkoutData.payment_mode || 1,
+      payment_mode: paymentType === "qr" ? 1 : 2, // 1 → QR, 2 → COD
     };
 
     try {
@@ -84,133 +109,174 @@ export default function Checkout() {
       ).unwrap();
 
       if (res?.status === true || res?.success) {
-        // ✅ Step 1: Remove checkout data
         safeLocalStorage.removeItem("checkoutData");
 
-        // ✅ Step 2: Clear user's HealthBag items
         if (healthBagItems?.length > 0) {
           for (const item of healthBagItems) {
-            // removeItem() already handles API or LS removal
             await removeItem(item.productid || item.product_id);
           }
         }
 
-        // ✅ Step 3: Show success modal
         setShowSuccess(true);
       } else {
-        toast.error(res?.message || "Failed to create order");
+        toast.error(res?.message || "Order failed");
       }
-    } catch (err: unknown) {
-      toast.error(
-        typeof err === "string"
-          ? err
-          : // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            (err as any)?.message || "Order creation failed"
-      );
+    } catch (err) {
+      toast.error("Order creation failed");
     }
   };
 
-  // ✅ Handle click outside modal
+  const regenerateCaptcha = () => {
+    setCaptchaQ({
+      a: Math.floor(Math.random() * 9) + 1,
+      b: Math.floor(Math.random() * 9) + 1,
+    });
+    setCaptchaAns(""); // clear input
+  };
+
   const handleModalHide = () => {
     setShowSuccess(false);
-    router.push("/"); // redirect to home
+    router.push("/");
   };
+
   return (
     <div className="page-wrapper bg-light min-vh-100 d-flex flex-column">
       <SiteHeader />
 
-      <div className="container py-5 flex-grow-1 d-flex flex-column align-items-center justify-content-center">
-        <h4 className="fw-bold mb-4 text-center text-primary">
-          Complete Your Payment
+      <div className="container py-5">
+        <h4 className="fw-bold text-center mb-4 text-primary">
+          Select Payment Method
         </h4>
 
-        {/* ✅ QR Section */}
-        <div
-          className="border rounded-4 p-4 shadow-sm text-center mb-4"
-          style={{
-            width: "100%",
-            maxWidth: "420px",
-            background: "#fff",
-          }}
-        >
-          <Image
-            src={`https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=upi://pay?pa=9876543210@upi&pn=HealthBag%20Store&am=${
-              checkoutData?.amount || 0
-            }&cu=INR`}
-            alt="QR Code"
-            style={{
-              border: "2px solid #e0e0e0",
-              borderRadius: "12px",
-              padding: "12px",
-              width: "100%",
-              maxWidth: "280px",
-              height: "auto",
-              objectFit: "contain",
-            }}
-          />
+        {/* Payment Type Selector */}
+        <div className="d-flex justify-content-center gap-4 mb-4">
+          <button
+            className={`btn ${
+              paymentType === "qr" ? "btn-primary" : "btn-outline-primary"
+            }`}
+            onClick={() => setPaymentType("qr")}
+          >
+            QR Payment
+          </button>
 
-          <p className="text-muted mt-3 mb-1">Scan & Pay via UPI</p>
-          <h6 className="fw-semibold text-success">
-            Amount: ₹{checkoutData?.amount || 0}
-          </h6>
+          <button
+            className={`btn ${
+              paymentType === "cod" ? "btn-primary" : "btn-outline-primary"
+            }`}
+            onClick={() => setPaymentType("cod")}
+          >
+            Cash on Delivery
+          </button>
         </div>
 
-        {/* ✅ Buttons */}
+        {/* Payment Content */}
+        <div className="d-flex justify-content-center">
+          <div
+            className="border rounded-4 p-4 shadow-sm"
+            style={{ width: "100%", maxWidth: "420px", background: "#fff" }}
+          >
+            {/* =============== QR PAYMENT UI =============== */}
+            {paymentType === "qr" && (
+              <>
+                <Image
+                  src={`https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=upi://pay?pa=9876543210@upi&pn=HealthBag&am=${checkoutData?.amount}&cu=INR`}
+                  alt="QR"
+                  className="img-fluid"
+                />
+
+                <p className="text-center text-muted mt-3 mb-1">
+                  Scan the QR to Pay
+                </p>
+                <h6 className="text-center fw-semibold text-success">
+                  Amount: ₹{checkoutData?.amount}
+                </h6>
+              </>
+            )}
+
+            {/* =============== COD PAYMENT UI =============== */}
+            {paymentType === "cod" && (
+              <div className="text-center">
+                <h6 className="fw-bold mb-3 text-primary">Verify Captcha</h6>
+
+                <div className="bg-light p-3 rounded mb-3 d-flex justify-content-center align-items-center gap-3">
+                  <span
+                    className="fw-bold text-success"
+                    style={{ fontSize: "20px" }}
+                  >
+                    {captchaQ.a} + {captchaQ.b} = ?
+                  </span>
+
+                  {/* 🔥 Refresh Captcha Button */}
+                  <button
+                    className="btn btn-sm btn-outline-primary rounded-circle"
+                    onClick={regenerateCaptcha}
+                    title="Refresh Captcha"
+                    style={{ width: "36px", height: "36px", padding: 0 }}
+                  >
+                    <i className="bi bi-arrow-clockwise"></i>
+                  </button>
+                </div>
+
+                <input
+                  type="number"
+                  className="form-control text-center"
+                  placeholder="Enter answer"
+                  value={captchaAns}
+                  onChange={(e) => setCaptchaAns(e.target.value)}
+                />
+
+                <p className="text-muted mt-2">
+                  Enter the correct answer to place the order.
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Buttons */}
         <div
-          className="d-flex justify-content-between align-items-center"
-          style={{ width: "100%", maxWidth: "420px" }}
+          className="d-flex justify-content-between mt-4"
+          style={{ maxWidth: "420px", margin: "0 auto" }}
         >
           <button
             className="btn btn-outline-secondary px-4"
             onClick={handleBack}
-            disabled={loading}
           >
             ← Back
           </button>
 
-          <button
-            className="btn btn-success px-5"
-            onClick={handleContinue}
-            disabled={loading}
-          >
-            {loading ? "Processing..." : "Continue"}
+          <button className="btn btn-success px-5" onClick={handleContinue}>
+            {loading ? "Processing..." : "Place Order"}
           </button>
         </div>
       </div>
 
-      {/* ✅ Success Modal */}
+      {/* Success Modal */}
       <Modal
         show={showSuccess}
         centered
         onHide={handleModalHide}
         backdrop="static"
-        keyboard={false}
       >
         <div className="text-center p-5">
           <i
-            className="bi bi-check-circle-fill mb-3"
-            style={{ fontSize: "70px", color: "#28a745" }}
+            className="bi bi-check-circle-fill text-success"
+            style={{ fontSize: 70 }}
           ></i>
-          <h5 className="fw-bold text-success mb-2">
-            Order Placed Successfully!
-          </h5>
-          <p className="text-muted mb-4">
-            Thank you for your purchase. We’ll notify you once it’s confirmed.
-          </p>
+          <h5 className="fw-bold mt-3">Order Placed Successfully!</h5>
 
-          <div className="d-flex justify-content-center gap-3">
+          <div className="d-flex justify-content-center mt-4 gap-3">
             <button
               className="btn btn-outline-primary"
               onClick={() => router.push("/")}
             >
-              Go To Home
+              Home
             </button>
-
             <button
               className="btn btn-primary"
               onClick={() => router.push("/profile?tab=order")}
             >
-              Go To Orders
+              Orders
             </button>
           </div>
         </div>

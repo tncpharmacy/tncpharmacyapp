@@ -7,6 +7,7 @@ import { useEffect } from "react";
 import ProfileMenu from "@/app/components/ProfileMenu/ProfileMenu";
 import HeaderProfilePic from "@/app/components/HeaderProfilePic/HeaderProfilePic";
 import Link from "next/link";
+import { Image } from "react-bootstrap";
 
 export default function Header() {
   const { accessToken } = useAppSelector((state) => state.auth);
@@ -20,11 +21,14 @@ export default function Header() {
 
   return (
     <div className="header">
-      <div className="container-fluid">
+      <div
+        className="container-fluid"
+        style={{ width: "100%", maxWidth: "1525px" }}
+      >
         <div className="row">
           <div className="col-sm-6">
             <Link href="/admin-dashboard" className="logo">
-              <img src="/images/logo.png" alt="" />
+              <Image src="/images/logo.png" alt="" />
             </Link>
           </div>
           <div className="col-sm-6 text-right">

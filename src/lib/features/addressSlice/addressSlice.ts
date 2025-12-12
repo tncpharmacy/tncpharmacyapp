@@ -4,6 +4,7 @@ import {
   createAddress,
   updateAddress,
   deleteAddress,
+  setDefaultAddress,
 } from "@/lib/api/address";
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import { Address, AddressResponse } from "@/types/address";
@@ -69,13 +70,25 @@ export const addAddress = createAsyncThunk(
   }
 );
 
+export const makeDefaultAddress = createAsyncThunk(
+  "address/default",
+  async ({ addressId }: { addressId: number }, { rejectWithValue }) => {
+    try {
+      const response = await setDefaultAddress(addressId, {
+        set_default: true,
+      });
+      return response;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (err: any) {
+      return rejectWithValue(err.message || "Failed to set default address");
+    }
+  }
+);
+
 export const editAddress = createAsyncThunk(
   "address/update",
   async (
-    {
-      id,
-      data,
-    }: { id: number; data: Partial<Address> | { set_default: boolean } },
+    { id, data }: { id: number; data: Partial<Address> },
     { rejectWithValue }
   ) => {
     try {
@@ -162,20 +175,65 @@ const addressSlice = createSlice({
         state.error = action.payload as string;
       })
 
-      // ======= UPDATE =======
+      // ======= SET DEFAULT =======
+      .addCase(makeDefaultAddress.pending, (state) => {
+        state.loading = true;
+      })
+
+      .addCase(
+        makeDefaultAddress.fulfilled,
+        (state, action: PayloadAction<Address>) => {
+          state.loading = false;
+
+          state.addresses = state.addresses.map((addr) => {
+            // If it's the address returned => make it default
+            if (addr.id === action.payload.id) {
+              return { ...addr, set_default: true };
+            }
+
+            // All others must be false
+            return { ...addr, set_default: false };
+          });
+
+          //state.message = "Default address updated successfully.";
+        }
+      )
+
+      .addCase(makeDefaultAddress.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+
+      // ======= UPDATE ADDRESS =======
       .addCase(editAddress.pending, (state) => {
         state.loading = true;
       })
+
       .addCase(
         editAddress.fulfilled,
         (state, action: PayloadAction<Address>) => {
           state.loading = false;
-          state.addresses = state.addresses.map((addr) =>
-            addr.id === action.payload.id ? action.payload : addr
-          );
+
+          const updated = action.payload;
+
+          state.addresses = state.addresses.map((addr) => {
+            // --- If this is the updated address ---
+            if (addr.id === updated.id) {
+              return updated; // replace with new data
+            }
+
+            // --- If updated address became default, others must be false ---
+            if (updated.set_default === true) {
+              return { ...addr, set_default: false };
+            }
+
+            return addr; // no change
+          });
+
           state.message = "Address updated successfully.";
         }
       )
+
       .addCase(editAddress.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;

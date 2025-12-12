@@ -40,6 +40,13 @@ body {
   align-items: center !important;
   height: 100% !important;
 }
+/* Force slider items to take full width */
+.category_sec .slick-slide > div {
+  width: 100% !important;
+  display: block !important;
+}
+
+
 
 /* 🖼️ Image box container */
 .product-image-box {

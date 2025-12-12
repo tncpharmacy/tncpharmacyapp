@@ -1,7 +1,19 @@
+
+
 :root {
     --background: #ffffff;
     --foreground: #171717;
+    /* --header-height: 120px; */
 }
+.website-body {
+  padding-top: 120px !important;
+}
+/* 
+body, .website-root {
+    padding-top: 150px !important; 
+} */
+
+
 
 @media (prefers-color-scheme: dark) {
     :root {

@@ -27,6 +27,7 @@ import {
   fetchSupplierById,
 } from "@/lib/features/supplierSlice/supplierSlice";
 import { updateSupplierApi } from "@/lib/api/supplier";
+import { getUser } from "@/lib/auth/auth";
 
 interface Props {
   id?: number; // agar edit mode hai to id milegi
@@ -41,6 +42,9 @@ const mediaBase = process.env.NEXT_PUBLIC_MEDIA_BASE_URL;
 
 export default function SupplierForm({ id }: Props) {
   const router = useRouter();
+  const user = getUser();
+  const pharmacy_id = Number(user?.pharmacy_id ?? 0);
+  const pharmacist_id = Number(user?.user_id ?? 0);
   const [formData, setFormData] = useState<Partial<Supplier>>({
     id: 0,
     supplier_id_code: "",
@@ -55,7 +59,7 @@ export default function SupplierForm({ id }: Props) {
     state: 0,
     address: "",
     status: "Active",
-    supplier_mobile: "",
+    mobile_number: "",
     uploadedFiles: [],
     documents: [],
   });
@@ -88,7 +92,7 @@ export default function SupplierForm({ id }: Props) {
             ...prev,
             ...res,
             id: res.id ?? id,
-            login_id: res.login_id,
+            mobile_number: res.login_id,
             documents: res.documents || [],
             uploadedFiles: [],
           }));
@@ -126,30 +130,31 @@ export default function SupplierForm({ id }: Props) {
 
     const formDataToSend = new FormData();
 
-    // string / number fields
+    // 🟩 Common fields
     formDataToSend.append("supplier_name", formData.supplier_name || "");
     formDataToSend.append("user_name", formData.user_name || "");
-    formDataToSend.append("gst_number", formData.gst_number || "");
+    formDataToSend.append(
+      "gst_number",
+      (formData.gst_number || "").toUpperCase().trim()
+    );
     formDataToSend.append("license_number", formData.license_number || "");
     formDataToSend.append(
       "license_valid_upto",
       formData.license_valid_upto || ""
     );
     formDataToSend.append("email_id", formData.email_id || "");
-    formDataToSend.append("login_id", formData.login_id || "");
+    formDataToSend.append("mobile_number", formData.mobile_number || "");
     formDataToSend.append("address", formData.address || "");
     formDataToSend.append("district", formData.district || "");
     formDataToSend.append("pincode", formData.pincode || "");
-    formDataToSend.append("state", String(formData.state)); // backend ko id chahiye
-    formDataToSend.append("status", formData.status || "0");
+    formDataToSend.append("state", String(formData.state));
+    formDataToSend.append("status", formData.status || "Active");
+    formDataToSend.append("pharmacy_id", String(pharmacy_id));
 
-    // ✅ password -> sirf create mode me bhejna
+    // CREATE vs UPDATE MODE
     if (!id) {
       formDataToSend.append("password", password);
-    }
-
-    // ✅ edit mode id + supplier_id_code
-    if (id) {
+    } else {
       formDataToSend.append("id", String(formData.id));
       formDataToSend.append(
         "supplier_id_code",
@@ -157,51 +162,48 @@ export default function SupplierForm({ id }: Props) {
       );
     }
 
-    // ✅ Existing documents ids (edit mode)
-    if (formData.documents && formData.documents.length > 0) {
+    // Send IDs of old documents that should be kept
+    if (formData.documents?.length) {
       formData.documents.forEach((doc) => {
-        formDataToSend.append("existing_document_ids", String(doc.id)); // [] hata diya
+        formDataToSend.append("existing_document_ids", String(doc.id));
       });
     }
 
-    // ✅ New uploaded files
-    if (formData.uploadedFiles && formData.uploadedFiles.length > 0) {
+    // Add NEW uploaded files only
+    if (formData.uploadedFiles?.length) {
       formData.uploadedFiles.forEach((file) => {
-        formDataToSend.append("documents", file); // backend field name ke sath match kare
+        formDataToSend.append("documents", file);
       });
     }
 
-    // debug: show all FormData entries
-    for (const [key, value] of formDataToSend.entries()) {
-      console.log("📦 FormData entry:", key, value);
+    // Debug
+    console.log("====== FINAL FORMDATA ======");
+    for (const [k, v] of formDataToSend.entries()) {
+      console.log(k, v);
     }
 
     try {
       if (id) {
         await dispatch(editSupplier({ id, data: formDataToSend })).unwrap();
-        toast.success("✅ Supplier successfully updated");
-
+        toast.success("Supplier successfully updated");
         await dispatch(fetchSupplier()).unwrap();
         router.push("/pharmacist/supplier");
       } else {
         const res = await dispatch(addSupplier(formDataToSend)).unwrap();
-        toast.success("✅ Supplier successfully added");
-
+        toast.success("Supplier successfully added");
         await dispatch(fetchSupplier()).unwrap();
-
-        setFormData((prev) => ({
-          ...prev,
-          supplier_id_code: res.supplier_id_code ?? prev.supplier_id_code,
-        }));
-
-        router.push("/pharmacist/supplier");
       }
-    } catch (error: unknown) {
-      const err = error as AxiosError<{ message?: string; detail?: string }>;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (error: any) {
+      console.log("🔥 FULL ERROR OBJECT:", error?.response?.data || error);
+
       const errorMsg =
-        err.response?.data?.message ||
-        err.response?.data?.detail ||
-        err.message;
+        error?.response?.data?.message ||
+        error?.response?.data?.detail ||
+        error?.response?.data?.error ||
+        JSON.stringify(error?.response?.data) ||
+        error?.message ||
+        "Unknown error occurred";
 
       console.error("❌ API call failed:", errorMsg);
       toast.error(errorMsg);
@@ -279,8 +281,8 @@ export default function SupplierForm({ id }: Props) {
                 <Input
                   type="text"
                   label="Mobile"
-                  name="login_id"
-                  value={formData.login_id}
+                  name="mobile_number"
+                  value={formData.mobile_number}
                   onChange={handleChange}
                   required
                 />

@@ -82,9 +82,14 @@ export default function ProfileMenu() {
           ""
         ) : (
           <span
-            style={{ fontSize: "14px", fontWeight: "600", color: "#111827" }}
+            style={{
+              fontSize: "14px",
+              fontWeight: "600",
+              color: "#111827",
+              whiteSpace: "nowrap",
+            }}
           >
-            Email: <span style={{ fontWeight: "400" }}>{email}</span>
+            Email: <span style={{ fontWeight: 400 }}>{email}</span>
           </span>
         )}
         {mobile === "N/A" ? (

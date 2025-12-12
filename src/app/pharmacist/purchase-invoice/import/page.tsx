@@ -15,6 +15,7 @@ import { getUser } from "@/lib/auth/auth";
 import { createPurchaseStock } from "@/lib/features/purchaseStockSlice/purchaseStockSlice";
 import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
+import { fetchSupplier } from "@/lib/features/supplierSlice/supplierSlice";
 
 export default function PurchaseInvoiceImport() {
   const dispatch = useAppDispatch();
@@ -23,6 +24,7 @@ export default function PurchaseInvoiceImport() {
   const pharmacy_id = userPharmacy?.pharmacy_id || 0;
   const pharmacist_id = userPharmacy?.id || 0;
   const { medicines: getMedicine } = useAppSelector((state) => state.medicine);
+  const { list: supplierList } = useAppSelector((state) => state.supplier);
   // Infinite scroll state
   const [visibleCount, setVisibleCount] = useState(10);
   const [loadings, setLoadings] = useState(false);
@@ -76,6 +78,16 @@ export default function PurchaseInvoiceImport() {
   useEffect(() => {
     dispatch(getMedicinesList());
   }, [dispatch]);
+
+  useEffect(() => {
+    dispatch(fetchSupplier());
+  }, [dispatch]);
+
+  // Convert suppliers into dropdown options
+  const supplierOptions = (supplierList || []).map((s) => ({
+    label: s.supplier_name,
+    value: s.id, // always use id
+  }));
 
   //infinte scroll records
   const loadMore = () => {
@@ -314,9 +326,7 @@ export default function PurchaseInvoiceImport() {
                           supplier: e.target.value,
                         }))
                       }
-                      options={[
-                        { value: "Ganga Pharmacy", label: "Ganga Pharmacy" },
-                      ]}
+                      options={supplierOptions}
                     />
                     <Input
                       label="Purchase Date"

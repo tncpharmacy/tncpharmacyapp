@@ -19,7 +19,10 @@ export default function Header() {
   }, [accessToken, router]);
   return (
     <div className="header">
-      <div className="container-fluid">
+      <div
+        className="container-fluid"
+        style={{ width: "100%", maxWidth: "1525px" }}
+      >
         <div className="row">
           <div className="col-sm-6">
             <Link href="/pharmacy-dashboard" className="logo">

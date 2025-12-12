@@ -10,7 +10,10 @@ export default function LogoutButton() {
 
   const handleLogout = () => {
     dispatch(logout());
-    router.push("/");
+    localStorage.clear();
+    sessionStorage.clear();
+
+    window.location.replace("/"); // 🔥 Full reload without history back
   };
 
   return (

@@ -205,7 +205,9 @@ export const ENDPOINTS = {
   // address
   ADDRESS: {
     CREATE: "/address/create/",
-    UPDATE: (id: number) => `/address/update/${id}/`,
+    UPDATE: (addressId: number) => `/address/update_address/${addressId}/`,
+    DEFAULT_ADDRESS: (addressId: number) =>
+      `/address/default_address/${addressId}/`,
     GET_ALL: (buyerId: number) => `/address/view/${buyerId}/`,
     GET_BY_ID: (buyerId: number, addressId: number) =>
       `/address/view/${buyerId}/address/${addressId}/`,
@@ -233,6 +235,6 @@ export const ENDPOINTS = {
 
   CHANGE_PASSWORD: {
     PUT_PASSWORD: (userId: number, userTypeId: number) =>
-      `/user/reset-password/${userId}/${userTypeId}/`,
+      `/user/change-password/${userId}/${userTypeId}/`,
   },
 };

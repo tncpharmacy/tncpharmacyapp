@@ -104,7 +104,7 @@ export default function BuyerLoginModal({
 
     try {
       const res = await dispatch(verifyBuyerOtp({ otp })).unwrap();
-      toast.success(res.message || "Login successful!");
+      //toast.success(res.message || "Login successful!");
 
       // ✅ Auto link prescription if guest session exists
       const sessionId = localStorage.getItem("PRESCRIPTION_SESSION");

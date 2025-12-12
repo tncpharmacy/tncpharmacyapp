@@ -1,5 +1,6 @@
 body {
     background: #e6f0ff;
+    padding-top: 0 !important;
 }
 
 .search_query {
