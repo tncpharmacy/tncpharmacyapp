@@ -200,7 +200,7 @@ export default function HomePage() {
         pause={false}
       >
         <Carousel.Item>
-          <Image
+          <img
             src="images/main-banner-1.jpg"
             className="d-block w-100"
             alt="..."
@@ -217,7 +217,7 @@ export default function HomePage() {
           </div>
         </Carousel.Item>
         <Carousel.Item>
-          <Image
+          <img
             src="images/main-banner-2.jpg"
             className="d-block w-100"
             alt="..."
@@ -234,7 +234,7 @@ export default function HomePage() {
           </div>
         </Carousel.Item>
         <Carousel.Item>
-          <Image
+          <img
             src="images/main-banner-3.jpg"
             className="d-block w-100"
             alt="..."
