@@ -305,7 +305,7 @@ export default function ContactUs() {
         show={showDeleteModal}
         onHide={() => setShowDeleteModal(false)}
         centered
-        size="md"
+        size="sm"
         className="custom-modal"
       >
         <Modal.Header closeButton>
@@ -314,7 +314,7 @@ export default function ContactUs() {
           </Modal.Title>
         </Modal.Header>
 
-        <Modal.Body className="text-center">
+        <Modal.Body className="text-start">
           <p style={{ fontSize: "16px" }}>
             Are you sure you want to delete this contact record?
           </p>
