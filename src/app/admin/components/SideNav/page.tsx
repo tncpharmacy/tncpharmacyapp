@@ -135,7 +135,11 @@ export default function SideNav() {
             <i className="bi bi-person-badge"></i> Doctors
           </Link>
         </li>
-
+        <li>
+          <Link href="/admin/contact-us" className="link">
+            <i className="bi bi-person-lines-fill me-2"></i> Contact Us
+          </Link>
+        </li>
         <li>
           <div onClick={() => toggleMenu("settings")} className="link arrow">
             <i className="bi bi-gear-wide-connected"></i> Settings

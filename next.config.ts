@@ -258,6 +258,10 @@ const nextConfig: NextConfig = {
         destination: "/admin/buyer",
       },
       {
+        source: "/admin/contact-us",
+        destination: "/admin/contact-us",
+      },
+      {
         source: "/profile",
         destination: "/doctor/doctor-profile",
       },

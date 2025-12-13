@@ -27,6 +27,7 @@ import pharmacistBuyerListReducer from "@/lib/features/pharmacistBuyerListSlice/
 import healthBagBuyerByPharmacistReducer from "@/lib/features/healthBagBuyerByPharmacistSlice/healthBagBuyerByPharmacistSlice";
 import supplierReducer from "@/lib/features/supplierSlice/supplierSlice";
 import changePasswordReducer from "@/lib/features/changePasswordSlice/changePasswordSlice";
+import contactUsReducer from "@/lib/features/contactUsSlice/contactUsSlice";
 
 //
 // ✅ STEP 1 — Load preloaded state from localStorage
@@ -92,6 +93,7 @@ export const store = configureStore({
     healthBagBuyerByPharmacist: healthBagBuyerByPharmacistReducer,
     supplier: supplierReducer,
     changePassword: changePasswordReducer,
+    contactUs: contactUsReducer,
   },
   preloadedState: loadState(), // ✅ instant load on refresh
 });

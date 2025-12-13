@@ -237,4 +237,11 @@ export const ENDPOINTS = {
     PUT_PASSWORD: (userId: number, userTypeId: number) =>
       `/user/change-password/${userId}/${userTypeId}/`,
   },
+
+  CONTACT_US: {
+    CREATE: "/website/contact_form/",
+    GET_ALL: "/website/contact_form/details/",
+    GET_BY_ID: (contactId: number) => `/website/contact_form/${contactId}/`,
+    DELETE: (contactId: number) => `/website/contact_form/${contactId}/`,
+  },
 };

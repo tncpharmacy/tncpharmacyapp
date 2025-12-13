@@ -8,8 +8,13 @@ import SiteHeader from "@/app/user/components/header/header";
 import Footer from "@/app/user/components/footer/footer";
 import Input from "@/app/components/Input/InputColSm";
 import InputTextArea from "@/app/components/Input/InputTextArea";
+import { useAppDispatch } from "@/lib/hooks";
+import { addContactForm } from "@/lib/features/contactUsSlice/contactUsSlice";
+import toast from "react-hot-toast";
 
 export default function ContactUs() {
+  const dispatch = useAppDispatch();
+
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -17,6 +22,8 @@ export default function ContactUs() {
     subject: "",
     message: "",
   });
+
+  const [loading, setLoading] = useState(false);
 
   const handleChange = (
     e: React.ChangeEvent<
@@ -26,10 +33,38 @@ export default function ContactUs() {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    alert("Message sent successfully! 🚀");
-    setFormData({ name: "", email: "", mobile: "", subject: "", message: "" });
+
+    setLoading(true);
+
+    try {
+      const result = await dispatch(
+        addContactForm({
+          name: formData.name,
+          email: formData.email,
+          number: formData.mobile, // backend expects 'number'
+          subject: formData.subject,
+          contact_summary: formData.message,
+        })
+      ).unwrap();
+
+      if (result) {
+        toast.success("Message sent successfully! 🚀");
+
+        setFormData({
+          name: "",
+          email: "",
+          mobile: "",
+          subject: "",
+          message: "",
+        });
+      }
+    } catch (err) {
+      toast.error("Something went wrong! Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -59,6 +94,7 @@ export default function ContactUs() {
                       marginBottom: "50px",
                     }}
                   />
+
                   <p className="text-muted mb-4">
                     Have questions about our services or need support? Feel free
                     to contact us — we’re here to help!
@@ -79,14 +115,17 @@ export default function ContactUs() {
                         Uttar Pradesh – 201301
                       </span>
                     </li>
+
                     <li className="mb-3">
                       <i className="bi bi-telephone-fill text-primary me-2"></i>
                       <span>+91 7042079595 (10:00 AM - 6:00 PM)</span>
                     </li>
+
                     <li className="mb-3">
                       <i className="bi bi-envelope-fill text-primary me-2"></i>
                       <span>care@tncpharmacy.in</span>
                     </li>
+
                     <li>
                       <i className="bi bi-whatsapp text-success me-2"></i>
                       <span>+91 9625768741 (24x7 Support)</span>
@@ -133,12 +172,14 @@ export default function ContactUs() {
                   <h5 className="fw-bold text-primary mb-3">
                     Send Us a Message
                   </h5>
+
                   <hr
                     style={{
                       border: "2px solid rgb(14 44 228)",
                       marginBottom: "40px",
                     }}
                   />
+
                   <form onSubmit={handleSubmit}>
                     <div className="row g-3">
                       <Input
@@ -150,6 +191,7 @@ export default function ContactUs() {
                         colSm={12}
                         required
                       />
+
                       <Input
                         label="Email"
                         type="email"
@@ -159,6 +201,7 @@ export default function ContactUs() {
                         colSm={6}
                         required
                       />
+
                       <Input
                         label="Mobile"
                         type="text"
@@ -168,6 +211,7 @@ export default function ContactUs() {
                         colSm={6}
                         required
                       />
+
                       <Input
                         label="Subject"
                         type="text"
@@ -177,6 +221,7 @@ export default function ContactUs() {
                         colSm={12}
                         required
                       />
+
                       <div className="col-md-12">
                         <div className="txt_col">
                           <span className="lbl1">Contact Summary</span>
@@ -194,8 +239,9 @@ export default function ContactUs() {
                         <button
                           type="submit"
                           className="btn btn-primary px-4 py-2 rounded-pill"
+                          disabled={loading}
                         >
-                          Send Message
+                          {loading ? "Sending..." : "Send Message"}
                         </button>
                       </div>
                     </div>
@@ -205,6 +251,7 @@ export default function ContactUs() {
             </div>
           </div>
 
+          {/* ======= Map ======= */}
           {/* ======= Map ======= */}
           <div className="mt-5">
             <iframe
@@ -218,7 +265,6 @@ export default function ContactUs() {
           </div>
         </div>
       </div>
-
       <Footer />
     </>
   );
