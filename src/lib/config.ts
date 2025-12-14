@@ -157,6 +157,9 @@ export const ENDPOINTS = {
       subCategoryId: number
     ) =>
       `website/medicine/list/?category_id=${categoryId}&sub_category_id=${subCategoryId}`,
+    SEARCH: (text: string) => `website/product/search/?text=${text}`,
+    SEARCH_SUGGESTION: (query: string) =>
+      `website/product/search/?text=${query}`,
   },
 
   // add to card

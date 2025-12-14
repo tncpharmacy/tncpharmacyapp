@@ -150,3 +150,27 @@ export const fetchMedicineListUpdate = async (
   );
   return res.data;
 };
+
+// =========================
+// SEARCH MEDICINES
+// =========================
+export const fetchMedicineSearch = async (
+  text: string
+): Promise<MedicineResponse> => {
+  const res = await axiosInstance.get<MedicineResponse>(
+    ENDPOINTS.MEDICINES.SEARCH(text)
+  );
+  return res.data;
+};
+
+// =========================
+// SEARCH SUGGESTION
+// =========================
+export const fetchMedicineSuggestion = async (
+  query: string
+): Promise<MedicineResponse> => {
+  const res = await axiosInstance.get<MedicineResponse>(
+    ENDPOINTS.MEDICINES.SEARCH_SUGGESTION(query)
+  );
+  return res.data;
+};

@@ -16,12 +16,24 @@ import { getCategoriesList } from "@/lib/features/categorySlice/categorySlice";
 import {
   getCategoryIdBySubcategory,
   getProductList,
+  getSearchSuggestions,
 } from "@/lib/features/medicineSlice/medicineSlice";
 import { useHealthBag } from "@/lib/hooks/useHealthBag";
 import { buyerLogout } from "@/lib/features/buyerSlice/buyerSlice";
 import { getSubcategoriesList } from "@/lib/features/subCategorySlice/subCategorySlice";
 import { fetchHealthBag } from "@/lib/api/healthBag";
 import { loadLocalHealthBag } from "@/lib/features/healthBagSlice/healthBagSlice";
+type CombinedSearchItem =
+  | {
+      _type: "api";
+      id: number;
+      medicine_name: string;
+    }
+  | ({
+      _type: "local";
+    } & Medicine);
+
+type APISuggestion = { id: number; medicine_name: string };
 
 const SiteHeader = () => {
   const dispatch = useAppDispatch();
@@ -41,14 +53,23 @@ const SiteHeader = () => {
   const { listAll: subcategories } = useAppSelector(
     (state) => state.subcategory
   );
-  const { medicines: productList } = useAppSelector((state) => state.medicine);
+  // const { medicines: productList } = useAppSelector((state) => state.medicine);
 
   const [shuffledCategories, setShuffledCategories] = useState<Category[]>([]);
-  const [searchTerm, setSearchTerm] = useState("");
+  const [headerSearch, setHeaderSearch] = useState("");
+
   const [filteredList, setFilteredList] = useState<Medicine[]>([]);
+  const [isArrowNavigation, setIsArrowNavigation] = useState(false);
+
   const [showList, setShowList] = useState(false);
+  const [localProductList, setLocalProductList] = useState<Medicine[]>([]);
+
   const [highlightIndex, setHighlightIndex] = useState(-1);
   const isSelecting = useRef(false);
+  const listRef = useRef<HTMLUListElement>(null);
+  const wrapperRef = useRef<HTMLDivElement>(null);
+
+  // const { suggestions } = useAppSelector((state) => state.medicine);
 
   // ---------- INITIAL LOAD ----------
   useEffect(() => {
@@ -67,6 +88,50 @@ const SiteHeader = () => {
       dispatch(loadLocalHealthBag()); // ✅ Load LS items into Redux when not logged in
     }
   }, [buyer?.id, dispatch]);
+
+  useEffect(() => {
+    if (!listRef.current) return;
+    if (highlightIndex < 0) return;
+
+    const list = listRef.current;
+    const item = list.children[highlightIndex] as HTMLElement;
+
+    if (!item) return;
+
+    const listRect = list.getBoundingClientRect();
+    const itemRect = item.getBoundingClientRect();
+
+    // If moving DOWN and item goes out of view → scroll
+    if (itemRect.bottom > listRect.bottom) {
+      list.scrollTop += itemRect.bottom - listRect.bottom;
+    }
+
+    // If moving UP and item goes above → scroll
+    if (itemRect.top < listRect.top) {
+      list.scrollTop -= listRect.top - itemRect.top;
+    }
+  }, [highlightIndex]);
+
+  const [apiSuggestions, setApiSuggestions] = useState<APISuggestion[]>([]);
+
+  const fetchSuggestions = async (text: string) => {
+    try {
+      const res = await fetch(
+        `https://api.tncpharmacy.in/api/website/product/search-suggestion/?search=${text}`
+      );
+      const data = await res.json();
+
+      const list = Array.isArray(data)
+        ? data
+        : Array.isArray(data.data)
+        ? data.data
+        : [];
+
+      setApiSuggestions(list);
+    } catch (e) {
+      console.error("Suggestion error:", e);
+    }
+  };
 
   useEffect(() => {
     console.log("🧮 Updated count from items:", items.length);
@@ -116,63 +181,150 @@ const SiteHeader = () => {
   const handleLogout = () => dispatch(buyerLogout());
 
   // ---------- SEARCH ----------
-  useEffect(() => {
-    dispatch(getProductList());
-  }, [dispatch]);
+  // useEffect(() => {
+  //   dispatch(getProductList());
+  // }, [dispatch]);
 
   useEffect(() => {
-    if (isSelecting.current) {
-      isSelecting.current = false;
-      return;
-    }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    dispatch(getProductList()).then((res: any) => {
+      const list = Array.isArray(res?.payload)
+        ? res.payload
+        : Array.isArray(res?.payload?.data)
+        ? res.payload.data
+        : [];
 
-    if (searchTerm.trim() && productList?.length > 0) {
-      const lower = searchTerm.toLowerCase();
-      const filtered = productList.filter(
+      setLocalProductList(list);
+    });
+  }, []);
+
+  // useEffect(() => {
+  //   if (isSelecting.current) {
+  //     isSelecting.current = false;
+  //     return;
+  //   }
+
+  //   if (searchTerm.trim() && productList?.length > 0) {
+  //     const lower = searchTerm.toLowerCase();
+  //     const filtered = productList.filter(
+  //       (p) =>
+  //         (p.medicine_name?.toLowerCase().includes(lower) ||
+  //           p.Manufacturer?.toLowerCase().includes(lower)) ??
+  //         false
+  //     );
+  //     setFilteredList(filtered.slice(0, 10));
+  //     setShowList(true);
+  //   } else {
+  //     setShowList(false);
+  //   }
+  // }, [searchTerm, productList]);
+
+  useEffect(() => {
+    if (isArrowNavigation) return; // ⛔ Arrow movement पर filter नहीं चलेगा
+
+    if (headerSearch.trim()) {
+      fetchSuggestions(headerSearch);
+      const lower = headerSearch.toLowerCase();
+
+      const filtered = localProductList.filter(
         (p) =>
-          (p.medicine_name?.toLowerCase().includes(lower) ||
-            p.Manufacturer?.toLowerCase().includes(lower)) ??
-          false
+          p.medicine_name?.toLowerCase().includes(lower) ||
+          p.Manufacturer?.toLowerCase().includes(lower)
       );
-      setFilteredList(filtered.slice(0, 10));
+
+      setFilteredList(filtered.slice(0, 8));
       setShowList(true);
     } else {
       setShowList(false);
     }
-  }, [searchTerm, productList]);
+  }, [headerSearch, localProductList, isArrowNavigation]);
 
-  const handleSelect = (product: Medicine) => {
-    setSearchTerm(product.medicine_name);
+  const apiItems: CombinedSearchItem[] = apiSuggestions.map((item) => ({
+    id: item.id,
+    medicine_name: item.medicine_name,
+    _type: "api" as const,
+  }));
+
+  const localItems: CombinedSearchItem[] = filteredList.map((item) => ({
+    ...item,
+    _type: "local" as const,
+  }));
+
+  const combinedList: CombinedSearchItem[] = [...apiItems, ...localItems];
+
+  // const handleSelect = (product: Medicine) => {
+  //   setSearchTerm(product.medicine_name);
+  //   setShowList(false);
+  //   const path =
+  //     product.category_id === 1
+  //       ? `/medicines-details/${encodeId(product.id)}`
+  //       : `/product-details/${encodeId(product.id)}`;
+  //   router.push(path);
+  // };
+
+  const handleCombinedSelect = (item: CombinedSearchItem) => {
     setShowList(false);
-    const path =
-      product.category_id === 1
-        ? `/medicines-details/${encodeId(product.id)}`
-        : `/product-details/${encodeId(product.id)}`;
-    router.push(path);
-  };
 
-  const handleItemSelect = (item: Medicine) => {
-    isSelecting.current = true;
-    handleSelect(item);
+    // 🔹 SUGGESTION (API result) → Go to search page
+    if (item._type === "api") {
+      router.push(
+        `/search-text?text=${encodeURIComponent(item.medicine_name)}`
+      );
+      return;
+    }
+
+    if (item._type === "local") {
+      const path =
+        item.category_id === 1
+          ? `/medicines-details/${encodeId(item.id)}`
+          : `/product-details/${encodeId(item.id)}`;
+
+      router.push(path);
+      return;
+    }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (!showList || filteredList.length === 0) return;
+    if (!showList || combinedList.length === 0) return;
 
     if (e.key === "ArrowDown") {
       e.preventDefault();
+      setIsArrowNavigation(true);
+
       setHighlightIndex((prev) =>
-        prev < filteredList.length - 1 ? prev + 1 : 0
+        prev < combinedList.length - 1 ? prev + 1 : 0
       );
-    } else if (e.key === "ArrowUp") {
+
+      const item = combinedList[highlightIndex + 1];
+      if (item) {
+        setHeaderSearch(item.medicine_name); // text change
+      }
+    }
+
+    if (e.key === "ArrowUp") {
       e.preventDefault();
+      setIsArrowNavigation(true);
+
       setHighlightIndex((prev) =>
-        prev > 0 ? prev - 1 : filteredList.length - 1
+        prev > 0 ? prev - 1 : combinedList.length - 1
       );
-    } else if (e.key === "Enter") {
+
+      const item = combinedList[highlightIndex - 1];
+      if (item) {
+        setHeaderSearch(item.medicine_name); // text change
+      }
+    }
+
+    if (e.key === "Enter") {
       e.preventDefault();
-      if (highlightIndex >= 0 && highlightIndex < filteredList.length) {
-        handleItemSelect(filteredList[highlightIndex]);
+      setShowList(false);
+      if (highlightIndex >= 0) {
+        handleCombinedSelect(combinedList[highlightIndex]);
+        return;
+      }
+      if (headerSearch.trim()) {
+        router.push(`/search-text?text=${encodeURIComponent(headerSearch)}`);
+        setShowList(false);
       }
     }
   };
@@ -198,6 +350,22 @@ const SiteHeader = () => {
     document.body.style.paddingTop = h + "px";
   }, []);
 
+  // Close list on outside click
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (
+        wrapperRef.current &&
+        !wrapperRef.current.contains(e.target as Node)
+      ) {
+        setShowList(false);
+        setHighlightIndex(-1);
+      }
+    }
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
   // ---------- RENDER ----------
   return (
     <header id="header">
@@ -209,20 +377,27 @@ const SiteHeader = () => {
             </Link>
 
             {/* ---------- SEARCH ---------- */}
-            <div className="search_query">
+            <div className="search_query header_search_query" ref={wrapperRef}>
               <a className="query_search_btn" href="javascript:void(0)">
                 <i className="bi bi-search"></i>
               </a>
               <input
                 type="text"
+                className="header_search_input"
                 placeholder="Search for medicines & products..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                onFocus={() => searchTerm && setShowList(true)}
+                value={headerSearch}
+                onChange={(e) => {
+                  setIsArrowNavigation(false); // 🔥 typing शुरू → filter allowed
+                  setHeaderSearch(e.target.value);
+                  setHighlightIndex(-1);
+                }}
+                onFocus={() => headerSearch && setShowList(true)}
                 onKeyDown={handleKeyDown}
               />
-              {showList && filteredList.length > 0 && (
+
+              {showList && combinedList.length > 0 && (
                 <ul
+                  ref={listRef}
                   style={{
                     position: "absolute",
                     top: "70%",
@@ -239,125 +414,130 @@ const SiteHeader = () => {
                     borderRadius: "4px",
                   }}
                 >
-                  {filteredList.map((item, index) => {
-                    const mrp = Number(item.MRP) || 0;
-                    const discount = Number(item.discount) || 0;
-                    const discountedPrice = Math.round(
-                      mrp - (mrp * discount) / 100
-                    );
+                  {combinedList.map((item, index) => (
+                    <li
+                      key={`${item._type}-${item.id}`}
+                      onClick={() => handleCombinedSelect(item)}
+                      onMouseDown={(e) => e.preventDefault()}
+                      onMouseEnter={() => setHighlightIndex(index)}
+                      style={{
+                        padding: "10px 12px",
+                        cursor: "pointer",
+                        borderBottom: "1px solid #eee",
+                        backgroundColor:
+                          index === highlightIndex
+                            ? "rgb(237 240 243)"
+                            : "#fff",
+                      }}
+                    >
+                      {/* -------- API SUGGESTION (TEXT ONLY) -------- */}
+                      {item._type === "api" && (
+                        <div
+                          style={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                            marginBottom: "10px",
+                          }}
+                        >
+                          <span
+                            style={{
+                              fontWeight: 600,
+                              fontSize: "14px",
+                              color: "#000",
+                              marginRight: "10px",
+                              flex: 1,
+                              lineHeight: "1.2",
+                            }}
+                          >
+                            {item.medicine_name}
+                          </span>
+                        </div>
+                      )}
 
-                    return (
-                      <li
-                        key={item.id}
-                        onClick={() => handleItemSelect(item)}
-                        onMouseDown={(e) => e.preventDefault()}
-                        onMouseEnter={() => setHighlightIndex(index)}
-                        style={{
-                          padding: "10px 12px",
-                          cursor: "pointer",
-                          borderBottom: "1px solid #eee",
-                          backgroundColor:
-                            index === highlightIndex
-                              ? "rgb(237 240 243)"
-                              : "#fff",
-                        }}
-                      >
+                      {/* -------- LOCAL PRODUCT (FULL DETAIL) -------- */}
+                      {item._type === "local" && (
                         <div
                           style={{ display: "flex", flexDirection: "column" }}
                         >
-                          {(() => {
-                            const mrp = Number(item.MRP) || 0;
-                            const discount = Number(item.discount) || 0;
-                            const discountedPrice = Math.round(
-                              mrp - (mrp * discount) / 100
-                            );
+                          {/* --- ROW 1: Title + Price --- */}
+                          <div
+                            style={{
+                              display: "flex",
+                              justifyContent: "space-between",
+                              marginBottom: "10px",
+                            }}
+                          >
+                            <span
+                              style={{
+                                fontWeight: 600,
+                                fontSize: "14px",
+                                color: "#000",
+                                marginRight: "10px",
+                                flex: 1,
+                                lineHeight: "1.2",
+                              }}
+                            >
+                              {item.medicine_name}
+                            </span>
 
-                            return (
-                              <>
-                                {/* ✅ ROW 1 */}
-                                <div
-                                  style={{
-                                    display: "flex",
-                                    justifyContent: "space-between",
-                                    marginBottom: "10px",
-                                  }}
-                                >
-                                  <span
-                                    style={{
-                                      fontWeight: 600,
-                                      fontSize: "14px",
-                                      color: "#000",
-                                      marginRight: "10px",
-                                      flex: 1,
-                                      lineHeight: "1.2",
-                                    }}
-                                  >
-                                    {item.medicine_name}
-                                  </span>
+                            <span style={{ whiteSpace: "nowrap" }}>
+                              <span
+                                style={{
+                                  color: "green",
+                                  fontWeight: 600,
+                                  fontSize: "14px",
+                                }}
+                              >
+                                ₹
+                                {(item.MRP ?? 0) -
+                                  ((item.MRP ?? 0) *
+                                    Number(item.discount ?? 0)) /
+                                    100}
+                              </span>
+                              <span
+                                style={{
+                                  marginLeft: 6,
+                                  textDecoration: "line-through",
+                                  color: "#777",
+                                  fontSize: "12px",
+                                }}
+                              >
+                                MRP ₹{item.MRP}
+                              </span>
+                            </span>
+                          </div>
 
-                                  <span style={{ whiteSpace: "nowrap" }}>
-                                    <span
-                                      style={{
-                                        color: "green",
-                                        fontWeight: 600,
-                                        fontSize: "14px",
-                                        lineHeight: "1.2",
-                                      }}
-                                    >
-                                      ₹{discountedPrice}
-                                    </span>
-                                    <span
-                                      style={{
-                                        marginLeft: 6,
-                                        textDecoration: "line-through",
-                                        color: "#777",
-                                        fontSize: "12px",
-                                      }}
-                                    >
-                                      MRP ₹{mrp}
-                                    </span>
-                                  </span>
-                                </div>
+                          {/* --- ROW 2: Pack & Discount --- */}
+                          <div
+                            style={{
+                              display: "flex",
+                              justifyContent: "space-between",
+                              fontSize: "12px",
+                              color: "#555",
+                              marginBottom: "10px",
+                            }}
+                          >
+                            <span>{item.pack_size}</span>
+                            <span style={{ color: "red", fontWeight: 600 }}>
+                              {item.discount}% OFF
+                            </span>
+                          </div>
 
-                                {/* ✅ ROW 2 */}
-                                <div
-                                  style={{
-                                    display: "flex",
-                                    justifyContent: "space-between",
-                                    fontSize: "12px",
-                                    color: "#555",
-                                    marginBottom: "10px",
-                                  }}
-                                >
-                                  <span>{item.pack_size}</span>
-                                  <span
-                                    style={{
-                                      color: "rgba(var(--bs-danger-rgb)",
-                                      fontWeight: 600,
-                                    }}
-                                  >
-                                    {discount}% OFF
-                                  </span>
-                                </div>
-
-                                {/* ✅ ROW 3 */}
-                                <div
-                                  style={{
-                                    fontSize: "12px",
-                                    fontWeight: 600,
-                                    color: "green",
-                                    lineHeight: "1.3",
-                                  }}
-                                >
-                                  {item.Manufacturer}
-                                </div>
-                              </>
-                            );
-                          })()}
+                          {/* --- ROW 3: Manufacturer --- */}
+                          <div
+                            style={{
+                              fontSize: "12px",
+                              fontWeight: 600,
+                              color: "green",
+                              lineHeight: "1.3",
+                            }}
+                          >
+                            {item.Manufacturer}
+                          </div>
                         </div>
-                      </li>
-                    );
-                  })}
+                      )}
+                    </li>
+                  ))}
                 </ul>
               )}
             </div>

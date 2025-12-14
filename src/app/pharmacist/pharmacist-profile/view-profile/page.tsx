@@ -7,7 +7,7 @@ import SideNav from "@/app/pharmacist/components/SideNav/page";
 import Header from "@/app/pharmacist/components/Header/page";
 import { useAppDispatch, useAppSelector } from "@/lib/hooks";
 import { fetchPharmacistSelf } from "@/lib/features/pharmacistSelfSlice/pharmacistSelfSlice";
-import Image from "next/image";
+import { Image } from "react-bootstrap";
 const mediaBase = process.env.NEXT_PUBLIC_MEDIA_BASE_URL;
 
 export default function ViewProfile() {

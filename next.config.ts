@@ -22,6 +22,10 @@ const nextConfig: NextConfig = {
         destination: "/user/profile",
       },
       {
+        source: "/search-text",
+        destination: "/user/search-text",
+      },
+      {
         source: "/all-group-care/:id",
         destination: "/user/all-group-care/:id",
       },
@@ -262,6 +266,10 @@ const nextConfig: NextConfig = {
         destination: "/admin/contact-us",
       },
       {
+        source: "/advertisement",
+        destination: "/admin/advertisement",
+      },
+      {
         source: "/profile",
         destination: "/doctor/doctor-profile",
       },
@@ -290,17 +298,21 @@ const nextConfig: NextConfig = {
         source: "/pharmacy-dashboard",
         destination: "/pharmacy/pharmacy-dashboard",
       },
+      // {
+      //   source: "/add-supplier",
+      //   destination: "/pharmacy/supplier/add-supplier",
+      // },
+      // {
+      //   source: "/supplier",
+      //   destination: "/pharmacy/supplier/list-supplier",
+      // },
       {
-        source: "/add-supplier",
-        destination: "/pharmacy/supplier/add-supplier",
+        source: "/pharmacy/patient-health-bag",
+        destination: "/pharmacy/buyerHealthBag",
       },
       {
-        source: "/supplier",
-        destination: "/pharmacy/supplier/list-supplier",
-      },
-      {
-        source: "/pharmacy/orders",
-        destination: "/pharmacy/order/order-list",
+        source: "/pharmacy/order",
+        destination: "/pharmacy/order",
       },
       {
         source: "/pharmacy/purchase-invoice",
@@ -341,6 +353,18 @@ const nextConfig: NextConfig = {
       {
         source: "/pharmacy/retail-counter",
         destination: "/pharmacy/retail-counter",
+      },
+      {
+        source: "/pharmacy/stock",
+        destination: "/pharmacy/stock",
+      },
+      {
+        source: "/pharmacy/supplier",
+        destination: "/pharmacy/supplier",
+      },
+      {
+        source: "/pharmacy/change-password",
+        destination: "/pharmacy/change-password",
       },
 
       // Pharmacist Routes

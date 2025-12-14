@@ -181,7 +181,7 @@ export default function UpdateProfile() {
           <div className="body_content">
             <div className="pageTitle">
               <i className="bi bi-shop-window me-2"></i>
-              {"Update Profile"}
+              {"Update Document"}
               <button
                 onClick={() => router.push("/view-profile")}
                 className="btn-style2 float-end pe-4 ps-4"
@@ -192,7 +192,7 @@ export default function UpdateProfile() {
             <div className="main_content">
               {/* <p>Generated Password: {password}</p> */}
               <form onSubmit={handleSubmit} className="row g-3">
-                <Input
+                {/* <Input
                   label="Pharmacy Name"
                   type="text"
                   name="pharmacy_name"
@@ -200,6 +200,7 @@ export default function UpdateProfile() {
                   onChange={handleChange}
                   error={fieldErrors.pharmacy_name}
                   required
+                  readOnly
                 />
                 <Input
                   type="text"
@@ -209,6 +210,7 @@ export default function UpdateProfile() {
                   onChange={handleChange}
                   error={fieldErrors.user_name}
                   required
+                  readOnly
                 />
                 <Input
                   type="text"
@@ -218,6 +220,7 @@ export default function UpdateProfile() {
                   onChange={handleChange}
                   error={fieldErrors.gst_number}
                   required
+                  readOnly
                 />
                 <Input
                   type="text"
@@ -236,6 +239,7 @@ export default function UpdateProfile() {
                   onChange={handleChange}
                   error={fieldErrors.license_valid_upto}
                   required
+                  readOnly
                 />
                 <Input
                   label="Email"
@@ -245,6 +249,7 @@ export default function UpdateProfile() {
                   onChange={handleChange}
                   error={fieldErrors.email_id}
                   required
+                  readOnly
                 />
                 <Input
                   type="text"
@@ -254,6 +259,7 @@ export default function UpdateProfile() {
                   onChange={handleChange}
                   error={fieldErrors.login_id}
                   required
+                  readOnly
                 />
                 <Input
                   type="text"
@@ -263,6 +269,7 @@ export default function UpdateProfile() {
                   onChange={handleChange}
                   error={fieldErrors.address}
                   required
+                  readOnly
                 />
                 <Input
                   type="text"
@@ -272,6 +279,7 @@ export default function UpdateProfile() {
                   onChange={handleChange}
                   error={fieldErrors.district}
                   required
+                  readOnly
                 />
                 <Input
                   type="text"
@@ -281,6 +289,7 @@ export default function UpdateProfile() {
                   onChange={handleChange}
                   error={fieldErrors.pincode}
                   required
+                  readOnly
                 />
                 <SelectInput
                   label="State"
@@ -307,7 +316,7 @@ export default function UpdateProfile() {
                   onChange={handleChange}
                   error={fieldErrors.status}
                   readOnly
-                />
+                /> */}
                 <InputFile
                   label="Upload Documents"
                   name="documents"

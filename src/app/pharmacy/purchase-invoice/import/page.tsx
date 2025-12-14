@@ -12,15 +12,19 @@ import InfiniteScroll from "@/app/components/InfiniteScroll/InfiniteScroll";
 import SelectInput from "@/app/components/Input/SelectInput";
 import Input from "@/app/components/Input/Input";
 import { getUser } from "@/lib/auth/auth";
+import { createPurchaseStock } from "@/lib/features/purchaseStockSlice/purchaseStockSlice";
+import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
+import { fetchSupplier } from "@/lib/features/supplierSlice/supplierSlice";
 
 export default function PurchaseInvoiceImport() {
   const dispatch = useAppDispatch();
   const router = useRouter();
   const userPharmacy = getUser();
-  const pharmacy_name = userPharmacy?.pharmacy_name || "";
-  const pharmacy_id = userPharmacy?.id || 0;
+  const pharmacy_id = userPharmacy?.pharmacy_id || 0;
+  const pharmacist_id = userPharmacy?.id || 0;
   const { medicines: getMedicine } = useAppSelector((state) => state.medicine);
+  const { list: supplierList } = useAppSelector((state) => state.supplier);
   // Infinite scroll state
   const [visibleCount, setVisibleCount] = useState(10);
   const [loadings, setLoadings] = useState(false);
@@ -37,8 +41,7 @@ export default function PurchaseInvoiceImport() {
   const [selectedMedicines] = useState<{ label: string; value: number }[]>([]);
 
   const [formData, setFormData] = useState<Partial<Product>>({
-    id: pharmacy_id,
-    pharmacy: pharmacy_name,
+    id: pharmacist_id,
     supplier: "",
     medicine_name: "",
     pack_size: "",
@@ -52,6 +55,7 @@ export default function PurchaseInvoiceImport() {
     mrp: "",
     purchase_rate: "",
     amount: "",
+    location: "",
   });
 
   // filtered records by search box + status filter
@@ -75,6 +79,16 @@ export default function PurchaseInvoiceImport() {
     dispatch(getMedicinesList());
   }, [dispatch]);
 
+  useEffect(() => {
+    dispatch(fetchSupplier());
+  }, [dispatch]);
+
+  // Convert suppliers into dropdown options
+  const supplierOptions = (supplierList || []).map((s) => ({
+    label: s.supplier_name,
+    value: s.id, // always use id
+  }));
+
   //infinte scroll records
   const loadMore = () => {
     if (loadings || visibleCount >= getMedicine.length) return;
@@ -90,24 +104,191 @@ export default function PurchaseInvoiceImport() {
     if (!file) return;
 
     const reader = new FileReader();
+
     reader.onload = (evt) => {
-      const data = evt.target?.result;
-      const workbook = XLSX.read(data, { type: "binary" });
-      const sheetName = workbook.SheetNames[0];
-      const worksheet = workbook.Sheets[sheetName];
-      const jsonData =
-        XLSX.utils.sheet_to_json<Record<string, string | number>>(worksheet);
+      const binaryStr = evt.target?.result;
+
+      const workbook = XLSX.read(binaryStr, {
+        type: "binary",
+        cellStyles: true,
+      });
+      const sheet = workbook.Sheets[workbook.SheetNames[0]];
+
+      const csv = XLSX.utils.sheet_to_csv(sheet);
+
+      // SAFE CSV PARSER (Fixes "Rack 4, A5")
+      const parseCSVLine = (line: string) => {
+        const result: string[] = [];
+        let current = "";
+        let insideQuotes = false;
+
+        for (const char of line) {
+          if (char === '"') {
+            insideQuotes = !insideQuotes;
+          } else if (char === "," && !insideQuotes) {
+            result.push(current);
+            current = "";
+          } else {
+            current += char;
+          }
+        }
+        result.push(current);
+        return result;
+      };
+
+      const rows = csv
+        .split("\n")
+        .map((line) => parseCSVLine(line))
+        .filter((r) => r.some((c) => c.trim() !== ""));
+
+      const headerIndex = rows.findIndex((r) =>
+        r.some((cell) => cell.trim().toLowerCase() === "product")
+      );
+
+      if (headerIndex === -1) {
+        alert("Header row not found!");
+        return;
+      }
+
+      const header = rows[headerIndex];
+      const body = rows.slice(headerIndex + 1);
+
+      const jsonData = body.map((r) => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const obj: any = {};
+        header.forEach((h, i) => {
+          obj[h.trim()] = r[i] ?? "";
+        });
+        return obj;
+      });
+
       setExcelData(jsonData);
     };
+
     reader.readAsBinaryString(file);
   };
+
+  // const handleExcelUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  //   const file = e.target.files?.[0];
+  //   if (!file) return;
+
+  //   const reader = new FileReader();
+
+  //   reader.onload = (evt) => {
+  //     const bstr = evt.target?.result;
+  //     const workbook = XLSX.read(bstr, { type: "binary" });
+
+  //     const sheetName = workbook.SheetNames[0];
+  //     const sheet = workbook.Sheets[sheetName];
+
+  //     // STEP 1: Read Sheet (Row wise)
+  //     const rows: any[][] = XLSX.utils.sheet_to_json(sheet, {
+  //       header: 1, // <-- First row will be header
+  //       defval: "", // remove undefined values
+  //       raw: false,
+  //     });
+
+  //     if (rows.length === 0) return;
+
+  //     const headers = rows[0]; // First row
+  //     const dataRows = rows.slice(1); // Remaining data
+
+  //     // STEP 2: Convert rows to JSON using excel headers
+  //     const finalData = dataRows.map((row) => {
+  //       const obj: Record<string, any> = {};
+
+  //       headers.forEach((h: string, columnIndex: number) => {
+  //         obj[h] = row[columnIndex] ?? "";
+  //       });
+
+  //       return obj;
+  //     });
+
+  //     console.log("FINAL DATA:", finalData);
+
+  //     // STEP 3: Save to State
+  //     setExcelData(finalData);
+  //   };
+
+  //   reader.readAsBinaryString(file);
+  // };
+
   const handleImportClick = () => {
     fileInputRef.current?.click(); // 👈 hidden input trigger
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Final Submit Data:", excelData);
+
+    const parseExcelDate = (excelDate: number): string => {
+      if (!excelDate) return new Date().toISOString();
+      const date = new Date((excelDate - 25569) * 86400 * 1000);
+      return date.toISOString();
+    };
+
+    // 🧾 2️⃣ Build purchase_details from Excel data
+    const purchaseDetails = excelData.map((row, i) => ({
+      pharmacy_id: pharmacy_id,
+      product_id: Number(row["Id"]) || 0, // ✅ Excel ka Id hi product_id hai
+      quantity: row["Required QTY"]?.toString() || "0",
+      // available_quantity: row["QTY"]?.toString() || "0",
+      batch: row["Batch"]?.toString() || `BATCH-${i + 1}`,
+      expiry_date: parseExcelDate(Number(row["Expiry Date"])),
+      mrp: row["MRP"]?.toString() || "0",
+      discount: row["Discount (%)"]?.toString() || "0",
+      purchase_rate: row["Purchase Rate"]?.toString() || "0",
+      amount: row["Amount"]?.toString() || "0",
+      location: row["Location"]?.toString() || "0",
+    }));
+
+    // 🧱 3️⃣ Build Final Payload
+    const payload = {
+      pharmacy_id: Number(pharmacy_id), // ✅ Number not string
+      supplier_id: Number(formData.supplier) || 1,
+      invoice_num: String(formData.invoice_number),
+      purchase_date: new Date(
+        formData.purchase_date || new Date()
+      ).toISOString(),
+      status: "Active",
+      purchase_details: purchaseDetails,
+    };
+
+    // console.log("📦 Final Payload to API:", payload);
+    // console.log("🧾 purchase_details:", purchaseDetails);
+
+    // 🚀 4️⃣ Dispatch to Redux Thunk
+    dispatch(createPurchaseStock(payload))
+      .unwrap()
+      .then((res) => {
+        console.log("✅ Purchase Created Successfully:", res);
+        toast.success("Purchase Invoice Imported Successfully!");
+        // ⭐⭐ Final Submit Ke Baad Table Clear Kar Do
+        setExcelData([]);
+        if (fileInputRef.current) fileInputRef.current.value = "";
+
+        // ⭐ Form Reset (optional but recommended)
+        setFormData({
+          id: pharmacist_id,
+          supplier: "",
+          medicine_name: "",
+          pack_size: "",
+          purchase_date: "",
+          invoice_number: "",
+          manufacturer_name: "",
+          qty: "",
+          batch: "",
+          expiry_date: "",
+          discount: "",
+          mrp: "",
+          purchase_rate: "",
+          amount: "",
+          location: "",
+        });
+      })
+      .catch((err) => {
+        console.error("❌ Failed to create purchase:", err);
+        toast.error("Failed to create purchase. Check console for details.");
+      });
   };
 
   return (
@@ -145,9 +326,7 @@ export default function PurchaseInvoiceImport() {
                           supplier: e.target.value,
                         }))
                       }
-                      options={[
-                        { value: "Ganga Pharmacy", label: "Ganga Pharmacy" },
-                      ]}
+                      options={supplierOptions}
                     />
                     <Input
                       label="Purchase Date"

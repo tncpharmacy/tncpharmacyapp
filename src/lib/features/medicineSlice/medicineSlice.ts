@@ -8,6 +8,8 @@ import {
   fetchMedicineListById,
   fetchMedicineListUpdate,
   fetchMedicinesAllList,
+  fetchMedicineSearch,
+  fetchMedicineSuggestion,
   fetchMenuMedicinesById,
   fetchMenuMedicinesByOtherId,
   fetchMenuMedicinesList,
@@ -42,6 +44,8 @@ interface MedicineState {
     [key: string]: Medicine[]; // ✅ dynamic keys allowed
   };
   selectedMedicine: Medicine | null;
+  searchResults: Medicine[];
+  suggestions: Medicine[];
 }
 
 const initialState: MedicineState = {
@@ -58,6 +62,8 @@ const initialState: MedicineState = {
   byCategory: {},
   byCategorySubcategory: {},
   selectedMedicine: null,
+  searchResults: [],
+  suggestions: [],
 };
 
 // ✅ Get all medicines menu List
@@ -284,6 +290,35 @@ export const updateMedicineListById = createAsyncThunk(
     }
   }
 );
+// Search text
+export const searchMedicines = createAsyncThunk<
+  MedicineResponse,
+  string,
+  { rejectValue: string }
+>("medicine/search", async (text, { rejectWithValue }) => {
+  try {
+    const res = await fetchMedicineSearch(text);
+    return res;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } catch (err: any) {
+    return rejectWithValue(err.message || "Search failed");
+  }
+});
+
+// Search suggestion
+export const getSearchSuggestions = createAsyncThunk<
+  MedicineResponse,
+  string,
+  { rejectValue: string }
+>("medicine/suggestion", async (query, { rejectWithValue }) => {
+  try {
+    const res = await fetchMedicineSuggestion(query);
+    return res;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } catch (err: any) {
+    return rejectWithValue(err.message || "Suggestion fetch failed");
+  }
+});
 
 const medicineSlice = createSlice({
   name: "medicine",
@@ -292,6 +327,9 @@ const medicineSlice = createSlice({
     clearSelectedMedicine: (state) => {
       state.selectedMedicine = null;
       state.medicinesList = []; // ✅ optional, agar form list bhi clear karni ho
+    },
+    clearSearchResults: (state) => {
+      state.searchResults = [];
     },
   },
   extraReducers: (builder) => {
@@ -481,9 +519,38 @@ const medicineSlice = createSlice({
       .addCase(updateMedicineListById.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
+      })
+
+      // Search Text
+      .addCase(searchMedicines.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(searchMedicines.fulfilled, (state, action) => {
+        state.loading = false;
+        state.searchResults = action.payload.data;
+        state.error = null;
+      })
+      .addCase(searchMedicines.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload || "Search failed";
+      })
+
+      // Search Suggestion
+      .addCase(getSearchSuggestions.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(getSearchSuggestions.fulfilled, (state, action) => {
+        state.loading = false;
+        state.suggestions = action.payload.data;
+        state.error = null;
+      })
+      .addCase(getSearchSuggestions.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload || "Suggestion fetch failed";
       });
   },
 });
 
-export const { clearSelectedMedicine } = medicineSlice.actions;
+export const { clearSelectedMedicine, clearSearchResults } =
+  medicineSlice.actions;
 export default medicineSlice.reducer;

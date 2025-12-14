@@ -23,14 +23,20 @@ export default function SideNav() {
           </Link>
         </li> */}
 
-        <li>
+        {/* <li>
           <Link href="/pharmacy/retail-counter" className="link">
             <i className="bi bi-capsule"></i> Retail Counter
           </Link>
+        </li> */}
+
+        <li>
+          <Link href="/pharmacy/patient-health-bag" className="link">
+            <i className="bi bi-cart-plus-fill"></i> Patient HealthBag
+          </Link>
         </li>
         <li>
-          <Link href="/pharmacy/orders" className="link">
-            <i className="bi bi-cart-plus-fill"></i> Order
+          <Link href="/pharmacy/order" className="link">
+            <i className="bi bi-clipboard-check"></i> Order
           </Link>
         </li>
         <li>
@@ -39,28 +45,9 @@ export default function SideNav() {
           </Link>
         </li>
         <li>
-          <Link href="#" className="link">
+          <Link href="/pharmacy/stock" className="link">
             <i className="bi bi-box"></i> Stock
           </Link>
-        </li>
-        <li>
-          <div onClick={() => toggleMenu("product")} className="link arrow">
-            <i className="bi bi-box-seam"></i> Product Master
-          </div>
-          {openMenu === "product" && (
-            <ul className="submenu myList">
-              <li>
-                <Link href="/pharmacy/medicine">
-                  <i className="bi bi-capsule"></i> Medicine Details
-                </Link>
-              </li>
-              <li>
-                <Link href="/pharmacy/other-product">
-                  <i className="bi bi-box-seam"></i> Other Product Details
-                </Link>
-              </li>
-            </ul>
-          )}
         </li>
         <li>
           <Link href="/pharmacy/pharmacist" className="link">
@@ -68,8 +55,8 @@ export default function SideNav() {
           </Link>
         </li>
         <li>
-          <Link href="/supplier" className="link">
-            <i className="bi bi-truck"></i> Supplier
+          <Link href="/pharmacy/supplier" className="link">
+            <i className="bi bi-basket"></i> Supplier
           </Link>
         </li>
         <li>
@@ -82,7 +69,7 @@ export default function SideNav() {
                 <Link href="/view-profile">Profile</Link>
               </li>
               <li>
-                <Link href="#">Reset Password</Link>
+                <Link href="/pharmacy/change-password">Change Password</Link>
               </li>
             </ul>
           )}

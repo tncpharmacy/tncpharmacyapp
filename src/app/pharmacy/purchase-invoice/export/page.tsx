@@ -12,20 +12,36 @@ import TableLoader from "@/app/components/TableLoader/TableLoader";
 import SelectMedicineDropdown from "@/app/components/Input/SelectMedicineDropdown";
 import { useExportExcel } from "@/lib/hooks/useExportExcel";
 import { useRouter } from "next/navigation";
-
+import toast from "react-hot-toast";
+import { fetchSupplier } from "@/lib/features/supplierSlice/supplierSlice";
+interface Supplier {
+  id: number;
+  name: string;
+}
 export default function PurchaseInvoiceExport() {
   const dispatch = useAppDispatch();
   const router = useRouter();
   const { exportToExcel } = useExportExcel();
   const { medicines: getMedicine } = useAppSelector((state) => state.medicine);
-
+  const { list: supplierList } = useAppSelector((state) => state.supplier);
   const [visibleCount, setVisibleCount] = useState(10);
   const [loadings, setLoadings] = useState(false);
-  const [selectedMedicines, setSelectedMedicines] = useState<Medicine[]>([]);
+  const [selectedMedicines, setSelectedMedicines] = useState<
+    (Medicine & { qty?: string })[]
+  >([]);
   const [selectAll, setSelectAll] = useState(false);
+
+  // ⭐ Supplier dropdown
+  const [selectedSupplier, setSelectedSupplier] = useState("");
+  const today = new Date().toISOString().split("T")[0];
+  const fileName = `${selectedSupplier || "NoSupplier"}_${today}`;
 
   useEffect(() => {
     dispatch(getMedicinesList());
+  }, [dispatch]);
+
+  useEffect(() => {
+    dispatch(fetchSupplier());
   }, [dispatch]);
 
   const loadMore = () => {
@@ -37,7 +53,7 @@ export default function PurchaseInvoiceExport() {
     }, 3000);
   };
 
-  // ✅ Dropdown se select hua
+  // ✅ Selected product from the dropdown
   const handleSelectMedicine = (
     selected: { label: string; value: number }[]
   ) => {
@@ -46,7 +62,9 @@ export default function PurchaseInvoiceExport() {
     setSelectedMedicines((prev) => {
       const merged = [...prev];
       newSelected.forEach((m) => {
-        if (!merged.some((x) => x.id === m.id)) merged.push(m);
+        if (!merged.some((x) => x.id === m.id)) {
+          merged.push({ ...m, qty: "" });
+        }
       });
       return merged;
     });
@@ -93,8 +111,30 @@ export default function PurchaseInvoiceExport() {
     });
   };
 
+  // ⭐ Qty Change
+  const handleQtyChange = (id: number, value: string) => {
+    setSelectedMedicines((prev) =>
+      prev.map((m) => (m.id === id ? { ...m, qty: value } : m))
+    );
+  };
+
   // ✅ Export Function
   const handleExportToExcel = () => {
+    if (!selectedSupplier) {
+      toast.error("⚠ Please select Supplier!");
+      return;
+    }
+
+    if (selectedMedicines.length === 0) {
+      alert("⚠ Please select at least 1 product!");
+      return;
+    }
+
+    // if (selectedMedicines.some((m) => !m.qty || m.qty.trim() === "")) {
+    //   alert("⚠ Please fill Qty for all selected products!");
+    //   return;
+    // }
+
     const exportData = [...selectedMedicines]
       .sort((a, b) =>
         a.medicine_name.localeCompare(b.medicine_name, undefined, {
@@ -106,15 +146,19 @@ export default function PurchaseInvoiceExport() {
         Product: item.medicine_name ?? "-",
         "Pack Size": item.pack_size ?? "-",
         Manufacture: item.manufacturer_name ?? "-",
-        QTY: "",
+        "Required QTY": item.qty ?? "",
         Batch: "",
         "Expiry Date": "",
         MRP: "",
         "Discount (%)": "",
         "Purchase Rate": "",
         Amount: "",
+        Location: "",
       }));
-    exportToExcel(exportData, "Selected_Medicines", "Medicines");
+    exportToExcel(exportData, fileName, "Medicines", selectedSupplier || "N/A");
+    // ⭐⭐ EXPORT COMPLETE → CLEAR RIGHT SIDE TABLE & UNCHECK ALL
+    setSelectedMedicines([]);
+    setSelectAll(false);
   };
 
   useEffect(() => {
@@ -147,7 +191,7 @@ export default function PurchaseInvoiceExport() {
             <div className="main_content">
               <div className="col-sm-12">
                 <div className="row align-items-center">
-                  <div className="col-md-8">
+                  <div className="col-md-6">
                     <div className="txt_col">
                       <SelectMedicineDropdown
                         medicines={getMedicine}
@@ -160,7 +204,26 @@ export default function PurchaseInvoiceExport() {
                       />
                     </div>
                   </div>
-                  <div className="col-md-4 text-end">
+                  {/* ⭐ SUPPLIER DROPDOWN */}
+                  <div className="col-md-3">
+                    <div className="txt_col">
+                      <select
+                        className="form-select"
+                        style={{ borderRadius: "0px" }}
+                        value={selectedSupplier}
+                        onChange={(e) => setSelectedSupplier(e.target.value)}
+                      >
+                        <option value="">Select Supplier</option>
+                        {supplierList.map((s) => (
+                          <option key={s.id} value={s.supplier_name}>
+                            {s.supplier_name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="col-md-3 text-end">
                     <button
                       className="btn-style1"
                       onClick={handleExportToExcel}
@@ -261,6 +324,9 @@ export default function PurchaseInvoiceExport() {
                               <th className="fw-bold text-start">
                                 Manufacture
                               </th>
+                              <th className="fw-bold text-start">
+                                Required Qty
+                              </th>
                             </tr>
                           </thead>
                           <tbody>
@@ -290,6 +356,19 @@ export default function PurchaseInvoiceExport() {
                                   <td className="text-start">{m.pack_size}</td>
                                   <td className="text-start">
                                     {m.manufacturer_name}
+                                  </td>
+                                  {/* ⭐ Qty Input Box */}
+                                  <td>
+                                    <input
+                                      type="number"
+                                      className="form-control"
+                                      value={m.qty ?? 0}
+                                      onChange={(e) =>
+                                        handleQtyChange(m.id, e.target.value)
+                                      }
+                                      placeholder="Required Qty"
+                                      style={{ borderRadius: "0px" }}
+                                    />
                                   </td>
                                 </tr>
                               ))}

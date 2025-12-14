@@ -29,7 +29,7 @@ export default function UpdateProfile() {
   const userId = getUserId();
   const dispatch = useAppDispatch();
   const { selfPharmacy } = useAppSelector((state) => state.selfPharmacist);
-
+  console.log("selfPharmacyselfPharmacy", selfPharmacy);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [formData, setFormData] = useState<Pharmacist>({
     id: 0,
@@ -213,7 +213,7 @@ export default function UpdateProfile() {
                   }
                   placeholder="/images/default-profile.jpg"
                 />
-                <Input
+                {/* <Input
                   type="text"
                   label="Pharmacist Name"
                   name="user_name"
@@ -290,7 +290,7 @@ export default function UpdateProfile() {
                   onChange={handleChange}
                   error={fieldErrors.license_valid_upto}
                   required
-                />
+                /> */}
                 <InputFile
                   label="Upload Documents"
                   name="documents"

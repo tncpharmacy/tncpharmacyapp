@@ -83,13 +83,14 @@ export default function Supplier() {
   };
 
   const handleToggleStatus = async (id: number, currentStatus: string) => {
-    if (
-      confirm(
-        `Are you sure you want to ${
-          currentStatus === "Active" ? "Inactive" : "Active"
-        } this supplier?`
-      )
-    ) {
+    // if (
+    //   confirm(
+    //     `Are you sure you want to ${
+    //       currentStatus === "Active" ? "Inactive" : "Active"
+    //     } this supplier?`
+    //   )
+    // )
+    {
       const res = await dispatch(toggleSupplierStatus(id));
       const payload = res?.payload;
 
