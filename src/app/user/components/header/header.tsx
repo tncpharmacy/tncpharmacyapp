@@ -53,7 +53,6 @@ const SiteHeader = () => {
   const { listAll: subcategories } = useAppSelector(
     (state) => state.subcategory
   );
-  // const { medicines: productList } = useAppSelector((state) => state.medicine);
 
   const [shuffledCategories, setShuffledCategories] = useState<Category[]>([]);
   const [headerSearch, setHeaderSearch] = useState("");
@@ -69,19 +68,12 @@ const SiteHeader = () => {
   const listRef = useRef<HTMLUListElement>(null);
   const wrapperRef = useRef<HTMLDivElement>(null);
 
-  // const { suggestions } = useAppSelector((state) => state.medicine);
-
   // ---------- INITIAL LOAD ----------
   useEffect(() => {
     setMounted(true);
     dispatch(getCategoriesList());
     dispatch(getSubcategoriesList());
   }, [dispatch]);
-
-  // ---------- HANDLE CART COUNT ----------
-  // useEffect(() => {
-  //   setLocalCount(items.length);
-  // }, [items, mounted]);
 
   useEffect(() => {
     if (!buyer?.id) {
@@ -180,11 +172,6 @@ const SiteHeader = () => {
   // ---------- LOGOUT ----------
   const handleLogout = () => dispatch(buyerLogout());
 
-  // ---------- SEARCH ----------
-  // useEffect(() => {
-  //   dispatch(getProductList());
-  // }, [dispatch]);
-
   useEffect(() => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     dispatch(getProductList()).then((res: any) => {
@@ -197,27 +184,6 @@ const SiteHeader = () => {
       setLocalProductList(list);
     });
   }, []);
-
-  // useEffect(() => {
-  //   if (isSelecting.current) {
-  //     isSelecting.current = false;
-  //     return;
-  //   }
-
-  //   if (searchTerm.trim() && productList?.length > 0) {
-  //     const lower = searchTerm.toLowerCase();
-  //     const filtered = productList.filter(
-  //       (p) =>
-  //         (p.medicine_name?.toLowerCase().includes(lower) ||
-  //           p.Manufacturer?.toLowerCase().includes(lower)) ??
-  //         false
-  //     );
-  //     setFilteredList(filtered.slice(0, 10));
-  //     setShowList(true);
-  //   } else {
-  //     setShowList(false);
-  //   }
-  // }, [searchTerm, productList]);
 
   useEffect(() => {
     if (isArrowNavigation) return; // ⛔ Arrow movement पर filter नहीं चलेगा
@@ -251,16 +217,6 @@ const SiteHeader = () => {
   }));
 
   const combinedList: CombinedSearchItem[] = [...apiItems, ...localItems];
-
-  // const handleSelect = (product: Medicine) => {
-  //   setSearchTerm(product.medicine_name);
-  //   setShowList(false);
-  //   const path =
-  //     product.category_id === 1
-  //       ? `/medicines-details/${encodeId(product.id)}`
-  //       : `/product-details/${encodeId(product.id)}`;
-  //   router.push(path);
-  // };
 
   const handleCombinedSelect = (item: CombinedSearchItem) => {
     setShowList(false);
