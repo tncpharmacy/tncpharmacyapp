@@ -16,6 +16,7 @@ import { Medicine } from "@/types/medicine";
 import { encodeId } from "@/lib/utils/encodeDecode";
 
 const mediaBase = process.env.NEXT_PUBLIC_MEDIA_BASE_URL;
+const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL;
 
 export default function SearchTextClient() {
   const router = useRouter();
@@ -55,7 +56,7 @@ export default function SearchTextClient() {
       setLoading(true);
       try {
         const res = await fetch(
-          `https://api.tncpharmacy.in/api/website/product/search/?text=${searchText}`
+          `${apiBase}/website/product/search/?text=${searchText}`
         );
         const data = await res.json();
 
@@ -231,7 +232,7 @@ export default function SearchTextClient() {
                       mrp !== undefined &&
                       mrp !== 0 &&
                       Number(mrp) > 0;
-                    const discount = parseFloat(item.Discount) || 0;
+                    const discount = parseFloat(item.discount) || 0;
                     const discounted = Math.round(mrp - (mrp * discount) / 100);
 
                     const img = item.primary_image?.document

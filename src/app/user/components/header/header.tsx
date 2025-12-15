@@ -34,6 +34,7 @@ type CombinedSearchItem =
     } & Medicine);
 
 type APISuggestion = { id: number; medicine_name: string };
+const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL;
 
 const SiteHeader = () => {
   const dispatch = useAppDispatch();
@@ -109,7 +110,7 @@ const SiteHeader = () => {
   const fetchSuggestions = async (text: string) => {
     try {
       const res = await fetch(
-        `https://api.tncpharmacy.in/api/website/product/search-suggestion/?search=${text}`
+        `${apiBase}/website/product/search-suggestion/?search=${text}`
       );
       const data = await res.json();
 
