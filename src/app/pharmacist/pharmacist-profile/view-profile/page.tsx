@@ -193,6 +193,7 @@ export default function ViewProfile() {
                       width={150}
                       height={150}
                       className="rounded-circle object-cover shadow-sm"
+                      style={{ border: "3px solid #E5E7EB" }}
                     />
 
                     <input
