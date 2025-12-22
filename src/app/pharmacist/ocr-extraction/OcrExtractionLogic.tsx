@@ -107,6 +107,7 @@ export default function OcrExtractionLogic({
   const [isHealthBagOpen, setIsHealthBagOpen] = useState(false);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [cart, setCart] = useState<any[]>([]);
+  const [shouldSubmit, setShouldSubmit] = useState(false);
 
   const [isWhatsappWaitModalOpen, setIsWhatsappWaitModalOpen] = useState(false);
 
@@ -196,14 +197,14 @@ export default function OcrExtractionLogic({
     setIsQtyModalOpen(false);
     setIsModalOpen(true);
   };
-
-  const handleProceedToHealthBag = async () => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const handleProceedToHealthBag = async (finalCart: any[]) => {
     if (!buyerId) {
       alert("Buyer ID missing.");
       return;
     }
-
-    const payloads = cart.map((item) => ({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const payloads = (finalCart ?? cart).map((item: any) => ({
       buyer_id: buyerId,
       product_id: Number(item.id),
       quantity: item.qty,
@@ -247,6 +248,12 @@ export default function OcrExtractionLogic({
 
       return updated;
     });
+  };
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const handleUpdateCartFromModal = (updated: any) => {
+    console.log("🟢 UPDATED CART RECEIVED:", updated);
+    setCart(updated);
+    setShouldSubmit(true); // <-- API call trigger
   };
 
   // -------------------------------------------------------------------
@@ -359,8 +366,10 @@ export default function OcrExtractionLogic({
         isOpen={isHealthBagOpen}
         onClose={() => setIsHealthBagOpen(false)}
         cartItems={cart}
-        onProceed={handleProceedToHealthBag}
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        onProceed={(finalCart: any[]) => handleProceedToHealthBag(finalCart)}
         onRemove={handleRemoveItem}
+        onUpdateCart={handleUpdateCartFromModal}
       />
 
       <WhatsappWaitModal

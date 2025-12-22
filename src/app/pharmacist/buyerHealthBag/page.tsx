@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Button, Image, Modal, OverlayTrigger, Tooltip } from "react-bootstrap";
 import "../css/pharmacy-style.css";
 import SideNav from "@/app/pharmacist/components/SideNav/page";
@@ -26,6 +26,17 @@ import {
   removeBuyerById,
 } from "@/lib/features/healthBagBuyerByPharmacistSlice/healthBagBuyerByPharmacistSlice";
 import { BuyerData } from "@/types/buyer";
+import DoseInstructionSelect from "@/app/components/Input/DoseInstructionSelect";
+import { formatAmount } from "@/lib/utils/formatAmount";
+import {
+  createProductDuration,
+  getProductDurations,
+} from "@/lib/features/productDurationSlice/productDurationSlice";
+import {
+  createProductInstruction,
+  getProductInstructions,
+} from "@/lib/features/productInstructionSlice/productInstructionSlice";
+import SmartCreateInput from "@/app/components/RetailCounterModal/SmartCreateInput";
 const mediaBase = process.env.NEXT_PUBLIC_MEDIA_BASE_URL;
 type Buyer = {
   id: number;
@@ -46,6 +57,7 @@ type PharmacyBuyerResponse = {
 export default function OrderList() {
   const router = useRouter();
   const dispatch = useAppDispatch();
+  const qtyRefs = useRef<(HTMLInputElement | null)[]>([]);
   const pharmacy = getUser();
   const pharmacyId = Number(pharmacy?.pharmacy_id) || 0;
   const [showHistory, setShowHistory] = useState(false);
@@ -58,6 +70,7 @@ export default function OrderList() {
   const [searchTerm, setSearchTerm] = useState("");
   const [filteredData, setFilteredData] = useState<BuyerData[]>([]);
   const [modalLoading, setModalLoading] = useState(false);
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [modalItems, setModalItems] = useState<any[]>([]);
   const [editing, setEditing] = useState<{
@@ -66,9 +79,30 @@ export default function OrderList() {
     value: string;
   } | null>(null);
 
+  const [editingQty, setEditingQty] = useState<{ [key: number]: string }>({});
+  // LOCAL COPY — prevent flickering
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [localItems, setLocalItems] = useState<any[]>([]);
   const { buyers, buyer: buyerById } = useAppSelector(
     (state) => state.healthBagBuyerByPharmacist
   );
+
+  const { list: durationList } = useAppSelector(
+    (state) => state.productDuration
+  );
+
+  const { list: instructionList } = useAppSelector(
+    (state) => state.productInstruction
+  );
+  useEffect(() => {
+    dispatch(getProductDurations());
+    dispatch(getProductInstructions());
+  }, [dispatch]);
+
+  // Sync only when parent updates
+  useEffect(() => {
+    setLocalItems(modalItems);
+  }, [modalItems]);
   // UI filtering directly render ke time
   useEffect(() => {
     setFilteredData(buyers);
@@ -170,6 +204,42 @@ export default function OrderList() {
     } catch (error) {
       console.error("PUT Error:", error);
     }
+  };
+
+  const handleQtyChange = (
+    e: React.ChangeEvent<HTMLInputElement>,
+    index: number
+  ) => {
+    const raw = e.target.value;
+
+    // allow only digits
+    if (!/^\d*$/.test(raw)) return;
+
+    // live typing state
+    setEditingQty((prev) => ({
+      ...prev,
+      [index]: raw,
+    }));
+
+    // 🔥 LIVE UPDATE total price because we also update modalItems
+    setModalItems((prevItems) =>
+      prevItems.map((it, i) =>
+        i === index ? { ...it, qty: raw === "" ? "" : Number(raw) } : it
+      )
+    );
+  };
+
+  const handleQtyBlur = async (index: number) => {
+    const newQty = editingQty[index] ?? localItems[index].qty;
+
+    await saveField(localItems[index].id, "qty", newQty);
+
+    // remove temporary editing
+    setEditingQty((prev) => {
+      const updated = { ...prev };
+      delete updated[index];
+      return updated;
+    });
   };
 
   return (
@@ -317,7 +387,7 @@ export default function OrderList() {
       <Modal
         show={showHistory}
         onHide={() => setShowHistory(false)}
-        size="lg"
+        size="xl"
         centered
         style={{
           backdropFilter: "blur(4px)",
@@ -389,167 +459,129 @@ export default function OrderList() {
 
                 <tbody>
                   {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                  {modalItems?.map((item: any) => (
+                  {modalItems?.map((item: any, index: number) => (
                     <tr key={item.id}>
                       <td className="text-start">{item.productname ?? ""}</td>
-                      {/* QTY */}
-                      <td
-                        className="text-start"
-                        onClick={() =>
-                          setEditing({
-                            id: item.id,
-                            field: "qty",
-                            value: item.qty ?? "",
-                          })
-                        }
-                      >
-                        {editing?.id === item.id && editing?.field === "qty" ? (
-                          <input
-                            autoFocus
-                            style={{
-                              width: "80px",
-                              padding: "4px 6px",
-                              border: "1px solid #ccc",
-                            }}
-                            value={editing.value}
-                            onChange={(e) =>
-                              setEditing({ ...editing, value: e.target.value })
-                            }
-                            onBlur={() =>
-                              saveField(item.id, "qty", editing.value)
-                            }
-                            onKeyDown={(e) => {
-                              if (e.key === "Enter") {
-                                saveField(item.id, "qty", editing.value);
-                              }
-                            }}
-                          />
-                        ) : (
-                          item.qty
-                        )}
-                      </td>
-                      {/* DOSES */}
-                      <td
-                        className="text-start"
-                        onClick={() =>
-                          setEditing({
-                            id: item.id,
-                            field: "doses",
-                            value: item.doses ?? "",
-                          })
-                        }
-                      >
-                        {editing?.id === item.id &&
-                        editing?.field === "doses" ? (
-                          <input
-                            autoFocus
-                            style={{
-                              width: "80px",
-                              padding: "4px 6px",
-                              border: "1px solid #ccc",
-                            }}
-                            value={editing.value}
-                            onChange={(e) =>
-                              setEditing({ ...editing, value: e.target.value })
-                            }
-                            onBlur={() =>
-                              saveField(item.id, "doses", editing.value)
-                            }
-                            onKeyDown={(e) => {
-                              if (e.key === "Enter") {
-                                saveField(item.id, "doses", editing.value);
-                              }
-                            }}
-                          />
-                        ) : (
-                          item.doses
-                        )}
-                      </td>
-                      {/* INSTRUCTION */}
-                      <td
-                        className="text-start"
-                        onClick={() =>
-                          setEditing({
-                            id: item.id,
-                            field: "instruction",
-                            value: item.instruction ?? "",
-                          })
-                        }
-                      >
-                        {editing?.id === item.id &&
-                        editing?.field === "instruction" ? (
-                          <input
-                            autoFocus
-                            style={{
-                              width: "80px",
-                              padding: "4px 6px",
-                              border: "1px solid #ccc",
-                            }}
-                            value={editing.value}
-                            onChange={(e) =>
-                              setEditing({ ...editing, value: e.target.value })
-                            }
-                            onBlur={() =>
-                              saveField(item.id, "instruction", editing.value)
-                            }
-                            onKeyDown={(e) => {
-                              if (e.key === "Enter") {
-                                saveField(
-                                  item.id,
-                                  "instruction",
-                                  editing.value
-                                );
-                              }
-                            }}
-                          />
-                        ) : (
-                          item.instruction
-                        )}
-                      </td>
-                      {/* DURATION */}
-                      <td
-                        className="text-start"
-                        onClick={() =>
-                          setEditing({
-                            id: item.id,
-                            field: "duration",
-                            value: item.duration ?? "",
-                          })
-                        }
-                      >
-                        {editing?.id === item.id &&
-                        editing?.field === "duration" ? (
-                          <input
-                            autoFocus
-                            style={{
-                              width: "80px",
-                              padding: "4px 6px",
-                              border: "1px solid #ccc",
-                            }}
-                            value={editing.value}
-                            onChange={(e) =>
-                              setEditing({ ...editing, value: e.target.value })
-                            }
-                            onBlur={() =>
-                              saveField(item.id, "duration", editing.value)
-                            }
-                            onKeyDown={(e) => {
-                              if (e.key === "Enter") {
-                                saveField(item.id, "duration", editing.value);
-                              }
-                            }}
-                          />
-                        ) : (
-                          item.duration
-                        )}
+
+                      {/* =================== QTY Editable =================== */}
+                      <td className="text-start" style={{ width: "110px" }}>
+                        <input
+                          ref={(el) => {
+                            if (!el) return;
+                            qtyRefs.current[index] = el;
+                          }}
+                          type="text"
+                          className="form-control"
+                          style={{ padding: "4px 6px", height: "38px" }}
+                          value={
+                            editingQty[index] ??
+                            String(localItems[index]?.qty ?? "")
+                          }
+                          onChange={(e) => handleQtyChange(e, index)}
+                          onBlur={() => handleQtyBlur(index)}
+                          maxLength={2}
+                        />
                       </td>
 
-                      <td className="text-start">
-                        ₹{Number(item.mrp || 0).toFixed(2)}
+                      {/* =================== DOSES (Dropdown) =================== */}
+                      <td className="text-start" style={{ width: "120px" }}>
+                        <DoseInstructionSelect
+                          type="select"
+                          label=""
+                          isTableEditMode={true}
+                          name="dose_form"
+                          value={item.doses || ""}
+                          onChange={(e) =>
+                            saveField(item.id, "doses", e.target.value)
+                          }
+                        />
                       </td>
-                      <td className="text-start">
-                        ₹{(item.qty * item.mrp).toFixed(2)}
+
+                      {/* =================== INSTRUCTION Editable =================== */}
+                      {/* <td className="text-start" style={{ width: "150px" }}>
+                        <input
+                          type="text"
+                          className="form-control"
+                          style={{ padding: "4px 6px", height: "38px" }}
+                          value={item.instruction || ""}
+                          onChange={(e) => {
+                            const val = e.target.value;
+
+                            // UI update
+                            setModalItems((prev) =>
+                              prev.map((x) =>
+                                x.id === item.id
+                                  ? { ...x, instruction: val }
+                                  : x
+                              )
+                            );
+
+                            // API update
+                            saveField(item.id, "instruction", val);
+                          }}
+                        />
+                      </td> */}
+                      <td className="text-start" style={{ width: "150px" }}>
+                        <SmartCreateInput
+                          label="" // table me label nahi chahiye
+                          placeholder=""
+                          value={item.instruction || ""}
+                          list={instructionList} // redux se aane wali list
+                          createAction={createProductInstruction}
+                          refreshAction={getProductInstructions}
+                          onChange={(val) => {
+                            // ✅ UI update
+                            setModalItems((prev) =>
+                              prev.map((x) =>
+                                x.id === item.id
+                                  ? { ...x, instruction: val }
+                                  : x
+                              )
+                            );
+
+                            // ✅ API update (same as before)
+                            saveField(item.id, "instruction", val);
+                          }}
+                        />
                       </td>
+
+                      {/* =================== DURATION Editable =================== */}
+                      <td
+                        className="text-start"
+                        style={{ width: "120px", position: "relative" }}
+                      >
+                        <SmartCreateInput
+                          label=""
+                          placeholder=""
+                          value={item.duration || ""}
+                          list={durationList}
+                          createAction={createProductDuration}
+                          refreshAction={getProductDurations}
+                          onChange={(val) => {
+                            // ✅ UI update
+                            setModalItems((prev) =>
+                              prev.map((x) =>
+                                x.id === item.id ? { ...x, duration: val } : x
+                              )
+                            );
+
+                            // ✅ API update (same as before)
+                            saveField(item.id, "duration", val);
+                          }}
+                        />
+                      </td>
+
+                      {/* =================== MRP / UNIT =================== */}
+                      <td className="text-start">
+                        ₹{formatAmount(Number(item.mrp || 0))}
+                      </td>
+
+                      {/* =================== TOTAL PRICE Auto Update =================== */}
+                      <td className="text-start">
+                        ₹{formatAmount(Number(item.qty) * Number(item.mrp))}
+                      </td>
+
+                      {/* =================== Remove =================== */}
                       <td className="text-start">
                         <button
                           className="btn btn-sm btn-danger"

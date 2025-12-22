@@ -16,6 +16,7 @@ import { createPurchaseStock } from "@/lib/features/purchaseStockSlice/purchaseS
 import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
 import { fetchSupplier } from "@/lib/features/supplierSlice/supplierSlice";
+import CenterSpinner from "@/app/components/CenterSppiner/CenterSppiner";
 
 export default function PurchaseInvoiceImport() {
   const dispatch = useAppDispatch();
@@ -28,6 +29,8 @@ export default function PurchaseInvoiceImport() {
   // Infinite scroll state
   const [visibleCount, setVisibleCount] = useState(10);
   const [loadings, setLoadings] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+
   // File input ref
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   // Excel preview data
@@ -103,69 +106,74 @@ export default function PurchaseInvoiceImport() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    const reader = new FileReader();
+    setIsLoading(true); // 🔥 Loader ON
 
-    reader.onload = (evt) => {
-      const binaryStr = evt.target?.result;
+    // ⭐ Give React time to render UI
+    setTimeout(() => {
+      const reader = new FileReader();
 
-      const workbook = XLSX.read(binaryStr, {
-        type: "binary",
-        cellStyles: true,
-      });
-      const sheet = workbook.Sheets[workbook.SheetNames[0]];
+      reader.onload = (evt) => {
+        try {
+          const binaryStr = evt.target?.result;
+          const workbook = XLSX.read(binaryStr, {
+            type: "binary",
+            cellStyles: true,
+          });
+          const sheet = workbook.Sheets[workbook.SheetNames[0]];
+          const csv = XLSX.utils.sheet_to_csv(sheet);
 
-      const csv = XLSX.utils.sheet_to_csv(sheet);
+          const parseCSVLine = (line: string) => {
+            const result: string[] = [];
+            let current = "";
+            let insideQuotes = false;
 
-      // SAFE CSV PARSER (Fixes "Rack 4, A5")
-      const parseCSVLine = (line: string) => {
-        const result: string[] = [];
-        let current = "";
-        let insideQuotes = false;
-
-        for (const char of line) {
-          if (char === '"') {
-            insideQuotes = !insideQuotes;
-          } else if (char === "," && !insideQuotes) {
+            for (const char of line) {
+              if (char === '"') {
+                insideQuotes = !insideQuotes;
+              } else if (char === "," && !insideQuotes) {
+                result.push(current);
+                current = "";
+              } else {
+                current += char;
+              }
+            }
             result.push(current);
-            current = "";
-          } else {
-            current += char;
+            return result;
+          };
+
+          const rows = csv
+            .split("\n")
+            .map((line) => parseCSVLine(line))
+            .filter((r) => r.some((c) => c.trim() !== ""));
+
+          const headerIndex = rows.findIndex((r) =>
+            r.some((cell) => cell.trim().toLowerCase() === "product")
+          );
+
+          if (headerIndex === -1) {
+            alert("Header row not found!");
+            setIsLoading(false);
+            return;
           }
+
+          const header = rows[headerIndex];
+          const body = rows.slice(headerIndex + 1);
+
+          const jsonData = body.map((r) => {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const obj: any = {};
+            header.forEach((h, i) => (obj[h.trim()] = r[i] ?? ""));
+            return obj;
+          });
+
+          setExcelData(jsonData);
+        } finally {
+          setIsLoading(false); // 🔥 Loader OFF
         }
-        result.push(current);
-        return result;
       };
 
-      const rows = csv
-        .split("\n")
-        .map((line) => parseCSVLine(line))
-        .filter((r) => r.some((c) => c.trim() !== ""));
-
-      const headerIndex = rows.findIndex((r) =>
-        r.some((cell) => cell.trim().toLowerCase() === "product")
-      );
-
-      if (headerIndex === -1) {
-        alert("Header row not found!");
-        return;
-      }
-
-      const header = rows[headerIndex];
-      const body = rows.slice(headerIndex + 1);
-
-      const jsonData = body.map((r) => {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const obj: any = {};
-        header.forEach((h, i) => {
-          obj[h.trim()] = r[i] ?? "";
-        });
-        return obj;
-      });
-
-      setExcelData(jsonData);
-    };
-
-    reader.readAsBinaryString(file);
+      reader.readAsBinaryString(file);
+    }, 1000); // ⭐ This delay ensures loader shows
   };
 
   // const handleExcelUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -220,75 +228,75 @@ export default function PurchaseInvoiceImport() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    const parseExcelDate = (excelDate: number): string => {
-      if (!excelDate) return new Date().toISOString();
-      const date = new Date((excelDate - 25569) * 86400 * 1000);
-      return date.toISOString();
-    };
+    setIsLoading(true); // 🔥 Loader ON immediately
 
-    // 🧾 2️⃣ Build purchase_details from Excel data
-    const purchaseDetails = excelData.map((row, i) => ({
-      pharmacy_id: pharmacy_id,
-      product_id: Number(row["Id"]) || 0, // ✅ Excel ka Id hi product_id hai
-      quantity: row["Required QTY"]?.toString() || "0",
-      // available_quantity: row["QTY"]?.toString() || "0",
-      batch: row["Batch"]?.toString() || `BATCH-${i + 1}`,
-      expiry_date: parseExcelDate(Number(row["Expiry Date"])),
-      mrp: row["MRP"]?.toString() || "0",
-      discount: row["Discount (%)"]?.toString() || "0",
-      purchase_rate: row["Purchase Rate"]?.toString() || "0",
-      amount: row["Amount"]?.toString() || "0",
-      location: row["Location"]?.toString() || "0",
-    }));
+    // ⭐ Give React time to render loader
+    setTimeout(() => {
+      const parseExcelDate = (excelDate: number): string => {
+        if (!excelDate) return new Date().toISOString();
+        const date = new Date((excelDate - 25569) * 86400 * 1000);
+        return date.toISOString();
+      };
 
-    // 🧱 3️⃣ Build Final Payload
-    const payload = {
-      pharmacy_id: Number(pharmacy_id), // ✅ Number not string
-      supplier_id: Number(formData.supplier) || 1,
-      invoice_num: String(formData.invoice_number),
-      purchase_date: new Date(
-        formData.purchase_date || new Date()
-      ).toISOString(),
-      status: "Active",
-      purchase_details: purchaseDetails,
-    };
+      // Build purchase_details from Excel
+      const purchaseDetails = excelData.map((row, i) => ({
+        pharmacy_id,
+        product_id: Number(row["Id"]) || 0,
+        quantity: row["Required QTY"]?.toString() || "0",
+        batch: row["Batch"]?.toString() || `BATCH-${i + 1}`,
+        expiry_date: parseExcelDate(Number(row["Expiry Date"])),
+        mrp: row["MRP"]?.toString() || "0",
+        discount: row["Discount (%)"]?.toString() || "0",
+        purchase_rate: row["Purchase Rate"]?.toString() || "0",
+        amount: row["Amount"]?.toString() || "0",
+        location: row["Location"]?.toString() || "0",
+      }));
 
-    // console.log("📦 Final Payload to API:", payload);
-    // console.log("🧾 purchase_details:", purchaseDetails);
+      const payload = {
+        pharmacy_id: Number(pharmacy_id),
+        supplier_id: Number(formData.supplier) || 1,
+        invoice_num: String(formData.invoice_number),
+        purchase_date: new Date(
+          formData.purchase_date || new Date()
+        ).toISOString(),
+        status: "Active",
+        purchase_details: purchaseDetails,
+      };
 
-    // 🚀 4️⃣ Dispatch to Redux Thunk
-    dispatch(createPurchaseStock(payload))
-      .unwrap()
-      .then((res) => {
-        console.log("✅ Purchase Created Successfully:", res);
-        toast.success("Purchase Invoice Imported Successfully!");
-        // ⭐⭐ Final Submit Ke Baad Table Clear Kar Do
-        setExcelData([]);
-        if (fileInputRef.current) fileInputRef.current.value = "";
+      // 🚀 API CALL
+      dispatch(createPurchaseStock(payload))
+        .unwrap()
+        .then((res) => {
+          toast.success("Purchase Invoice Imported Successfully!");
 
-        // ⭐ Form Reset (optional but recommended)
-        setFormData({
-          id: pharmacist_id,
-          supplier: "",
-          medicine_name: "",
-          pack_size: "",
-          purchase_date: "",
-          invoice_number: "",
-          manufacturer_name: "",
-          qty: "",
-          batch: "",
-          expiry_date: "",
-          discount: "",
-          mrp: "",
-          purchase_rate: "",
-          amount: "",
-          location: "",
+          setExcelData([]);
+          if (fileInputRef.current) fileInputRef.current.value = "";
+
+          setFormData({
+            id: pharmacist_id,
+            supplier: "",
+            medicine_name: "",
+            pack_size: "",
+            purchase_date: "",
+            invoice_number: "",
+            manufacturer_name: "",
+            qty: "",
+            batch: "",
+            expiry_date: "",
+            discount: "",
+            mrp: "",
+            purchase_rate: "",
+            amount: "",
+            location: "",
+          });
+        })
+        .catch(() => {
+          toast.error("Failed to create purchase.");
+        })
+        .finally(() => {
+          setIsLoading(false); // 🔥 Loader OFF
         });
-      })
-      .catch((err) => {
-        console.error("❌ Failed to create purchase:", err);
-        toast.error("Failed to create purchase. Check console for details.");
-      });
+    }, 1000); // ⭐ Ensures loader shows before heavy work starts
   };
 
   return (
@@ -297,6 +305,7 @@ export default function PurchaseInvoiceImport() {
       <div className="body_wrap">
         <SideNav />
         <div className="body_right">
+          {isLoading && <CenterSpinner />}
           <InfiniteScroll
             loadMore={loadMore}
             hasMore={visibleCount < filteredData.length}

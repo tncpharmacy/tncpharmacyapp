@@ -140,6 +140,7 @@ export default function RetailCounter() {
     pharmacy_id: pharmacy_id || 1, // pharmacy_id defined earlier in your component
   });
   const [cart, setCart] = useState<MedicineWithCartFields[]>([]);
+  const [shouldSubmit, setShouldSubmit] = useState(false);
   const [showBagModal, setShowBagModal] = useState(false);
   const [additionalDiscount, setAdditionalDiscount] = useState<string>("0");
 
@@ -578,6 +579,13 @@ export default function RetailCounter() {
     });
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const handleUpdateCartFromModal = (updatedCart: any) => {
+    console.log("🟢 Updated CART RECEIVED:", updatedCart);
+    setCart(updatedCart);
+    setShouldSubmit(true); // <-- API call trigger
+  };
+
   return (
     <>
       <Header />
@@ -589,23 +597,24 @@ export default function RetailCounter() {
               <div>
                 <i className="bi bi-receipt"></i> Patient Prescription Summary
               </div>
-
-              <div className="d-flex align-items-center gap-4 me-3 p-2 bg-light rounded shadow-sm">
-                <div className="text-primary fw-semibold">
-                  <i className="bi bi-person-circle me-2"></i>
-                  Patient:{" "}
-                  <span className="text-dark">
-                    {pharmacyBuyersById?.data?.name || "N/A"}
-                  </span>
+              {pharmacyBuyersById && (
+                <div className="d-flex align-items-center gap-4 me-3 p-2 bg-light rounded shadow-sm">
+                  <div className="text-primary fw-semibold">
+                    <i className="bi bi-person-circle me-2"></i>
+                    Patient:{" "}
+                    <span className="text-dark">
+                      {pharmacyBuyersById?.data?.name || "N/A"}
+                    </span>
+                  </div>
+                  <div className="text-success fw-semibold">
+                    <i className="bi bi-telephone me-2"></i>
+                    Mobile:{" "}
+                    <span className="text-dark">
+                      {pharmacyBuyersById?.data?.number || "N/A"}
+                    </span>
+                  </div>
                 </div>
-                <div className="text-success fw-semibold">
-                  <i className="bi bi-telephone me-2"></i>
-                  Mobile:{" "}
-                  <span className="text-dark">
-                    {pharmacyBuyersById?.data?.number || "N/A"}
-                  </span>
-                </div>
-              </div>
+              )}
             </div>
             <div className="card shadow-sm mb-4">
               <div className="card-body">
@@ -830,6 +839,7 @@ export default function RetailCounter() {
         onRemove={handleRemoveItem}
         additionalDiscount={additionalDiscount}
         onDiscountChange={(v) => setAdditionalDiscount(v)}
+        onUpdateCart={handleUpdateCartFromModal}
       />
       <BillPreviewModal
         show={isBillPreviewOpen}

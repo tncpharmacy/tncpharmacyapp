@@ -1,9 +1,19 @@
-// AddBillingItemModal.tsx (नया कंपोनेंट)
+"use client";
 
 import React, { useState, useEffect } from "react";
 import { Medicine } from "@/types/medicine";
-import { OptionType } from "../Input/SingleSelectDropdown";
 import toast from "react-hot-toast";
+import DoseInstructionSelect from "@/app/components/Input/DoseInstructionSelect";
+import { useAppDispatch, useAppSelector } from "@/lib/hooks";
+import {
+  createProductDuration,
+  getProductDurations,
+} from "@/lib/features/productDurationSlice/productDurationSlice";
+import {
+  createProductInstruction,
+  getProductInstructions,
+} from "@/lib/features/productInstructionSlice/productInstructionSlice";
+import SmartCreateInput from "./SmartCreateInput";
 
 interface AddBillingItemModalProps {
   isOpen: boolean;
@@ -18,16 +28,7 @@ interface AddBillingItemModalProps {
     duration: string
   ) => void;
 }
-const DOSE_INSTRUCTIONS = [
-  { value: "1-0-1", label: "Morning & Night" },
-  { value: "1-1-1", label: "Morning, Afternoon & Night" },
-  { value: "1-0-0", label: "Morning only" },
-  { value: "0-1-0", label: "Afternoon only" },
-  { value: "0-0-1", label: "Night only" },
-  { value: "1/2-0-1/2", label: "Half tablet morning & night" },
-  { value: "0-1-1", label: "Afternoon & Night" },
-  { value: "1-0-1/2", label: "Morning & half at night" },
-];
+
 const AddBillingItemModal: React.FC<AddBillingItemModalProps> = ({
   isOpen,
   onClose,
@@ -35,6 +36,8 @@ const AddBillingItemModal: React.FC<AddBillingItemModalProps> = ({
   onBack,
   onConfirmAdd,
 }) => {
+  const dispatch = useAppDispatch();
+
   // States for Form Inputs
   const [qty, setQty] = useState(1);
   const [selectedDoseValue, setSelectedDoseValue] = useState("");
@@ -43,6 +46,19 @@ const AddBillingItemModal: React.FC<AddBillingItemModalProps> = ({
 
   // AvailableQty Validation
   const availableQty = item?.AvailableQty || 0; // 🚨 Assuming your Medicine type has 'AvailableQty'
+  const { list: durationList } = useAppSelector(
+    (state) => state.productDuration
+  );
+
+  const { list: instructionList } = useAppSelector(
+    (state) => state.productInstruction
+  );
+  useEffect(() => {
+    if (isOpen) {
+      dispatch(getProductDurations());
+      dispatch(getProductInstructions());
+    }
+  }, [isOpen, dispatch]);
 
   // Form Reset on Item Change
   useEffect(() => {
@@ -122,7 +138,20 @@ const AddBillingItemModal: React.FC<AddBillingItemModalProps> = ({
       className="modal"
       tabIndex={-1}
       style={{ display: "block", backgroundColor: "rgba(0,0,0,0.5)" }}
-      onClick={onClose}
+      onKeyDownCapture={(e) => {
+        const target = e.target as HTMLElement;
+
+        // ✅ allow Enter INSIDE inputs
+        if (
+          e.key === "Enter" &&
+          target.tagName !== "INPUT" &&
+          target.tagName !== "TEXTAREA"
+        ) {
+          e.preventDefault();
+          e.stopPropagation();
+        }
+      }}
+      onClick={(e) => e.stopPropagation()}
     >
       <div className="modal-dialog" onClick={(e) => e.stopPropagation()}>
         <div className="modal-content">
@@ -182,43 +211,39 @@ const AddBillingItemModal: React.FC<AddBillingItemModalProps> = ({
             {/* Dose Form Input (Select/Input based on your requirement) */}
             <div className="txt_col">
               <label className="lbl1 fw-bold">Doses Instruction</label>
-              <select
-                className="form-control" // Bootstrap class
+              <DoseInstructionSelect
+                type="select"
+                name=""
+                label=""
+                isTableEditMode={true}
                 value={selectedDoseValue}
                 onChange={(e) => setSelectedDoseValue(e.target.value)}
                 required
-              >
-                {/* Default Option */}
-                <option value="" disabled>
-                  Select Doses
-                </option>
-
-                {/* Map the Data */}
-                {DOSE_INSTRUCTIONS.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.value}
-                  </option>
-                ))}
-              </select>
-            </div>
-            {/* Remarks Input */}
-            <div className="txt_col">
-              <label className="lbl1 fw-bold">Instruction</label>
-              <input
-                type="text"
-                className="form-control"
-                value={remarks}
-                onChange={(e) => setRemarks(e.target.value)}
               />
             </div>
+            {/* Remarks Input */}
+            <div style={{ marginTop: "16px" }}>
+              <SmartCreateInput
+                label="Instruction"
+                value={remarks}
+                onChange={setRemarks}
+                list={instructionList}
+                createAction={createProductInstruction}
+                refreshAction={getProductInstructions}
+                placeholder=""
+              />
+            </div>
+
             {/* Duration Input */}
-            <div className="txt_col">
-              <label className="lbl1 fw-bold">Duration</label>
-              <input
-                type="text"
-                className="form-control"
+            <div style={{ marginTop: "16px" }}>
+              <SmartCreateInput
+                label="Duration"
                 value={duration}
-                onChange={(e) => setDuration(e.target.value)}
+                onChange={setDuration}
+                list={durationList}
+                createAction={createProductDuration}
+                refreshAction={getProductDurations}
+                placeholder=""
               />
             </div>
           </div>

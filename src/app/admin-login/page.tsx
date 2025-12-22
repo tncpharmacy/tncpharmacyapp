@@ -48,7 +48,7 @@ export default function Login({ show, handleClose }: LoginFormProps) {
           router.push("/doctor/doctor-dashboard");
           break;
         case 4:
-          router.push("/pharmacy/retail-counter");
+          router.push("pharmacy/patient-health-bag");
           break;
         case 5:
           router.push("/pharmacist/retail-counter");

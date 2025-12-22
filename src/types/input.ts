@@ -46,4 +46,6 @@ export interface InputPropsColSm {
   max?: string | number;
   min?: string | number;
   maxLength?: number;
+  // ⭐ NEW
+  isTableEditMode?: boolean;
 }

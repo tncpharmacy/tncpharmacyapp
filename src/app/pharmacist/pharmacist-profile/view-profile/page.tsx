@@ -12,6 +12,8 @@ import {
 } from "@/lib/features/pharmacistSelfSlice/pharmacistSelfSlice";
 import { Image } from "react-bootstrap";
 import toast from "react-hot-toast";
+import Spinner from "@/app/components/Sppiner/Sppiner";
+import CenterSpinner from "@/app/components/CenterSppiner/CenterSppiner";
 const mediaBase = process.env.NEXT_PUBLIC_MEDIA_BASE_URL;
 const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL;
 
@@ -149,28 +151,7 @@ export default function ViewProfile() {
       <div className="body_wrap">
         <SideNav />
         <div className="body_right">
-          {isLoading && (
-            <div
-              style={{
-                position: "fixed",
-                top: 0,
-                left: 0,
-                width: "100%",
-                height: "100%",
-                background: "rgba(0,0,0,0.4)",
-                display: "flex",
-                justifyContent: "center",
-                alignItems: "center",
-                zIndex: 9999,
-              }}
-            >
-              <div
-                className="spinner-border text-light"
-                style={{ width: "60px", height: "60px" }}
-                role="status"
-              ></div>
-            </div>
-          )}
+          {isLoading && <CenterSpinner />}
           <div className="body_content">
             <div className="pageTitle">
               <i className="bi bi-person-add"></i> Profile

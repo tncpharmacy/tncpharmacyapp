@@ -1,6 +1,7 @@
 import { Medicine } from "@/types/medicine";
 import React from "react";
 import "../../pharmacist/css/pharmacy-style.css";
+import { formatAmount } from "@/lib/utils/formatAmount";
 
 declare module "react" {
   interface CSSProperties {
@@ -33,10 +34,14 @@ const GenericOptionsModal: React.FC<GenericOptionsModalProps> = ({
   const originalMedicineName = selectedOriginalItem?.medicine_name || "N/A";
   return (
     <div
-      className="modal"
+      className="modal xl"
       tabIndex={-1}
       // Visibility fix: Display block to override default CSS
-      style={{ display: "block", backgroundColor: "rgba(0,0,0,0.5)" }}
+      style={{
+        display: "block",
+        backgroundColor: "rgba(0,0,0,0.5)",
+        width: "xl",
+      }}
       onClick={onClose}
     >
       <div
@@ -108,7 +113,7 @@ const GenericOptionsModal: React.FC<GenericOptionsModalProps> = ({
                         <td>{item.Manufacturer || "N/A"}</td>
                         <td>{item.AvailableQty || "N/A"}</td>
                         <td>{item.pack_size || "N/A"}</td>
-                        <td>₹ {item.MRP || "N/A"}</td>
+                        <td>₹ {formatAmount(Number(item.MRP)) || "N/A"}</td>
                         <td>
                           <button
                             className="btn btn-success btn-sm"

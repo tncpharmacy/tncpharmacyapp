@@ -107,24 +107,24 @@ const SiteHeader = () => {
 
   const [apiSuggestions, setApiSuggestions] = useState<APISuggestion[]>([]);
 
-  const fetchSuggestions = async (text: string) => {
-    try {
-      const res = await fetch(
-        `${apiBase}/website/product/search-suggestion/?search=${text}`
-      );
-      const data = await res.json();
+  // const fetchSuggestions = async (text: string) => {
+  //   try {
+  //     const res = await fetch(
+  //       `${apiBase}/website/product/search-suggestion/?search=${text}`
+  //     );
+  //     const data = await res.json();
 
-      const list = Array.isArray(data)
-        ? data
-        : Array.isArray(data.data)
-        ? data.data
-        : [];
+  //     const list = Array.isArray(data)
+  //       ? data
+  //       : Array.isArray(data.data)
+  //       ? data.data
+  //       : [];
 
-      setApiSuggestions(list);
-    } catch (e) {
-      console.error("Suggestion error:", e);
-    }
-  };
+  //     setApiSuggestions(list);
+  //   } catch (e) {
+  //     console.error("Suggestion error:", e);
+  //   }
+  // };
 
   useEffect(() => {
     console.log("🧮 Updated count from items:", items.length);
@@ -190,14 +190,18 @@ const SiteHeader = () => {
     if (isArrowNavigation) return; // ⛔ Arrow movement पर filter नहीं चलेगा
 
     if (headerSearch.trim()) {
-      fetchSuggestions(headerSearch);
+      //fetchSuggestions(headerSearch);
       const lower = headerSearch.toLowerCase();
 
-      const filtered = localProductList.filter(
-        (p) =>
-          p.medicine_name?.toLowerCase().includes(lower) ||
-          p.Manufacturer?.toLowerCase().includes(lower)
-      );
+      const filtered = localProductList.filter((p) => {
+        const nameWords = p.medicine_name?.toLowerCase().split(" ") || [];
+        const brandWords = p.Manufacturer?.toLowerCase().split(" ") || [];
+
+        return (
+          nameWords.some((word) => word.startsWith(lower)) ||
+          brandWords.some((word) => word.startsWith(lower))
+        );
+      });
 
       setFilteredList(filtered.slice(0, 8));
       setShowList(true);
@@ -219,69 +223,100 @@ const SiteHeader = () => {
 
   const combinedList: CombinedSearchItem[] = [...apiItems, ...localItems];
 
-  const handleCombinedSelect = (item: CombinedSearchItem) => {
+  const handleProductSelect = (item: Medicine) => {
     setShowList(false);
 
-    // 🔹 SUGGESTION (API result) → Go to search page
-    if (item._type === "api") {
-      router.push(
-        `/search-text?text=${encodeURIComponent(item.medicine_name)}`
-      );
-      return;
-    }
+    const path =
+      item.category_id === 1
+        ? `/medicines-details/${encodeId(item.id)}`
+        : `/product-details/${encodeId(item.id)}`;
 
-    if (item._type === "local") {
-      const path =
-        item.category_id === 1
-          ? `/medicines-details/${encodeId(item.id)}`
-          : `/product-details/${encodeId(item.id)}`;
-
-      router.push(path);
-      return;
-    }
+    router.push(path);
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (!showList || combinedList.length === 0) return;
+  // const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+  //   if (!showList || combinedList.length === 0) return;
 
-    if (e.key === "ArrowDown") {
+  //   if (e.key === "ArrowDown") {
+  //     e.preventDefault();
+  //     setIsArrowNavigation(true);
+
+  //     setHighlightIndex((prev) =>
+  //       prev < combinedList.length - 1 ? prev + 1 : 0
+  //     );
+
+  //     const item = combinedList[highlightIndex + 1];
+  //     if (item) {
+  //       setHeaderSearch(item.medicine_name); // text change
+  //     }
+  //   }
+
+  //   if (e.key === "ArrowUp") {
+  //     e.preventDefault();
+  //     setIsArrowNavigation(true);
+
+  //     setHighlightIndex((prev) =>
+  //       prev > 0 ? prev - 1 : combinedList.length - 1
+  //     );
+
+  //     const item = combinedList[highlightIndex - 1];
+  //     if (item) {
+  //       setHeaderSearch(item.medicine_name); // text change
+  //     }
+  //   }
+
+  //   if (e.key === "Enter") {
+  //     e.preventDefault();
+  //     setShowList(false);
+  //     if (highlightIndex >= 0) {
+  //       handleCombinedSelect(combinedList[highlightIndex]);
+  //       return;
+  //     }
+  //     if (headerSearch.trim()) {
+  //       router.push(`/search-text?text=${encodeURIComponent(headerSearch)}`);
+  //       setShowList(false);
+  //     }
+  //   }
+  // };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "ArrowDown" && filteredList.length) {
       e.preventDefault();
       setIsArrowNavigation(true);
 
       setHighlightIndex((prev) =>
-        prev < combinedList.length - 1 ? prev + 1 : 0
+        prev < filteredList.length - 1 ? prev + 1 : 0
       );
 
-      const item = combinedList[highlightIndex + 1];
-      if (item) {
-        setHeaderSearch(item.medicine_name); // text change
-      }
+      const item = filteredList[highlightIndex + 1];
+      if (item) setHeaderSearch(item.medicine_name);
     }
 
-    if (e.key === "ArrowUp") {
+    if (e.key === "ArrowUp" && filteredList.length) {
       e.preventDefault();
       setIsArrowNavigation(true);
 
       setHighlightIndex((prev) =>
-        prev > 0 ? prev - 1 : combinedList.length - 1
+        prev > 0 ? prev - 1 : filteredList.length - 1
       );
 
-      const item = combinedList[highlightIndex - 1];
-      if (item) {
-        setHeaderSearch(item.medicine_name); // text change
-      }
+      const item = filteredList[highlightIndex - 1];
+      if (item) setHeaderSearch(item.medicine_name);
     }
 
     if (e.key === "Enter") {
       e.preventDefault();
       setShowList(false);
-      if (highlightIndex >= 0) {
-        handleCombinedSelect(combinedList[highlightIndex]);
+
+      // 👉 dropdown selection
+      if (highlightIndex >= 0 && filteredList[highlightIndex]) {
+        handleProductSelect(filteredList[highlightIndex]);
         return;
       }
+
+      // 👉 free text search
       if (headerSearch.trim()) {
         router.push(`/search-text?text=${encodeURIComponent(headerSearch)}`);
-        setShowList(false);
       }
     }
   };
@@ -371,10 +406,10 @@ const SiteHeader = () => {
                     borderRadius: "4px",
                   }}
                 >
-                  {combinedList.map((item, index) => (
+                  {filteredList.map((item, index) => (
                     <li
-                      key={`${item._type}-${item.id}`}
-                      onClick={() => handleCombinedSelect(item)}
+                      key={item.id}
+                      onClick={() => handleProductSelect(item)}
                       onMouseDown={(e) => e.preventDefault()}
                       onMouseEnter={() => setHighlightIndex(index)}
                       style={{
@@ -388,7 +423,7 @@ const SiteHeader = () => {
                       }}
                     >
                       {/* -------- API SUGGESTION (TEXT ONLY) -------- */}
-                      {item._type === "api" && (
+                      {/* {item._type === "api" && (
                         <div
                           style={{
                             display: "flex",
@@ -409,90 +444,87 @@ const SiteHeader = () => {
                             {item.medicine_name}
                           </span>
                         </div>
-                      )}
+                      )} */}
 
                       {/* -------- LOCAL PRODUCT (FULL DETAIL) -------- */}
-                      {item._type === "local" && (
+                      {/* {item._type === "local" && ( */}
+                      <div style={{ display: "flex", flexDirection: "column" }}>
+                        {/* --- ROW 1: Title + Price --- */}
                         <div
-                          style={{ display: "flex", flexDirection: "column" }}
+                          style={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                            marginBottom: "10px",
+                          }}
                         >
-                          {/* --- ROW 1: Title + Price --- */}
-                          <div
+                          <span
                             style={{
-                              display: "flex",
-                              justifyContent: "space-between",
-                              marginBottom: "10px",
+                              fontWeight: 600,
+                              fontSize: "14px",
+                              color: "#000",
+                              marginRight: "10px",
+                              flex: 1,
+                              lineHeight: "1.2",
                             }}
                           >
+                            {item.medicine_name}
+                          </span>
+
+                          <span style={{ whiteSpace: "nowrap" }}>
                             <span
                               style={{
+                                color: "green",
                                 fontWeight: 600,
                                 fontSize: "14px",
-                                color: "#000",
-                                marginRight: "10px",
-                                flex: 1,
-                                lineHeight: "1.2",
                               }}
                             >
-                              {item.medicine_name}
+                              ₹
+                              {(item.MRP ?? 0) -
+                                ((item.MRP ?? 0) * Number(item.discount ?? 0)) /
+                                  100}
                             </span>
-
-                            <span style={{ whiteSpace: "nowrap" }}>
-                              <span
-                                style={{
-                                  color: "green",
-                                  fontWeight: 600,
-                                  fontSize: "14px",
-                                }}
-                              >
-                                ₹
-                                {(item.MRP ?? 0) -
-                                  ((item.MRP ?? 0) *
-                                    Number(item.discount ?? 0)) /
-                                    100}
-                              </span>
-                              <span
-                                style={{
-                                  marginLeft: 6,
-                                  textDecoration: "line-through",
-                                  color: "#777",
-                                  fontSize: "12px",
-                                }}
-                              >
-                                MRP ₹{item.MRP}
-                              </span>
+                            <span
+                              style={{
+                                marginLeft: 6,
+                                textDecoration: "line-through",
+                                color: "#777",
+                                fontSize: "12px",
+                              }}
+                            >
+                              MRP ₹{item.MRP}
                             </span>
-                          </div>
-
-                          {/* --- ROW 2: Pack & Discount --- */}
-                          <div
-                            style={{
-                              display: "flex",
-                              justifyContent: "space-between",
-                              fontSize: "12px",
-                              color: "#555",
-                              marginBottom: "10px",
-                            }}
-                          >
-                            <span>{item.pack_size}</span>
-                            <span style={{ color: "red", fontWeight: 600 }}>
-                              {item.discount}% OFF
-                            </span>
-                          </div>
-
-                          {/* --- ROW 3: Manufacturer --- */}
-                          <div
-                            style={{
-                              fontSize: "12px",
-                              fontWeight: 600,
-                              color: "green",
-                              lineHeight: "1.3",
-                            }}
-                          >
-                            {item.Manufacturer}
-                          </div>
+                          </span>
                         </div>
-                      )}
+
+                        {/* --- ROW 2: Pack & Discount --- */}
+                        <div
+                          style={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                            fontSize: "12px",
+                            color: "#555",
+                            marginBottom: "10px",
+                          }}
+                        >
+                          <span>{item.pack_size}</span>
+                          <span style={{ color: "red", fontWeight: 600 }}>
+                            {item.discount}% OFF
+                          </span>
+                        </div>
+
+                        {/* --- ROW 3: Manufacturer --- */}
+                        <div
+                          style={{
+                            fontSize: "12px",
+                            fontWeight: 600,
+                            color: "green",
+                            lineHeight: "1.3",
+                          }}
+                        >
+                          {item.Manufacturer}
+                        </div>
+                      </div>
+                      {/* )} */}
                     </li>
                   ))}
                 </ul>

@@ -187,7 +187,7 @@ export default function PharmacistByPharmacyForm({ id }: Props) {
               <i className="bi bi-shop-window me-2"></i>
               {id ? "Update Pharmacist" : "Add New Pharmacist"}
               <button
-                onClick={() => router.push("/pharmacist")}
+                onClick={() => router.push("/pharmacy/pharmacist")}
                 className="btn-style2 float-end pe-4 ps-4"
               >
                 ← Back

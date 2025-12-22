@@ -13,9 +13,9 @@ const DOSE_INSTRUCTIONS = [
 ];
 
 const DoseInstructionSelect: React.FC<InputPropsColSm> = ({
-  label,
-  name,
-  type = "text",
+  label = "",
+  name = "",
+  type = "select",
   value,
   placeholder,
   required = false,
@@ -29,9 +29,39 @@ const DoseInstructionSelect: React.FC<InputPropsColSm> = ({
   max,
   min,
   maxLength,
+
+  // ⭐ NEW
+  isTableEditMode = false,
 }) => {
-  // ✅ Dynamic responsive column class (Bootstrap style)
-  const colClasses = [
+  // ⭐ TABLE MODE → No grid, no labels
+  if (isTableEditMode) {
+    return (
+      <div style={{ minWidth: "120px" }}>
+        <select
+          id={name}
+          name={name}
+          className="form-control"
+          value={value ?? ""}
+          required={required}
+          onChange={onChange}
+          style={{
+            height: "40px",
+            fontSize: "14px",
+          }}
+        >
+          <option value="">-- Select --</option>
+          {DOSE_INSTRUCTIONS.map((opt, i) => (
+            <option key={i} value={opt.value}>
+              {opt.value}
+            </option>
+          ))}
+        </select>
+      </div>
+    );
+  }
+
+  // ⭐ NORMAL FORM MODE
+  const classes = [
     colClass,
     colSm ? `col-sm-${colSm}` : "",
     colMd ? `col-md-${colMd}` : "",
@@ -41,45 +71,30 @@ const DoseInstructionSelect: React.FC<InputPropsColSm> = ({
     .join(" ");
 
   return (
-    <div className={colClasses || "col-md-4"}>
+    <div className={classes || "col-md-4"}>
       <div className="txt_col">
-        <span className="lbl1">
-          {label} {required && <span className="text-danger">*</span>}
-        </span>
-
-        {type === "select" ? (
-          <select
-            id={name}
-            name={name}
-            className="txt1"
-            value={value ?? ""}
-            required={required}
-            onChange={onChange}
-            style={{ padding: "0", height: "27px", fontSize: "11px" }}
-          >
-            <option value="">-- Select --</option>
-            {DOSE_INSTRUCTIONS.map((opt, idx) => (
-              <option key={idx} value={opt.value}>
-                {opt.value}
-              </option>
-            ))}
-          </select>
-        ) : (
-          <input
-            type={type}
-            id={name}
-            name={name}
-            className="txt1"
-            value={value ?? ""}
-            placeholder={placeholder}
-            required={required}
-            readOnly={readOnly}
-            onChange={onChange}
-            max={max}
-            min={min}
-            maxLength={maxLength}
-          />
+        {label && (
+          <span className="lbl1">
+            {label} {required && <span className="text-danger">*</span>}
+          </span>
         )}
+
+        <select
+          id={name}
+          name={name}
+          className="txt1"
+          value={value ?? ""}
+          required={required}
+          onChange={onChange}
+          style={{ height: "40px", fontSize: "14px", padding: 0 }}
+        >
+          <option value="">-- Select --</option>
+          {DOSE_INSTRUCTIONS.map((opt, idx) => (
+            <option key={idx} value={opt.value}>
+              {opt.value}
+            </option>
+          ))}
+        </select>
 
         {error && <small className="text-danger">{error}</small>}
       </div>

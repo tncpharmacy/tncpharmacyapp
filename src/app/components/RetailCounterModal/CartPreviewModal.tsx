@@ -1,12 +1,24 @@
 import { formatAmount } from "@/lib/utils/formatAmount";
-import { useState } from "react";
 import { Modal, Table, Button } from "react-bootstrap";
 import { FaTrash } from "react-icons/fa";
+import React, { useState } from "react";
+import DoseInstructionSelect from "../Input/DoseInstructionSelect";
+import { useAppDispatch, useAppSelector } from "@/lib/hooks";
+import {
+  createProductDuration,
+  getProductDurations,
+} from "@/lib/features/productDurationSlice/productDurationSlice";
+import {
+  createProductInstruction,
+  getProductInstructions,
+} from "@/lib/features/productInstructionSlice/productInstructionSlice";
+import SmartCreateInput from "./SmartCreateInput";
 
+// -------------------- Types --------------------
 interface CartItem {
   medicine_name: string;
   qty: number;
-  pack_size?: string | number; // ← FIX
+  pack_size?: string | number;
   dose_form?: string;
   remarks?: string;
   duration?: string;
@@ -22,7 +34,10 @@ interface CartPreviewModalProps {
   onRemove: (index: number) => void;
   additionalDiscount: string;
   onDiscountChange: (v: string) => void;
+  onUpdateCart?: (updated: CartItem[]) => void;
 }
+
+// -------------------------------------------------
 
 const CartPreviewModal = ({
   show,
@@ -32,19 +47,52 @@ const CartPreviewModal = ({
   onRemove,
   onDiscountChange,
   additionalDiscount,
+  onUpdateCart,
 }: CartPreviewModalProps) => {
-  //const [additionalDiscount, setAdditionalDiscount] = useState<string>("0");
+  const dispatch = useAppDispatch();
+  const { list: durationList } = useAppSelector(
+    (state) => state.productDuration
+  );
+
+  const { list: instructionList } = useAppSelector(
+    (state) => state.productInstruction
+  );
+  React.useEffect(() => {
+    dispatch(getProductDurations());
+    dispatch(getProductInstructions());
+  }, [dispatch]);
   if (!show) return null;
 
-  const total = cart.reduce((acc, item) => {
-    const subtotal =
-      item.qty * item.price - (item.price * (item.Disc ?? 0)) / 100;
-    return acc + subtotal;
-  }, 0);
-  // Final after Additional Discount
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const handleEditChange = (index: number, field: string, value: any) => {
+    const updated = [...cart];
+
+    updated[index] = {
+      ...updated[index],
+      [field]: field === "qty" || field === "Disc" ? Number(value) : value,
+    };
+
+    // Send updated cart to parent
+    onUpdateCart && onUpdateCart(updated);
+  };
+
+  const calculateSubtotal = (item: CartItem) => {
+    const qty = Number(item.qty);
+    const price = Number(item.price);
+    const disc = Number(item.Disc ?? 0);
+
+    const total = qty * price;
+    const discountAmt = (total * disc) / 100;
+
+    return total - discountAmt;
+  };
+
+  const total = cart.reduce((acc, item) => acc + calculateSubtotal(item), 0);
+
   const finalAmount = total - (total * Number(additionalDiscount)) / 100;
+
   return (
-    <Modal show={show} onHide={onClose} size="lg" centered>
+    <Modal show={show} onHide={onClose} size="xl" centered>
       <Modal.Header closeButton>
         <Modal.Title>🛍️ Health Bag</Modal.Title>
       </Modal.Header>
@@ -67,23 +115,115 @@ const CartPreviewModal = ({
 
           <tbody>
             {cart.map((item, idx) => {
-              const subtotal =
-                item.qty * item.price - (item.price * (item.Disc ?? 0)) / 100;
+              const subtotal = calculateSubtotal(item);
 
               return (
                 <tr key={idx}>
                   <td>{item.medicine_name}</td>
-                  <td>
-                    {item.pack_size
-                      ? `${item.pack_size} × ${item.qty}`
-                      : item.qty}
+
+                  {/* Editable Qty */}
+                  <td onDoubleClick={() => {}} style={{ cursor: "pointer" }}>
+                    <input
+                      type="number"
+                      className="form-control"
+                      value={item.qty}
+                      min={1}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        // ❗ Allow only digits and maxLength = 2
+                        if (val.length <= 2) {
+                          handleEditChange(idx, "qty", val);
+                        }
+                      }}
+                      style={{ width: "70px" }}
+                    />
                   </td>
-                  <td>{item.dose_form}</td>
-                  <td>{item.remarks}</td>
-                  <td>{item.duration}</td>
-                  <td>{item.price}</td>
-                  <td>{item.Disc ?? 0}</td>
-                  <td>{subtotal}</td>
+
+                  {/* Editable Dose Form */}
+                  <td>
+                    <DoseInstructionSelect
+                      type="select"
+                      name=""
+                      label=""
+                      isTableEditMode={true}
+                      value={item.dose_form}
+                      onChange={(e) =>
+                        handleEditChange(idx, "dose_form", e.target.value)
+                      }
+                    />
+                  </td>
+
+                  {/* Editable Instruction */}
+                  <td
+                    style={{
+                      maxWidth: "160px",
+                      position: "relative",
+                    }}
+                  >
+                    <SmartCreateInput
+                      label=""
+                      value={item.remarks ?? ""}
+                      list={instructionList}
+                      createAction={createProductInstruction}
+                      refreshAction={getProductInstructions}
+                      placeholder=""
+                      onChange={(val) => {
+                        if (val.length <= 50) {
+                          handleEditChange(idx, "remarks", val);
+                        }
+                      }}
+                    />
+                  </td>
+
+                  {/* Editable Duration */}
+                  <td
+                    style={{
+                      maxWidth: "120px",
+                      position: "relative", // 🔥 MUST
+                    }}
+                  >
+                    <SmartCreateInput
+                      label=""
+                      value={item.duration ?? ""}
+                      list={durationList}
+                      createAction={createProductDuration}
+                      refreshAction={getProductDurations}
+                      placeholder=""
+                      onChange={(val) => {
+                        if (val.length <= 10) {
+                          handleEditChange(idx, "duration", val);
+                        }
+                      }}
+                    />
+                  </td>
+
+                  <td>₹{formatAmount(item.price)}</td>
+
+                  {/* Editable Discount */}
+                  <td>
+                    <input
+                      type="number"
+                      className="form-control"
+                      value={item.Disc ?? 0}
+                      max={99}
+                      min={0}
+                      // onChange={(e) =>
+                      //   handleEditChange(idx, "Disc", e.target.value)
+                      // }
+                      style={{ width: "70px" }}
+                      onChange={(e) => {
+                        const val = e.target.value;
+
+                        // ❗ Allow only digits and maxLength = 2
+                        if (val.length <= 2) {
+                          handleEditChange(idx, "Disc", val);
+                        }
+                      }}
+                    />
+                  </td>
+
+                  <td>₹{formatAmount(subtotal)}</td>
+
                   <td>
                     <Button
                       variant="danger"
@@ -98,6 +238,8 @@ const CartPreviewModal = ({
             })}
           </tbody>
         </Table>
+
+        {/* Total / Discount Box */}
         <div className="d-flex justify-content-end">
           <div
             className="p-3 border rounded shadow-sm"
@@ -105,48 +247,39 @@ const CartPreviewModal = ({
               width: "300px",
               background: "#F8FBFF",
               marginTop: "-10px",
-              textAlign: "left", // ⬅⬅ Box ke andar ka text LEFT align
+              textAlign: "left",
             }}
           >
-            <h6
-              className="fw-bold mb-2"
-              style={{ color: "red", whiteSpace: "nowrap" }}
-            >
+            <h6 className="fw-bold mb-2" style={{ color: "red" }}>
               Total: ₹{formatAmount(total)}
             </h6>
 
-            <div className="mb-2">
-              <div
-                className="d-flex align-items-center mb-2"
-                style={{ gap: "8px" }}
-              >
-                <span
-                  className="fw-semibold"
-                  style={{ color: "green", whiteSpace: "nowrap" }}
-                >
-                  Additional Discount:
-                </span>
+            <div
+              className="mb-2 d-flex align-items-center"
+              style={{ gap: "8px" }}
+            >
+              <span className="fw-semibold" style={{ color: "green" }}>
+                Additional Discount:
+              </span>
 
-                <input
-                  type="text"
-                  className="form-control"
-                  style={{ width: "60px" }}
-                  maxLength={2}
-                  value={String(additionalDiscount)}
-                  onChange={(e) => {
-                    const val = e.target.value;
-                    if (/^\d{0,2}$/.test(val)) {
-                      // local update — yeh tumhara rakhna zaroori hai
-                      onDiscountChange(val); // parent ko bhej diya
-                    }
-                  }}
-                />
+              <input
+                type="text"
+                className="form-control"
+                style={{ width: "60px" }}
+                maxLength={2}
+                value={additionalDiscount}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  if (/^\d{0,2}$/.test(val)) {
+                    onDiscountChange(val);
+                  }
+                }}
+              />
 
-                <span className="fw-bold">(%)</span>
-              </div>
+              <span className="fw-bold">(%)</span>
             </div>
 
-            <h5 className="fw-bold text-primary mb-3">
+            <h5 className="fw-bold text-primary mb-1">
               Grand Total: ₹{formatAmount(finalAmount)}
             </h5>
           </div>

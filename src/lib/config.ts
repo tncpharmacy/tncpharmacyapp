@@ -247,4 +247,37 @@ export const ENDPOINTS = {
     GET_BY_ID: (contactId: number) => `/website/contact_form/${contactId}/`,
     DELETE: (contactId: number) => `/website/contact_form/${contactId}/`,
   },
+
+  DOSES: {
+    GET_ALL: "/masterapp/doses-form/list/",
+  },
+
+  SAFETY_LABEL: {
+    CREATE: "/medicine/safety-advice/upsert/",
+    GET_ALL: "/masterapp/safety-labels/active/",
+    GET_BY_ID: (SafetyCodeId: number) =>
+      `/medicine/${SafetyCodeId}/safety-advice/`,
+  },
+
+  PRODUCT_INSTRUCTION: {
+    CREATE: "/masterapp/instruction/create/",
+    GET_ALL: "/masterapp/instruction/details/",
+    GET_BY_ID: (productInstructionId: number) =>
+      `/masterapp/instruction/${productInstructionId}/`,
+    PUT_BY_ID: (productInstructionId: number) =>
+      `/masterapp/update/instruction/${productInstructionId}/`,
+    DELETE: (productInstructionId: number) =>
+      `/masterapp/delete/instruction/${productInstructionId}/`,
+  },
+
+  PRODUCT_DURATION: {
+    CREATE: "/masterapp/duration/create/",
+    GET_ALL: "/masterapp/duration/details/",
+    GET_BY_ID: (productDurationId: number) =>
+      `/masterapp/duration/${productDurationId}/`,
+    PUT_BY_ID: (productDurationId: number) =>
+      `/masterapp/update/duration/${productDurationId}/`,
+    DELETE: (productDurationId: number) =>
+      `/masterapp/delete/duration/${productDurationId}/`,
+  },
 };

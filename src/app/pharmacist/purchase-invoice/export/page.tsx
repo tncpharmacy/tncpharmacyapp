@@ -14,6 +14,7 @@ import { useExportExcel } from "@/lib/hooks/useExportExcel";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { fetchSupplier } from "@/lib/features/supplierSlice/supplierSlice";
+import CenterSpinner from "@/app/components/CenterSppiner/CenterSppiner";
 interface Supplier {
   id: number;
   name: string;
@@ -30,6 +31,7 @@ export default function PurchaseInvoiceExport() {
     (Medicine & { qty?: string })[]
   >([]);
   const [selectAll, setSelectAll] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   // ⭐ Supplier dropdown
   const [selectedSupplier, setSelectedSupplier] = useState("");
@@ -119,7 +121,51 @@ export default function PurchaseInvoiceExport() {
   };
 
   // ✅ Export Function
-  const handleExportToExcel = () => {
+  // const handleExportToExcel = () => {
+  //   if (!selectedSupplier) {
+  //     toast.error("⚠ Please select Supplier!");
+  //     return;
+  //   }
+
+  //   if (selectedMedicines.length === 0) {
+  //     alert("⚠ Please select at least 1 product!");
+  //     return;
+  //   }
+
+  //   // if (selectedMedicines.some((m) => !m.qty || m.qty.trim() === "")) {
+  //   //   alert("⚠ Please fill Qty for all selected products!");
+  //   //   return;
+  //   // }
+  //   setIsLoading(true); // 🔥 Loading Start
+
+  //   const exportData = [...selectedMedicines]
+  //     .sort((a, b) =>
+  //       a.medicine_name.localeCompare(b.medicine_name, undefined, {
+  //         sensitivity: "base",
+  //       })
+  //     )
+  //     .map((item) => ({
+  //       Id: item.id ?? "-",
+  //       Product: item.medicine_name ?? "-",
+  //       "Pack Size": item.pack_size ?? "-",
+  //       Manufacture: item.manufacturer_name ?? "-",
+  //       "Required QTY": item.qty ?? "",
+  //       Batch: "",
+  //       "Expiry Date": "",
+  //       MRP: "",
+  //       "Discount (%)": "",
+  //       "Purchase Rate": "",
+  //       Amount: "",
+  //       Location: "",
+  //     }));
+  //   exportToExcel(exportData, fileName, "Medicines", selectedSupplier || "N/A");
+  //   // ⭐⭐ EXPORT COMPLETE → CLEAR RIGHT SIDE TABLE & UNCHECK ALL
+  //   setIsLoading(false); // 🔥 Loading Close
+  //   setSelectedMedicines([]);
+  //   setSelectAll(false);
+  // };
+
+  const handleExportToExcel = async () => {
     if (!selectedSupplier) {
       toast.error("⚠ Please select Supplier!");
       return;
@@ -130,10 +176,7 @@ export default function PurchaseInvoiceExport() {
       return;
     }
 
-    // if (selectedMedicines.some((m) => !m.qty || m.qty.trim() === "")) {
-    //   alert("⚠ Please fill Qty for all selected products!");
-    //   return;
-    // }
+    setIsLoading(true); // START LOADING
 
     const exportData = [...selectedMedicines]
       .sort((a, b) =>
@@ -155,8 +198,21 @@ export default function PurchaseInvoiceExport() {
         Amount: "",
         Location: "",
       }));
-    exportToExcel(exportData, fileName, "Medicines", selectedSupplier || "N/A");
-    // ⭐⭐ EXPORT COMPLETE → CLEAR RIGHT SIDE TABLE & UNCHECK ALL
+
+    // 🟢 IMPORTANT: Wait until file export completes
+    await new Promise<void>((resolve) => {
+      setTimeout(() => {
+        exportToExcel(
+          exportData,
+          fileName,
+          "Medicines",
+          selectedSupplier || "N/A"
+        );
+        resolve();
+      }, 1000);
+    });
+
+    setIsLoading(false); // STOP LOADING
     setSelectedMedicines([]);
     setSelectAll(false);
   };
@@ -173,6 +229,7 @@ export default function PurchaseInvoiceExport() {
       <div className="body_wrap">
         <SideNav />
         <div className="body_right">
+          {isLoading && <CenterSpinner />}
           <InfiniteScroll
             loadMore={loadMore}
             hasMore={visibleCount < getMedicine.length}
