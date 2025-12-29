@@ -1,6 +1,8 @@
 import { Medicine } from "./../../../types/medicine";
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import {
+  createMedicine,
+  deleteMedicineById,
   fetchCategoryIdBySubcategory,
   fetchGroupCare,
   fetchGroupCareById,
@@ -8,6 +10,7 @@ import {
   fetchMedicineListById,
   fetchMedicineListUpdate,
   fetchMedicinesAllList,
+  fetchMedicinesViewById,
   fetchMedicineSearch,
   fetchMedicineSuggestion,
   fetchMenuMedicinesById,
@@ -16,6 +19,8 @@ import {
   fetchMenuOtherMedicinesByCategory,
   fetchProductAllList,
   fetchProductByGenericId,
+  updateMedicine,
+  fetchMedicinesEditById,
 } from "@/lib/api/medicine";
 import {
   CareGroup,
@@ -29,6 +34,7 @@ interface FetchCategoryPayload {
   subCategoryId: number;
 }
 interface MedicineState {
+  medicine: MedicineResponse | null;
   medicines: Medicine[];
   medicinesList: Medicine[];
   groupCareList: Medicine[];
@@ -49,6 +55,7 @@ interface MedicineState {
 }
 
 const initialState: MedicineState = {
+  medicine: null,
   medicines: [],
   medicinesList: [],
   groupCareList: [],
@@ -320,6 +327,84 @@ export const getSearchSuggestions = createAsyncThunk<
   }
 });
 
+// get medicine view by id
+export const getMedicineViewByIdThunk = createAsyncThunk(
+  "medicine/medicineGetViewById",
+  async (id: number, { rejectWithValue }) => {
+    try {
+      return await fetchMedicinesViewById(id);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (error: any) {
+      return rejectWithValue(
+        error.response?.data?.message || "Failed to fetch medicine"
+      );
+    }
+  }
+);
+
+// get medicine edit by id
+export const getMedicineEditByIdThunk = createAsyncThunk(
+  "medicine/medicineGetEditById",
+  async (id: number, { rejectWithValue }) => {
+    try {
+      return await fetchMedicinesEditById(id);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (error: any) {
+      return rejectWithValue(
+        error.response?.data?.message || "Failed to fetch medicine"
+      );
+    }
+  }
+);
+
+// create medicine
+export const createMedicineThunk = createAsyncThunk<
+  MedicineResponse,
+  FormData,
+  { rejectValue: string }
+>("medicine/create", async (payload, { rejectWithValue }) => {
+  try {
+    return await createMedicine(payload);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } catch (error: any) {
+    return rejectWithValue(
+      error.response?.data?.message || "Failed to create medicine"
+    );
+  }
+});
+
+// update medicine
+export const updateMedicineThunk = createAsyncThunk<
+  MedicineResponse,
+  { id: number; data: FormData },
+  { rejectValue: string }
+>("medicine/update", async ({ id, data }, { rejectWithValue }) => {
+  try {
+    return await updateMedicine(id, data);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } catch (error: any) {
+    return rejectWithValue(
+      error.response?.data?.message || "Failed to update medicine"
+    );
+  }
+});
+
+// delete medicine
+export const deleteMedicineThunk = createAsyncThunk(
+  "medicine/delete",
+  async (id: number, { rejectWithValue }) => {
+    try {
+      await deleteMedicineById(id);
+      return id;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (error: any) {
+      return rejectWithValue(
+        error.response?.data?.message || "Failed to delete medicine"
+      );
+    }
+  }
+);
+
 const medicineSlice = createSlice({
   name: "medicine",
   initialState,
@@ -547,6 +632,97 @@ const medicineSlice = createSlice({
       .addCase(getSearchSuggestions.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload || "Suggestion fetch failed";
+      })
+
+      // GET MEDICINE VIEW BY ID
+      .addCase(getMedicineViewByIdThunk.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(getMedicineViewByIdThunk.fulfilled, (state, action) => {
+        state.loading = false;
+        state.medicine = action.payload;
+      })
+      .addCase(getMedicineViewByIdThunk.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+
+      // GET MEDICINE EDIT BY ID
+      .addCase(getMedicineEditByIdThunk.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(getMedicineEditByIdThunk.fulfilled, (state, action) => {
+        state.loading = false;
+        state.medicine = action.payload;
+      })
+      .addCase(getMedicineEditByIdThunk.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+
+      // CREATE MEDICINE
+      .addCase(createMedicineThunk.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(createMedicineThunk.fulfilled, (state, action) => {
+        state.loading = false;
+
+        const newMedicine = action.payload.data[0]; // ✅ FIRST ITEM
+
+        state.medicine = action.payload; // MedicineResponse
+        state.medicinesList.unshift(newMedicine); // Medicine
+      })
+      .addCase(createMedicineThunk.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+
+      // UPDATE MEDICINE
+      .addCase(updateMedicineThunk.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(updateMedicineThunk.fulfilled, (state, action) => {
+        state.loading = false;
+
+        const updatedMedicine = action.payload.data[0]; // ✅ FIRST ITEM
+
+        state.medicine = action.payload;
+
+        const index = state.medicinesList.findIndex(
+          (m) => m.id === updatedMedicine.id
+        );
+
+        if (index !== -1) {
+          state.medicinesList[index] = updatedMedicine; // ✅ Medicine
+        }
+      })
+      // DELETE MEDICINE
+      .addCase(deleteMedicineThunk.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(deleteMedicineThunk.fulfilled, (state, action) => {
+        state.loading = false;
+
+        const deletedId = action.payload;
+
+        // list se hatao
+        state.medicinesList = state.medicinesList.filter(
+          (m) => m.id !== deletedId
+        );
+
+        // single view clear karo
+        if (state.medicine?.data?.[0]?.id === deletedId) {
+          state.medicine = null;
+        }
+      })
+      .addCase(deleteMedicineThunk.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
       });
   },
 });

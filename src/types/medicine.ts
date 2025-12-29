@@ -13,23 +13,31 @@ export interface MedicineFormData {
   id: number;
   medicine_name: string;
   pack_size: string;
-  variant: string;
-  product_introduction: string;
+  HSN_Code?: string;
+
   prescription_required: number;
-  generic: string;
-  unit: string;
-  manufacturer: string;
-  category: string | number;
-  sub_category: string | number;
+  H1_Restricted: number;
+
+  generic_id: number | null;
+  unit_id: number | null;
+  manufacturer_id: number | null;
+  dose_form_id: number | null;
+
+  category?: number | null;
+  sub_category?: number | null;
+
+  discount?: number;
+  GST?: number;
+  variant?: string;
+
+  product_introduction: string;
   description: string;
-  dose_form: string;
-  uses_benefits: string;
-  side_effect: string;
   direction_for_use: string;
+  side_effect: string;
   storage: string;
+  uses_benefits: string;
+
   status: "Active" | "Inactive";
-  documents: DocumentFile[]; // existing uploaded docs
-  uploadedFiles: File[]; // new files from InputFile
 }
 
 export interface Medicine {
@@ -37,6 +45,8 @@ export interface Medicine {
   medicine_id: number;
   unit: string;
   medicine_name: string;
+  H1_Restricted: number;
+  prescription_required: number;
   manufacturer_name?: string;
   Manufacturer?: string;
   AvailableQTY?: number | null;
@@ -46,7 +56,6 @@ export interface Medicine {
   GenericName?: string;
   dose_form?: string;
   pack_size?: string;
-  prescription_required?: number;
   Disc?: string | number;
   discount?: string;
   status?: string;
@@ -56,15 +65,19 @@ export interface Medicine {
   mrp?: number | null;
   description?: string;
   direction_for_use?: string;
-  safety_advice?: SafetyAdvice;
+  safety_advice?: MedicineSafety;
   side_effect?: string;
   storage?: string;
   uses_benefits?: string;
   created_on: string;
   updated_on: string;
   varient_id: number | null;
-  dose_form_id: number;
   updated_by: number | null;
+  generic_id: number | null;
+  unit_id: number | null;
+  manufacturer_id: number | null;
+  dose_form_id: number | null;
+
   primary_image: {
     id: number;
     document: string;
@@ -120,19 +133,27 @@ export type SafetyLabel = {
   safety_label: string;
 };
 
-export type SafetyAdvice = {
-  alcohol?: string;
+export type MedicineSafety = {
+  alcohol?: string | null;
   alcohol_label?: SafetyLabel | null;
-  pregnancy?: string;
+
+  pregnancy?: string | null;
   pregnancy_label?: SafetyLabel | null;
-  breast_feeding?: string;
+
+  breast_feeding?: string | null;
   breast_feeding_label?: SafetyLabel | null;
-  driving?: string;
+
+  driving?: string | null;
   driving_label?: SafetyLabel | null;
-  kidney?: string;
+
+  kidney?: string | null;
   kidney_label?: SafetyLabel | null;
-  liver?: string;
+
+  liver?: string | null;
   liver_label?: SafetyLabel | null;
+
+  heart?: string | null;
+  heart_label?: SafetyLabel | null;
 };
 
 // --- Safety Keys Definitions ---
@@ -144,16 +165,17 @@ export type SafetyFieldKeys =
   | "breast_feeding"
   | "driving"
   | "kidney"
-  | "liver";
+  | "liver"
+  | "heart";
 
-// 2. Safety fields with the '_label' suffix (e.g., 'alcohol_label')
 export type SafetyLabelKeys =
   | "alcohol_label"
   | "pregnancy_label"
   | "breast_feeding_label"
   | "driving_label"
   | "kidney_label"
-  | "liver_label";
+  | "liver_label"
+  | "heart_label";
 
 export interface CareGroup {
   id: number;

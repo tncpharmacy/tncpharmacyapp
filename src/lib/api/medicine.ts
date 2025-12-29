@@ -1,6 +1,10 @@
 import axiosInstance from "@/lib/axios";
 import { ENDPOINTS } from "@/lib/config";
-import { CareGroupResponse, MedicineResponse } from "@/types/medicine";
+import {
+  CareGroupResponse,
+  Medicine,
+  MedicineResponse,
+} from "@/types/medicine";
 // =========================
 // GET ALL MEDICINES List
 // =========================
@@ -171,6 +175,79 @@ export const fetchMedicineSuggestion = async (
 ): Promise<MedicineResponse> => {
   const res = await axiosInstance.get<MedicineResponse>(
     ENDPOINTS.MEDICINES.SEARCH_SUGGESTION(query)
+  );
+  return res.data;
+};
+
+// =========================
+//  GET MEDICINE VIEW BY ID
+// =========================
+export const fetchMedicinesViewById = async (
+  id: number
+): Promise<MedicineResponse> => {
+  const res = await axiosInstance.get<MedicineResponse>(
+    ENDPOINTS.MEDICINES.GET_MEDICINE_VIEW_BY_ID(id)
+  );
+  return res.data; // ✅ res.data is now MedicineResponse
+};
+
+// =========================
+//  GET MEDICINE EDIT BY ID
+// =========================
+export const fetchMedicinesEditById = async (
+  id: number
+): Promise<MedicineResponse> => {
+  const res = await axiosInstance.get<MedicineResponse>(
+    ENDPOINTS.MEDICINES.GET_MEDICINE_EDIT_BY_ID(id)
+  );
+  return res.data; // ✅ res.data is now MedicineResponse
+};
+
+// =========================
+//  CREATE MEDICINE
+// =========================
+export const createMedicine = async (
+  payload: FormData
+): Promise<MedicineResponse> => {
+  const res = await axiosInstance.post<MedicineResponse>(
+    ENDPOINTS.MEDICINES.CREATE,
+    payload,
+    {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    }
+  );
+  return res.data;
+};
+
+// =========================
+//  UPDATE MEDICINE
+// =========================
+export const updateMedicine = async (
+  id: number,
+  payload: FormData
+): Promise<MedicineResponse> => {
+  const res = await axiosInstance.put<MedicineResponse>(
+    ENDPOINTS.MEDICINES.UPDATE(id),
+    payload,
+    {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    }
+  );
+  return res.data;
+};
+
+// =========================
+//  DELETE MEDICINE
+// =========================
+export const deleteMedicineById = async (
+  id: number
+): Promise<MedicineResponse> => {
+  const res = await axiosInstance.delete<MedicineResponse>(
+    ENDPOINTS.MEDICINES.DELETE(id)
   );
   return res.data;
 };

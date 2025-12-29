@@ -34,9 +34,14 @@ import RichTextEditor from "@/app/components/Input/RichTextEditor";
 import MultiSelectDropdown from "@/app/components/Input/MultiSelectDropdown";
 import { decodeId } from "@/lib/utils/encodeDecode";
 import {
+  createMedicineThunk,
+  getMedicineEditByIdThunk,
   getMedicineListById,
   updateMedicineListById,
+  updateMedicineThunk,
 } from "@/lib/features/medicineSlice/medicineSlice";
+import { fetchDoseFormThunk } from "@/lib/features/doseFormSlice/doseFormSlice";
+import { DoseForm } from "@/types/doseForm";
 
 interface Props {
   id?: number; // agar edit mode hai to id milegi
@@ -71,6 +76,7 @@ export default function OtherMedicineForm({ id }: Props) {
   const { list: manufacturers } = useAppSelector((state) => state.manufacturer);
   const { list: categories } = useAppSelector((state) => state.category);
   const { list: subcategories } = useAppSelector((state) => state.subcategory);
+  const { list: doseForm } = useAppSelector((state) => state.doseForm);
 
   const [selectedCategories, setSelectedCategories] = useState<number[]>([]);
   const [selectedSubCategories, setSelectedSubCategories] = useState<number[]>(
@@ -82,33 +88,48 @@ export default function OtherMedicineForm({ id }: Props) {
     medicine_name: "",
     pack_size: "",
     product_introduction: "",
-    variant: "",
+    H1_Restricted: 0,
+    HSN_Code: "",
     prescription_required: 0,
-    unit: "",
-    manufacturer: "",
-    category: "",
-    sub_category: "",
+    discount: 0,
+    GST: 0,
+    variant: "1",
+    category: null,
+    sub_category: null,
     description: "",
-    dose_form: "",
-    uploadedFiles: [],
-    documents: [],
+    status: "Active",
+    generic_id: null,
+    unit_id: null,
+    manufacturer_id: null,
+    dose_form_id: null,
   });
 
   // ✅ Load data when editing
   useEffect(() => {
-    if (decodedId) {
-      setLoading(true);
-      dispatch(getMedicineListById(decodedId))
-        .unwrap()
-        .then((res) => {
-          const data = Array.isArray(res) ? res[0] : res;
-          if (data) {
-            setFormData((prev) => ({ ...prev, ...data }));
-          }
-        })
-        .catch((err) => console.error("Error fetching medicine:", err))
-        .finally(() => setLoading(false));
-    }
+    if (!decodedId) return;
+
+    setLoading(true);
+    dispatch(getMedicineEditByIdThunk(decodedId))
+      .unwrap()
+      .then((res) => {
+        console.log("API RES 👉", res);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const data = res.data as any;
+
+        if (!data) return;
+
+        setFormData((prev) => ({
+          ...prev,
+          ...data,
+          H1_Restricted: Number(data.H1_Restricted ?? 0),
+          prescription_required: Number(data.prescription_required ?? 0),
+          unit_id: Number(data.unit_id) || null,
+          manufacturer_id: Number(data.manufacture_id) || null,
+          dose_form_id: Number(data.dose_form_id) || null,
+        }));
+      })
+      .catch((err) => console.error("Error fetching medicine:", err))
+      .finally(() => setLoading(false));
   }, [decodedId, dispatch]);
 
   // ✅ agar Redux state me update ho to bhi reflect kar
@@ -127,6 +148,7 @@ export default function OtherMedicineForm({ id }: Props) {
     dispatch(getUnitsAllList());
     dispatch(getGenericsAllList());
     dispatch(getManufacturersAllList());
+    dispatch(fetchDoseFormThunk());
   }, [dispatch]);
 
   // // Category dropdown options
@@ -188,6 +210,12 @@ export default function OtherMedicineForm({ id }: Props) {
     value: m.id_manufacturer,
   }));
 
+  // DoseForm dropdown options
+  const doseFormOptions = (doseForm || []).map((m: DoseForm) => ({
+    label: m.doses_form,
+    value: m.id,
+  }));
+
   // ✅ Load data when editing
   // useEffect(() => {
   //   if (id) {
@@ -220,80 +248,93 @@ export default function OtherMedicineForm({ id }: Props) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("🚀 Submitting formData:", formData);
 
     const formDataToSend = new FormData();
 
-    // formDataToSend.append("medicine_name", formData.medicine_name || "");
-    // formDataToSend.append("pack_size", formData.pack_size || "");
-    // formDataToSend.append(
-    //   "prescription_required",
-    //   String(formData.prescription_required ?? 1)
-    // );
-    // formDataToSend.append("unit", String(formData.unit || ""));
-    // formDataToSend.append("generic", String(formData.generic || ""));
-    // formDataToSend.append("manufacturer", String(formData.manufacturer || ""));
-    // formDataToSend.append("category", String(formData.category || ""));
-    // formDataToSend.append("sub_category", String(formData.sub_category || ""));
+    // 🔹 Basic fields
+    formDataToSend.append("medicine_name", formData.medicine_name || "");
+    formDataToSend.append("pack_size", formData.pack_size || "");
+    formDataToSend.append(
+      "prescription_required",
+      String(formData.prescription_required ?? 1)
+    );
+
+    if (formData.manufacturer_id)
+      formDataToSend.append(
+        "manufacture_id",
+        String(formData.manufacturer_id) // ⚠ backend key
+      );
+
+    if (formData.unit_id)
+      formDataToSend.append("unit_id", String(formData.unit_id));
+
+    if (formData.category)
+      formDataToSend.append("category_id", String(formData.category));
+
+    if (formData.dose_form_id)
+      formDataToSend.append("dose_form_id", String(formData.dose_form_id));
+
+    // 🔹 Text fields
     formDataToSend.append("description", formData.description || "");
     formDataToSend.append(
       "product_introduction",
       formData.product_introduction || ""
     );
-    // formDataToSend.append("side_effect", formData.side_effect || "");
-    // formDataToSend.append("storage", formData.storage || "");
-    // formDataToSend.append("uses_benefits", formData.uses_benefits || "");
-    // formDataToSend.append("status", formData.status || "Active");
 
-    // ✅ id bhejna zaruri hai update mode me
+    // 🔹 Optional / forced blank
+    formDataToSend.append("generic_id", "");
+    formDataToSend.append("uses_benefits", "");
+    formDataToSend.append("side_effect", "");
+    formDataToSend.append("direction_for_use", "");
+    formDataToSend.append("storage", "");
+    formDataToSend.append("variant_id", "");
+
+    // 🔹 Pricing & misc
+    formDataToSend.append("GST", String(formData.GST || ""));
+    formDataToSend.append("discount", String(formData.discount || 0));
+    formDataToSend.append("H1_Restricted", String(formData.H1_Restricted ?? 0));
+    formDataToSend.append("HSN_Code", formData.HSN_Code || "");
+    formDataToSend.append("status", formData.status || "Active");
+
+    // // 🔹 Images (multiple)
+    // if (formData.uploadedFiles?.length) {
+    //   formData.uploadedFiles.forEach((file) => {
+    //     formDataToSend.append("images", file);
+    //   });
+    // }
+
+    // 🔹 Update mode
     if (decodedId) {
       formDataToSend.append("id", String(decodedId));
     }
 
-    // ✅ Old documents
-    if (formData.documents && formData.documents.length > 0) {
-      formData.documents.forEach((doc) => {
-        if (doc.id)
-          formDataToSend.append("existing_document_ids", String(doc.id));
-      });
-    }
-
-    // ✅ New uploaded files
-    if (formData.uploadedFiles && formData.uploadedFiles.length > 0) {
-      formData.uploadedFiles.forEach((file) => {
-        formDataToSend.append("documents", file);
-      });
-    }
-
+    // 🧪 Debug
     for (const [key, value] of formDataToSend.entries()) {
       console.log("📦", key, value);
     }
 
     try {
       setLoading(true);
+
       if (decodedId) {
         await dispatch(
-          updateMedicineListById({
+          updateMedicineThunk({
             id: decodedId,
             data: formDataToSend,
           })
         ).unwrap();
         toast.success("Medicine updated successfully");
       } else {
-        //await createMedicineApi(formDataToSend);
+        await dispatch(createMedicineThunk(formDataToSend)).unwrap();
         toast.success("Medicine added successfully");
       }
 
       router.push("/medicine");
     } catch (error) {
       const err = error as AxiosError<{ message?: string; detail?: string }>;
-      const errorMsg =
-        err.response?.data?.message ||
-        err.response?.data?.detail ||
-        err.message ||
-        "Unknown error";
-      console.error("❌ API Error:", errorMsg);
-      toast.error(errorMsg);
+      toast.error(
+        err.response?.data?.message || err.response?.data?.detail || err.message
+      );
     } finally {
       setLoading(false);
     }
@@ -336,6 +377,30 @@ export default function OtherMedicineForm({ id }: Props) {
                   //required
                 />
                 <Input
+                  label="HSN Code"
+                  type="text"
+                  name="HSN_Code"
+                  value={formData.HSN_Code || ""}
+                  onChange={handleChange}
+                  //required
+                />
+                <Input
+                  label="GST"
+                  type="text"
+                  name="GST"
+                  value={formData.GST || ""}
+                  onChange={handleChange}
+                  //required
+                />
+                <Input
+                  label="Discount"
+                  type="text"
+                  name="discount"
+                  value={formData.discount || ""}
+                  onChange={handleChange}
+                  //required
+                />
+                <Input
                   label="Prescription Required"
                   type="select"
                   name="prescription_required"
@@ -347,49 +412,56 @@ export default function OtherMedicineForm({ id }: Props) {
                     { value: 0, label: "No" },
                   ]}
                 />
+                <Input
+                  label="H1 Restricted"
+                  type="select"
+                  name="H1_Restricted"
+                  value={formData.H1_Restricted}
+                  onChange={handleChange}
+                  options={[
+                    { value: 0, label: "No" },
+                    { value: 1, label: "Yes" },
+                  ]}
+                />
+
                 <CustomSelectInput
-                  label="Variant"
-                  name="generic"
-                  value={formData.generic || ""}
-                  options={genericOptions}
+                  label="Unit"
+                  name="unit_id"
+                  value={formData.unit_id ?? 0}
+                  options={unitOptions}
                   onChange={(value) =>
                     setFormData((prev) => ({
                       ...prev,
-                      generic: value.toString(),
+                      unit_id: Number(value),
                     }))
                   }
-                  // onAddOption={(label) => {
-                  //   dispatch(addGeneric({ label, value: label })); // ✅ action dispatch
-                  // }}
-                  // required
                 />
-                <CustomSelectInput
-                  label="Unit"
-                  name="unit"
-                  value={formData.unit || ""}
-                  options={unitOptions}
-                  onChange={(e) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      unit: e.toString(),
-                    }))
-                  }
-                  // required
-                />
+
                 <CustomSelectInput
                   label="Manufacturer"
-                  name="manufacturer"
-                  value={formData.manufacturer || ""}
+                  name="manufacturer_id"
+                  value={formData.manufacturer_id ?? 0}
                   options={manufactureOptions}
-                  onChange={(e) =>
+                  onChange={(value) =>
                     setFormData((prev) => ({
                       ...prev,
-                      manufacturer: e.toString(),
+                      manufacturer_id: Number(value),
                     }))
                   }
-                  //required
                 />
-                <MultiSelectDropdown
+                <CustomSelectInput
+                  label="Doses Form"
+                  name="dose_form_id"
+                  value={formData.dose_form_id ?? 0}
+                  options={doseFormOptions}
+                  onChange={(value) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      dose_form_id: Number(value),
+                    }))
+                  }
+                />
+                {/* <MultiSelectDropdown
                   label="Categories"
                   options={categories.map((c) => ({
                     label: c.category_name,
@@ -398,21 +470,9 @@ export default function OtherMedicineForm({ id }: Props) {
                   selected={selectedCategories}
                   onChange={setSelectedCategories}
                   maxSelect={3}
-                />
-                <CustomSelectInput
-                  label="Doses Form"
-                  name="manufacturer"
-                  value={formData.manufacturer || ""}
-                  options={manufactureOptions}
-                  onChange={(e) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      sub_category: e.toString(),
-                    }))
-                  }
-                  //required
-                />
+                /> */}
 
+                {/* 
                 <div
                   style={{ display: "flex", gap: "2rem", marginTop: "1rem" }}
                 >
@@ -470,7 +530,7 @@ export default function OtherMedicineForm({ id }: Props) {
                       </div>
                     </div>
                   ))}
-                </div>
+                </div> */}
                 <RichTextEditor
                   label="Product Introduction"
                   name="product_introduction"
@@ -494,7 +554,7 @@ export default function OtherMedicineForm({ id }: Props) {
                   //required
                   colClass="col-md-12"
                 />
-                <InputFile
+                {/* <InputFile
                   label="Upload Product Picture"
                   name="documents"
                   multiple
@@ -519,7 +579,7 @@ export default function OtherMedicineForm({ id }: Props) {
                       uploadedFiles: files,
                     }))
                   }
-                />
+                /> */}
 
                 <div className="col-md-12">
                   <button type="submit" className="btn btn-primary">

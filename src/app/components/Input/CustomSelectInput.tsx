@@ -29,7 +29,9 @@ const CustomSelectInput: React.FC<CustomSelectInputProps> = ({
   onAddOption,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [inputValue, setInputValue] = useState(value?.toString() || "");
+  const [inputValue, setInputValue] = useState(""); // selected label
+  const [searchText, setSearchText] = useState(""); // filter text
+
   const [highlightedIndex, setHighlightedIndex] = useState(0);
 
   const [showModal, setShowModal] = useState(false);
@@ -39,8 +41,24 @@ const CustomSelectInput: React.FC<CustomSelectInputProps> = ({
   const listRef = useRef<HTMLUListElement>(null);
 
   const filteredOptions = options.filter((opt) =>
-    opt.label.toLowerCase().includes(inputValue.toLowerCase())
+    opt.label.toLowerCase().includes(searchText.toLowerCase())
   );
+
+  useEffect(() => {
+    if (!value) {
+      setInputValue("");
+      return;
+    }
+
+    const selectedOption = options.find(
+      (opt) => String(opt.value) === String(value)
+    );
+
+    if (selectedOption) {
+      setInputValue(selectedOption.label);
+      setSearchText(""); // 🔥 reset filter
+    }
+  }, [value, options]);
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -88,7 +106,8 @@ const CustomSelectInput: React.FC<CustomSelectInputProps> = ({
   };
 
   const handleOptionClick = (opt: Option) => {
-    setInputValue(opt.label);
+    setInputValue(opt.label); // selected text
+    setSearchText(""); // reset search
     onChange(opt.value);
     setIsOpen(false);
   };
@@ -121,10 +140,15 @@ const CustomSelectInput: React.FC<CustomSelectInputProps> = ({
             name={name}
             className="txt1"
             value={inputValue}
+            onFocus={() => {
+              setIsOpen(true);
+              setSearchText(""); // 🔥 show full list
+              setHighlightedIndex(0);
+            }}
             onChange={(e) => {
               setInputValue(e.target.value);
+              setSearchText(e.target.value); // 🔍 search only
               setIsOpen(true);
-              setHighlightedIndex(0);
             }}
             onClick={() => setIsOpen(true)}
             onKeyDown={handleKeyDown}

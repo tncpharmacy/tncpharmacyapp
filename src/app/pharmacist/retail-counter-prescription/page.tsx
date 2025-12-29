@@ -149,7 +149,6 @@ export default function RetailCounter() {
   const { pharmacyBuyersById } = useAppSelector(
     (state) => state.pharmacistBuyerList
   );
-  console.log("pharmacyBuyersById", pharmacyBuyersById);
 
   const checkMobileInDB = async (value: string) => {
     if (value.length !== 10) return;

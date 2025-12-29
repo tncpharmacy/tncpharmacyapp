@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Button, Modal } from "react-bootstrap";
+import { Badge, Button, Modal } from "react-bootstrap";
 import "../../css/admin-style.css";
 import SideNav from "@/app/admin/components/SideNav/page";
 import Header from "@/app/admin/components/Header/page";
@@ -19,7 +19,9 @@ import { Category } from "@/types/category";
 import { Medicine } from "@/types/medicine";
 import {
   clearSelectedMedicine,
+  deleteMedicineThunk,
   getMedicinesList,
+  getMedicineViewByIdThunk,
   getMenuMedicinesList,
 } from "@/lib/features/medicineSlice/medicineSlice";
 import { encodeId } from "@/lib/utils/encodeDecode";
@@ -28,7 +30,9 @@ export default function MedicineList() {
   const dispatch = useAppDispatch();
   const router = useRouter();
   const { list: getCategoryList } = useAppSelector((state) => state.category);
-  const { medicines: medicineList } = useAppSelector((state) => state.medicine);
+  const { medicines: medicineList, loading } = useAppSelector(
+    (state) => state.medicine
+  );
   // filter directly
   // ✅ Base list (without category_id = 1)
   const filteredMedicines = useMemo(() => {
@@ -52,9 +56,16 @@ export default function MedicineList() {
     null
   );
 
+  const [showViewModal, setShowViewModal] = useState(false);
+  const [viewLoading, setViewLoading] = useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [viewMedicine, setViewMedicine] = useState<any>(null);
+
   // filtered records by search box
   const [filteredData, setFilteredData] = useState<Medicine[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
+
+  const [searchLoading, setSearchLoading] = useState(false);
 
   //status
   const [status, setStatus] = useState<string>("all");
@@ -73,26 +84,38 @@ export default function MedicineList() {
   // filtered records by search box + status filter
   // 🧠 Master filter logic
   useEffect(() => {
-    let data = filteredMedicines;
+    setSearchLoading(true); // 🔥 spinner ON
 
-    // Category filter
-    if (selectedCategoryId) {
-      data = data.filter((item) => item.category_id === selectedCategoryId);
-    }
+    const timeout = setTimeout(() => {
+      let data = filteredMedicines;
 
-    // Search filter
-    if (searchTerm) {
-      data = data.filter((item) =>
-        item.medicine_name.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-    }
+      // Category filter
+      if (selectedCategoryId) {
+        data = data.filter((item) => item.category_id === selectedCategoryId);
+      }
 
-    // Status filter
-    if (status !== "all") {
-      data = data.filter((item) => item.status === status);
-    }
+      // Search filter (Name + ID)
+      if (searchTerm) {
+        const term = searchTerm.toLowerCase();
 
-    setFilteredData(data);
+        data = data.filter(
+          (item) =>
+            item.medicine_name.toLowerCase().includes(term) ||
+            item.id.toString().includes(term)
+        );
+      }
+
+      // Status filter
+      if (status !== "all") {
+        data = data.filter((item) => item.status === status);
+      }
+
+      setFilteredData(data);
+      setVisibleCount(10); // 🔥 reset infinite scroll
+      setSearchLoading(false); // 🔥 spinner OFF
+    }, 500); // ⏳ debounce (0.5 sec)
+
+    return () => clearTimeout(timeout);
   }, [filteredMedicines, selectedCategoryId, searchTerm, status]);
 
   // ✅ only length (primitive)
@@ -102,21 +125,81 @@ export default function MedicineList() {
     setTimeout(() => {
       setVisibleCount((prev) => prev + 5);
       setLoadings(false);
-    }, 1500); // spinner for 3 sec
+    }, 800); // spinner for 3 sec
   };
 
-  const handleView = (medicine: Medicine) => {
-    setSelectedMedicine(medicine);
-    setShowModal(true);
-  };
-  const handleEdit = (id: number, category_id?: number) => {
+  // const handleView = (medicine: Medicine) => {
+  //   setSelectedMedicine(medicine);
+  //   setShowModal(true);
+  // };
+  const handleEdit = (id: number, category_id?: number | null) => {
     const encodedId = encodeId(id);
 
-    // Safety: agar category_id missing ya 1 hai to medicine page
-    if (!category_id || category_id === 1) {
-      router.push(`/update-medicine/${encodedId}`);
-    } else {
+    // ✅ category null/undefined → other product
+    if (category_id == null) {
       router.push(`/update-other-product/${encodedId}`);
+      return;
+    }
+
+    // ✅ Medicines category
+    if (category_id === 1) {
+      router.push(`/update-medicine/${encodedId}`);
+      return;
+    }
+
+    // ✅ All other categories
+    router.push(`/update-other-product/${encodedId}`);
+  };
+
+  const handleSafetyAdvice = (id: number) => {
+    const encodedId = encodeId(id);
+    router.push(`/safety-advice/${encodedId}`);
+  };
+
+  const handleUploadImage = (id: number) => {
+    const encodedId = encodeId(id);
+    router.push(`/admin/medicine/medicine-item/medicine-image/${encodedId}`);
+  };
+
+  const handleToggleStatus = async (medicine: Medicine) => {
+    const oldStatus = medicine.status;
+    const newStatus = oldStatus === "Active" ? "Inactive" : "Active";
+
+    // 🔥 Optimistic UI update (instant color change)
+    setFilteredData((prev) =>
+      prev.map((item) =>
+        item.id === medicine.id ? { ...item, status: newStatus } : item
+      )
+    );
+
+    // ✅ TOAST IMMEDIATELY (no delay)
+    toast.success(`Status changed to ${newStatus}`);
+
+    try {
+      await dispatch(deleteMedicineThunk(medicine.id)).unwrap();
+    } catch (error) {
+      // ❌ rollback UI
+      setFilteredData((prev) =>
+        prev.map((item) =>
+          item.id === medicine.id ? { ...item, status: oldStatus } : item
+        )
+      );
+
+      toast.error("Failed to change status");
+    }
+  };
+
+  const handleView = async (medicineId: number) => {
+    try {
+      setViewLoading(true);
+      const res = await dispatch(getMedicineViewByIdThunk(medicineId)).unwrap();
+
+      setViewMedicine(res.data); // 👈 API response ka data
+      setShowViewModal(true);
+    } catch (err) {
+      toast.error("Failed to load medicine details");
+    } finally {
+      setViewLoading(false);
     }
   };
 
@@ -210,6 +293,7 @@ export default function MedicineList() {
                     <thead>
                       <tr>
                         {/* <th className="fw-bold text-start"></th> */}
+                        <th className="fw-bold text-start">ID</th>
                         <th className="fw-bold text-start">Medicine Name</th>
                         <th className="fw-bold text-start">Pack Size</th>
                         <th className="fw-bold text-start">Unit</th>
@@ -219,13 +303,18 @@ export default function MedicineList() {
                       </tr>
                     </thead>
                     <tbody>
-                      {Array.isArray(filteredData) &&
+                      {loading && (
+                        <TableLoader colSpan={9} text="Searching..." />
+                      )}
+
+                      {!loading &&
                         filteredData
                           .slice(0, visibleCount)
                           .map((p: Medicine, index) => {
                             return (
                               <tr key={p.id}>
                                 {/* <td>{index + 1}</td> */}
+                                <td className="text-start">{p.id ?? "-"}</td>
                                 <td className="text-start">
                                   {p.medicine_name ?? "-"}
                                 </td>
@@ -240,7 +329,7 @@ export default function MedicineList() {
                               <td>{p.mrp ?? "-"}</td> */}
                                 <td className="text-center">
                                   <span
-                                    //onClick={() => handleToggleStatus(p.id)}
+                                    onClick={() => handleToggleStatus(p)}
                                     className={`status ${
                                       p.status === "Active"
                                         ? "status-active"
@@ -254,6 +343,7 @@ export default function MedicineList() {
                                   </span>
                                 </td>
                                 <td className="text-center">
+                                  {/* Edit */}
                                   <button
                                     className="btn btn-light btn-sm me-2"
                                     onClick={() =>
@@ -262,24 +352,59 @@ export default function MedicineList() {
                                   >
                                     <i className="bi bi-pencil"></i>
                                   </button>
+                                  {/* View */}
                                   <button
                                     className="btn btn-light btn-sm"
-                                    onClick={() => handleView(p)}
+                                    onClick={() => handleView(p.id)}
                                   >
                                     <i className="bi bi-eye-fill"></i>
+                                  </button>
+
+                                  {/* Safety Advice */}
+                                  {p.category_id === 1 ? (
+                                    /* Safety Advice */
+                                    <button
+                                      className="btn btn-light btn-sm me-2"
+                                      title="Safety Advice"
+                                      onClick={() => handleSafetyAdvice(p.id)}
+                                    >
+                                      <i className="bi bi-shield-check text-warning"></i>
+                                    </button>
+                                  ) : (
+                                    /* Category / Subcategory Update */
+                                    <button
+                                      className="btn btn-light btn-sm me-2"
+                                      title="Update Category / Subcategory"
+                                      // onClick={() => handleCategoryUpdate(p.id)}
+                                    >
+                                      <i className="bi bi-diagram-3 text-success"></i>
+                                    </button>
+                                  )}
+
+                                  {/* Upload Image */}
+                                  <button
+                                    type="button"
+                                    className="btn btn-light btn-sm"
+                                    title="Upload Medicine Image"
+                                    onClick={() => handleUploadImage(p.id)}
+                                  >
+                                    <i className="bi bi-image text-primary"></i>
                                   </button>
                                 </td>
                               </tr>
                             );
                           })}
+
                       {/* Spinner row */}
                       {loadings && (
                         <TableLoader colSpan={9} text="Loading more..." />
                       )}
 
                       {/* No more records */}
-                      {!loadings &&
-                        visibleCount >= filteredMedicines.length && (
+                      {!loading &&
+                        !searchLoading &&
+                        !loadings &&
+                        filteredData.length === 0 && (
                           <tr>
                             <td
                               colSpan={9}
@@ -299,107 +424,171 @@ export default function MedicineList() {
       </div>
 
       {/* View Modal */}
-      {/* <Modal show={showModal} onHide={() => setShowModal(false)} centered>
+      <Modal
+        show={showViewModal}
+        onHide={() => setShowViewModal(false)}
+        size="xl"
+        centered
+        scrollable
+      >
         <Modal.Header closeButton>
-          <Modal.Title>Pharmacy Details</Modal.Title>
+          <Modal.Title>
+            {viewMedicine?.medicine_name || "Medicine Details"}
+          </Modal.Title>
         </Modal.Header>
-        <Modal.Body>
-          {selectedPharmacy ? (
-            (() => {
-              const { date: createdDate, time: createdTime } = formatDateTime(
-                selectedPharmacy?.created_on
-              );
-              const { date: updatedDate, time: updatedTime } = formatDateTime(
-                selectedPharmacy?.updated_on
-              );
 
-              return (
-                <div>
-                  <p>
-                    <strong>Pharmacy Id:</strong>{" "}
-                    {selectedPharmacy.pharmacy_id_code}
-                  </p>
-                  <p>
-                    <strong>Pharmacy Name:</strong>{" "}
-                    {selectedPharmacy.pharmacy_name ?? "-"}
-                  </p>
-                  <p>
-                    <strong>Contact Person:</strong>{" "}
-                    {selectedPharmacy.user_name ?? "-"}
-                  </p>
-                  <p>
-                    <strong>GST No.:</strong> {selectedPharmacy.gst_number}
-                  </p>
-                  <p>
-                    <strong>License No.:</strong>{" "}
-                    {selectedPharmacy.license_number}
-                  </p>
-                  <p>
-                    <strong>License Validity:</strong>{" "}
-                    {formatDateOnly(selectedPharmacy.license_valid_upto)}
-                  </p>
-                  <p>
-                    <strong>Email:</strong> {selectedPharmacy.email_id}
-                  </p>
-                  <p>
-                    <strong>Contact:</strong> {selectedPharmacy.login_id ?? "-"}
-                  </p>
-                  <p>
-                    <strong>Address:</strong>{" "}
-                    {selectedPharmacy.address ??
-                      selectedPharmacy.district ??
-                      "-"}
-                  </p>
-                  <p>
-                    <strong>Pincode:</strong> {selectedPharmacy.pincode}
-                  </p>
-                  <p>
-                    <strong>Created On:</strong> {createdDate} at {createdTime}
-                  </p>
-                  <p>
-                    <strong>Updated On:</strong> {updatedDate} at {updatedTime}
-                  </p>
-                  <p>
-                    <strong>Status:</strong> {selectedPharmacy.status}
-                  </p>
-                  <hr />
-                  <h5>Documents:</h5>
-                  <div
-                    style={{ display: "flex", gap: "15px", flexWrap: "wrap" }}
-                  >
-                    {selectedPharmacy.documents &&
-                    selectedPharmacy.documents.length > 0 ? (
-                      selectedPharmacy.documents.map((doc) => (
-                        <img
-                          key={doc.id}
-                          src={`http://68.183.174.17:8081${doc.document}`}
-                          alt="Pharmacy Document"
-                          style={{
-                            width: "150px",
-                            height: "150px",
-                            objectFit: "cover",
-                            border: "1px solid #ccc",
-                            borderRadius: "8px",
-                          }}
-                        />
-                      ))
-                    ) : (
-                      <p>No documents uploaded.</p>
-                    )}
+        <Modal.Body>
+          {viewLoading ? (
+            <p className="text-center">Loading...</p>
+          ) : (
+            viewMedicine && (
+              <>
+                {/* BASIC INFO */}
+                <div className="mb-3">
+                  <h6 className="fw-bold">Basic Information</h6>
+                  <div className="row">
+                    <div className="col-md-6">
+                      <p>
+                        <strong>Generic:</strong> {viewMedicine.generic_name}
+                      </p>
+                      <p>
+                        <strong>Manufacturer:</strong>{" "}
+                        {viewMedicine.manufacture_name}
+                      </p>
+                      <p>
+                        <strong>Dosage Form:</strong>{" "}
+                        {viewMedicine.dose_form_name}
+                      </p>
+                    </div>
+                    <div className="col-md-6">
+                      <p>
+                        <strong>Pack Size:</strong> {viewMedicine.pack_size}
+                      </p>
+                      <p>
+                        <strong>Unit:</strong> {viewMedicine.unit_name}
+                      </p>
+                      <p>
+                        <strong>Status:</strong>{" "}
+                        <Badge
+                          bg={
+                            viewMedicine.status === "Active"
+                              ? "success"
+                              : "danger"
+                          }
+                        >
+                          {viewMedicine.status}
+                        </Badge>
+                      </p>
+                    </div>
                   </div>
                 </div>
-              );
-            })()
-          ) : (
-            <p>No details found.</p>
+
+                <hr />
+
+                {/* PRICING */}
+                <div className="mb-3">
+                  <h6 className="fw-bold">Pricing & Compliance</h6>
+                  <div className="row">
+                    <div className="col-md-4">
+                      <p>
+                        <strong>GST:</strong> {viewMedicine.GST}%
+                      </p>
+                    </div>
+                    <div className="col-md-4">
+                      <p>
+                        <strong>Discount:</strong> {viewMedicine.discount}%
+                      </p>
+                    </div>
+                    <div className="col-md-4">
+                      <p>
+                        <strong>HSN:</strong> {viewMedicine.HSN_Code ?? "-"}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <hr />
+
+                {/* MEDICAL FLAGS */}
+                <div className="mb-3">
+                  <h6 className="fw-bold">Medical Flags</h6>
+                  <p>
+                    <strong>Prescription Required:</strong>{" "}
+                    {viewMedicine.prescription_required ? "Yes" : "No"}
+                  </p>
+                  <p>
+                    <strong>H1 Restricted:</strong>{" "}
+                    {viewMedicine.H1_Restricted === "1" ? "Yes" : "No"}
+                  </p>
+                </div>
+
+                <hr />
+
+                {/* CONTENT SECTIONS */}
+                <div className="mb-3">
+                  <h6 className="fw-bold">Description</h6>
+                  <div
+                    className="content-box"
+                    dangerouslySetInnerHTML={{
+                      __html: viewMedicine.description,
+                    }}
+                  />
+                </div>
+                <hr />
+                <div className="mb-3">
+                  <h6 className="fw-bold">Uses & Benefits</h6>
+                  <div
+                    className="content-box"
+                    dangerouslySetInnerHTML={{
+                      __html: viewMedicine.uses_benefits,
+                    }}
+                  />
+                </div>
+                <hr />
+                <div className="mb-3">
+                  <h6 className="fw-bold">Side Effects</h6>
+                  <div
+                    className="content-box"
+                    dangerouslySetInnerHTML={{
+                      __html: viewMedicine.side_effect,
+                    }}
+                  />
+                </div>
+                <hr />
+                <div className="mb-3">
+                  <h6 className="fw-bold">Direction For Use</h6>
+                  <div
+                    className="content-box"
+                    dangerouslySetInnerHTML={{
+                      __html: viewMedicine.direction_for_use,
+                    }}
+                  />
+                </div>
+                <hr />
+                <div className="mb-3">
+                  <h6 className="fw-bold">Storage</h6>
+                  <p>{viewMedicine.storage}</p>
+                </div>
+
+                <hr />
+
+                {/* META */}
+                <div className="text-muted small">
+                  Created by <b>{viewMedicine.created_by_name}</b> on{" "}
+                  {formatDateOnly(viewMedicine.created_on)} <br />
+                  Updated by <b>{viewMedicine.updated_by_name}</b>
+                </div>
+              </>
+            )
           )}
         </Modal.Body>
+
         <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowModal(false)}>
+          <Button variant="secondary" onClick={() => setShowViewModal(false)}>
             Close
           </Button>
         </Modal.Footer>
-      </Modal> */}
+      </Modal>
     </>
   );
 }

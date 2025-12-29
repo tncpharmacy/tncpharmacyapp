@@ -202,6 +202,14 @@ const nextConfig: NextConfig = {
         destination: "/admin/medicine/medicine-item/add-product/:id",
       },
       {
+        source: "/medicine-image/:id",
+        destination: "/admin/medicine/medicine-item/medicine-image/:id",
+      },
+      {
+        source: "/safety-advice/:id",
+        destination: "/admin/medicine/medicine-item/safety-advice/:id",
+      },
+      {
         source: "/category",
         destination: "/admin/medicine/category",
       },

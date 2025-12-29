@@ -136,6 +136,11 @@ export const ENDPOINTS = {
 
   // medicines
   MEDICINES: {
+    CREATE: "/medicine/create/",
+    UPDATE: (id: number) => `medicine/${id}/update-with-images/`,
+    GET_MEDICINE_VIEW_BY_ID: (id: number) => `/medicine/view/${id}/`,
+    GET_MEDICINE_EDIT_BY_ID: (id: number) => `/medicine/edit/view/${id}/`,
+    DELETE: (id: number) => `medicine/${id}/delete/`,
     GET_ALL_LIST: "/medicine/list/",
     GET_MEDICINE_LIST_BY_ID: (id: number) => `/medicine/list/${id}/`,
     GET_MEDICINE_LIST_UPDATE: (id: number | string) =>
@@ -255,8 +260,7 @@ export const ENDPOINTS = {
   SAFETY_LABEL: {
     CREATE: "/medicine/safety-advice/upsert/",
     GET_ALL: "/masterapp/safety-labels/active/",
-    GET_BY_ID: (SafetyCodeId: number) =>
-      `/medicine/${SafetyCodeId}/safety-advice/`,
+    GET_BY_ID: (medicineId: number) => `/medicine/${medicineId}/safety-advice/`,
   },
 
   PRODUCT_INSTRUCTION: {
