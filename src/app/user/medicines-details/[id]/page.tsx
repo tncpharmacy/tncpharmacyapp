@@ -18,7 +18,7 @@ import {
 } from "@/lib/features/medicineSlice/medicineSlice";
 import {
   Medicine,
-  SafetyAdvice,
+  MedicineSafety,
   SafetyFieldKeys,
   SafetyLabelKeys,
 } from "@/types/medicine";
@@ -224,12 +224,13 @@ export default function ProductPage() {
     driving: "driving_label",
     kidney: "kidney_label",
     liver: "liver_label",
+    heart: "heart_label",
   };
   // --- getSafetyField Function ---
   const getSafetyField = (field: SafetyFieldKeys) => {
     if (!safety_advice) return { label: "N/A", text: "No data available." };
     const labelKey = safetyFieldLabelMap[field];
-    const labelObj = (safety_advice as SafetyAdvice)[labelKey];
+    const labelObj = (safety_advice as MedicineSafety)[labelKey];
     return {
       label: labelObj?.safety_label || "N/A",
       text: safety_advice[field] || "No data available.",

@@ -135,7 +135,7 @@ export default function SafetyAdviceForm({ id }: Props) {
           <div className="body_content">
             <div className="pageTitle mb-2">
               <i className="bi bi-shield-check me-2"></i>
-              {" Safety Advice"}
+              {" Safety Advice"} {id}
               <button
                 onClick={() => router.back()}
                 className="btn-style2 float-end pe-4 ps-4"
