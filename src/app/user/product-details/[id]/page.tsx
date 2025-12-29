@@ -17,7 +17,7 @@ import {
 } from "@/lib/features/medicineSlice/medicineSlice";
 import {
   Medicine,
-  SafetyAdvice,
+  MedicineSafety,
   SafetyFieldKeys,
   SafetyLabelKeys,
 } from "@/types/medicine";
