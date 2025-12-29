@@ -4,25 +4,25 @@ export interface SafetyAdvice {
   medicine_id: number;
 
   alcohol: string | null;
-  alcohol_label: SafetyLabel | null;
+  alcohol_label: number | null;
 
   pregnancy: string | null;
-  pregnancy_label: SafetyLabel | null;
+  pregnancy_label: number | null;
 
   breast_feeding: string | null;
-  breast_feeding_label: SafetyLabel | null;
+  breast_feeding_label: number | null;
 
   driving: string | null;
-  driving_label: SafetyLabel | null;
+  driving_label: number | null;
 
   kidney: string | null;
-  kidney_label: SafetyLabel | null;
+  kidney_label: number | null;
 
   liver: string | null;
-  liver_label: SafetyLabel | null;
+  liver_label: number | null;
 
   heart: string | null;
-  heart_label: SafetyLabel | null;
+  heart_label: number | null;
 
   status: "Active" | "Inactive";
 }
