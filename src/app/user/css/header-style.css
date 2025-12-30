@@ -580,7 +580,7 @@ span.user_p i .count {
 }
     .search_query {
         position: absolute;
-        background: #ff7b00;
+        /* background: #ff7b00; */
         left: 0;
         top: 60px;
         z-index: 111;
@@ -603,7 +603,7 @@ span.user_p i .count {
         letter-spacing: 0.5px;
         height: 35px;
         background: #ffffff;
-        border-color: #ff7b00;
+        /* border-color: #ff7b00; */
         border-radius: 3px;
 }
 .menu_header {
