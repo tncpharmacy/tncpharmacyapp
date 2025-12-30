@@ -305,7 +305,13 @@ export default function HomePage() {
               <Slider {...settings}>
                 {groupCare?.map((group, index) => (
                   <div key={group.id}>
-                    <div className="category_item">
+                    <div
+                      className="category_item"
+                      onClick={() =>
+                        router.push(`/all-group-care/${encodeId(group.id)}`)
+                      }
+                      style={{ cursor: "pointer" }}
+                    >
                       <div
                         className={`category_img ${
                           BG_CLASSES[index % BG_CLASSES.length]
@@ -316,16 +322,13 @@ export default function HomePage() {
                           alt={`${group.group_name} Icon`}
                         />
                       </div>
+
                       <div>
-                        {/* ✅ Group Name Dynamic */}
                         <h2 className="category_title">{group.group_name}</h2>
-                        <span
-                          className="category_link"
-                          onClick={() =>
-                            router.push(`/all-group-care/${encodeId(group.id)}`)
-                          }
-                        >
-                          View Now<i className="bi bi-arrow-right-short"></i>
+
+                        {/* View Now sirf visual ke liye */}
+                        <span className="category_link">
+                          View Now <i className="bi bi-arrow-right-short"></i>
                         </span>
                       </div>
                     </div>
@@ -389,16 +392,18 @@ export default function HomePage() {
                           style={{
                             height: "220px",
                             objectFit: "contain",
+                            cursor: "pointer",
                             opacity:
                               imageUrl === "/images/tnc-default.png" ? 0.3 : 1, // ✅ only default image faded
                           }}
+                          onClick={() => handleClick(item.product_id)}
                         />
                       </div>
                       <div className="pd_content">
                         <h3
-                          className="pd-title hover-link"
+                          className="pd-title hover-link fw-bold"
                           onClick={() => handleClick(item.product_id)}
-                          style={{ cursor: "pointer" }}
+                          style={{ cursor: "pointer", color: "#264b8c" }}
                         >
                           {item.ProductName || ""}
                         </h3>
@@ -624,16 +629,18 @@ export default function HomePage() {
                           style={{
                             height: "220px",
                             objectFit: "contain",
+                            cursor: "pointer",
                             opacity:
                               imageUrl === "/images/tnc-default.png" ? 0.3 : 1, // ✅ only default image faded
                           }}
+                          onClick={() => handleClick(item.product_id)}
                         />
                       </div>
                       <div className="pd_content">
                         <h3
-                          className="pd-title hover-link"
+                          className="pd-title hover-link fw-bold"
                           onClick={() => handleClick(item.product_id)}
-                          style={{ cursor: "pointer" }}
+                          style={{ cursor: "pointer", color: "#264b8c" }}
                         >
                           {item.ProductName || ""}
                         </h3>
@@ -779,16 +786,18 @@ export default function HomePage() {
                           style={{
                             height: "220px",
                             objectFit: "contain",
+                            cursor: "pointer",
                             opacity:
                               imageUrl === "/images/tnc-default.png" ? 0.3 : 1, // ✅ only default image faded
                           }}
+                          onClick={() => handleClick(item.product_id)}
                         />
                       </div>
                       <div className="pd_content">
                         <h3
-                          className="pd-title hover-link"
+                          className="pd-title hover-link fw-bold"
                           onClick={() => handleClick(item.product_id)}
-                          style={{ cursor: "pointer" }}
+                          style={{ cursor: "pointer", color: "#264b8c" }}
                         >
                           {item.ProductName || ""}
                         </h3>

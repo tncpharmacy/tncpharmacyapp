@@ -11,18 +11,22 @@ interface MedicineListProps {
 const MedicineList: React.FC<MedicineListProps> = ({ medicines, loading }) => {
   const [searchTerm, setSearchTerm] = useState("");
 
-  const [visibleData, setVisibleData] = useState<Medicine[]>([]);
+  // const [visibleData, setVisibleData] = useState<Medicine[]>([]);
   const [limit, setLimit] = useState(20);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
 
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
 
-  const safeMedicines = Array.isArray(medicines) ? medicines : [];
+  const safeMedicines = useMemo(
+    () => (Array.isArray(medicines) ? medicines : []),
+    [medicines]
+  );
 
-  // Set initial visible items
-  useEffect(() => {
-    setVisibleData(safeMedicines.slice(0, limit));
-  }, [safeMedicines, limit]);
+  // ✅ DERIVED DATA (NO STATE)
+  const visibleData = useMemo(
+    () => safeMedicines.slice(0, limit),
+    [safeMedicines, limit]
+  );
 
   // Search logic
   const filteredMedicines = useMemo(() => {

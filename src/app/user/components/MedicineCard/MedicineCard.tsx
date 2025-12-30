@@ -136,7 +136,11 @@ export default function MedicineCard({
     <div className="medicine-card">
       <div className="medicine-content">
         {/* Top section */}
-        <div className="medicine-top">
+        <div
+          className="medicine-top"
+          style={{ cursor: "pointer" }}
+          onClick={() => handleClick(id)}
+        >
           {/* Image with zoom on hover */}
           <div className="medicine-imgs" style={{ position: "relative" }}>
             {/* ✅ Only image hover controls zoom */}
@@ -186,12 +190,14 @@ export default function MedicineCard({
             <div className="medicine-header">
               <h3
                 className="medicine-name hover-link"
-                style={{
-                  // textDecoration: "none",
-                  // color: "inherit",
-                  cursor: "pointer",
-                }}
-                onClick={() => handleClick(id)}
+                style={
+                  {
+                    // textDecoration: "none",
+                    // color: "inherit",
+                    // cursor: "pointer",
+                  }
+                }
+                //onClick={() => handleClick(id)}
               >
                 {medicine_name}
               </h3>
@@ -222,7 +228,7 @@ export default function MedicineCard({
           {!hasValidMrp ? (
             <p className="text-danger fw-bold">OUT OF STOCK</p>
           ) : (
-            <>
+            <div style={{ cursor: "pointer" }} onClick={() => handleClick(id)}>
               {discountPercent > 0 ? (
                 <div className="d-flex flex-column align-items-start">
                   {/* Discounted Price */}
@@ -252,7 +258,7 @@ export default function MedicineCard({
               ) : (
                 <p className="medicine-mrp">₹{formatCurrency(originalMrp)}</p>
               )}
-            </>
+            </div>
           )}
           {/* <p className="medicine-mrp">MRP ₹{formatCurrency(mrp)}</p>; */}
           <div className="text-end">

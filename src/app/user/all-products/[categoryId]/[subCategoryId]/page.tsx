@@ -325,66 +325,77 @@ export default function AllProducts() {
                             style={{
                               height: "220px",
                               objectFit: "contain",
+                              cursor: "pointer",
                               opacity:
                                 imageUrl === "/images/tnc-default.png"
                                   ? 0.3
                                   : 1,
                             }}
+                            onClick={() => handleClick(item.product_id)}
                           />
                         </div>
 
                         <div className="pd_content">
-                          <h3
-                            className="pd-title hover-link"
+                          <div
                             style={{ cursor: "pointer" }}
                             onClick={() => handleClick(item.product_id)}
                           >
-                            {item.ProductName}
-                          </h3>
+                            <h3
+                              className="pd-title hover-link fw-bold"
+                              style={{ color: "#264b8c" }}
+                            >
+                              {item.ProductName}
+                            </h3>
 
-                          <h6 className="pd-title fw-bold">
-                            {item.Manufacturer}
-                          </h6>
-                          {!hasValidMrp ? (
-                            <p className="text-danger fw-bold">OUT OF STOCK</p>
-                          ) : (
-                            <div className="pd_price">
-                              <span className="new_price">
-                                ₹{discountedPrice}
-                              </span>
-                              {mrp > 0 && (
-                                <span className="old_price">
-                                  <del>MRP ₹{mrp}</del> {discount}% off
+                            <h6 className="pd-title fw-bold">
+                              {item.Manufacturer}
+                            </h6>
+                            {!hasValidMrp ? (
+                              <p className="text-danger fw-bold">
+                                OUT OF STOCK
+                              </p>
+                            ) : (
+                              <div className="pd_price">
+                                <span className="new_price">
+                                  ₹{discountedPrice}
                                 </span>
-                              )}
-                            </div>
-                          )}
-
-                          <button
-                            className={`btn-1 btn-HO ${
-                              isInBag ? "remove" : "add"
-                            }`}
-                            disabled={
-                              !hasValidMrp ||
-                              processingIds.includes(item.product_id)
-                            }
-                            style={{
-                              opacity: !hasValidMrp ? 0.5 : 1,
-                              cursor: !hasValidMrp ? "not-allowed" : "pointer",
-                              pointerEvents: !hasValidMrp ? "none" : "auto",
-                            }}
-                            onClick={() =>
-                              isInBag
-                                ? handleRemove(item.product_id)
-                                : handleAdd(item)
-                            }
-                          >
-                            {processingIds.includes(item.product_id)
-                              ? "Processing..."
-                              : isInBag
-                              ? "REMOVE"
-                              : "ADD"}
-                          </button>
+                                {mrp > 0 && (
+                                  <span className="old_price">
+                                    <del>MRP ₹{mrp}</del> {discount}% off
+                                  </span>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                          <div>
+                            <button
+                              className={`btn-1 btn-HO ${
+                                isInBag ? "remove" : "add"
+                              }`}
+                              disabled={
+                                !hasValidMrp ||
+                                processingIds.includes(item.product_id)
+                              }
+                              style={{
+                                opacity: !hasValidMrp ? 0.5 : 1,
+                                cursor: !hasValidMrp
+                                  ? "not-allowed"
+                                  : "pointer",
+                                pointerEvents: !hasValidMrp ? "none" : "auto",
+                              }}
+                              onClick={() =>
+                                isInBag
+                                  ? handleRemove(item.product_id)
+                                  : handleAdd(item)
+                              }
+                            >
+                              {processingIds.includes(item.product_id)
+                                ? "Processing..."
+                                : isInBag
+                                ? "REMOVE"
+                                : "ADD"}
+                            </button>
+                          </div>
                         </div>
                       </div>
                     );

@@ -278,60 +278,76 @@ export default function AllGroupCare() {
                             style={{
                               height: "220px",
                               objectFit: "contain",
+                              cursor: "pointer",
                               opacity:
                                 imageUrl === "/images/tnc-default.png"
                                   ? 0.3
                                   : 1,
                             }}
+                            onClick={() => handleClick(item.medicine_id)}
                           />
                         </div>
 
                         <div className="pd_content">
-                          <h3
-                            className="pd-title hover-link"
-                            onClick={() => handleClick(item.medicine_id)}
+                          <div
                             style={{ cursor: "pointer" }}
+                            onClick={() => handleClick(item.medicine_id)}
                           >
-                            {item.medicine_name}
-                          </h3>
+                            <h3
+                              className="pd-title hover-link fw-bold"
+                              style={{ color: "#264b8c" }}
+                            >
+                              {item.medicine_name}
+                            </h3>
 
-                          <h6 className="pd-title fw-bold">
-                            {item.manufacturer_name}
-                          </h6>
+                            <h6 className="pd-title fw-bold">
+                              {item.manufacturer_name}
+                            </h6>
 
-                          {!hasValidMrp ? (
-                            <p className="text-danger fw-bold">OUT OF STOCK</p>
-                          ) : (
-                            <div className="pd_price">
-                              <span className="new_price">
-                                ₹{discountedPrice}
-                              </span>
-                              <span className="old_price">
-                                <del>MRP ₹{mrp}</del> {discount}% off
-                              </span>
-                            </div>
-                          )}
-
-                          <button
-                            className={`btn-1 btn-HO ${
-                              isInBag ? "remove" : "add"
-                            }`}
-                            disabled={
-                              !hasValidMrp ||
-                              processingIds.includes(item.medicine_id)
-                            }
-                            onClick={() =>
-                              isInBag
-                                ? handleRemove(item.medicine_id)
-                                : handleAdd(item)
-                            }
-                          >
-                            {processingIds.includes(item.medicine_id)
-                              ? "Processing..."
-                              : isInBag
-                              ? "REMOVE"
-                              : "ADD"}
-                          </button>
+                            {!hasValidMrp ? (
+                              <p className="text-danger fw-bold">
+                                OUT OF STOCK
+                              </p>
+                            ) : (
+                              <div className="pd_price">
+                                <span className="new_price">
+                                  ₹{discountedPrice}
+                                </span>
+                                <span className="old_price">
+                                  <del>MRP ₹{mrp}</del> {discount}% off
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                          <div>
+                            <button
+                              className={`btn-1 btn-HO ${
+                                isInBag ? "remove" : "add"
+                              }`}
+                              disabled={
+                                !hasValidMrp ||
+                                processingIds.includes(item.medicine_id)
+                              }
+                              style={{
+                                opacity: !hasValidMrp ? 0.5 : 1,
+                                cursor: !hasValidMrp
+                                  ? "not-allowed"
+                                  : "pointer",
+                                pointerEvents: !hasValidMrp ? "none" : "auto",
+                              }}
+                              onClick={() =>
+                                isInBag
+                                  ? handleRemove(item.medicine_id)
+                                  : handleAdd(item)
+                              }
+                            >
+                              {processingIds.includes(item.medicine_id)
+                                ? "Processing..."
+                                : isInBag
+                                ? "REMOVE"
+                                : "ADD"}
+                            </button>
+                          </div>
                         </div>
                       </div>
                     );
