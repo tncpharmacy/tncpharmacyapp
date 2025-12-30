@@ -2,8 +2,15 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   images: {
-    domains: ["68.183.174.17"],
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "api.tncpharmacy.in",
+        pathname: "/media/**",
+      },
+    ],
   },
+
   eslint: {
     // Allow production builds even if ESLint errors are present
     ignoreDuringBuilds: true,
