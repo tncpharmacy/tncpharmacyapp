@@ -10,6 +10,7 @@ import { changePassword } from "@/lib/features/changePasswordSlice/changePasswor
 import { getUser } from "@/lib/auth/auth";
 import toast from "react-hot-toast";
 import PasswordInput from "@/app/components/Input/PasswordInput";
+import TncLoader from "@/app/components/TncLoader/TncLoader";
 
 export default function ChangePassword() {
   const dispatch = useAppDispatch();
@@ -23,6 +24,7 @@ export default function ChangePassword() {
     new_password: "",
     confirm_password: "",
   });
+  const [submitLoading, setSubmitLoading] = useState(false);
 
   // Handle input changes
   const handleChange = (
@@ -39,7 +41,10 @@ export default function ChangePassword() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    if (submitLoading) return;
+
     try {
+      setSubmitLoading(true);
       const res = await dispatch(
         changePassword({
           userId,
@@ -64,6 +69,8 @@ export default function ChangePassword() {
     } catch (error: any) {
       // ERROR TOAST
       toast.error(error?.message || "Something went wrong!");
+    } finally {
+      setSubmitLoading(false); // 🔥 STOP LOADER
     }
   };
 
@@ -74,6 +81,21 @@ export default function ChangePassword() {
         <SideNav />
         <div className="body_right">
           <div className="body_content">
+            {submitLoading && (
+              <div
+                className="position-absolute top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center"
+                style={{
+                  background: "rgba(255,255,255,0.6)",
+                  backdropFilter: "blur(2px)",
+                  zIndex: 10,
+                }}
+              >
+                <div className="text-center">
+                  <TncLoader />
+                </div>
+              </div>
+            )}
+
             <div className="pageTitle">
               <i className="bi bi-shield-lock"></i> Change Password
             </div>

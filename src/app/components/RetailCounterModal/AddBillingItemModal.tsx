@@ -14,6 +14,7 @@ import {
   getProductInstructions,
 } from "@/lib/features/productInstructionSlice/productInstructionSlice";
 import SmartCreateInput from "./SmartCreateInput";
+import TncLoader from "../TncLoader/TncLoader";
 
 interface AddBillingItemModalProps {
   isOpen: boolean;
@@ -53,6 +54,21 @@ const AddBillingItemModal: React.FC<AddBillingItemModalProps> = ({
   const { list: instructionList } = useAppSelector(
     (state) => state.productInstruction
   );
+  const [initialLoading, setInitialLoading] = React.useState(true);
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    setInitialLoading(true);
+
+    // micro delay to avoid flash
+    const t = setTimeout(() => {
+      setInitialLoading(false);
+    }, 500);
+
+    return () => clearTimeout(t);
+  }, [isOpen]);
+
   useEffect(() => {
     if (isOpen) {
       dispatch(getProductDurations());
@@ -153,119 +169,132 @@ const AddBillingItemModal: React.FC<AddBillingItemModalProps> = ({
       }}
       onClick={(e) => e.stopPropagation()}
     >
-      <div className="modal-dialog" onClick={(e) => e.stopPropagation()}>
-        <div className="modal-content">
-          <div className="modal-header">
-            {/* ✅ Back Button Icon */}
-            <button
-              type="button"
-              className="btn btn-light btn-sm me-2"
-              onClick={onBack}
-              style={{
-                border: "none",
-                padding: "0",
-                background: "transparent",
-              }}
-            >
-              <i
-                className="bi bi-arrow-left-circle"
-                style={{ fontSize: "1.5rem", color: "#007bff" }}
-              ></i>
-            </button>
-            <h6 className="modal-title">Product Item:- {item.medicine_name}</h6>
-            {/* Close Button on the right */}
-            <button
-              type="button"
-              className="btn-close"
-              onClick={onClose}
-            ></button>
-          </div>
-          <div className="modal-body">
-            {/* Current Price Display */}
-            <p>
-              <strong>MRP:</strong> ₹{item.MRP || 0}
-            </p>
-            <p className="text-success color-green fw-bold">
-              Available Stock: {availableQty}
-            </p>
-            <hr />
-
-            {/* Qty Input */}
-            <div className="txt_col">
-              <label className="lbl1 fw-bold">Quantity</label>
-              <input
-                type="number"
-                className="form-control"
-                value={qty === 0 ? "" : qty} // 👈 input blank handle
-                onChange={handleQtyChange}
-                max={availableQty}
-              />
-
-              {qty > availableQty && (
-                <div className="text-danger mt-1">
-                  Error: Max available quantity is {availableQty}.
-                </div>
-              )}
-            </div>
-
-            {/* Dose Form Input (Select/Input based on your requirement) */}
-            <div className="txt_col">
-              <label className="lbl1 fw-bold">Doses Instruction</label>
-              <DoseInstructionSelect
-                type="select"
-                name=""
-                label=""
-                isTableEditMode={true}
-                value={selectedDoseValue}
-                onChange={(e) => setSelectedDoseValue(e.target.value)}
-                required
-              />
-            </div>
-            {/* Remarks Input */}
-            <div style={{ marginTop: "16px" }}>
-              <SmartCreateInput
-                label="Instruction"
-                value={remarks}
-                onChange={setRemarks}
-                list={instructionList}
-                createAction={createProductInstruction}
-                refreshAction={getProductInstructions}
-                placeholder=""
-              />
-            </div>
-
-            {/* Duration Input */}
-            <div style={{ marginTop: "16px" }}>
-              <SmartCreateInput
-                label="Duration"
-                value={duration}
-                onChange={setDuration}
-                list={durationList}
-                createAction={createProductDuration}
-                refreshAction={getProductDurations}
-                placeholder=""
-              />
-            </div>
-          </div>
-          <div className="modal-footer">
-            <button
-              type="button"
-              className="btn btn-secondary"
-              onClick={onClose}
-            >
-              Cancel
-            </button>
-            <button
-              type="button"
-              className="btn btn-success"
-              onClick={handleSubmit}
-              disabled={qty === 0}
-            >
-              Add to Bill
-            </button>
-          </div>
+      {initialLoading ? (
+        <div
+          className="d-flex justify-content-center align-items-center"
+          style={{ minHeight: 500 }}
+        >
+          <TncLoader />
         </div>
-      </div>
+      ) : (
+        <>
+          <div className="modal-dialog" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-content">
+              <div className="modal-header">
+                {/* ✅ Back Button Icon */}
+                <button
+                  type="button"
+                  className="btn btn-light btn-sm me-2"
+                  onClick={onBack}
+                  style={{
+                    border: "none",
+                    padding: "0",
+                    background: "transparent",
+                  }}
+                >
+                  <i
+                    className="bi bi-arrow-left-circle"
+                    style={{ fontSize: "1.5rem", color: "#007bff" }}
+                  ></i>
+                </button>
+                <h6 className="modal-title">
+                  Product Item:- {item.medicine_name}
+                </h6>
+                {/* Close Button on the right */}
+                <button
+                  type="button"
+                  className="btn-close"
+                  onClick={onClose}
+                ></button>
+              </div>
+              <div className="modal-body">
+                {/* Current Price Display */}
+                <p>
+                  <strong>MRP:</strong> ₹{item.MRP || 0}
+                </p>
+                <p className="text-success color-green fw-bold">
+                  Available Stock: {availableQty}
+                </p>
+                <hr />
+
+                {/* Qty Input */}
+                <div className="txt_col">
+                  <label className="lbl1 fw-bold">Quantity</label>
+                  <input
+                    type="number"
+                    className="form-control"
+                    value={qty === 0 ? "" : qty} // 👈 input blank handle
+                    onChange={handleQtyChange}
+                    max={availableQty}
+                  />
+
+                  {qty > availableQty && (
+                    <div className="text-danger mt-1">
+                      Error: Max available quantity is {availableQty}.
+                    </div>
+                  )}
+                </div>
+
+                {/* Dose Form Input (Select/Input based on your requirement) */}
+                <div className="txt_col">
+                  <label className="lbl1 fw-bold">Doses Instruction</label>
+                  <DoseInstructionSelect
+                    type="select"
+                    name=""
+                    label=""
+                    isTableEditMode={true}
+                    value={selectedDoseValue}
+                    onChange={(e) => setSelectedDoseValue(e.target.value)}
+                    required
+                  />
+                </div>
+                {/* Remarks Input */}
+                <div style={{ marginTop: "16px" }}>
+                  <SmartCreateInput
+                    label="Instruction"
+                    value={remarks}
+                    onChange={setRemarks}
+                    list={instructionList}
+                    createAction={createProductInstruction}
+                    refreshAction={getProductInstructions}
+                    placeholder=""
+                  />
+                </div>
+
+                {/* Duration Input */}
+                <div style={{ marginTop: "16px" }}>
+                  <SmartCreateInput
+                    label="Duration"
+                    value={duration}
+                    onChange={setDuration}
+                    list={durationList}
+                    createAction={createProductDuration}
+                    refreshAction={getProductDurations}
+                    placeholder=""
+                  />
+                </div>
+              </div>
+              <div className="modal-footer">
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  onClick={onClose}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-success"
+                  onClick={handleSubmit}
+                  disabled={qty === 0}
+                >
+                  Add to Bill
+                </button>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 };

@@ -9,8 +9,11 @@ import {
 } from "@/lib/features/pharmacistPrescriptionSlice/pharmacistPrescriptionSlice";
 import { PrescriptionItem } from "@/types/prescription";
 import { getUser } from "@/lib/auth/auth";
-import { createWorker } from "tesseract.js";
 import { useRouter } from "next/navigation";
+import TncLoader from "@/app/components/TncLoader/TncLoader";
+import TableLoader from "@/app/components/TableLoader/TableLoader";
+import toast from "react-hot-toast";
+
 const mediaBase = process.env.NEXT_PUBLIC_MEDIA_BASE_URL;
 
 export default function PatientPrescriptionModal({
@@ -20,54 +23,51 @@ export default function PatientPrescriptionModal({
 }) {
   const dispatch = useAppDispatch();
   const router = useRouter();
+
   const { list, loadingList, receiveLoading, lastReceived } = useAppSelector(
     (state) => state.pharmacistPrescription
   );
 
   const pharmacist = getUser();
   const pharmacistId = pharmacist?.id;
+
   const [filteredData, setFilteredData] = useState<PrescriptionItem[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
-  const [status, setStatus] = useState<string>("all");
+
+  // 🔥 LOADERS
+  const [pageLoading, setPageLoading] = useState(true); // component open
+  const [previewLoading, setPreviewLoading] = useState(false); // modal preview
+  const [actionLoading, setActionLoading] = useState(false);
+
+  // modal
   const [showHistory, setShowHistory] = useState(false);
   const [selectedPrescription, setSelectedPrescription] = useState<
     number | null
   >(null);
 
-  // pagination states
+  // pagination
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
+  /* ---------------- INITIAL LOAD ---------------- */
   useEffect(() => {
-    dispatch(getPrescriptionListPharmacistThunk());
+    dispatch(getPrescriptionListPharmacistThunk()).finally(() => {
+      setPageLoading(false);
+    });
   }, [dispatch]);
 
-  const handleReceive = (id: number) => {
-    dispatch(
-      receivePrescriptionThunk({
-        prescriptionId: id,
-        pharmacistId: Number(pharmacistId),
-      })
-    );
-  };
-
-  const handlePrescriptionView = (id: number) => {
-    setSelectedPrescription(id);
-    setShowHistory(true);
-  };
-
-  // filter logic
+  /* ---------------- FILTER ---------------- */
   useEffect(() => {
-    let data = list;
-    data = data.filter((item) => item.prescription_status.toString() === "1");
+    let data = list.filter(
+      (item) => item.prescription_status.toString() === "1"
+    );
 
-    const currentPharmacistId = Number(pharmacistId);
-
+    const pid = Number(pharmacistId);
     data = data.filter(
       (item) =>
         item.handle_by === null ||
         item.handle_by === 0 ||
-        item.handle_by === currentPharmacistId
+        item.handle_by === pid
     );
 
     if (searchTerm) {
@@ -75,11 +75,7 @@ export default function PatientPrescriptionModal({
         (item.buyer_name ?? "").toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
-    // if (status !== "all") {
-    //   data = data.filter(
-    //     (item) => item.prescription_status.toString() === status
-    //   );
-    // }
+
     setFilteredData(
       [...data].sort(
         (a, b) =>
@@ -87,9 +83,9 @@ export default function PatientPrescriptionModal({
       )
     );
     setCurrentPage(1);
-  }, [list, searchTerm]);
+  }, [list, searchTerm, pharmacistId]);
 
-  // pagination calculation
+  /* ---------------- PAGINATION ---------------- */
   const totalPages = Math.ceil(filteredData.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const currentItems = filteredData.slice(
@@ -97,220 +93,188 @@ export default function PatientPrescriptionModal({
     startIndex + itemsPerPage
   );
 
-  const handlePageChange = (page: number) => {
-    if (page >= 1 && page <= totalPages) {
-      setCurrentPage(page);
-    }
+  /* ---------------- HANDLERS ---------------- */
+  const handlePrescriptionView = (id: number) => {
+    setSelectedPrescription(id);
+    setPreviewLoading(true);
+    setShowHistory(true);
   };
 
-  const handleReceiveAndOCR = async (prescription: PrescriptionItem) => {
+  const handleReceiveAndOCR = async (p: PrescriptionItem) => {
     try {
+      setActionLoading(true);
       const res = await dispatch(
         receivePrescriptionThunk({
-          prescriptionId: prescription.id,
+          prescriptionId: p.id,
           pharmacistId: Number(pharmacistId),
         })
       ).unwrap();
 
       if (onClose) onClose();
 
-      // 🔥 1. Prescription pic from backend
-      const pic = res?.data?.prescription_pic || "";
+      const pic = res.data.prescription_pic;
+      const full = pic.startsWith("/") ? `${mediaBase}${pic}` : pic;
 
-      // 🔥 2. Build full image URL using media base
-      const mediaBase = process.env.NEXT_PUBLIC_MEDIA_BASE_URL;
-
-      let fullImageUrl = "";
-      if (pic.startsWith("/")) {
-        fullImageUrl = `${mediaBase}${pic}`;
-      } else {
-        fullImageUrl = pic;
-      }
-
-      // 🔥 3. Encode for safe URL
-      const encoded = encodeURIComponent(fullImageUrl);
-
-      // 🔥 4. Redirect
       router.push(
-        `/pharmacist/ocr-extraction?id=${prescription.id}&buyerId=${res.data.buyer}&imageUrl=${encoded}`
+        `/pharmacist/ocr-extraction?id=${p.id}&buyerId=${
+          res.data.buyer
+        }&imageUrl=${encodeURIComponent(full)}`
       );
-    } catch (error) {
-      console.error("Receive Failed:", error);
-      alert("Failed to receive prescription.");
+    } catch {
+      toast.error("Failed to receive prescription");
+      setActionLoading(false);
     }
   };
 
+  /* ===================================================== */
   return (
     <>
-      <div className="pageTitle mb-2">
-        <i className="bi bi-receipt"></i> Prescription Summary
-      </div>
-
-      <div className="row mb-3">
-        <div className="col-md-8">
-          <div className="search_query">
-            <a className="query_search_btn" href="#">
-              <i className="bi bi-search"></i>
-            </a>
-            <input
-              type="text"
-              className="txt1 rounded"
-              placeholder="Search patient name..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </div>
-        </div>
-        <div className="col-md-4 text-end">
-          <div className="txt_col">
-            {/* <span className="lbl1">Status</span>
-            <select
-              className="txt1"
-              value={status}
-              onChange={(event) => setStatus(event.target.value)}
-            >
-              <option value="all">-Select-</option>
-              <option value="1">Active</option>
-              <option value="0">Inactive</option>
-            </select> */}
-          </div>
-        </div>
-      </div>
-
-      <div className="scroll_table" style={{ minHeight: "400px" }}>
-        <table className="table cust_table1" style={{ marginBottom: "0" }}>
-          <thead>
-            <tr>
-              <th style={{ width: "0px" }}></th>
-              <th className="fw-bold text-start">Prescription ID</th>
-              <th className="fw-bold text-start">Prescription</th>
-              <th className="fw-bold text-start">Patient Name</th>
-              <th className="fw-bold text-start">Mobile</th>
-              <th className="fw-bold text-start">Prescription Date</th>
-              <th className="fw-bold text-start">Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            {loadingList ? (
-              <tr>
-                <td colSpan={8} className="text-center">
-                  Loading...
-                </td>
-              </tr>
-            ) : currentItems.length === 0 ? (
-              <tr>
-                <td colSpan={8} className="text-center">
-                  No data found
-                </td>
-              </tr>
-            ) : (
-              currentItems.map((p) => {
-                // ✅ Check karein ki kya prescription ko current pharmacist ne receive kiya hai
-                const isHandledByMe = p.handle_by === Number(pharmacistId);
-                const isReceived = p.handle_by !== null && p.handle_by !== 0;
-
-                return (
-                  <tr key={p.id}>
-                    <td></td>
-                    <td className="text-start">{p.id}</td>
-                    <td className="text-start">
-                      {(() => {
-                        const fileUrl = `${mediaBase}${p.prescription_pic}`;
-                        const ext = fileUrl.split(".").pop()?.toLowerCase();
-                        return ext === "pdf" ? (
-                          <i
-                            className="bi bi-file-earmark-pdf"
-                            style={{
-                              fontSize: "2rem",
-                              color: "red",
-                              cursor: "pointer",
-                            }}
-                            onClick={() => handlePrescriptionView(p.id)}
-                          ></i>
-                        ) : (
-                          <Image
-                            src={fileUrl}
-                            alt="Prescription"
-                            style={{
-                              width: "50px",
-                              height: "50px",
-                              objectFit: "cover",
-                            }}
-                            onClick={() => handlePrescriptionView(p.id)}
-                          />
-                        );
-                      })()}
-                    </td>
-                    <td className="text-start">{p.buyer_name}</td>
-                    <td className="text-start">{p.buyer_number}</td>
-                    <td className="text-start">
-                      {new Date(p.created_on).toLocaleDateString()}
-                    </td>
-                    <td className="text-start">
-                      <Button // ✅ VARIANT (COLOR) CHANGE
-                        variant={
-                          isHandledByMe
-                            ? "warning"
-                            : isReceived
-                            ? "secondary"
-                            : "success"
-                        }
-                        size="sm"
-                        onClick={() => handleReceiveAndOCR(p)}
-                        // receiveLoading check bhi add kar do
-                        disabled={receiveLoading && lastReceived?.id === p.id}
-                      >
-                        {/* ✅ BUTTON TEXT CHANGE */}
-                        {receiveLoading && lastReceived?.id === p.id
-                          ? "Processing..."
-                          : isHandledByMe
-                          ? "Continue Scan" // Jo tumne receive kiya hai, uspe yeh dikhe
-                          : isReceived
-                          ? "Received" // Agar kisi aur ne receive kiya hai (par filter se woh visible nahi hona chahiye)
-                          : "Receive & Scan"}
-                      </Button>
-                    </td>
-                  </tr>
-                );
-              })
-            )}
-          </tbody>
-        </table>
-      </div>
-
-      {/* pagination controls */}
-      {filteredData.length > 0 && (
-        <div className="d-flex justify-content-between align-items-center mt-3">
-          <div>
-            Showing {startIndex + 1} -{" "}
-            {Math.min(startIndex + itemsPerPage, filteredData.length)} of{" "}
-            {filteredData.length}
-          </div>
-          <div className="pagination-controls">
-            <Button
-              variant="outline-secondary"
-              size="sm"
-              onClick={() => handlePageChange(currentPage - 1)}
-              disabled={currentPage === 1}
-            >
-              Prev
-            </Button>
-            <span className="mx-2">
-              Page {currentPage} of {totalPages}
-            </span>
-            <Button
-              variant="outline-secondary"
-              size="sm"
-              onClick={() => handlePageChange(currentPage + 1)}
-              disabled={currentPage === totalPages}
-            >
-              Next
-            </Button>
+      {/* ================= PAGE LOADER ================= */}
+      {actionLoading && (
+        <div
+          className="position-fixed top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center"
+          style={{
+            background: "rgba(255,255,255,0.7)",
+            backdropFilter: "blur(3px)",
+            zIndex: 10000,
+          }}
+        >
+          <div className="text-center">
+            <TncLoader />
           </div>
         </div>
       )}
 
-      {/* Nested Modal for preview */}
+      {pageLoading && (
+        <div
+          className="position-fixed top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center"
+          style={{
+            background: "rgba(255,255,255,0.7)",
+            backdropFilter: "blur(2px)",
+            zIndex: 9999,
+          }}
+        >
+          <div className="text-center">
+            <TncLoader />
+          </div>
+        </div>
+      )}
+
+      <div className="pageTitle mb-2">
+        <i className="bi bi-receipt"></i> Prescription Summary
+      </div>
+
+      {/* ================= SEARCH ================= */}
+      <div className="row mb-3">
+        <div className="col-md-8">
+          <input
+            className="form-control"
+            placeholder="Search patient name..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
+      </div>
+
+      {/* ================= TABLE ================= */}
+      <div
+        className="scroll_table position-relative"
+        style={{ minHeight: 400 }}
+      >
+        <table className="table cust_table1 mb-0">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Prescription</th>
+              <th>Patient</th>
+              <th>Mobile</th>
+              <th>Date</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+
+          {/* 🔥 TABLE INLINE LOADER */}
+          {/* {loadingList && (
+            <tbody>
+              <tr>
+                <td colSpan={6} className="text-center py-4">
+                  <TableLoader colSpan={6} />
+                </td>
+              </tr>
+            </tbody>
+          )} */}
+
+          {!loadingList && (
+            <tbody>
+              {currentItems.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="text-center">
+                    No data found
+                  </td>
+                </tr>
+              ) : (
+                currentItems.map((p) => {
+                  const fileUrl = `${mediaBase}${p.prescription_pic}`;
+                  const ext = fileUrl.split(".").pop()?.toLowerCase();
+                  const isHandledByMe = p.handle_by === Number(pharmacistId);
+                  const isReceived = p.handle_by !== null && p.handle_by !== 0;
+
+                  return (
+                    <tr key={p.id}>
+                      <td>{p.id}</td>
+                      <td>
+                        {ext === "pdf" ? (
+                          <i
+                            className="bi bi-file-earmark-pdf text-danger"
+                            style={{ fontSize: 22, cursor: "pointer" }}
+                            onClick={() => handlePrescriptionView(p.id)}
+                          />
+                        ) : (
+                          <Image
+                            src={fileUrl}
+                            style={{
+                              width: 50,
+                              height: 50,
+                              objectFit: "cover",
+                              cursor: "pointer",
+                            }}
+                            onClick={() => handlePrescriptionView(p.id)}
+                          />
+                        )}
+                      </td>
+                      <td>{p.buyer_name}</td>
+                      <td>{p.buyer_number}</td>
+                      <td>{new Date(p.created_on).toLocaleDateString()}</td>
+                      <td>
+                        <Button
+                          size="sm"
+                          variant={
+                            isHandledByMe
+                              ? "warning"
+                              : isReceived
+                              ? "secondary"
+                              : "danger"
+                          }
+                          disabled={receiveLoading && lastReceived?.id === p.id}
+                          onClick={() => handleReceiveAndOCR(p)}
+                        >
+                          {receiveLoading && lastReceived?.id === p.id
+                            ? "Processing..."
+                            : isHandledByMe
+                            ? "Continue Scan"
+                            : "Receive & Scan"}
+                        </Button>
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          )}
+        </table>
+      </div>
+
+      {/* ================= PREVIEW MODAL ================= */}
       <Modal
         show={showHistory}
         onHide={() => setShowHistory(false)}
@@ -318,58 +282,47 @@ export default function PatientPrescriptionModal({
         centered
       >
         <Modal.Header closeButton>
-          <Modal.Title>
-            <i className="bi bi-card-list"></i> Prescription Details
-          </Modal.Title>
+          <Modal.Title>Prescription Preview</Modal.Title>
         </Modal.Header>
-        <Modal.Body>
+
+        <Modal.Body className="position-relative">
+          {/* 🔥 MODAL LOADER */}
+          {previewLoading && (
+            <div
+              className="position-absolute top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center"
+              style={{
+                background: "rgba(255,255,255,0.75)",
+                backdropFilter: "blur(2px)",
+                zIndex: 20,
+              }}
+            >
+              <TncLoader />
+            </div>
+          )}
+
           {selectedPrescription &&
             list
               .filter((p) => p.id === selectedPrescription)
               .map((p) => {
                 const fileUrl = `${mediaBase}${p.prescription_pic}`;
                 const ext = fileUrl.split(".").pop()?.toLowerCase();
-                return (
-                  <div key={p.id}>
-                    <p>
-                      <b>Patient Name:</b> {p.buyer_name}
-                    </p>
-                    <p>
-                      <b>Mobile:</b> {p.buyer_number}
-                    </p>
-                    <p>
-                      <b>Status:</b>{" "}
-                      {p.prescription_status === "1" ? "Active" : "Received"}
-                    </p>
-                    <div className="text-center">
-                      {ext === "pdf" ? (
-                        <iframe
-                          src={fileUrl}
-                          width="100%"
-                          height="500"
-                          style={{ border: "none" }}
-                        />
-                      ) : (
-                        <Image
-                          src={fileUrl}
-                          alt="Preview"
-                          style={{
-                            width: "100%",
-                            maxHeight: "500px",
-                            objectFit: "contain",
-                          }}
-                        />
-                      )}
-                    </div>
-                    <Button
-                      variant="outline-primary"
-                      size="sm"
-                      className="mt-3"
-                      onClick={() => window.open(fileUrl, "_blank")}
-                    >
-                      <i className="bi bi-download"></i> Download File
-                    </Button>
-                  </div>
+
+                return ext === "pdf" ? (
+                  <iframe
+                    key={p.id}
+                    src={fileUrl}
+                    width="100%"
+                    height="500"
+                    onLoad={() => setPreviewLoading(false)}
+                  />
+                ) : (
+                  <Image
+                    key={p.id}
+                    src={fileUrl}
+                    fluid
+                    onLoad={() => setPreviewLoading(false)}
+                    onError={() => setPreviewLoading(false)}
+                  />
                 );
               })}
         </Modal.Body>

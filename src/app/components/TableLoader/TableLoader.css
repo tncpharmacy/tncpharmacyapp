@@ -1,0 +1,24 @@
+.table-loader-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.table-loader-spin {
+  animation: table-spin 1.1s linear infinite;
+}
+
+@keyframes table-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.table-loader-text {
+  font-size: 14px;
+  color: #555;
+}

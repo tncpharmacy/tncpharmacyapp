@@ -19,12 +19,14 @@ import InfiniteScroll from "@/app/components/InfiniteScrollS/InfiniteScrollS";
 import TableLoader from "@/app/components/TableLoader/TableLoader";
 import { formatAmount } from "@/lib/utils/formatAmount";
 import { formatDateOnly } from "@/utils/dateFormatter";
+import TncLoader from "@/app/components/TncLoader/TncLoader";
 
 export default function PurchaseInvoice() {
   const router = useRouter();
   const dispatch = useAppDispatch();
   const [showPrint, setShowPrint] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
+  const [modalLoading, setModalLoading] = useState(false);
 
   const [showReport, setShowReport] = useState(false);
   const [startDate, setStartDate] = useState("");
@@ -41,11 +43,9 @@ export default function PurchaseInvoice() {
   //status
   const [status, setStatus] = useState<string>("");
 
-  const { purchaseStockList, purchaseStockById } = useAppSelector(
+  const { purchaseStockList, purchaseStockById, loading } = useAppSelector(
     (state) => state.purchaseStock
   );
-
-  console.log("purchaseStockList", purchaseStockList);
 
   // Fetch all pharmacies once
   useEffect(() => {
@@ -113,6 +113,10 @@ export default function PurchaseInvoice() {
     dispatch(resetPharmacistById());
     dispatch(getPharmacistById({ id }));
     setShowHistory(true);
+    setModalLoading(true);
+    setTimeout(() => {
+      setModalLoading(false);
+    }, 5000);
   };
 
   return (
@@ -201,59 +205,80 @@ export default function PurchaseInvoice() {
                   <table className="table cust_table1">
                     <thead>
                       <tr>
-                        <th style={{ width: "0px" }}></th>
+                        {/* <th style={{ width: "0px" }}></th> */}
                         <th className="fw-bold text-start">Pharmacy</th>
                         <th className="fw-bold text-start">Supplier</th>
                         <th className="fw-bold text-start">Purchase Date</th>
                         <th className="fw-bold text-start">Invoice Number</th>
-                        <th className="fw-bold text-start">Action</th>
+                        <th className="fw-bold text-center">Action</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {filteredData
-                        ?.slice() // copy array
-                        .sort((a, b) => {
-                          return (
-                            new Date(b.purchase_date || "").getTime() -
-                            new Date(a.purchase_date || "").getTime()
-                          );
-                        }) // LATEST FIRST
-                        .slice(0, visibleCount) // visible limit
-                        .map((p: StockItem) => {
-                          return (
-                            <tr key={p.id}>
-                              <td></td>
-                              <td className="text-start">
-                                {p.pharmacy_name ?? ""}
-                              </td>
-                              <td className="text-start">
-                                {p.supplier_name ?? ""}
-                              </td>
-                              <td className="text-start">
-                                {formatDateOnly(p.purchase_date ?? "")}
-                              </td>
-                              <td className="text-start">
-                                {p.invoice_num ?? ""}
-                              </td>
-                              <td className="text-start">
-                                <button
-                                  className="btn-style1"
-                                  onClick={() => handleHistory(p.id)}
-                                >
-                                  <i className="bi bi-card-list"></i> Purchase
-                                  Details
-                                </button>
-                              </td>
-                            </tr>
-                          );
-                        })}
+                      {loading ? (
+                        <TableLoader colSpan={9} text="Loading records..." />
+                      ) : (
+                        <>
+                          {filteredData
+                            ?.slice() // copy array
+                            .sort((a, b) => {
+                              return (
+                                new Date(b.purchase_date || "").getTime() -
+                                new Date(a.purchase_date || "").getTime()
+                              );
+                            }) // LATEST FIRST
+                            .slice(0, visibleCount) // visible limit
+                            .map((p: StockItem) => {
+                              return (
+                                <tr key={p.id}>
+                                  {/* <td></td> */}
+                                  <td className="text-start">
+                                    {p.pharmacy_name ?? ""}
+                                  </td>
+                                  <td className="text-start">
+                                    {p.supplier_name ?? ""}
+                                  </td>
+                                  <td className="text-start">
+                                    {formatDateOnly(p.purchase_date ?? "")}
+                                  </td>
+                                  <td className="text-start">
+                                    {p.invoice_num ?? ""}
+                                  </td>
+                                  <td className="text-center">
+                                    <button
+                                      className="btn btn-light btn-sm"
+                                      title="Purchase Details"
+                                      onClick={() => handleHistory(p.id)}
+                                    >
+                                      <i className="bi bi-eye-fill"></i>
+                                    </button>
+                                  </td>
+                                </tr>
+                              );
+                            })}
+                        </>
+                      )}
                       {/* Spinner row */}
                       {loadings && (
                         <TableLoader colSpan={9} text="Loading more..." />
                       )}
 
                       {/* No more records */}
-                      {!loadings &&
+                      {!loading &&
+                        !loadings &&
+                        purchaseStockList.length === 0 && (
+                          <tr>
+                            <td
+                              colSpan={9}
+                              className="text-center py-2 text-muted fw-bold fs-6"
+                            >
+                              No records found
+                            </td>
+                          </tr>
+                        )}
+
+                      {!loading &&
+                        !loadings &&
+                        purchaseStockList.length > 0 &&
                         visibleCount >= purchaseStockList.length && (
                           <tr>
                             <td
@@ -287,7 +312,11 @@ export default function PurchaseInvoice() {
         </Modal.Header>
 
         <Modal.Body>
-          {!purchaseStockById ? (
+          {modalLoading ? (
+            <div className="py-5 text-center">
+              <TncLoader size={50} text="Loading details..." />
+            </div>
+          ) : !purchaseStockById ? (
             <p>Loading...</p>
           ) : (
             <div className="container-fluid">

@@ -36,6 +36,7 @@ import {
   getPharmacistBuyerByIdThunk,
   updateBuyerForPharmacistThunk,
 } from "@/lib/features/pharmacistBuyerListSlice/pharmacistBuyerListSlice";
+import TncLoader from "@/app/components/TncLoader/TncLoader";
 const PreviewBox = dynamic(() => import("./PreviewBox"), {
   ssr: false,
 });
@@ -77,6 +78,11 @@ interface MatchedMedicine {
   category_id: number;
 }
 
+interface PreviewBoxProps {
+  file: File | null;
+  onLoadComplete?: () => void;
+}
+
 export default function RetailCounter() {
   const router = useRouter();
   const dispatch = useAppDispatch();
@@ -84,6 +90,10 @@ export default function RetailCounter() {
   const userPharmacy = getUser();
   const pharmacist_id = Number(userPharmacy?.id) || 0;
   const pharmacy_id = Number(userPharmacy?.pharmacy_id) || 0;
+
+  // for loader
+  const [submitLoading, setSubmitLoading] = useState(false);
+  const [previewLoading, setPreviewLoading] = useState(false);
 
   const [customerName, setCustomerName] = useState("");
   const [uhId, setUhId] = useState("");
@@ -189,6 +199,7 @@ export default function RetailCounter() {
     if (!file) return;
 
     setPrescriptionFile(file);
+    setPreviewLoading(true);
   };
 
   useEffect(() => {
@@ -198,11 +209,15 @@ export default function RetailCounter() {
   const handleSubmit = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
 
+    if (submitLoading) return;
+
     try {
       if (!mobile || !customerName || !prescriptionFile) {
         toast.error("Please fill all fields");
         return;
       }
+
+      setSubmitLoading(true);
 
       let buyer_id: number | null = null;
 
@@ -289,6 +304,8 @@ export default function RetailCounter() {
       const rejectMessage =
         err.payload || err.message || "Failed to upload prescription";
       toast.error("Error: " + rejectMessage);
+    } finally {
+      setSubmitLoading(false);
     }
   };
 
@@ -616,6 +633,21 @@ export default function RetailCounter() {
               )}
             </div>
             <div className="card shadow-sm mb-4">
+              {submitLoading && (
+                <div
+                  className="position-absolute top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center"
+                  style={{
+                    background: "rgba(255, 255, 255, 0.65)",
+                    backdropFilter: "blur(2px)",
+                    zIndex: 20,
+                  }}
+                >
+                  <div className="text-center">
+                    <TncLoader />
+                  </div>
+                </div>
+              )}
+
               <div className="card-body">
                 {!showForm && (
                   <div className="row g-3 align-items-end">
@@ -735,18 +767,58 @@ export default function RetailCounter() {
                             </div>
                             <div className="col-md-12">
                               <div className="txt_col">
-                                <button
+                                {/* <button
                                   type="submit"
                                   className="btn btn-primary col-sm-12"
                                 >
                                   Submit
+                                </button> */}
+                                {/* {submitLoading && <TncLoader />} */}
+                                <button
+                                  type="submit"
+                                  className="btn btn-primary col-sm-12 d-flex align-items-center justify-content-center"
+                                  disabled={submitLoading || !isUploadEnabled}
+                                >
+                                  {submitLoading ? (
+                                    <>
+                                      <span
+                                        className="spinner-border spinner-border-sm me-2"
+                                        role="status"
+                                        aria-hidden="true"
+                                      ></span>
+                                      Uploading...
+                                    </>
+                                  ) : (
+                                    "Submit"
+                                  )}
                                 </button>
                               </div>
                             </div>
                           </div>
 
-                          <div className="col-md-6 text-center">
-                            <PreviewBox file={prescriptionFile} />
+                          <div className="col-md-6 text-center position-relative">
+                            {previewLoading && (
+                              <div
+                                className="position-absolute top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center"
+                                style={{
+                                  background: "rgba(255,255,255,0.6)",
+                                  backdropFilter: "blur(2px)",
+                                  zIndex: 10,
+                                }}
+                              >
+                                <div className="text-center">
+                                  <TncLoader />
+                                  <div className="fw-semibold mt-2 text-muted">
+                                    Loading preview…
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+
+                            <PreviewBox
+                              file={prescriptionFile}
+                              onLoadComplete={() => setPreviewLoading(false)} // 🔥 callback
+                            />
                           </div>
                         </div>
                       </form>

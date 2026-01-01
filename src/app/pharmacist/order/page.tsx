@@ -23,6 +23,7 @@ import { formatAmount } from "@/lib/utils/formatAmount";
 import BillPreviewModal from "@/app/components/RetailCounterModal/BillPreviewModal";
 import ExcelJS from "exceljs";
 import { saveAs } from "file-saver";
+import TncLoader from "@/app/components/TncLoader/TncLoader";
 //import * as XLSX from "xlsx";
 // import XLSX from "xlsx-style";
 
@@ -82,6 +83,9 @@ export default function OrderList() {
     buyerOrderList,
     order: pharmacistOrder,
     orders,
+    loading,
+    listLoading,
+    detailsLoading,
   } = useAppSelector((state) => state.pharmacistOrder);
 
   const { pharmacyBuyers } = useAppSelector((state) => {
@@ -452,7 +456,7 @@ export default function OrderList() {
                   <table className="table cust_table1">
                     <thead>
                       <tr>
-                        <th style={{ width: "0px" }}></th>
+                        {/* <th style={{ width: "0px" }}></th> */}
                         <th className="fw-bold text-start">Order Id</th>
                         <th className="fw-bold text-start">Name</th>
                         <th className="fw-bold text-start">Mobile</th>
@@ -462,83 +466,108 @@ export default function OrderList() {
                         <th className="fw-bold text-start">Mode</th>
                         <th className="fw-bold text-start">Status</th>
                         <th className="fw-bold text-start">Date</th>
-                        <th className="fw-bold text-start">Action</th>
+                        <th className="fw-bold text-center">Action</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {filteredData
-                        .slice()
-                        .sort(
-                          (a, b) =>
-                            new Date(b.orderDate).getTime() -
-                            new Date(a.orderDate).getTime()
-                        )
-                        .slice(0, visibleCount)
-                        .map((p: PharmacistOrder) => {
-                          return (
-                            <tr key={p.orderId}>
-                              <td></td>
-                              <td className="text-start">{p.orderId ?? ""}</td>
-                              <td className="text-start">
-                                {p.buyerName ?? ""}
-                              </td>
-                              <td className="text-start">
-                                {p.buyerNumber ?? ""}
-                              </td>
-                              {/* <td className="text-start">
+                      {listLoading ? (
+                        <TableLoader colSpan={9} text="Loading records..." />
+                      ) : (
+                        <>
+                          {filteredData
+                            .slice()
+                            .sort(
+                              (a, b) =>
+                                new Date(b.orderDate).getTime() -
+                                new Date(a.orderDate).getTime()
+                            )
+                            .slice(0, visibleCount)
+                            .map((p: PharmacistOrder) => {
+                              return (
+                                <tr key={p.orderId}>
+                                  {/* <td></td> */}
+                                  <td className="text-start">
+                                    {p.orderId ?? ""}
+                                  </td>
+                                  <td className="text-start">
+                                    {p.buyerName ?? ""}
+                                  </td>
+                                  <td className="text-start">
+                                    {p.buyerNumber ?? ""}
+                                  </td>
+                                  {/* <td className="text-start">
                                 {p.gst_number ?? ""}
                               </td> */}
-                              <td className="text-start">
-                                {formatAmount(Number(p.amount))}
-                              </td>
-                              <td className="text-start">
-                                {p.orderType ?? ""}
-                              </td>
-                              <td className="text-start">
-                                {p.paymentMode ?? ""}
-                              </td>
-                              <td className="text-start">
-                                {p.paymentStatus ?? ""}
-                              </td>
-                              <td className="text-start">
-                                {formatDate(p.orderDate ?? "")}
-                              </td>
-                              <td className="text-start">
-                                <button
-                                  className="btn-style1"
-                                  onClick={() => handleHistory(p.orderId)}
-                                >
-                                  <i className="bi bi-card-list"></i> Order
-                                  Details
-                                </button>
-                                <button
-                                  className="btn-style1 ms-2"
-                                  onClick={() =>
-                                    handleReprintFromTable(p.orderId)
-                                  }
-                                >
-                                  <i className="bi bi-printer-fill"></i> Reprint
-                                </button>
-                              </td>
-                            </tr>
-                          );
-                        })}
+                                  <td className="text-start">
+                                    {formatAmount(Number(p.amount))}
+                                  </td>
+                                  <td className="text-start">
+                                    {p.orderType ?? ""}
+                                  </td>
+                                  <td className="text-start">
+                                    {p.paymentMode ?? ""}
+                                  </td>
+                                  <td className="text-start">
+                                    {p.paymentStatus ?? ""}
+                                  </td>
+                                  <td className="text-start">
+                                    {formatDate(p.orderDate ?? "")}
+                                  </td>
+                                  <td className="text-center">
+                                    <button
+                                      className="btn btn-light btn-sm"
+                                      title="Order Details"
+                                      onClick={() => handleHistory(p.orderId)}
+                                    >
+                                      <i className="bi bi-eye-fill"></i>
+                                    </button>
+                                    <button
+                                      className="btn btn-light btn-sm ms-2"
+                                      title="Order Reprint"
+                                      onClick={() =>
+                                        handleReprintFromTable(p.orderId)
+                                      }
+                                    >
+                                      <i className="bi bi-printer-fill"></i>
+                                    </button>
+                                  </td>
+                                </tr>
+                              );
+                            })}
+                        </>
+                      )}
                       {/* Spinner row */}
                       {loadings && (
                         <TableLoader colSpan={9} text="Loading more..." />
                       )}
 
                       {/* No more records */}
-                      {!loadings && visibleCount >= orders.length && (
-                        <tr>
-                          <td
-                            colSpan={9}
-                            className="text-center py-2 text-muted fw-bold fs-6"
-                          >
-                            No more records
-                          </td>
-                        </tr>
-                      )}
+                      {!listLoading &&
+                        !loadings &&
+                        filteredData.length === 0 && (
+                          <tr>
+                            <td
+                              colSpan={9}
+                              className="text-center py-2 text-muted fw-bold fs-6"
+                            >
+                              No records found
+                            </td>
+                          </tr>
+                        )}
+
+                      {!listLoading &&
+                        !loadings &&
+                        filteredData.length > 0 &&
+                        visibleCount >= filteredData.length && (
+                          <tr>
+                            <td
+                              colSpan={9}
+                              className="text-center py-2 text-muted fw-bold fs-6"
+                            >
+                              No more records
+                            </td>
+                          </tr>
+                        )}
                     </tbody>
                   </table>
                 </div>
@@ -569,11 +598,7 @@ export default function OrderList() {
         </Modal.Header>
 
         <Modal.Body style={{ background: "#f4f6f9", padding: "25px" }}>
-          {modalLoading && (
-            <div className="d-flex justify-content-center py-5">
-              <div className="spinner-border text-primary" role="status" />
-            </div>
-          )}
+          {modalLoading && <TncLoader />}
 
           {!modalLoading &&
             orderData.length > 0 &&

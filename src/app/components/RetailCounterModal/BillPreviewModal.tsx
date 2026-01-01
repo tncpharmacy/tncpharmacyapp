@@ -4,6 +4,7 @@ import { useAppDispatch } from "@/lib/hooks";
 import { formatAmount } from "@/lib/utils/formatAmount";
 import { useEffect, useRef, useState } from "react";
 import { Image, Modal } from "react-bootstrap";
+import TncLoader from "../TncLoader/TncLoader";
 
 // Mock style object
 const styles = {
@@ -45,6 +46,7 @@ const BillPreviewModal: React.FC<BillPreviewModalProps> = ({
   uhid,
   additionalDiscount,
 }) => {
+  const [initialLoading, setInitialLoading] = useState(true);
   const printRef = useRef<HTMLDivElement>(null);
   const dispatch = useAppDispatch();
   const userPharmacy = getUser();
@@ -80,14 +82,20 @@ const BillPreviewModal: React.FC<BillPreviewModalProps> = ({
 
   useEffect(() => {
     if (!show) return;
+    setInitialLoading(true);
     const updatedCart = (cart || []).map((i) => ({
       ...i,
-      //duration: i.duration || "3 days", // <-- DUMMY SET
     }));
 
     setTranslatedCart(updatedCart);
     setLanguage("en");
     setApiError(null);
+
+    const t = setTimeout(() => {
+      setInitialLoading(false);
+    }, 500);
+
+    return () => clearTimeout(t);
   }, [show, cart]);
 
   // Helper function for reliable fetching with exponential backoff
@@ -410,299 +418,316 @@ const BillPreviewModal: React.FC<BillPreviewModalProps> = ({
 
   return (
     <Modal show={show} onHide={onClose} size="lg" centered>
-      <Modal.Header closeButton className="border-0 pb-0">
-        <Modal.Title className="fw-semibold text-primary">
-          🧾 Bill Preview
-        </Modal.Title>
-      </Modal.Header>
-
-      <Modal.Body>
-        <div className={styles.modalContentWrapper} ref={printRef}>
-          {/* ---------------- BILL SECTION (ONLY FOR PRINT BILL) ---------------- */}
-          <div className="bill-section">
-            {/* Header */}
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "flex-start",
-                marginBottom: "20px",
-                borderBottom: "2px solid #007bff",
-                paddingBottom: "8px",
-              }}
-            >
-              <div
-                style={{ display: "flex", alignItems: "center", gap: "10px" }}
-              >
-                <Image
-                  src="/images/logo.png"
-                  alt="TnC Pharmacy"
-                  style={{ height: 90, width: 200, objectFit: "contain" }}
-                />
-              </div>
-
-              <div
-                style={{
-                  textAlign: "right",
-                  fontSize: "12px",
-                  color: "#333",
-                  lineHeight: "1.4",
-                  maxWidth: "220px",
-                }}
-              >
-                <strong style={{ fontSize: "13px", color: "#007bff" }}>
-                  {pharmacy_name}
-                </strong>
-                <br />
-                {pharmacy_address}, {pharmacy_district} - {pharmacy_pincode}{" "}
-                <br />
-                Ph: +91-{pharmacy_login_id} <br />
-                Email: {pharmacy_email_id}
-              </div>
-            </div>
-
-            {/* Customer Info */}
-            <div className={styles.customerInfo}>
-              <div className="d-flex justify-content-between">
-                <div>
-                  <strong>Customer Name:</strong> {customerName || "-"}
-                </div>
-                <div>
-                  <strong>Mobile No.:</strong> {mobile || "-"}
-                </div>
-              </div>
-            </div>
-
-            {/* Billing Table */}
-            <h3
-              style={{
-                fontSize: "16px",
-                fontWeight: "700",
-                color: "#007bff",
-                marginBottom: "10px",
-              }}
-            >
-              Billing Summary
-            </h3>
-
-            <table
-              className="table table-bordered text-center align-middle"
-              style={{ border: "1px solid #000", width: "100%" }}
-            >
-              <thead className="table-light">
-                <tr>
-                  <th>Medicine</th>
-                  <th>Qty</th>
-                  <th>MRP (₹)</th>
-                  <th>Discount (%)</th>
-                  <th>Subtotal (₹)</th>
-                </tr>
-              </thead>
-              <tbody>
-                {translatedCart.map((item, idx) => {
-                  const total = item.qty * item.price;
-                  const discountAmount = item.Disc
-                    ? (total * item.Disc) / 100
-                    : 0;
-                  const subtotal = total - discountAmount;
-
-                  return (
-                    <tr key={idx}>
-                      <td>{item.medicine_name}</td>
-                      <td>
-                        {item.pack_size
-                          ? `${item.pack_size} × ${item.qty}`
-                          : item.qty}
-                      </td>
-                      <td>{item.price}</td>
-                      <td>{item.Disc}</td>
-                      <td>{formatAmount(subtotal)}</td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-              <tfoot>
-                <tr style={{ backgroundColor: "#f8f9fa" }}>
-                  <th
-                    colSpan={4}
-                    className="text-end "
-                    style={{ color: "red" }}
-                  >
-                    Total Amount
-                  </th>
-                  <th style={{ color: "red" }}>{formatAmount(grandTotal)}</th>
-                </tr>
-                {Number(additionalDiscount) > 0 && (
-                  <tr style={{ backgroundColor: "#f8f9fa" }}>
-                    <th
-                      colSpan={4}
-                      className="text-end"
-                      style={{ color: "green" }}
-                    >
-                      Additional Discount (%)
-                    </th>
-                    <th style={{ color: "green" }}>
-                      {additionalDiscount ?? "0"}
-                    </th>
-                  </tr>
-                )}
-                <tr style={{ backgroundColor: "#f8f9fa" }}>
-                  <th
-                    colSpan={4}
-                    className="text-end"
-                    style={{ color: "#007bff" }}
-                  >
-                    Grand Total
-                  </th>
-                  <th style={{ color: "#007bff" }}>
-                    {formatAmount(
-                      grandTotal -
-                        (grandTotal * Number(additionalDiscount)) / 100
-                    )}
-                  </th>
-                </tr>
-              </tfoot>
-            </table>
-          </div>
-
-          {/* PAGE BREAK */}
-          <div style={{ pageBreakBefore: "always" }}></div>
-          {/* 🌐 Language Dropdown (Visible on Screen, Hidden during Print) */}
-          <div className="d-flex justify-content-between align-items-center mb-3 print-hide">
-            {apiError && (
-              <small className="text-danger fw-semibold me-3">{apiError}</small>
-            )}
-            <select
-              className="form-select w-auto ms-auto" // ms-auto to push to right if error is shown
-              value={language}
-              onChange={(e) => handleLanguageChange(e.target.value)}
-              disabled={isTranslating}
-            >
-              {languageOptions.map((lang) => (
-                <option key={lang.code} value={lang.code}>
-                  {lang.name}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {isTranslating ? (
-            <div className="text-center text-muted py-5">
-              Translating to{" "}
-              {languageOptions.find((l) => l.code === language)?.name} (Please
-              ensure your API key is valid)...
-            </div>
-          ) : (
-            <>
-              {/* ---------------- CARD SECTION (ONLY FOR PRINT LABEL) ---------------- */}
-              <div className="card-section" style={{ marginTop: 24 }}>
-                {translatedCart.map((item, idx) => (
+      {initialLoading ? (
+        <TncLoader />
+      ) : (
+        <>
+          <Modal.Header closeButton className="border-0 pb-0">
+            <Modal.Title className="fw-semibold text-primary">
+              🧾 Bill Preview
+            </Modal.Title>
+          </Modal.Header>
+          <Modal.Body>
+            <div className={styles.modalContentWrapper} ref={printRef}>
+              {/* ---------------- BILL SECTION (ONLY FOR PRINT BILL) ---------------- */}
+              <div className="bill-section">
+                {/* Header */}
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "flex-start",
+                    marginBottom: "20px",
+                    borderBottom: "2px solid #007bff",
+                    paddingBottom: "8px",
+                  }}
+                >
                   <div
-                    key={idx}
                     style={{
-                      width: 220, // purely for modal visual scale
-                      border: "1px solid #ccc",
-                      padding: 12,
-                      marginBottom: 12,
-                      borderRadius: 4,
-                      background: "#fff",
-                      display: "inline-block",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "10px",
                     }}
                   >
-                    {/* header (modal) */}
-                    <div
-                      style={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "center",
-                      }}
-                    >
-                      <Image
-                        src="/images/logo-bw-h.png"
-                        alt="logo-bw"
-                        width={90}
-                        height={30}
-                      />
-                      <p
-                        className="date-text"
-                        style={{ fontSize: 12, margin: 0 }}
-                      >
-                        <strong>Date:</strong>{" "}
-                        {new Date().toLocaleDateString("en-GB", {
-                          day: "2-digit",
-                          month: "short",
-                          year: "numeric",
-                        })}
-                      </p>
-                    </div>
-
-                    {/* header line (visible in both modal and print) */}
-                    <div
-                      style={{ borderTop: "1px solid #000", margin: "8px 0" }}
+                    <Image
+                      src="/images/logo.png"
+                      alt="TnC Pharmacy"
+                      style={{ height: 90, width: 200, objectFit: "contain" }}
                     />
-
-                    <p style={{ margin: "2px 0" }}>
-                      <strong>Patient:</strong> {customerName}
-                    </p>
-                    <p style={{ margin: "2px 0" }}>
-                      <strong>UHID:</strong> {uhid}
-                    </p>
-                    <p style={{ margin: "2px 0" }}>
-                      <strong>Medicine:</strong> {item.medicine_name}
-                    </p>
-                    <p style={{ margin: "2px 0" }}>
-                      <strong>Dose:</strong> {item.dose_form}
-                    </p>
-                    <p style={{ margin: "2px 0" }}>
-                      <strong>Instruction:</strong> {item.remarks}
-                    </p>
-                    <p style={{ margin: "2px 0" }}>
-                      <strong>Duration:</strong> {item.duration}
-                    </p>
-
-                    <p style={{ margin: "2px 0" }}>
-                      <strong>Qty:</strong>{" "}
-                      {item.pack_size
-                        ? `${item.pack_size} × ${item.qty}`
-                        : item.qty}
-                    </p>
-
-                    {/* footer line (visible in both modal and print) */}
-                    <div
-                      style={{
-                        borderTop: "1px solid #000",
-                        margin: "8px 0 6px 0",
-                      }}
-                    />
-
-                    {/* footer compact & centered */}
-                    <p className="footer-website">www.tncpharmacy.in</p>
-                    <p className="footer-support">24×7 Support: 7042079595</p>
-                    <p className="footer-wish">Get Well Soon</p>
                   </div>
-                ))}
+
+                  <div
+                    style={{
+                      textAlign: "right",
+                      fontSize: "12px",
+                      color: "#333",
+                      lineHeight: "1.4",
+                      maxWidth: "220px",
+                    }}
+                  >
+                    <strong style={{ fontSize: "13px", color: "#007bff" }}>
+                      {pharmacy_name}
+                    </strong>
+                    <br />
+                    {pharmacy_address}, {pharmacy_district} - {pharmacy_pincode}{" "}
+                    <br />
+                    Ph: +91-{pharmacy_login_id} <br />
+                    Email: {pharmacy_email_id}
+                  </div>
+                </div>
+
+                {/* Customer Info */}
+                <div className={styles.customerInfo}>
+                  <div className="d-flex justify-content-between">
+                    <div>
+                      <strong>Customer Name:</strong> {customerName || "-"}
+                    </div>
+                    <div>
+                      <strong>Mobile No.:</strong> {mobile || "-"}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Billing Table */}
+                <h3
+                  style={{
+                    fontSize: "16px",
+                    fontWeight: "700",
+                    color: "#007bff",
+                    marginBottom: "10px",
+                  }}
+                >
+                  Billing Summary
+                </h3>
+
+                <table
+                  className="table table-bordered text-center align-middle"
+                  style={{ border: "1px solid #000", width: "100%" }}
+                >
+                  <thead className="table-light">
+                    <tr>
+                      <th>Medicine</th>
+                      <th>Qty</th>
+                      <th>MRP (₹)</th>
+                      <th>Discount (%)</th>
+                      <th>Subtotal (₹)</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {translatedCart.map((item, idx) => {
+                      const total = item.qty * item.price;
+                      const discountAmount = item.Disc
+                        ? (total * item.Disc) / 100
+                        : 0;
+                      const subtotal = total - discountAmount;
+
+                      return (
+                        <tr key={idx}>
+                          <td>{item.medicine_name}</td>
+                          <td>
+                            {item.pack_size
+                              ? `${item.pack_size} × ${item.qty}`
+                              : item.qty}
+                          </td>
+                          <td>{item.price}</td>
+                          <td>{item.Disc}</td>
+                          <td>{formatAmount(subtotal)}</td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                  <tfoot>
+                    <tr style={{ backgroundColor: "#f8f9fa" }}>
+                      <th
+                        colSpan={4}
+                        className="text-end "
+                        style={{ color: "red" }}
+                      >
+                        Total Amount
+                      </th>
+                      <th style={{ color: "red" }}>
+                        {formatAmount(grandTotal)}
+                      </th>
+                    </tr>
+                    {Number(additionalDiscount) > 0 && (
+                      <tr style={{ backgroundColor: "#f8f9fa" }}>
+                        <th
+                          colSpan={4}
+                          className="text-end"
+                          style={{ color: "green" }}
+                        >
+                          Additional Discount (%)
+                        </th>
+                        <th style={{ color: "green" }}>
+                          {additionalDiscount ?? "0"}
+                        </th>
+                      </tr>
+                    )}
+                    <tr style={{ backgroundColor: "#f8f9fa" }}>
+                      <th
+                        colSpan={4}
+                        className="text-end"
+                        style={{ color: "#007bff" }}
+                      >
+                        Grand Total
+                      </th>
+                      <th style={{ color: "#007bff" }}>
+                        {formatAmount(
+                          grandTotal -
+                            (grandTotal * Number(additionalDiscount)) / 100
+                        )}
+                      </th>
+                    </tr>
+                  </tfoot>
+                </table>
               </div>
-            </>
-          )}
-        </div>
-      </Modal.Body>
 
-      {/* ---------------- FOOTER ---------------- */}
-      <Modal.Footer className="border-0 pt-0">
-        <button className="btn btn-outline-secondary" onClick={onClose}>
-          Close
-        </button>
+              {/* PAGE BREAK */}
+              <div style={{ pageBreakBefore: "always" }}></div>
+              {/* 🌐 Language Dropdown (Visible on Screen, Hidden during Print) */}
+              <div className="d-flex justify-content-between align-items-center mb-3 print-hide">
+                {apiError && (
+                  <small className="text-danger fw-semibold me-3">
+                    {apiError}
+                  </small>
+                )}
+                <select
+                  className="form-select w-auto ms-auto" // ms-auto to push to right if error is shown
+                  value={language}
+                  onChange={(e) => handleLanguageChange(e.target.value)}
+                  disabled={isTranslating}
+                >
+                  {languageOptions.map((lang) => (
+                    <option key={lang.code} value={lang.code}>
+                      {lang.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
 
-        {/* 🟡 PRINT LABEL BUTTON */}
-        <button className="btn btn-warning" onClick={handlePrintLabel}>
-          Print Label
-        </button>
+              {isTranslating ? (
+                <div className="text-center text-muted py-5">
+                  Translating to{" "}
+                  {languageOptions.find((l) => l.code === language)?.name}{" "}
+                  (Please ensure your API key is valid)...
+                </div>
+              ) : (
+                <>
+                  {/* ---------------- CARD SECTION (ONLY FOR PRINT LABEL) ---------------- */}
+                  <div className="card-section" style={{ marginTop: 24 }}>
+                    {translatedCart.map((item, idx) => (
+                      <div
+                        key={idx}
+                        style={{
+                          width: 220, // purely for modal visual scale
+                          border: "1px solid #ccc",
+                          padding: 12,
+                          marginBottom: 12,
+                          borderRadius: 4,
+                          background: "#fff",
+                          display: "inline-block",
+                        }}
+                      >
+                        {/* header (modal) */}
+                        <div
+                          style={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                            alignItems: "center",
+                          }}
+                        >
+                          <Image
+                            src="/images/logo-bw-h.png"
+                            alt="logo-bw"
+                            width={90}
+                            height={30}
+                          />
+                          <p
+                            className="date-text"
+                            style={{ fontSize: 12, margin: 0 }}
+                          >
+                            <strong>Date:</strong>{" "}
+                            {new Date().toLocaleDateString("en-GB", {
+                              day: "2-digit",
+                              month: "short",
+                              year: "numeric",
+                            })}
+                          </p>
+                        </div>
 
-        {/* 🔵 PRINT BILL BUTTON */}
-        <button className="btn btn-primary" onClick={handlePrintBill}>
-          Print Bill
-        </button>
-      </Modal.Footer>
+                        {/* header line (visible in both modal and print) */}
+                        <div
+                          style={{
+                            borderTop: "1px solid #000",
+                            margin: "8px 0",
+                          }}
+                        />
+
+                        <p style={{ margin: "2px 0" }}>
+                          <strong>Patient:</strong> {customerName}
+                        </p>
+                        <p style={{ margin: "2px 0" }}>
+                          <strong>UHID:</strong> {uhid}
+                        </p>
+                        <p style={{ margin: "2px 0" }}>
+                          <strong>Medicine:</strong> {item.medicine_name}
+                        </p>
+                        <p style={{ margin: "2px 0" }}>
+                          <strong>Dose:</strong> {item.dose_form}
+                        </p>
+                        <p style={{ margin: "2px 0" }}>
+                          <strong>Instruction:</strong> {item.remarks}
+                        </p>
+                        <p style={{ margin: "2px 0" }}>
+                          <strong>Duration:</strong> {item.duration}
+                        </p>
+
+                        <p style={{ margin: "2px 0" }}>
+                          <strong>Qty:</strong>{" "}
+                          {item.pack_size
+                            ? `${item.pack_size} × ${item.qty}`
+                            : item.qty}
+                        </p>
+
+                        {/* footer line (visible in both modal and print) */}
+                        <div
+                          style={{
+                            borderTop: "1px solid #000",
+                            margin: "8px 0 6px 0",
+                          }}
+                        />
+
+                        {/* footer compact & centered */}
+                        <p className="footer-website">www.tncpharmacy.in</p>
+                        <p className="footer-support">
+                          24×7 Support: 7042079595
+                        </p>
+                        <p className="footer-wish">Get Well Soon</p>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+          </Modal.Body>
+          {/* ---------------- FOOTER ---------------- */}
+          <Modal.Footer className="border-0 pt-0">
+            <button className="btn btn-outline-secondary" onClick={onClose}>
+              Close
+            </button>
+
+            {/* 🟡 PRINT LABEL BUTTON */}
+            <button className="btn btn-warning" onClick={handlePrintLabel}>
+              Print Label
+            </button>
+
+            {/* 🔵 PRINT BILL BUTTON */}
+            <button className="btn btn-primary" onClick={handlePrintBill}>
+              Print Bill
+            </button>
+          </Modal.Footer>{" "}
+        </>
+      )}
     </Modal>
   );
 };

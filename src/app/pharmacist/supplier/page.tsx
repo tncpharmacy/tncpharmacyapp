@@ -19,12 +19,13 @@ import {
   toggleSupplierStatus,
 } from "@/lib/features/supplierSlice/supplierSlice";
 import toast from "react-hot-toast";
+import TncLoader from "@/app/components/TncLoader/TncLoader";
 const mediaBase = process.env.NEXT_PUBLIC_MEDIA_BASE_URL;
 
 export default function Supplier() {
   const dispatch = useAppDispatch();
   const router = useRouter();
-  const { list } = useAppSelector((state) => state.supplier);
+  const { list, loading } = useAppSelector((state) => state.supplier);
 
   // Infinite scroll state
   const [visibleCount, setVisibleCount] = useState(10);
@@ -32,6 +33,7 @@ export default function Supplier() {
 
   // Modal state
   const [showModal, setShowModal] = useState(false);
+  const [modalLoading, setModalLoading] = useState(false);
   const [selectedSupplier, setSelectedSupplier] = useState<Supplier | null>(
     null
   );
@@ -112,6 +114,11 @@ export default function Supplier() {
   const handleView = (supplier: Supplier) => {
     setSelectedSupplier(supplier);
     setShowModal(true);
+    setModalLoading(true);
+    setTimeout(() => {
+      setSelectedSupplier(supplier);
+      setModalLoading(false);
+    }, 1000);
   };
 
   const handleEdit = (id: number) => {
@@ -179,74 +186,108 @@ export default function Supplier() {
                   <table className="table cust_table1">
                     <thead className="fw-bold text-dark">
                       <tr>
-                        <th className="fw-bold">Supplier Id</th>
-                        <th className="fw-bold">Supplier Name</th>
-                        <th className="fw-bold">Contact Person</th>
-                        <th className="fw-bold">License No.</th>
-                        <th className="fw-bold">License Validity</th>
-                        <th className="fw-bold">Email ID</th>
-                        <th className="fw-bold">Mobile</th>
-                        <th className="fw-bold">Address</th>
-                        <th className="fw-bold">Status</th>
-                        <th className="fw-bold">Action</th>
+                        <th className="text-start fw-bold">Supplier Id</th>
+                        <th className="text-start fw-bold">Supplier Name</th>
+                        {/* <th className="text-start fw-bold">Contact Person</th> */}
+                        <th className="text-start fw-bold">License No.</th>
+                        <th className="text-start fw-bold">License Validity</th>
+                        <th className="text-start fw-bold">Email ID</th>
+                        <th className="text-start fw-bold">Mobile</th>
+                        {/* <th className="text-start fw-bold">Address</th> */}
+                        <th className="text-center fw-bold">Status</th>
+                        <th className="text-center fw-bold">Action</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {filteredData.slice(0, visibleCount).map((p) => (
-                        <tr key={p.id}>
-                          <td>{p.supplier_id_code}</td>
-                          <td>{p.supplier_name ?? "-"}</td>
-                          <td>{p.user_name ?? "-"}</td>
-                          <td>{p.license_number}</td>
-                          <td>{p.license_valid_upto}</td>
-                          <td>{p.email_id}</td>
-                          <td>{p.login_id ?? "-"}</td>
-                          <td>{p.address ?? p.district ?? "-"}</td>
-                          <td>
-                            <span
-                              onClick={() => handleToggleStatus(p.id, p.status)}
-                              className={`status ${
-                                p.status === "Active"
-                                  ? "status-active"
-                                  : "status-deactive"
-                              } cursor-pointer`}
-                              title="Click to change status"
-                            >
-                              {p.status === "Active" ? "Active" : "Inactive"}
-                            </span>
-                          </td>
-                          <td>
-                            <button
-                              className="btn btn-light btn-sm me-2"
-                              onClick={() => handleEdit(p.id)}
-                            >
-                              <i className="bi bi-pencil"></i>
-                            </button>
-                            <button
-                              className="btn btn-light btn-sm"
-                              onClick={() => handleView(p)}
-                            >
-                              <i className="bi bi-eye-fill"></i>
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
+                      {loading ? (
+                        <TableLoader colSpan={9} text="Loading records..." />
+                      ) : (
+                        <>
+                          {filteredData.slice(0, visibleCount).map((p) => (
+                            <tr key={p.id}>
+                              <td className="text-start">
+                                {p.supplier_id_code}
+                              </td>
+                              <td className="text-start">
+                                {p.supplier_name ?? "-"}
+                              </td>
+                              {/* <td className="text-start">{p.user_name ?? "-"}</td> */}
+                              <td className="text-start">{p.license_number}</td>
+                              <td className="text-start">
+                                {p.license_valid_upto}
+                              </td>
+                              <td className="text-start">{p.email_id}</td>
+                              <td className="text-start">
+                                {p.login_id ?? "-"}
+                              </td>
+                              {/* <td className="text-start">{p.address ?? p.district ?? "-"}</td> */}
+                              <td className="text-center">
+                                <span
+                                  onClick={() =>
+                                    handleToggleStatus(p.id, p.status)
+                                  }
+                                  className={`status ${
+                                    p.status === "Active"
+                                      ? "status-active"
+                                      : "status-deactive"
+                                  } cursor-pointer`}
+                                  title="Click to change status"
+                                >
+                                  {p.status === "Active"
+                                    ? "Active"
+                                    : "Inactive"}
+                                </span>
+                              </td>
+                              <td className="text-center">
+                                <button
+                                  className="btn btn-light btn-sm me-2"
+                                  title="Supplier Update"
+                                  onClick={() => handleEdit(p.id)}
+                                >
+                                  <i className="bi bi-pencil"></i>
+                                </button>
+                                <button
+                                  className="btn btn-light btn-sm"
+                                  title="Supplier Details"
+                                  onClick={() => handleView(p)}
+                                >
+                                  <i className="bi bi-eye-fill"></i>
+                                </button>
+                              </td>
+                            </tr>
+                          ))}
+                        </>
+                      )}
                       {/* Spinner row */}
                       {loadings && (
                         <TableLoader colSpan={9} text="Loading more..." />
                       )}
 
                       {/* No more records */}
-                      {!loadings && visibleCount >= list.length && (
+                      {!loading && !loadings && list.length === 0 && (
                         <tr>
                           <td
                             colSpan={9}
                             className="text-center py-2 text-muted fw-bold fs-6"
                           >
-                            No more records
+                            No records found
                           </td>
                         </tr>
                       )}
+
+                      {!loading &&
+                        !loadings &&
+                        list.length > 0 &&
+                        visibleCount >= list.length && (
+                          <tr>
+                            <td
+                              colSpan={9}
+                              className="text-center py-2 text-muted fw-bold fs-6"
+                            >
+                              No more records
+                            </td>
+                          </tr>
+                        )}
                     </tbody>
                   </table>
                 </div>
@@ -270,7 +311,11 @@ export default function Supplier() {
         </Modal.Header>
 
         <Modal.Body>
-          {selectedSupplier ? (
+          {modalLoading ? (
+            <div className="py-5 text-center">
+              <TncLoader size={50} text="Loading details..." />
+            </div>
+          ) : selectedSupplier ? (
             (() => {
               const { date: createdDate, time: createdTime } = formatDateTime(
                 selectedSupplier?.created_on

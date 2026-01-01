@@ -8,6 +8,8 @@ export interface PharmacistOrderState {
   orders: PharmacistOrder[]; // FIXED: should match response
   buyerOrderList: OrderItem[]; // Buyer list uses buyer OrderItem
   orderCreated: boolean;
+  listLoading: boolean;
+  detailsLoading: boolean;
   // pharmacistOrder: PharmacistOrder[];
 }
 

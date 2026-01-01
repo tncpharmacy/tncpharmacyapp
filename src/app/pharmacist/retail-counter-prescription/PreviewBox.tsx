@@ -1,25 +1,45 @@
 "use client";
 import { useEffect, useState } from "react";
 
-export default function PreviewBox({ file }: { file: File | null }) {
+interface PreviewBoxProps {
+  file: File | null;
+  onLoadComplete?: () => void;
+}
+
+const PreviewBox: React.FC<PreviewBoxProps> = ({ file, onLoadComplete }) => {
   const [previewSrc, setPreviewSrc] = useState<string>("");
 
   useEffect(() => {
-    if (!file) return;
+    if (!file) {
+      setPreviewSrc("");
+      return;
+    }
 
-    // PDF → Base64
+    let objectUrl: string | null = null;
+
+    // 📄 PDF → Base64
     if (file.type === "application/pdf") {
       const reader = new FileReader();
       reader.onload = () => {
-        setPreviewSrc(reader.result as string); // base64
+        setPreviewSrc(reader.result as string);
+      };
+      reader.onerror = () => {
+        onLoadComplete?.(); // 🔥 error case
       };
       reader.readAsDataURL(file);
     }
-    // Image → blob URL OK
+    // 🖼️ Image → Blob URL
     else {
-      setPreviewSrc(URL.createObjectURL(file));
+      objectUrl = URL.createObjectURL(file);
+      setPreviewSrc(objectUrl);
     }
-  }, [file]);
+
+    return () => {
+      if (objectUrl) {
+        URL.revokeObjectURL(objectUrl); // 🧹 cleanup
+      }
+    };
+  }, [file, onLoadComplete]);
 
   if (!file) {
     return (
@@ -54,17 +74,23 @@ export default function PreviewBox({ file }: { file: File | null }) {
         <iframe
           src={`${previewSrc}#toolbar=0`}
           style={{ width: "100%", height: "100%", border: "none" }}
-        ></iframe>
+          onLoad={() => onLoadComplete?.()} // 🔥 PDF loaded
+        />
       ) : (
         <img
           src={previewSrc}
+          alt="Preview"
           style={{
             width: "100%",
             height: "100%",
             objectFit: "contain",
           }}
+          onLoad={() => onLoadComplete?.()} // 🔥 Image loaded
+          onError={() => onLoadComplete?.()} // 🔥 Error case
         />
       )}
     </div>
   );
-}
+};
+
+export default PreviewBox;

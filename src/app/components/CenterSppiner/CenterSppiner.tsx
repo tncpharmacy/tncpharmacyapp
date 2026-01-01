@@ -1,26 +1,20 @@
 "use client";
 
+import Image from "next/image";
+import "./CenterSpinner.css";
+
 export default function CenterSpinner() {
   return (
-    <div
-      style={{
-        position: "fixed",
-        top: 0,
-        left: 0,
-        width: "100%",
-        height: "100%",
-        background: "rgba(0,0,0,0.4)",
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        zIndex: 9999,
-      }}
-    >
-      <div
-        className="spinner-border text-primary"
-        style={{ width: "60px", height: "60px" }}
-        role="status"
-      ></div>
+    <div className="center-spinner-overlay">
+      <div className="center-spinner-rotate">
+        <Image
+          src="/images/tnc-capsule.png"
+          alt="Loading"
+          width={70}
+          height={70}
+          priority
+        />
+      </div>
     </div>
   );
 }

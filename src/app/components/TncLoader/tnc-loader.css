@@ -1,0 +1,26 @@
+.tnc-loader-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.tnc-loader {
+  animation: tnc-spin 1.2s linear infinite;
+}
+
+@keyframes tnc-spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.tnc-loader-text {
+  margin-top: 10px;
+  font-size: 14px;
+  color: #555;
+}

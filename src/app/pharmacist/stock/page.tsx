@@ -77,7 +77,9 @@ export default function StockList() {
   const pharmacy_id = Number(userPharmacy?.pharmacy_id) || 0;
   const pharmacist_id = userPharmacy?.id || 0;
   // const { list, loading } = useAppSelector((state) => state.pharmacist);
-  const { items: stockData } = useAppSelector((state) => state.purchaseStock);
+  const { items: stockData, loading } = useAppSelector(
+    (state) => state.purchaseStock
+  );
 
   // --- NEW STATE FOR FILTERING ---
   const [filterType, setFilterType] = useState<FilterType>("All");
@@ -391,70 +393,89 @@ export default function StockList() {
                       </tr>
                     </thead>
                     <tbody>
-                      {filteredData
-                        .slice(0, visibleCount)
-                        .map((p: StockItem, index) => {
-                          const isLowStock =
-                            Number(p.AvailableQty) <= Number(p.MinStockLevel);
-                          return (
-                            <tr key={index + 1}>
-                              <td
-                                className="text-start"
-                                style={{ paddingLeft: "20px" }}
-                              >
-                                {p.MedicineName ?? ""}
-                              </td>
-                              <td className="text-start">
-                                {p.Manufacturer ?? ""}
-                              </td>
-                              <td
-                                className={`text-start ${
-                                  isLowStock
-                                    ? "text-danger fw-bold"
-                                    : "text-success fw-bold"
-                                }`}
-                              >
-                                <span
-                                  style={{
-                                    border: `2px solid ${
-                                      isLowStock ? "red" : "green"
-                                    }`,
-                                    borderRadius: "35px",
-                                    padding: "4px 8px",
-                                    backgroundColor: isLowStock
-                                      ? "red"
-                                      : "green",
-                                    color: "white",
-                                    fontWeight: "bold",
-                                    display: "inline-block",
-                                  }}
-                                >
-                                  {p.AvailableQty ?? "-"}
-                                </span>
-                              </td>
-                              <td className="text-start">
-                                {p.location ?? "N/A"}
-                              </td>
-                            </tr>
-                          );
-                        })}
-
+                      {loading ? (
+                        <TableLoader colSpan={9} text="Loading records..." />
+                      ) : (
+                        <>
+                          {filteredData
+                            .slice(0, visibleCount)
+                            .map((p: StockItem, index) => {
+                              const isLowStock =
+                                Number(p.AvailableQty) <=
+                                Number(p.MinStockLevel);
+                              return (
+                                <tr key={index + 1}>
+                                  <td
+                                    className="text-start"
+                                    style={{ paddingLeft: "20px" }}
+                                  >
+                                    {p.MedicineName ?? ""}
+                                  </td>
+                                  <td className="text-start">
+                                    {p.Manufacturer ?? ""}
+                                  </td>
+                                  <td
+                                    className={`text-start ${
+                                      isLowStock
+                                        ? "text-danger fw-bold"
+                                        : "text-success fw-bold"
+                                    }`}
+                                  >
+                                    <span
+                                      style={{
+                                        border: `2px solid ${
+                                          isLowStock ? "red" : "green"
+                                        }`,
+                                        borderRadius: "35px",
+                                        padding: "4px 8px",
+                                        backgroundColor: isLowStock
+                                          ? "red"
+                                          : "green",
+                                        color: "white",
+                                        fontWeight: "bold",
+                                        display: "inline-block",
+                                      }}
+                                    >
+                                      {p.AvailableQty ?? "-"}
+                                    </span>
+                                  </td>
+                                  <td className="text-start">
+                                    {p.location ?? "N/A"}
+                                  </td>
+                                </tr>
+                              );
+                            })}
+                        </>
+                      )}
                       {/* Spinner row */}
                       {loadings && (
                         <TableLoader colSpan={9} text="Loading more..." />
                       )}
-
                       {/* No more records */}
-                      {!loadings && visibleCount >= stockData.length && (
+                      {!loading && !loadings && stockData.length === 0 && (
                         <tr>
                           <td
                             colSpan={9}
                             className="text-center py-2 text-muted fw-bold fs-6"
                           >
-                            No more records
+                            No records found
                           </td>
                         </tr>
                       )}
+
+                      {!loading &&
+                        !loadings &&
+                        stockData.length > 0 &&
+                        visibleCount >= stockData.length && (
+                          <tr>
+                            <td
+                              colSpan={9}
+                              className="text-center py-2 text-muted fw-bold fs-6"
+                            >
+                              No more records
+                            </td>
+                          </tr>
+                        )}
                     </tbody>
                   </table>
                 </div>

@@ -83,9 +83,11 @@ export default function OrderList() {
   // LOCAL COPY — prevent flickering
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [localItems, setLocalItems] = useState<any[]>([]);
-  const { buyers, buyer: buyerById } = useAppSelector(
-    (state) => state.healthBagBuyerByPharmacist
-  );
+  const {
+    buyers,
+    buyer: buyerById,
+    loading,
+  } = useAppSelector((state) => state.healthBagBuyerByPharmacist);
 
   const { list: durationList } = useAppSelector(
     (state) => state.productDuration
@@ -297,7 +299,7 @@ export default function OrderList() {
                   <table className="table cust_table1">
                     <thead>
                       <tr>
-                        <th style={{ width: "0px" }}></th>
+                        {/* <th style={{ width: "0px" }}></th> */}
                         <th className="fw-bold text-start">Id</th>
                         <th className="fw-bold text-start">Profile Image</th>
                         <th className="fw-bold text-start">Name</th>
@@ -305,74 +307,103 @@ export default function OrderList() {
                         <th className="fw-bold text-start">Email</th>
                         <th className="fw-bold text-start">UHID</th>
                         <th className="fw-bold text-start">Status</th>
-                        <th className="fw-bold text-start">Action</th>
+                        <th className="fw-bold text-center">Action</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {Array.isArray(filteredData) &&
-                        filteredData
-                          .slice(0, visibleCount)
-                          .map((p: BuyerData) => {
-                            return (
-                              <tr key={p.id}>
-                                <td></td>
-                                <td className="text-start">{p.id ?? ""}</td>
+                      {loading ? (
+                        <TableLoader colSpan={9} text="Loading records..." />
+                      ) : (
+                        <>
+                          {Array.isArray(filteredData) &&
+                            filteredData
+                              .slice(0, visibleCount)
+                              .map((p: BuyerData) => {
+                                return (
+                                  <tr key={p.id}>
+                                    {/* <td></td> */}
+                                    <td className="text-start">{p.id ?? ""}</td>
 
-                                <td className="text-start">
-                                  <Image
-                                    src={
-                                      p.profile_pic
-                                        ? `${mediaBase}${p.profile_pic}`
-                                        : "/images/default-profile.jpg"
-                                    }
-                                    onError={(e) => {
-                                      e.currentTarget.src =
-                                        "/images/default-profile.jpg";
-                                    }}
-                                    alt={p.name}
-                                    className="rounded-circle"
-                                    style={{
-                                      width: "40px",
-                                      height: "40px",
-                                      objectFit: "cover",
-                                      border: "1px solid #ddd",
-                                    }}
-                                  />
-                                </td>
+                                    <td className="text-start">
+                                      <Image
+                                        src={
+                                          p.profile_pic
+                                            ? `${mediaBase}${p.profile_pic}`
+                                            : "/images/default-profile.jpg"
+                                        }
+                                        onError={(e) => {
+                                          e.currentTarget.src =
+                                            "/images/default-profile.jpg";
+                                        }}
+                                        alt={p.name}
+                                        className="rounded-circle"
+                                        style={{
+                                          width: "40px",
+                                          height: "40px",
+                                          objectFit: "cover",
+                                          border: "1px solid #ddd",
+                                        }}
+                                      />
+                                    </td>
 
-                                <td className="text-start">{p.name ?? ""}</td>
-                                <td className="text-start">{p.number ?? ""}</td>
-                                <td className="text-start">{p.email ?? ""}</td>
-                                <td className="text-start">{p.uhid ?? ""}</td>
-                                <td className="text-start">{p.status ?? ""}</td>
-                                <td className="text-start">
-                                  <button
-                                    className="btn-style1"
-                                    onClick={() => handleHistory(p.id)}
-                                  >
-                                    <i className="bi bi-cart-plus-fill"></i>{" "}
-                                    HealthBag
-                                  </button>
-                                </td>
-                              </tr>
-                            );
-                          })}
+                                    <td className="text-start">
+                                      {p.name ?? ""}
+                                    </td>
+                                    <td className="text-start">
+                                      {p.number ?? ""}
+                                    </td>
+                                    <td className="text-start">
+                                      {p.email ?? ""}
+                                    </td>
+                                    <td className="text-start">
+                                      {p.uhid ?? ""}
+                                    </td>
+                                    <td className="text-start">
+                                      {p.status ?? ""}
+                                    </td>
+                                    <td className="text-center">
+                                      <button
+                                        className="btn btn-light btn-sm"
+                                        title="Patient HealthBag"
+                                        onClick={() => handleHistory(p.id)}
+                                      >
+                                        <i className="bi bi-cart-plus-fill"></i>
+                                      </button>
+                                    </td>
+                                  </tr>
+                                );
+                              })}
+                        </>
+                      )}
                       {/* Spinner row */}
                       {loadings && (
                         <TableLoader colSpan={9} text="Loading more..." />
                       )}
-
                       {/* No more records */}
-                      {!loadings && visibleCount >= buyers.length && (
+                      {!loading && !loadings && buyers.length === 0 && (
                         <tr>
                           <td
                             colSpan={9}
                             className="text-center py-2 text-muted fw-bold fs-6"
                           >
-                            No more records
+                            No records found
                           </td>
                         </tr>
                       )}
+
+                      {!loading &&
+                        !loadings &&
+                        buyers.length > 0 &&
+                        visibleCount >= buyers.length && (
+                          <tr>
+                            <td
+                              colSpan={9}
+                              className="text-center py-2 text-muted fw-bold fs-6"
+                            >
+                              No more records
+                            </td>
+                          </tr>
+                        )}
                     </tbody>
                   </table>
                 </div>

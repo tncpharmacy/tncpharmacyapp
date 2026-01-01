@@ -24,6 +24,8 @@ const initialState: PharmacistOrderState = {
   orders: [],
   buyerOrderList: [],
   orderCreated: false,
+  listLoading: false,
+  detailsLoading: false,
 };
 
 // ===============================
@@ -145,15 +147,15 @@ const pharmacistOrderSlice = createSlice({
 
       // GET ORDER BY ID
       .addCase(getPharmacistOrderById.pending, (state) => {
-        state.loading = true;
+        state.detailsLoading = true;
         state.error = null;
       })
       .addCase(getPharmacistOrderById.fulfilled, (state, action) => {
-        state.loading = false;
+        state.detailsLoading = false;
         state.order = action.payload?.data || null;
       })
       .addCase(getPharmacistOrderById.rejected, (state, action) => {
-        state.loading = false;
+        state.detailsLoading = false;
         state.error = action.payload || "Failed to fetch order";
       })
 
@@ -173,15 +175,15 @@ const pharmacistOrderSlice = createSlice({
 
       // GET ALL ORDERS
       .addCase(getPharmacistOrders.pending, (state) => {
-        state.loading = true;
+        state.listLoading = true;
         state.error = null;
       })
       .addCase(getPharmacistOrders.fulfilled, (state, action) => {
-        state.loading = false;
+        state.listLoading = false;
         state.orders = action.payload?.data || [];
       })
       .addCase(getPharmacistOrders.rejected, (state, action) => {
-        state.loading = false;
+        state.listLoading = false;
         state.error = action.payload || "Failed to fetch orders";
       });
   },

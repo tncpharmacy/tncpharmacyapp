@@ -14,6 +14,7 @@ import {
   getProductInstructions,
 } from "@/lib/features/productInstructionSlice/productInstructionSlice";
 import SmartCreateInput from "./SmartCreateInput";
+import TncLoader from "../TncLoader/TncLoader";
 
 interface HealthBagModalProps {
   isOpen: boolean;
@@ -45,10 +46,34 @@ const HealthBagModal: React.FC<HealthBagModalProps> = ({
   const { list: instructionList } = useAppSelector(
     (state) => state.productInstruction
   );
+  // 🔥 MODAL LOADER
+  const [modalLoading, setModalLoading] = React.useState(false);
+
+  // 🔥 Fetch dropdown data on modal open
   React.useEffect(() => {
-    dispatch(getProductDurations());
-    dispatch(getProductInstructions());
-  }, [dispatch]);
+    if (!isOpen) return;
+
+    const loadData = async () => {
+      setModalLoading(true);
+      try {
+        await Promise.all([
+          dispatch(getProductDurations()).unwrap(),
+          dispatch(getProductInstructions()).unwrap(),
+        ]);
+      } catch (e) {
+        console.error("HealthBag Modal Load Error", e);
+      } finally {
+        setModalLoading(false);
+      }
+    };
+
+    loadData();
+  }, [isOpen, dispatch]);
+
+  // React.useEffect(() => {
+  //   dispatch(getProductDurations());
+  //   dispatch(getProductInstructions());
+  // }, [dispatch]);
 
   React.useEffect(() => {
     setLocalCart(cartItems);
@@ -73,6 +98,20 @@ const HealthBagModal: React.FC<HealthBagModalProps> = ({
 
   return (
     <Modal show={isOpen} onHide={onClose} size="xl">
+      {modalLoading && (
+        <div
+          className="position-absolute top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center"
+          style={{
+            background: "rgba(255,255,255,0.7)",
+            backdropFilter: "blur(3px)",
+            zIndex: 10,
+          }}
+        >
+          <div className="text-center">
+            <TncLoader />
+          </div>
+        </div>
+      )}
       <Modal.Header closeButton>
         <Modal.Title>
           🛒 Health Bag / Billing Cart ({localCart.length} items)

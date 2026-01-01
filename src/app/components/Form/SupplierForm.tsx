@@ -28,6 +28,7 @@ import {
 } from "@/lib/features/supplierSlice/supplierSlice";
 import { updateSupplierApi } from "@/lib/api/supplier";
 import { getUser } from "@/lib/auth/auth";
+import TncLoader from "../TncLoader/TncLoader";
 
 interface Props {
   id?: number; // agar edit mode hai to id milegi
@@ -65,6 +66,7 @@ export default function SupplierForm({ id }: Props) {
   });
 
   const [loading, setLoading] = useState(false);
+  const [submitLoading, setSubmitLoading] = useState(false);
 
   const dispatch = useAppDispatch();
   const { states, loading: statesLoading } = useAppSelector(
@@ -126,10 +128,8 @@ export default function SupplierForm({ id }: Props) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("🚀 handleSubmit called, current formData:", formData);
-
+    if (submitLoading) return;
     const formDataToSend = new FormData();
-
     // 🟩 Common fields
     formDataToSend.append("supplier_name", formData.supplier_name || "");
     formDataToSend.append("user_name", formData.user_name || "");
@@ -183,6 +183,7 @@ export default function SupplierForm({ id }: Props) {
     }
 
     try {
+      setSubmitLoading(true);
       if (id) {
         await dispatch(editSupplier({ id, data: formDataToSend })).unwrap();
         toast.success("Supplier successfully updated");
@@ -207,6 +208,8 @@ export default function SupplierForm({ id }: Props) {
 
       console.error("❌ API call failed:", errorMsg);
       toast.error(errorMsg);
+    } finally {
+      setSubmitLoading(false); // 🔥 STOP LOADER
     }
   };
 
@@ -217,6 +220,24 @@ export default function SupplierForm({ id }: Props) {
         <SideNav />
         <div className="body_right">
           <div className="body_content">
+            {submitLoading && (
+              <div
+                className="position-absolute top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center"
+                style={{
+                  background: "rgba(255,255,255,0.65)",
+                  backdropFilter: "blur(2px)",
+                  zIndex: 20,
+                }}
+              >
+                <div className="text-center">
+                  <TncLoader />
+                  <div className="fw-semibold text-muted">
+                    {id ? "Updating supplier…" : "Saving supplier…"}
+                  </div>
+                </div>
+              </div>
+            )}
+
             <div className="pageTitle">
               <i className="bi bi-shop-window me-2"></i>
               {id ? "Update Supplier" : "Add New Supplier"}
