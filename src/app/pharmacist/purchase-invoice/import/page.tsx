@@ -18,6 +18,17 @@ import { useRouter } from "next/navigation";
 import { fetchSupplier } from "@/lib/features/supplierSlice/supplierSlice";
 import CenterSpinner from "@/app/components/CenterSppiner/CenterSppiner";
 
+const getToday = () => {
+  const d = new Date();
+  return d.toISOString().split("T")[0];
+};
+
+const getYesterday = () => {
+  const d = new Date();
+  d.setDate(d.getDate() - 1);
+  return d.toISOString().split("T")[0];
+};
+
 export default function PurchaseInvoiceImport() {
   const dispatch = useAppDispatch();
   const router = useRouter();
@@ -59,6 +70,7 @@ export default function PurchaseInvoiceImport() {
     purchase_rate: "",
     amount: "",
     location: "",
+    applied_discount: "",
   });
 
   // filtered records by search box + status filter
@@ -76,6 +88,13 @@ export default function PurchaseInvoiceImport() {
 
     setFilteredData(data);
   }, [selectedMedicines, getMedicine]);
+
+  useEffect(() => {
+    setFormData((prev) => ({
+      ...prev,
+      purchase_date: getToday(), // ✅ default today
+    }));
+  }, []);
 
   // Fetch all pharmacies once
   useEffect(() => {
@@ -227,6 +246,16 @@ export default function PurchaseInvoiceImport() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    const today = getToday();
+    const yesterday = getYesterday();
+
+    if (
+      formData.purchase_date !== today &&
+      formData.purchase_date !== yesterday
+    ) {
+      toast.error("Purchase date must be today or yesterday");
+      return;
+    }
 
     setIsLoading(true); // 🔥 Loader ON immediately
 
@@ -250,6 +279,7 @@ export default function PurchaseInvoiceImport() {
         purchase_rate: row["Purchase Rate"]?.toString() || "0",
         amount: row["Amount"]?.toString() || "0",
         location: row["Location"]?.toString() || "0",
+        applied_discount: row["Applied Discount"]?.toString() || "0",
       }));
 
       const payload = {
@@ -288,6 +318,7 @@ export default function PurchaseInvoiceImport() {
             purchase_rate: "",
             amount: "",
             location: "",
+            applied_discount: "",
           });
         })
         .catch(() => {
@@ -342,6 +373,8 @@ export default function PurchaseInvoiceImport() {
                       type="date"
                       name="purchase_date"
                       value={formData.purchase_date}
+                      min={getYesterday()} // ✅ yesterday allowed
+                      max={getToday()} // ✅ today allowed
                       onChange={(e) =>
                         setFormData((prev) => ({
                           ...prev,

@@ -15,6 +15,7 @@ import { getCategories } from "@/lib/features/categorySlice/categorySlice";
 import Footer from "@/app/user/components/footer/footer";
 import { useShuffledProduct } from "@/lib/hooks/useShuffledProduct";
 import { HealthBag } from "@/types/healthBag";
+import TncLoader from "@/app/components/TncLoader/TncLoader";
 
 const mediaBase = process.env.NEXT_PUBLIC_MEDIA_BASE_URL;
 
@@ -30,7 +31,9 @@ export default function AllGroupCare() {
   // -----------------------------
   const [limit, setLimit] = useState(20);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [visibleList, setVisibleList] = useState<any[]>([]);
+  // const [visibleList, setVisibleList] = useState<any[]>([]);
+
+  const [hasFetched, setHasFetched] = useState(false);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -78,7 +81,12 @@ export default function AllGroupCare() {
 
   // Fetch API calls
   useEffect(() => {
-    dispatch(getGroupCareById(categoryIdNum));
+    setHasFetched(false);
+
+    dispatch(getGroupCareById(categoryIdNum)).finally(() =>
+      setHasFetched(true)
+    );
+
     dispatch(getCategories());
   }, [categoryIdNum, dispatch]);
 
@@ -119,11 +127,11 @@ export default function AllGroupCare() {
     filteredRef.current = filteredMedicines;
   }, [filteredMedicines]);
 
-  // -----------------------------
-  // UPDATE VISIBLE LIST
-  // -----------------------------
-  useEffect(() => {
-    setVisibleList(filteredMedicines.slice(0, limit));
+  // -------------------------------
+  // 🔹 UPDATE VISIBLE LIST
+  // -------------------------------
+  const visibleList = useMemo(() => {
+    return filteredMedicines.slice(0, limit);
   }, [filteredMedicines, limit]);
 
   // -----------------------------
@@ -230,21 +238,30 @@ export default function AllGroupCare() {
                 </div>
               </div>
               {/* First time loader */}
-              {loading && (
+              {/* {loading && (
                 <div className="text-center my-4">
-                  <div className="spinner-border text-primary"></div>
+                  <TncLoader />
                 </div>
-              )}
+              )} */}
               {/* PRODUCT LIST */}
               <div className="pd_list">
-                {loading ? (
-                  <p></p>
+                {!hasFetched || loading ? (
+                  <div
+                    className="d-flex justify-content-center align-items-center"
+                    style={{ marginLeft: "100vh" }}
+                  >
+                    <TncLoader />
+                  </div>
                 ) : visibleList.length === 0 ? (
                   <p>No products found.</p>
                 ) : (
                   visibleList.map((item) => {
-                    const mrp = item.mrp || 0;
-                    const hasValidMrp = mrp > 0;
+                    const mrpRaw =
+                      item.MRP ?? item.mrp ?? item.Mrp ?? item.price ?? 0;
+
+                    const mrp = Number(mrpRaw);
+
+                    const hasValidMrp = Number.isFinite(mrp) && mrp > 0;
 
                     const discount = parseFloat(item.discount || "0");
                     const discountedPrice = Math.round(

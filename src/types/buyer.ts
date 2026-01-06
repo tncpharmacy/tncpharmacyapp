@@ -120,6 +120,7 @@ export interface OrderDetail {
   products: Array<{
     id: number;
     medicine_name: string;
+    pack_size: string;
     manufacturer: string;
     image: string | null;
     quantity: string;

@@ -126,6 +126,7 @@ export interface Product {
   purchase_rate: string;
   amount: string;
   location: string;
+  applied_discount: string;
 }
 
 export type SafetyLabel = {

@@ -12,6 +12,7 @@ import { useAppDispatch, useAppSelector } from "@/lib/hooks";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   getAddress,
+  makeDefaultAddress,
   removeAddress,
 } from "@/lib/features/addressSlice/addressSlice";
 import toast from "react-hot-toast";
@@ -27,6 +28,8 @@ import { formatDateOnly } from "@/utils/dateFormatter";
 import { formatAmount } from "@/lib/utils/formatAmount";
 import { BuyerOrderDetail, OrderDetail } from "@/types/buyer";
 import OrderDetailsModal from "@/app/components/BuyerProfileModal/OrderDetailsModal";
+import { Address } from "@/types/address";
+import TncLoader from "@/app/components/TncLoader/TncLoader";
 
 // Mapped interface to fix type errors
 interface BuyerData {
@@ -44,6 +47,11 @@ export default function BuyerProfile() {
   const [showModal, setShowModal] = useState(false);
   const [showOrderModal, setShowOrderModal] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<OrderDetail | null>(null);
+  const [selectedAddressId, setSelectedAddressId] = useState<number | null>(
+    null
+  );
+  const [pendingDefaultId, setPendingDefaultId] = useState<number | null>(null);
+  const [ordersLoading, setOrdersLoading] = useState(false);
 
   const [isClient, setIsClient] = useState(false);
 
@@ -65,7 +73,6 @@ export default function BuyerProfile() {
   ) as unknown as BuyerOrderItem[];
 
   const { details: buyerOrderDetails } = useAppSelector((state) => state.buyer);
-  console.log("buyerOrderDetails", buyerOrderDetails);
 
   // active addresses
   const activeAddresses =
@@ -76,6 +83,18 @@ export default function BuyerProfile() {
 
   const [selectedLocation, setSelectedLocation] =
     useState<LocationDetails | null>(null);
+
+  useEffect(() => {
+    if (billingAddresses.length > 0 && selectedAddressId === null) {
+      const defaultAddr = billingAddresses.find(
+        (addr) => addr.default_address === 1
+      );
+
+      if (defaultAddr?.id) {
+        setSelectedAddressId(defaultAddr.id);
+      }
+    }
+  }, [billingAddresses.length, selectedAddressId, billingAddresses]);
 
   // const formatted: BuyerOrderDetail = {
   //   id: d.orderId,
@@ -199,7 +218,12 @@ export default function BuyerProfile() {
   // Fetch orders & addresses
   useEffect(() => {
     if (userId !== null) {
-      dispatch(getBuyerOrdersList(userId));
+      setOrdersLoading(true);
+
+      dispatch(getBuyerOrdersList(userId))
+        .unwrap()
+        .finally(() => setOrdersLoading(false));
+
       dispatch(getAddress(userId));
     }
   }, [dispatch, userId]);
@@ -242,14 +266,32 @@ export default function BuyerProfile() {
   }, [buyerOrderDetails]);
 
   const handleViewOrder = async (orderId: number) => {
-    setShowOrderModal(false);
-    setSelectedOrder(null);
+    setSelectedOrder(null); // 🔥 loader state
+    setShowOrderModal(true); // 🔥 modal open FIRST
 
-    const result = await dispatch(getBuyerOrderDetails(orderId)).unwrap();
+    try {
+      const result = await dispatch(getBuyerOrderDetails(orderId)).unwrap();
 
-    if (result) {
-      setSelectedOrder(result as BuyerOrderDetail);
-      setShowOrderModal(true);
+      setSelectedOrder(result);
+    } catch (e) {
+      toast.error("Failed to load order details");
+      setShowOrderModal(false);
+    }
+  };
+
+  const handleSetDefaultAddress = async (address: Address) => {
+    if (!address.id) return;
+
+    try {
+      setSelectedAddressId(address.id); // 🔥 instant UI update
+      setPendingDefaultId(address.id);
+
+      await dispatch(makeDefaultAddress({ addressId: address.id })).unwrap();
+
+      toast.success("Default address updated!");
+    } catch (error) {
+      toast.error("Failed to set default address");
+      console.error(error);
     }
   };
 
@@ -402,85 +444,222 @@ export default function BuyerProfile() {
                           />
                         )}
                       </div>
-                      {billingAddresses.map((addr, idx) => (
-                        <div key={idx} className="border rounded p-3 mb-3">
-                          <label
-                            className="fw-semibold mb-0"
-                            style={{ fontSize: "15px", color: "#212121" }}
-                          >
-                            {addr.address_type_id === 1
-                              ? "Home"
-                              : addr.address_type_id === 2
-                              ? "Office"
-                              : "Other"}
-                          </label>
-                          <p className="text-muted mb-0">{addr.name}</p>
-                          <p className="text-muted mb-0">{addr.address}</p>
-                          <p className="text-muted mb-0">
-                            {addr.location} - {addr.pincode}
-                          </p>
-                          <p className="text-muted mb-2">{addr.mobile}</p>
-                          <button
-                            className="btn btn-link p-0 fw-semibold text-danger"
-                            style={{ fontSize: "13px" }}
-                            onClick={() => addr.id && handleRemove(addr.id)}
-                          >
-                            Remove
-                          </button>
-                        </div>
-                      ))}
+                      <div className="row">
+                        {billingAddresses.map((addr, idx) => {
+                          const isSelected =
+                            selectedAddressId === addr.id ||
+                            pendingDefaultId === addr.id;
+                          const isDefault =
+                            selectedAddressId === addr.id ||
+                            pendingDefaultId === addr.id;
+
+                          return (
+                            <div className="col-md-4 mb-4" key={addr.id}>
+                              <div
+                                className={`card ${
+                                  isSelected ? "border-danger" : "border-light"
+                                } shadow-sm`}
+                                style={{
+                                  cursor: "pointer",
+                                  borderWidth: "2px",
+                                  borderRadius: "8px",
+                                  transition: "all 0.2s ease-in-out",
+                                }}
+                              >
+                                <div className="card-body p-3">
+                                  <div className="d-flex align-items-center mb-2">
+                                    <input
+                                      type="radio"
+                                      name="billingAddresses"
+                                      checked={isSelected}
+                                      onChange={() =>
+                                        handleSetDefaultAddress(addr)
+                                      }
+                                      className="form-check-input me-2"
+                                      title="Set Default Address"
+                                    />
+
+                                    <label
+                                      className="fw-semibold mb-0"
+                                      style={{
+                                        fontSize: "15px",
+                                        color: "#212121",
+                                      }}
+                                    >
+                                      {addr.address_type_id === 1
+                                        ? "Home"
+                                        : addr.address_type_id === 2
+                                        ? "Office"
+                                        : "Other"}
+                                    </label>
+                                  </div>
+
+                                  <div className="ps-4">
+                                    <p
+                                      className="mb-1"
+                                      style={{
+                                        fontSize: "13px",
+                                        color: "#555",
+                                        lineHeight: "1",
+                                      }}
+                                    >
+                                      {addr.address}
+                                    </p>
+                                    <p
+                                      className="mb-3"
+                                      style={{
+                                        fontSize: "13px",
+                                        color: "#555",
+                                        lineHeight: "1",
+                                      }}
+                                    >
+                                      {addr.location} ({addr.pincode})
+                                    </p>
+                                    <p
+                                      className="mb-0 fw-semibold"
+                                      style={{
+                                        fontSize: "13.5px",
+                                        color: "#212121",
+                                      }}
+                                    >
+                                      {addr.name}
+                                    </p>
+                                    <p
+                                      className="mb-2"
+                                      style={{
+                                        fontSize: "13px",
+                                        color: "#757575",
+                                      }}
+                                    >
+                                      {addr.mobile}
+                                    </p>
+
+                                    {/* Remove */}
+                                    {/* <button
+                                      className="btn btn-link p-0 fw-semibold text-danger"
+                                      style={{ fontSize: "13px" }}
+                                      onClick={() =>
+                                        addr.id && handleRemove(addr.id)
+                                      }
+                                      title="Remove Address"
+                                    >
+                                      <i className="bi bi-trash"></i>
+                                    </button> */}
+                                    <button
+                                      className="btn btn-link p-0 fw-semibold"
+                                      style={{
+                                        fontSize: "13px",
+                                        color: isDefault ? "#999" : "#e53935",
+                                        textDecoration: "none",
+                                        cursor: isDefault
+                                          ? "not-allowed"
+                                          : "pointer",
+                                      }}
+                                      type="button"
+                                      disabled={isDefault}
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        if (isDefault) return;
+
+                                        if (!addr.id) {
+                                          toast.error("Invalid address ID");
+                                          return;
+                                        }
+                                        handleRemove(addr.id);
+                                      }}
+                                      title="Remove Address"
+                                    >
+                                      <i
+                                        className="bi bi-trash"
+                                        style={{
+                                          fontSize: "16px",
+                                          color: isDefault ? "#999" : "red",
+                                        }}
+                                      ></i>
+                                    </button>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
                     </div>
                   )}
 
                   {activeTab === "order" && (
                     <div>
                       <h5 className="fw-bold mb-3 text-primary">My Orders</h5>
-                      {visibleOrders.length > 0 ? (
-                        visibleOrders.map((order) => (
-                          <div
-                            key={order.orderId}
-                            className="border rounded p-3 mb-3"
-                          >
-                            <div className="d-flex justify-content-between align-items-center">
-                              <div>
-                                <h6 className="mb-1 text-primary">
-                                  Order Number: {order.orderId}
-                                </h6>
-                                <p className="mb-0 text-success">
-                                  Payment Status:{" "}
-                                  <span
-                                    className={
-                                      order.paymentStatus === "Buy"
-                                        ? "text-success"
-                                        : "text-warning"
-                                    }
-                                  >
-                                    {order.paymentStatus}
-                                  </span>
-                                </p>
-                                <p className="mb-0 text-success">
-                                  Payment Mode: {order.paymentMode}
-                                </p>
-                                <p className="mb-0">
-                                  Order Date: {formatDateOnly(order.orderDate)}
-                                </p>
-                                <p className="mb-0 text-danger">
-                                  Amount: ₹{formatAmount(Number(order.amount))}{" "}
-                                  | Type: {order.orderType}
-                                </p>
-                                <p className="mb-0 text-muted">
-                                  {order.address}
-                                </p>
-                              </div>
-                              <button
-                                className="btn btn-outline-primary btn-sm"
-                                onClick={() => handleViewOrder(order.orderId)}
-                              >
-                                View
-                              </button>
-                            </div>
+
+                      {ordersLoading ? (
+                        <div className="d-flex justify-content-center align-items-center py-5">
+                          <div className="text-center">
+                            <TncLoader />
                           </div>
-                        ))
+                        </div>
+                      ) : visibleOrders.length > 0 ? (
+                        <div className="row">
+                          {visibleOrders.map((order) => (
+                            <div key={order.orderId} className="col-md-4 mb-4">
+                              <div
+                                className="card h-100 shadow-sm"
+                                style={{
+                                  borderRadius: "8px",
+                                  border: "1px solid #e0e0e0",
+                                }}
+                              >
+                                <div className="card-body d-flex flex-column justify-content-between">
+                                  <div>
+                                    <h6 className="mb-2 text-primary fw-semibold">
+                                      Order Number: {order.orderId}
+                                    </h6>
+
+                                    <p className="mb-0 text-success">
+                                      Payment Status:{" "}
+                                      <span
+                                        className={
+                                          order.paymentStatus === "Buy"
+                                            ? "text-success"
+                                            : "text-warning"
+                                        }
+                                      >
+                                        {order.paymentStatus}
+                                      </span>
+                                    </p>
+
+                                    <p className="mb-0 text-success">
+                                      Payment Mode: {order.paymentMode}
+                                    </p>
+                                    <p className="mb-0">
+                                      Order Date:{" "}
+                                      {formatDateOnly(order.orderDate)}
+                                    </p>
+                                    <p className="mb-0 text-danger">
+                                      Amount: ₹
+                                      {formatAmount(Number(order.amount))} |
+                                      Type: {order.orderType}
+                                    </p>
+                                    <p className="mb-0 text-muted">
+                                      {order.address}
+                                    </p>
+                                  </div>
+
+                                  <div className="text-end">
+                                    <button
+                                      className="btn btn-outline-primary btn-sm"
+                                      onClick={() =>
+                                        handleViewOrder(order.orderId)
+                                      }
+                                      title="Order Details"
+                                    >
+                                      <i className="bi bi-eye-fill"></i>
+                                    </button>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
                       ) : (
                         <p>No orders found.</p>
                       )}

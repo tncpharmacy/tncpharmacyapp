@@ -264,7 +264,7 @@ export default function Checkout() {
             style={{ fontSize: 70 }}
           ></i>
           <h5 className="fw-bold mt-3">Order Placed Successfully!</h5>
-
+          <h5 className="fw-bold mt-3">Go To..</h5>
           <div className="d-flex justify-content-center mt-4 gap-3">
             <button
               className="btn btn-outline-primary"

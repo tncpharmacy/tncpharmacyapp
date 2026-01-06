@@ -25,6 +25,7 @@ import Input from "@/app/components/Input/InputColSm";
 import { getAddress } from "@/lib/features/addressSlice/addressSlice";
 import AddressBar from "../components/AddressBar/AddressBar";
 import toast from "react-hot-toast";
+import { formatAmount } from "@/lib/utils/formatAmount";
 const mediaBase = process.env.NEXT_PUBLIC_MEDIA_BASE_URL;
 
 export interface Medicine {
@@ -470,9 +471,9 @@ export default function HealthBags() {
 
                       <div className="text-end ms-3">
                         <h6 className="mb-2 text-success">
-                          ₹{item.discountMrp.toLocaleString()}{" "}
+                          ₹{formatAmount(item.discountMrp).toLocaleString()}{" "}
                           <small className="text-muted text-decoration-line-through">
-                            MRP ₹{(item.mrp ?? 0).toLocaleString()}
+                            MRP ₹{formatAmount(item.mrp ?? 0).toLocaleString()}
                           </small>
                           <br />
                           <span className="text-danger small">
@@ -517,7 +518,7 @@ export default function HealthBags() {
 
                 <div className="d-flex justify-content-between mb-2 small">
                   <span>Item total (MRP)</span>
-                  <span>₹{totals.totalMrp.toLocaleString()}</span>
+                  <span>₹{formatAmount(totals.totalMrp).toLocaleString()}</span>
                 </div>
                 {/* 
                 <div className="d-flex justify-content-between mb-2 small">
@@ -528,7 +529,7 @@ export default function HealthBags() {
                 <div className="d-flex justify-content-between mb-2 small">
                   <span>Total discount</span>
                   <span className="text-success">
-                    -₹{totals.totalDiscount.toLocaleString()}
+                    -₹{formatAmount(totals.totalDiscount).toLocaleString()}
                   </span>
                 </div>
 
@@ -541,7 +542,7 @@ export default function HealthBags() {
 
                 <div className="d-flex justify-content-between mb-3 fw-semibold">
                   <span>To be paid</span>
-                  <span>₹{grandTotal.toLocaleString()}</span>
+                  <span>₹{formatAmount(grandTotal).toLocaleString()}</span>
                 </div>
 
                 <Button

@@ -359,88 +359,99 @@ export default function HomePage() {
           </div>
           <div className="row">
             {shuffled7 && shuffled7.length > 0 ? (
-              shuffled7.slice(0, 5).map((item) => {
-                const mrp = item.MRP
-                  ? parseFloat(item.MRP.toString())
-                  : Math.floor(Math.random() * (1000 - 100 + 1)) + 100;
+              shuffled7
+                // ✅ ONLY products having real image
+                .filter(
+                  (item) =>
+                    item.DefaultImageURL &&
+                    item.DefaultImageURL.trim() !== "" &&
+                    item.DefaultImageURL !== "/images/tnc-default.png"
+                )
+                .slice(0, 5)
+                .map((item) => {
+                  const mrp = Number(item.mrp) || 0;
 
-                const discount = parseFloat(item.Discount) || 0;
-                const discountedPrice = Math.round(
-                  mrp - (mrp * discount) / 100
-                );
-
-                const imageUrl = item.DefaultImageURL
-                  ? item.DefaultImageURL.startsWith("http")
-                    ? item.DefaultImageURL
-                    : `${mediaBase}${item.DefaultImageURL}`
-                  : "/images/tnc-default.png";
-                const isInBag =
-                  localBag.includes(item.product_id) ||
-                  items.some(
-                    (i) =>
-                      i.productid === item.product_id || // backend data
-                      i.product_id === item.product_id // guest/local data
+                  const discount = parseFloat(item.Discount) || 0;
+                  const discountedPrice = Math.round(
+                    mrp - (mrp * discount) / 100
                   );
 
-                return (
-                  <div className="col" key={item.product_id}>
-                    <div className="pd_box">
-                      <div className="pd_img">
-                        <Image
-                          src={imageUrl}
-                          alt={item.ProductName}
-                          style={{
-                            height: "220px",
-                            objectFit: "contain",
-                            cursor: "pointer",
-                            opacity:
-                              imageUrl === "/images/tnc-default.png" ? 0.3 : 1, // ✅ only default image faded
-                          }}
-                          onClick={() => handleClick(item.product_id)}
-                        />
-                      </div>
-                      <div className="pd_content">
-                        <h3
-                          className="pd-title hover-link fw-bold"
-                          onClick={() => handleClick(item.product_id)}
-                          style={{ cursor: "pointer", color: "#264b8c" }}
-                        >
-                          {item.ProductName || ""}
-                        </h3>
-                        <h6 className="pd-title fw-bold">
-                          {item.Manufacturer || ""}
-                        </h6>
-                        <div className="pd_price">
-                          <span className="new_price">₹{discountedPrice}</span>
-                          <span className="old_price">
-                            <del>MRP ₹{mrp}</del> {discount}% off
-                          </span>
-                        </div>
+                  const imageUrl = item.DefaultImageURL
+                    ? item.DefaultImageURL.startsWith("http")
+                      ? item.DefaultImageURL
+                      : `${mediaBase}${item.DefaultImageURL}`
+                    : "/images/tnc-default.png";
+                  const isInBag =
+                    localBag.includes(item.product_id) ||
+                    items.some(
+                      (i) =>
+                        i.productid === item.product_id || // backend data
+                        i.product_id === item.product_id // guest/local data
+                    );
 
-                        <Button
-                          size="sm"
-                          className={`btn-1 btn-HO ${
-                            isInBag ? "remove" : "add"
-                          }`}
-                          style={{ borderRadius: "35px" }}
-                          disabled={processingIds.includes(item.product_id)}
-                          onClick={() =>
-                            isInBag
-                              ? handleRemove(item.product_id)
-                              : handleAdd(item)
-                          }
-                        >
-                          {processingIds.includes(item.product_id)
-                            ? "Processing..."
-                            : isInBag
-                            ? "REMOVE"
-                            : "ADD"}
-                        </Button>
+                  return (
+                    <div className="col" key={item.product_id}>
+                      <div className="pd_box">
+                        <div className="pd_img">
+                          <Image
+                            src={imageUrl}
+                            alt={item.ProductName}
+                            style={{
+                              height: "220px",
+                              objectFit: "contain",
+                              cursor: "pointer",
+                              opacity:
+                                imageUrl === "/images/tnc-default.png"
+                                  ? 0.3
+                                  : 1, // ✅ only default image faded
+                            }}
+                            onClick={() => handleClick(item.product_id)}
+                          />
+                        </div>
+                        <div className="pd_content">
+                          <h3
+                            className="pd-title hover-link fw-bold"
+                            onClick={() => handleClick(item.product_id)}
+                            style={{ cursor: "pointer", color: "#264b8c" }}
+                          >
+                            {item.ProductName || ""}
+                          </h3>
+                          <h6 className="pd-title fw-bold">
+                            {item.Manufacturer || ""}
+                          </h6>
+                          <div className="pd_price">
+                            <span className="new_price">
+                              ₹{discountedPrice}
+                            </span>
+                            <span className="old_price">
+                              <del>MRP ₹{mrp}</del> {discount}% off
+                            </span>
+                          </div>
+
+                          <Button
+                            size="sm"
+                            className={`btn-1 btn-HO ${
+                              isInBag ? "remove" : "add"
+                            }`}
+                            style={{ borderRadius: "35px" }}
+                            disabled={processingIds.includes(item.product_id)}
+                            onClick={() =>
+                              isInBag
+                                ? handleRemove(item.product_id)
+                                : handleAdd(item)
+                            }
+                          >
+                            {processingIds.includes(item.product_id)
+                              ? "Processing..."
+                              : isInBag
+                              ? "REMOVE"
+                              : "ADD"}
+                          </Button>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                );
-              })
+                  );
+                })
             ) : (
               <p>Loading medicines...</p>
             )}
@@ -595,88 +606,99 @@ export default function HomePage() {
           </div>
           <div className="row">
             {shuffled5 && shuffled5.length > 0 ? (
-              shuffled5.slice(0, 5).map((item) => {
-                const mrp = item.MRP
-                  ? parseFloat(item.MRP.toString())
-                  : Math.floor(Math.random() * (1000 - 100 + 1)) + 100;
+              shuffled5
+                // ✅ ONLY products having real image
+                .filter(
+                  (item) =>
+                    item.DefaultImageURL &&
+                    item.DefaultImageURL.trim() !== "" &&
+                    item.DefaultImageURL !== "/images/tnc-default.png"
+                )
+                .slice(0, 5)
+                .map((item) => {
+                  const mrp = Number(item.mrp) || 0;
 
-                const discount = parseFloat(item.Discount) || 0;
-                const discountedPrice = Math.round(
-                  mrp - (mrp * discount) / 100
-                );
-
-                const imageUrl = item.DefaultImageURL
-                  ? item.DefaultImageURL.startsWith("http")
-                    ? item.DefaultImageURL
-                    : `${mediaBase}${item.DefaultImageURL}`
-                  : "/images/tnc-default.png";
-
-                const isInBag =
-                  localBag.includes(item.product_id) ||
-                  items.some(
-                    (i) =>
-                      i.productid === item.product_id || // backend data
-                      i.product_id === item.product_id // guest/local data
+                  const discount = parseFloat(item.Discount) || 0;
+                  const discountedPrice = Math.round(
+                    mrp - (mrp * discount) / 100
                   );
 
-                return (
-                  <div className="col" key={item.product_id}>
-                    <div className="pd_box">
-                      <div className="pd_img">
-                        <Image
-                          src={imageUrl}
-                          alt={item.ProductName}
-                          style={{
-                            height: "220px",
-                            objectFit: "contain",
-                            cursor: "pointer",
-                            opacity:
-                              imageUrl === "/images/tnc-default.png" ? 0.3 : 1, // ✅ only default image faded
-                          }}
-                          onClick={() => handleClick(item.product_id)}
-                        />
-                      </div>
-                      <div className="pd_content">
-                        <h3
-                          className="pd-title hover-link fw-bold"
-                          onClick={() => handleClick(item.product_id)}
-                          style={{ cursor: "pointer", color: "#264b8c" }}
-                        >
-                          {item.ProductName || ""}
-                        </h3>
-                        <h6 className="pd-title fw-bold">
-                          {item.Manufacturer || ""}
-                        </h6>
-                        <div className="pd_price">
-                          <span className="new_price">₹{discountedPrice}</span>
-                          <span className="old_price">
-                            <del>MRP ₹{mrp}</del> {discount}% off
-                          </span>
+                  const imageUrl = item.DefaultImageURL
+                    ? item.DefaultImageURL.startsWith("http")
+                      ? item.DefaultImageURL
+                      : `${mediaBase}${item.DefaultImageURL}`
+                    : "/images/tnc-default.png";
+
+                  const isInBag =
+                    localBag.includes(item.product_id) ||
+                    items.some(
+                      (i) =>
+                        i.productid === item.product_id || // backend data
+                        i.product_id === item.product_id // guest/local data
+                    );
+
+                  return (
+                    <div className="col" key={item.product_id}>
+                      <div className="pd_box">
+                        <div className="pd_img">
+                          <Image
+                            src={imageUrl}
+                            alt={item.ProductName}
+                            style={{
+                              height: "220px",
+                              objectFit: "contain",
+                              cursor: "pointer",
+                              opacity:
+                                imageUrl === "/images/tnc-default.png"
+                                  ? 0.3
+                                  : 1, // ✅ only default image faded
+                            }}
+                            onClick={() => handleClick(item.product_id)}
+                          />
                         </div>
-                        <Button
-                          size="sm"
-                          className={`btn-1 btn-HO ${
-                            isInBag ? "remove" : "add"
-                          }`}
-                          style={{ borderRadius: "35px" }}
-                          disabled={processingIds.includes(item.product_id)}
-                          onClick={() =>
-                            isInBag
-                              ? handleRemove(item.product_id)
-                              : handleAdd(item)
-                          }
-                        >
-                          {processingIds.includes(item.product_id)
-                            ? "Processing..."
-                            : isInBag
-                            ? "REMOVE"
-                            : "ADD"}
-                        </Button>
+                        <div className="pd_content">
+                          <h3
+                            className="pd-title hover-link fw-bold"
+                            onClick={() => handleClick(item.product_id)}
+                            style={{ cursor: "pointer", color: "#264b8c" }}
+                          >
+                            {item.ProductName || ""}
+                          </h3>
+                          <h6 className="pd-title fw-bold">
+                            {item.Manufacturer || ""}
+                          </h6>
+                          <div className="pd_price">
+                            <span className="new_price">
+                              ₹{discountedPrice}
+                            </span>
+                            <span className="old_price">
+                              <del>MRP ₹{mrp}</del> {discount}% off
+                            </span>
+                          </div>
+                          <Button
+                            size="sm"
+                            className={`btn-1 btn-HO ${
+                              isInBag ? "remove" : "add"
+                            }`}
+                            style={{ borderRadius: "35px" }}
+                            disabled={processingIds.includes(item.product_id)}
+                            onClick={() =>
+                              isInBag
+                                ? handleRemove(item.product_id)
+                                : handleAdd(item)
+                            }
+                          >
+                            {processingIds.includes(item.product_id)
+                              ? "Processing..."
+                              : isInBag
+                              ? "REMOVE"
+                              : "ADD"}
+                          </Button>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                );
-              })
+                  );
+                })
             ) : (
               <p>Loading medicines...</p>
             )}
@@ -752,89 +774,100 @@ export default function HomePage() {
           </div>
           <div className="row">
             {shuffled9 && shuffled9.length > 0 ? (
-              shuffled9.slice(0, 5).map((item) => {
-                const mrp = item.MRP
-                  ? parseFloat(item.MRP.toString())
-                  : Math.floor(Math.random() * (1000 - 100 + 1)) + 100;
+              shuffled9
+                // ✅ ONLY products having real image
+                .filter(
+                  (item) =>
+                    item.DefaultImageURL &&
+                    item.DefaultImageURL.trim() !== "" &&
+                    item.DefaultImageURL !== "/images/tnc-default.png"
+                )
+                .slice(0, 5)
+                .map((item) => {
+                  const mrp = Number(item.mrp) || 0;
 
-                const discount = parseFloat(item.Discount) || 0;
-                const discountedPrice = Math.round(
-                  mrp - (mrp * discount) / 100
-                );
-
-                const imageUrl = item.DefaultImageURL
-                  ? item.DefaultImageURL.startsWith("http")
-                    ? item.DefaultImageURL
-                    : `${mediaBase}${item.DefaultImageURL}`
-                  : "/images/tnc-default.png";
-
-                const isInBag =
-                  localBag.includes(item.product_id) ||
-                  items.some(
-                    (i) =>
-                      i.productid === item.product_id || // backend data
-                      i.product_id === item.product_id // guest/local data
+                  const discount = parseFloat(item.Discount) || 0;
+                  const discountedPrice = Math.round(
+                    mrp - (mrp * discount) / 100
                   );
 
-                return (
-                  <div className="col" key={item.product_id}>
-                    <div className="pd_box">
-                      <div className="pd_img">
-                        <Image
-                          src={imageUrl}
-                          alt={item.ProductName}
-                          style={{
-                            height: "220px",
-                            objectFit: "contain",
-                            cursor: "pointer",
-                            opacity:
-                              imageUrl === "/images/tnc-default.png" ? 0.3 : 1, // ✅ only default image faded
-                          }}
-                          onClick={() => handleClick(item.product_id)}
-                        />
-                      </div>
-                      <div className="pd_content">
-                        <h3
-                          className="pd-title hover-link fw-bold"
-                          onClick={() => handleClick(item.product_id)}
-                          style={{ cursor: "pointer", color: "#264b8c" }}
-                        >
-                          {item.ProductName || ""}
-                        </h3>
-                        <h6 className="pd-title fw-bold">
-                          {item.Manufacturer || ""}
-                        </h6>
-                        <div className="pd_price">
-                          <span className="new_price">₹{discountedPrice}</span>
-                          <span className="old_price">
-                            <del>MRP ₹{mrp}</del> {discount}% off
-                          </span>
-                        </div>
+                  const imageUrl = item.DefaultImageURL
+                    ? item.DefaultImageURL.startsWith("http")
+                      ? item.DefaultImageURL
+                      : `${mediaBase}${item.DefaultImageURL}`
+                    : "/images/tnc-default.png";
 
-                        <Button
-                          size="sm"
-                          className={`btn-1 btn-HO ${
-                            isInBag ? "remove" : "add"
-                          }`}
-                          style={{ borderRadius: "35px" }}
-                          disabled={processingIds.includes(item.product_id)}
-                          onClick={() =>
-                            isInBag
-                              ? handleRemove(item.product_id)
-                              : handleAdd(item)
-                          }
-                        >
-                          {processingIds.includes(item.product_id)
-                            ? "Processing..."
-                            : isInBag
-                            ? "REMOVE"
-                            : "ADD"}
-                        </Button>
+                  const isInBag =
+                    localBag.includes(item.product_id) ||
+                    items.some(
+                      (i) =>
+                        i.productid === item.product_id || // backend data
+                        i.product_id === item.product_id // guest/local data
+                    );
+
+                  return (
+                    <div className="col" key={item.product_id}>
+                      <div className="pd_box">
+                        <div className="pd_img">
+                          <Image
+                            src={imageUrl}
+                            alt={item.ProductName}
+                            style={{
+                              height: "220px",
+                              objectFit: "contain",
+                              cursor: "pointer",
+                              opacity:
+                                imageUrl === "/images/tnc-default.png"
+                                  ? 0.3
+                                  : 1, // ✅ only default image faded
+                            }}
+                            onClick={() => handleClick(item.product_id)}
+                          />
+                        </div>
+                        <div className="pd_content">
+                          <h3
+                            className="pd-title hover-link fw-bold"
+                            onClick={() => handleClick(item.product_id)}
+                            style={{ cursor: "pointer", color: "#264b8c" }}
+                          >
+                            {item.ProductName || ""}
+                          </h3>
+                          <h6 className="pd-title fw-bold">
+                            {item.Manufacturer || ""}
+                          </h6>
+                          <div className="pd_price">
+                            <span className="new_price">
+                              ₹{discountedPrice}
+                            </span>
+                            <span className="old_price">
+                              <del>MRP ₹{mrp}</del> {discount}% off
+                            </span>
+                          </div>
+
+                          <Button
+                            size="sm"
+                            className={`btn-1 btn-HO ${
+                              isInBag ? "remove" : "add"
+                            }`}
+                            style={{ borderRadius: "35px" }}
+                            disabled={processingIds.includes(item.product_id)}
+                            onClick={() =>
+                              isInBag
+                                ? handleRemove(item.product_id)
+                                : handleAdd(item)
+                            }
+                          >
+                            {processingIds.includes(item.product_id)
+                              ? "Processing..."
+                              : isInBag
+                              ? "REMOVE"
+                              : "ADD"}
+                          </Button>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                );
-              })
+                  );
+                })
             ) : (
               <p>Loading medicines...</p>
             )}

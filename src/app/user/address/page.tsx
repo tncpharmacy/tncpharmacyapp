@@ -174,7 +174,8 @@ export default function AddressList() {
           {sortedBillingAddresses.map((addr, index) => {
             const isSelected =
               selectedAddressId === addr.id || pendingDefaultId === addr.id;
-
+            const isDefault =
+              selectedAddressId === addr.id || pendingDefaultId === addr.id;
             return (
               <div className="col-md-4 mb-4" key={index}>
                 <div
@@ -273,13 +274,10 @@ export default function AddressList() {
                             color:
                               addr.default_address === 1 ? "#999" : "#e53935",
                             textDecoration: "none",
-                            cursor:
-                              addr.default_address === 1
-                                ? "not-allowed"
-                                : "pointer",
+                            cursor: isDefault ? "not-allowed" : "pointer",
                           }}
                           type="button"
-                          disabled={addr.default_address === 1}
+                          disabled={isDefault}
                           onClick={(e) => {
                             e.stopPropagation();
                             if (addr.default_address === 1) return; // safety

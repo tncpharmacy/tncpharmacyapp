@@ -16,6 +16,7 @@ import { getCategories } from "@/lib/features/categorySlice/categorySlice";
 import Footer from "@/app/user/components/footer/footer";
 import { useShuffledProduct } from "@/lib/hooks/useShuffledProduct";
 import { HealthBag } from "@/types/healthBag";
+import TncLoader from "@/app/components/TncLoader/TncLoader";
 
 const mediaBase = process.env.NEXT_PUBLIC_MEDIA_BASE_URL;
 
@@ -24,8 +25,10 @@ export default function AllProduct() {
 
   // Scrolling state
   const [limit, setLimit] = useState(20);
+  const [hasFetched, setHasFetched] = useState(false);
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [visibleList, setVisibleList] = useState<any[]>([]);
+  // const [visibleList, setVisibleList] = useState<any[]>([]);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -93,11 +96,14 @@ export default function AllProduct() {
 
   // --- Fetch data initially ---
   useEffect(() => {
-    if (!medicines.length && categoryIdNum) {
-      dispatch(getMedicinesByCategoryId(categoryIdNum));
+    if (categoryIdNum) {
+      dispatch(getMedicinesByCategoryId(categoryIdNum)).finally(() =>
+        setHasFetched(true)
+      );
+
       dispatch(getCategories());
     }
-  }, [categoryIdNum, dispatch, medicines.length]);
+  }, [categoryIdNum, dispatch]);
 
   // --- Merge guest cart ---
   useEffect(() => {
@@ -116,15 +122,16 @@ export default function AllProduct() {
   }, [finalShuffledList, searchTerm]);
 
   // keep filteredRef in sync for observer checks
+  // useEffect(() => {
+  //   filteredRef.current = filteredMedicines;
+  //   if (filteredMedicines.length > 0 && limit === 0) {
+  //     setLimit(20);
+  //   }
+  // }, [filteredMedicines, limit]);
+
   useEffect(() => {
     filteredRef.current = filteredMedicines;
-    // when filtered list changes (new search or initial load), reset limit to 20
-    // BUT only if the filtered result is different and user hasn't manually increased limit.
-    // IMPORTANT: Do not reset limit if it's already > 20 to avoid jumping back while user scrolled.
-    if (filteredMedicines.length > 0 && limit === 0) {
-      setLimit(20);
-    }
-  }, [filteredMedicines, limit]);
+  }, [filteredMedicines]);
 
   // --- Handlers ---
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -158,8 +165,8 @@ export default function AllProduct() {
   };
 
   // --- visibleList slice (controls what we render) ---
-  useEffect(() => {
-    setVisibleList(filteredMedicines.slice(0, limit));
+  const visibleList = useMemo(() => {
+    return filteredMedicines.slice(0, limit);
   }, [filteredMedicines, limit]);
 
   // --- IntersectionObserver: create ONCE, read filteredRef.current inside callback ---
@@ -236,24 +243,30 @@ export default function AllProduct() {
                 </div>
               </div>
               {/* First time loader */}
-              {loading && (
+              {/* {loading && (
                 <div className="text-center my-4">
-                  <div className="spinner-border text-primary"></div>
+                  <TncLoader />
                 </div>
-              )}
+              )} */}
               <div className="pd_list">
-                {loading ? (
-                  <p></p>
+                {!hasFetched || loading ? (
+                  <div
+                    className="d-flex justify-content-center align-items-center"
+                    style={{ marginLeft: "100vh" }}
+                  >
+                    <TncLoader />
+                  </div>
                 ) : visibleList.length === 0 ? (
                   <p>No products found.</p>
                 ) : (
                   visibleList.map((item) => {
-                    const mrp = item.MRP || 0;
-                    const hasValidMrp =
-                      mrp !== null &&
-                      mrp !== undefined &&
-                      mrp !== 0 &&
-                      Number(mrp) > 0;
+                    const mrpRaw =
+                      item.MRP ?? item.mrp ?? item.Mrp ?? item.price ?? 0;
+
+                    const mrp = Number(mrpRaw);
+
+                    const hasValidMrp = Number.isFinite(mrp) && mrp > 0;
+
                     const discount = parseFloat(item.Discount) || 0;
                     const discountedPrice = Math.round(
                       mrp - (mrp * discount) / 100

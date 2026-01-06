@@ -177,6 +177,7 @@ export default function ProductPage() {
     status,
     category_id,
     created_by,
+    prescription_required,
     mrp,
     description,
     product_introduction,
@@ -467,7 +468,29 @@ export default function ProductPage() {
                 <div className="row">
                   <div className="col-md-8">
                     <h3 className="fw-bold">{medicine_name}</h3>
-
+                    <div className="mb-4">
+                      {typeof prescription_required === "number" ? (
+                        prescription_required === 1 ? (
+                          <div className="descr d-flex align-items-center">
+                            <Image
+                              src="/images/RX-small.png"
+                              alt="Prescription Required"
+                              width={28} // same as your inline width
+                              height={28} // required prop
+                              style={{ marginRight: "10px" }}
+                            />
+                            Prescription Required
+                          </div>
+                        ) : (
+                          <div className="descr">No Prescription Required</div>
+                        )
+                      ) : (
+                        // Ye blank placeholder SSR ke liye taaki hydration error na aaye
+                        <div className="descr" suppressHydrationWarning>
+                          &nbsp;
+                        </div>
+                      )}
+                    </div>
                     <div className="mb-2">
                       <div className="title">Manufacturer</div>
                       <div className="descr">{manufacturer_name}</div>

@@ -197,6 +197,7 @@ export default function PurchaseInvoiceExport() {
         "Purchase Rate": "",
         Amount: "",
         Location: "",
+        applied_discount: "",
       }));
 
     // 🟢 IMPORTANT: Wait until file export completes
