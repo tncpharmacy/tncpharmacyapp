@@ -6,6 +6,7 @@ import {
   deleteBuyerById,
   increaseBuyerQuantity,
   decreaseBuyerQuantity,
+  fetchBuyerByIdForAdmin,
 } from "@/lib/api/healthBagBuyerByPharmacist";
 
 interface BuyerState {
@@ -45,6 +46,19 @@ export const getBuyerById = createAsyncThunk(
   async (buyerId: number, { rejectWithValue }) => {
     try {
       return await fetchBuyerById(buyerId);
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        return rejectWithValue(err.message);
+      }
+      return rejectWithValue("Something went wrong");
+    }
+  }
+);
+export const getBuyerByIdForAdmin = createAsyncThunk(
+  "buyer/getBuyerByIdForAdmin",
+  async (buyerId: number, { rejectWithValue }) => {
+    try {
+      return await fetchBuyerByIdForAdmin(buyerId);
     } catch (err: unknown) {
       if (err instanceof Error) {
         return rejectWithValue(err.message);
@@ -135,7 +149,10 @@ export const healthBagBuyerByPharmacistSlice = createSlice({
     builder.addCase(getBuyerById.fulfilled, (state, action) => {
       state.buyer = action.payload.data;
     });
-
+    // Get Buyer By ID For Admin
+    builder.addCase(getBuyerByIdForAdmin.fulfilled, (state, action) => {
+      state.buyer = action.payload.data;
+    });
     // Update Buyer
     builder.addCase(putBuyerById.fulfilled, (state, action) => {
       const updatedBuyer = action.payload;

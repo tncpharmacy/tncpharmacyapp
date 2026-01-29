@@ -40,6 +40,7 @@ interface MedicineState {
   groupCareList: Medicine[];
   otherMedicines: Medicine[];
   groupCare: CareGroup[];
+  groupCareLoading: boolean;
   genericAlternatives: Medicine[];
   genericAlternativesMedicines: Medicine[];
   count: number;
@@ -61,6 +62,7 @@ const initialState: MedicineState = {
   groupCareList: [],
   otherMedicines: [],
   groupCare: [],
+  groupCareLoading: false,
   genericAlternatives: [],
   genericAlternativesMedicines: [],
   count: 0,
@@ -550,17 +552,18 @@ const medicineSlice = createSlice({
       })
       // Get group care
       .addCase(getGroupCare.pending, (state) => {
-        state.loading = true;
+        state.groupCareLoading = true;
       })
       .addCase(getGroupCare.fulfilled, (state, action) => {
-        state.loading = false;
+        state.groupCareLoading = false;
         state.groupCare = action.payload.data;
         state.error = null;
       })
       .addCase(getGroupCare.rejected, (state, action) => {
-        state.loading = false;
+        state.groupCareLoading = false;
         state.error = action.payload || "Something went wrong";
       })
+
       // ✅ Get group care by ID
       .addCase(getGroupCareById.pending, (state) => {
         state.loading = true;

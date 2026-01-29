@@ -25,7 +25,9 @@ const mediaBase = process.env.NEXT_PUBLIC_MEDIA_BASE_URL;
 export default function Supplier() {
   const dispatch = useAppDispatch();
   const router = useRouter();
-  const { list, loading } = useAppSelector((state) => state.supplier);
+  const { list, loadingList, togglingStatusId } = useAppSelector(
+    (state) => state.supplier
+  );
 
   // Infinite scroll state
   const [visibleCount, setVisibleCount] = useState(10);
@@ -92,22 +94,21 @@ export default function Supplier() {
     //     } this supplier?`
     //   )
     // )
-    {
-      const res = await dispatch(toggleSupplierStatus(id));
-      const payload = res?.payload;
 
-      if (payload && typeof payload === "object" && "status" in payload) {
-        // Status successfully toggled
-        const newStatus = payload.status; // "Active" / "Inactive"
+    const res = await dispatch(toggleSupplierStatus(id));
+    const payload = res?.payload;
 
-        toast.success(
-          `Supplier has been ${
-            newStatus === "Active" ? "activated" : "deactivated"
-          } successfully!`
-        );
-      } else {
-        toast.error("Something went wrong!");
-      }
+    if (payload && typeof payload === "object" && "status" in payload) {
+      // Status successfully toggled
+      const newStatus = payload.status; // "Active" / "Inactive"
+
+      toast.success(
+        `Supplier has been ${
+          newStatus === "Active" ? "activated" : "deactivated"
+        } successfully!`
+      );
+    } else {
+      toast.error("Something went wrong!");
     }
   };
 
@@ -199,7 +200,7 @@ export default function Supplier() {
                       </tr>
                     </thead>
                     <tbody>
-                      {loading ? (
+                      {loadingList ? (
                         <TableLoader colSpan={9} text="Loading records..." />
                       ) : (
                         <>
@@ -224,18 +225,23 @@ export default function Supplier() {
                               <td className="text-center">
                                 <span
                                   onClick={() =>
+                                    togglingStatusId !== p.id &&
                                     handleToggleStatus(p.id, p.status)
                                   }
                                   className={`status ${
                                     p.status === "Active"
                                       ? "status-active"
                                       : "status-deactive"
-                                  } cursor-pointer`}
+                                  } ${
+                                    togglingStatusId === p.id
+                                      ? "opacity-50 pointer-events-none"
+                                      : ""
+                                  }`}
                                   title="Click to change status"
                                 >
-                                  {p.status === "Active"
-                                    ? "Active"
-                                    : "Inactive"}
+                                  {togglingStatusId === p.id
+                                    ? "Updating..."
+                                    : p.status}
                                 </span>
                               </td>
                               <td className="text-center">
@@ -264,7 +270,7 @@ export default function Supplier() {
                       )}
 
                       {/* No more records */}
-                      {!loading && !loadings && list.length === 0 && (
+                      {!loadingList && !loadings && list.length === 0 && (
                         <tr>
                           <td
                             colSpan={9}
@@ -275,7 +281,7 @@ export default function Supplier() {
                         </tr>
                       )}
 
-                      {!loading &&
+                      {!loadingList &&
                         !loadings &&
                         list.length > 0 &&
                         visibleCount >= list.length && (

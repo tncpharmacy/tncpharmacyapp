@@ -652,7 +652,7 @@ export default function BuyerProfile() {
                                       }
                                       title="Order Details"
                                     >
-                                      <i className="bi bi-eye-fill"></i>
+                                      <i className="bi bi-eye-fill"></i> Details
                                     </button>
                                   </div>
                                 </div>

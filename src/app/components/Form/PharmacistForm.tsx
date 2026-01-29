@@ -222,8 +222,8 @@ export default function PharmacistForm({ id }: Props) {
 
                     setFormData((prev) => ({
                       ...prev,
-                      pharmacy_id: selectedId, // 👈 backend ke liye
-                      pharmacy_name: selectedPharmacy?.label ?? "", // 👈 UI me dikhane ke liye
+                      pharmacy_id: selectedId,
+                      pharmacy_name: selectedPharmacy?.label ?? "",
                     }));
                   }}
                 />

@@ -19,12 +19,12 @@ export default function SideNav() {
           </Link>
         </li>
         <li>
-          <Link href="/orders" className="link">
+          <Link href="/order" className="link">
             <i className="bi bi-bag-check"></i> Order
           </Link>
         </li>
         <li>
-          <Link href="#" className="link">
+          <Link href="/stock" className="link">
             <i className="bi bi-box-seam"></i> Stock
           </Link>
         </li>
@@ -44,10 +44,14 @@ export default function SideNav() {
             <i className="bi bi-person-workspace"></i> Pharmacist
           </Link>
         </li>
-
         <li>
           <Link href="/buyer" className="link">
-            <i className="bi bi-person"></i> Buyer
+            <i className="bi bi-person"></i> Patient
+          </Link>
+        </li>
+        <li>
+          <Link href="/buyerHealthBag" className="link">
+            <i className="bi bi-person"></i> Patient HealthBag
           </Link>
         </li>
         <li>
@@ -125,11 +129,11 @@ export default function SideNav() {
             </ul>
           )}
         </li>
-        <li>
+        {/* <li>
           <Link href="/clinic" className="link">
             <i className="bi bi-hospital"></i> Hospital & Clinic
           </Link>
-        </li>
+        </li> */}
         {/* <li>
           <Link href="/doctors" className="link">
             <i className="bi bi-person-badge"></i> Doctors

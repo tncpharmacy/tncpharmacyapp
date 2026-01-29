@@ -11,27 +11,37 @@ import type { Medicine, Product } from "@/types/medicine";
 import InfiniteScroll from "@/app/components/InfiniteScroll/InfiniteScroll";
 import SelectInput from "@/app/components/Input/SelectInput";
 import Input from "@/app/components/Input/Input";
-import { fetchPharmacyList } from "@/lib/features/pharmacyListSlice/pharmacyListSlice";
+import { getUser } from "@/lib/auth/auth";
+import { createPurchaseStock } from "@/lib/features/purchaseStockSlice/purchaseStockSlice";
+import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
+import { fetchSupplier } from "@/lib/features/supplierSlice/supplierSlice";
+import CenterSpinner from "@/app/components/CenterSppiner/CenterSppiner";
 
-type PharmacyCommon = {
-  id: number;
-  pharmacy_name: string;
+const getToday = () => {
+  const d = new Date();
+  return d.toISOString().split("T")[0];
+};
+
+const getYesterday = () => {
+  const d = new Date();
+  d.setDate(d.getDate() - 1);
+  return d.toISOString().split("T")[0];
 };
 
 export default function PurchaseInvoiceImport() {
   const dispatch = useAppDispatch();
   const router = useRouter();
-  // const userPharmacy = getUser();
-  // const pharmacyName = userPharmacy?.pharmacy_name || "";
-  // const pharmacyId = userPharmacy?.id || 0;
+  const userPharmacy = getUser();
+  const pharmacy_id = userPharmacy?.pharmacy_id || 0;
+  const pharmacist_id = userPharmacy?.id || 0;
   const { medicines: getMedicine } = useAppSelector((state) => state.medicine);
-  const { list: getPharmacyList } = useAppSelector(
-    (state) => state.pharmacyList
-  );
+  const { list: supplierList } = useAppSelector((state) => state.supplier);
   // Infinite scroll state
   const [visibleCount, setVisibleCount] = useState(10);
   const [loadings, setLoadings] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+
   // File input ref
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   // Excel preview data
@@ -45,8 +55,7 @@ export default function PurchaseInvoiceImport() {
   const [selectedMedicines] = useState<{ label: string; value: number }[]>([]);
 
   const [formData, setFormData] = useState<Partial<Product>>({
-    id: 0,
-    pharmacy: "",
+    id: pharmacist_id,
     supplier: "",
     medicine_name: "",
     pack_size: "",
@@ -60,6 +69,8 @@ export default function PurchaseInvoiceImport() {
     mrp: "",
     purchase_rate: "",
     amount: "",
+    location: "",
+    applied_discount: "",
   });
 
   // filtered records by search box + status filter
@@ -78,18 +89,27 @@ export default function PurchaseInvoiceImport() {
     setFilteredData(data);
   }, [selectedMedicines, getMedicine]);
 
+  useEffect(() => {
+    setFormData((prev) => ({
+      ...prev,
+      purchase_date: getToday(), // ✅ default today
+    }));
+  }, []);
+
   // Fetch all pharmacies once
   useEffect(() => {
-    dispatch(fetchPharmacyList());
     dispatch(getMedicinesList());
   }, [dispatch]);
 
-  const pharmacyOptions = ((getPharmacyList as PharmacyCommon[]) || []).map(
-    (p) => ({
-      label: p.pharmacy_name,
-      value: p.id,
-    })
-  );
+  useEffect(() => {
+    dispatch(fetchSupplier());
+  }, [dispatch]);
+
+  // Convert suppliers into dropdown options
+  const supplierOptions = (supplierList || []).map((s) => ({
+    label: s.supplier_name,
+    value: s.id, // always use id
+  }));
 
   //infinte scroll records
   const loadMore = () => {
@@ -105,25 +125,209 @@ export default function PurchaseInvoiceImport() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    const reader = new FileReader();
-    reader.onload = (evt) => {
-      const data = evt.target?.result;
-      const workbook = XLSX.read(data, { type: "binary" });
-      const sheetName = workbook.SheetNames[0];
-      const worksheet = workbook.Sheets[sheetName];
-      const jsonData =
-        XLSX.utils.sheet_to_json<Record<string, string | number>>(worksheet);
-      setExcelData(jsonData);
-    };
-    reader.readAsBinaryString(file);
+    setIsLoading(true); // 🔥 Loader ON
+
+    // ⭐ Give React time to render UI
+    setTimeout(() => {
+      const reader = new FileReader();
+
+      reader.onload = (evt) => {
+        try {
+          const binaryStr = evt.target?.result;
+          const workbook = XLSX.read(binaryStr, {
+            type: "binary",
+            cellStyles: true,
+          });
+          const sheet = workbook.Sheets[workbook.SheetNames[0]];
+          const csv = XLSX.utils.sheet_to_csv(sheet);
+
+          const parseCSVLine = (line: string) => {
+            const result: string[] = [];
+            let current = "";
+            let insideQuotes = false;
+
+            for (const char of line) {
+              if (char === '"') {
+                insideQuotes = !insideQuotes;
+              } else if (char === "," && !insideQuotes) {
+                result.push(current);
+                current = "";
+              } else {
+                current += char;
+              }
+            }
+            result.push(current);
+            return result;
+          };
+
+          const rows = csv
+            .split("\n")
+            .map((line) => parseCSVLine(line))
+            .filter((r) => r.some((c) => c.trim() !== ""));
+
+          const headerIndex = rows.findIndex((r) =>
+            r.some((cell) => cell.trim().toLowerCase() === "product")
+          );
+
+          if (headerIndex === -1) {
+            alert("Header row not found!");
+            setIsLoading(false);
+            return;
+          }
+
+          const header = rows[headerIndex];
+          const body = rows.slice(headerIndex + 1);
+
+          const jsonData = body.map((r) => {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const obj: any = {};
+            header.forEach((h, i) => (obj[h.trim()] = r[i] ?? ""));
+            return obj;
+          });
+
+          setExcelData(jsonData);
+        } finally {
+          setIsLoading(false); // 🔥 Loader OFF
+        }
+      };
+
+      reader.readAsBinaryString(file);
+    }, 1000); // ⭐ This delay ensures loader shows
   };
+
+  // const handleExcelUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  //   const file = e.target.files?.[0];
+  //   if (!file) return;
+
+  //   const reader = new FileReader();
+
+  //   reader.onload = (evt) => {
+  //     const bstr = evt.target?.result;
+  //     const workbook = XLSX.read(bstr, { type: "binary" });
+
+  //     const sheetName = workbook.SheetNames[0];
+  //     const sheet = workbook.Sheets[sheetName];
+
+  //     // STEP 1: Read Sheet (Row wise)
+  //     const rows: any[][] = XLSX.utils.sheet_to_json(sheet, {
+  //       header: 1, // <-- First row will be header
+  //       defval: "", // remove undefined values
+  //       raw: false,
+  //     });
+
+  //     if (rows.length === 0) return;
+
+  //     const headers = rows[0]; // First row
+  //     const dataRows = rows.slice(1); // Remaining data
+
+  //     // STEP 2: Convert rows to JSON using excel headers
+  //     const finalData = dataRows.map((row) => {
+  //       const obj: Record<string, any> = {};
+
+  //       headers.forEach((h: string, columnIndex: number) => {
+  //         obj[h] = row[columnIndex] ?? "";
+  //       });
+
+  //       return obj;
+  //     });
+
+  //     console.log("FINAL DATA:", finalData);
+
+  //     // STEP 3: Save to State
+  //     setExcelData(finalData);
+  //   };
+
+  //   reader.readAsBinaryString(file);
+  // };
+
   const handleImportClick = () => {
     fileInputRef.current?.click(); // 👈 hidden input trigger
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Final Submit Data:", excelData);
+    const today = getToday();
+    const yesterday = getYesterday();
+
+    if (
+      formData.purchase_date !== today &&
+      formData.purchase_date !== yesterday
+    ) {
+      toast.error("Purchase date must be today or yesterday");
+      return;
+    }
+
+    setIsLoading(true); // 🔥 Loader ON immediately
+
+    // ⭐ Give React time to render loader
+    setTimeout(() => {
+      const parseExcelDate = (excelDate: number): string => {
+        if (!excelDate) return new Date().toISOString();
+        const date = new Date((excelDate - 25569) * 86400 * 1000);
+        return date.toISOString();
+      };
+
+      // Build purchase_details from Excel
+      const purchaseDetails = excelData.map((row, i) => ({
+        pharmacy_id,
+        product_id: Number(row["Id"]) || 0,
+        quantity: row["Required QTY"]?.toString() || "0",
+        batch: row["Batch"]?.toString() || `BATCH-${i + 1}`,
+        expiry_date: parseExcelDate(Number(row["Expiry Date"])),
+        mrp: row["MRP"]?.toString() || "0",
+        discount: row["Discount (%)"]?.toString() || "0",
+        purchase_rate: row["Purchase Rate"]?.toString() || "0",
+        amount: row["Amount"]?.toString() || "0",
+        location: row["Location"]?.toString() || "0",
+        applied_discount: row["Applied Discount"]?.toString() || "0",
+      }));
+
+      const payload = {
+        pharmacy_id: Number(pharmacy_id),
+        supplier_id: Number(formData.supplier) || 1,
+        invoice_num: String(formData.invoice_number),
+        purchase_date: new Date(
+          formData.purchase_date || new Date()
+        ).toISOString(),
+        status: "Active",
+        purchase_details: purchaseDetails,
+      };
+
+      // 🚀 API CALL
+      dispatch(createPurchaseStock(payload))
+        .unwrap()
+        .then((res) => {
+          toast.success("Purchase Invoice Imported Successfully!");
+
+          setExcelData([]);
+          if (fileInputRef.current) fileInputRef.current.value = "";
+
+          setFormData({
+            id: pharmacist_id,
+            supplier: "",
+            medicine_name: "",
+            pack_size: "",
+            purchase_date: "",
+            invoice_number: "",
+            manufacturer_name: "",
+            qty: "",
+            batch: "",
+            expiry_date: "",
+            discount: "",
+            mrp: "",
+            purchase_rate: "",
+            amount: "",
+            location: "",
+            applied_discount: "",
+          });
+        })
+        .catch(() => {
+          toast.error("Failed to create purchase.");
+        })
+        .finally(() => {
+          setIsLoading(false); // 🔥 Loader OFF
+        });
+    }, 1000); // ⭐ Ensures loader shows before heavy work starts
   };
 
   return (
@@ -132,6 +336,7 @@ export default function PurchaseInvoiceImport() {
       <div className="body_wrap">
         <SideNav />
         <div className="body_right">
+          {isLoading && <CenterSpinner />}
           <InfiniteScroll
             loadMore={loadMore}
             hasMore={visibleCount < filteredData.length}
@@ -152,19 +357,6 @@ export default function PurchaseInvoiceImport() {
                   <div className="row gy-3">
                     {/* 🔹 Row 1 */}
                     <SelectInput
-                      label="Pharmacy"
-                      name="pharmacy"
-                      value={formData.pharmacy || ""}
-                      onChange={(e) =>
-                        setFormData((prev) => ({
-                          ...prev,
-                          pharmacy: e.target.value,
-                        }))
-                      }
-                      options={pharmacyOptions}
-                      //required
-                    />
-                    <SelectInput
                       label="Supplier"
                       name="supplier"
                       value={formData.supplier || ""}
@@ -174,20 +366,15 @@ export default function PurchaseInvoiceImport() {
                           supplier: e.target.value,
                         }))
                       }
-                      options={[
-                        { value: "SS Pharma", label: "SS Pharma" },
-                        { value: "TSS Pharma", label: "TSS Pharma" },
-                        {
-                          value: "MLK Pharma",
-                          label: "MLK Pharma",
-                        },
-                      ]}
+                      options={supplierOptions}
                     />
                     <Input
                       label="Purchase Date"
                       type="date"
                       name="purchase_date"
                       value={formData.purchase_date}
+                      min={getYesterday()} // ✅ yesterday allowed
+                      max={getToday()} // ✅ today allowed
                       onChange={(e) =>
                         setFormData((prev) => ({
                           ...prev,
@@ -196,7 +383,6 @@ export default function PurchaseInvoiceImport() {
                       }
                       // required
                     />
-                    {/* 🔹 Row 2 */}
                     <Input
                       label="Invoice Number"
                       type="text"
@@ -210,6 +396,7 @@ export default function PurchaseInvoiceImport() {
                       }
                       //required
                     />
+                    {/* 🔹 Row 2 */}
                     {/* Hidden file input */}
                     <input
                       type="file"
@@ -218,7 +405,7 @@ export default function PurchaseInvoiceImport() {
                       onChange={handleExcelUpload}
                       style={{ display: "none" }}
                     />
-                    <div className="col-md-4 d-flex align-items-end">
+                    <div className="col-md-6 d-flex align-items-end">
                       <div className="txt_col w-100 text-end">
                         <button
                           type="button"
@@ -230,7 +417,7 @@ export default function PurchaseInvoiceImport() {
                       </div>
                     </div>
 
-                    <div className="col-md-4 d-flex align-items-end">
+                    <div className="col-md-6 d-flex align-items-end">
                       <div className="txt_col w-100 text-end">
                         <button
                           className="btn-style1 w-100"

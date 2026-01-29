@@ -14,6 +14,7 @@ export interface StockItem {
   invoice_num?: string;
   pharmacy_name?: string;
   supplier_name?: string;
+  pharmacy_id?: string;
   items: PurchaseItem[];
 }
 export interface PurchaseItem {

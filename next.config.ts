@@ -129,6 +129,10 @@ const nextConfig: NextConfig = {
         destination: "/admin/admin-dashboard",
       },
       {
+        source: "/stock",
+        destination: "/admin/stock",
+      },
+      {
         source: "/purchase-invoice",
         destination: "/admin/purchase-invoice",
       },
@@ -261,16 +265,20 @@ const nextConfig: NextConfig = {
         destination: "/admin/medicine/medicine-strength",
       },
       {
-        source: "/orders",
-        destination: "/admin/order/order-list",
+        source: "/order",
+        destination: "/admin/order",
       },
       {
         source: "/supplier",
-        destination: "/admin/supplier/list-supplier",
+        destination: "/admin/supplier",
       },
       {
         source: "/add-supplier",
         destination: "/admin/supplier/add-supplier",
+      },
+      {
+        source: "/buyerHealthBag",
+        destination: "/admin/buyerHealthBag",
       },
       {
         source: "/buyer",

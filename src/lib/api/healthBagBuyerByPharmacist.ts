@@ -21,6 +21,16 @@ export const fetchBuyerById = async (buyerId: number) => {
 };
 
 // ================================
+// GET BUYER BY ID FOR ADMIN
+// ================================
+export const fetchBuyerByIdForAdmin = async (buyerId: number) => {
+  const res = await api.get(
+    ENDPOINTS.HEALTHBAG_PHARMACIST.GET_BUYER_LIST_BY_ID__FOR_ADMIN(buyerId)
+  );
+  return res.data;
+};
+
+// ================================
 // UPDATE BUYER (PUT)
 // ================================
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

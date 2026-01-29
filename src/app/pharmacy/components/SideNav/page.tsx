@@ -56,7 +56,7 @@ export default function SideNav() {
         </li>
         <li>
           <Link href="/pharmacy/supplier" className="link">
-            <i className="bi bi-basket"></i> Supplier
+            <i className="bi bi-truck"></i> Supplier
           </Link>
         </li>
         <li>

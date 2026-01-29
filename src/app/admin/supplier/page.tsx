@@ -2,9 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { Button, Image, Modal } from "react-bootstrap";
-import "../css/style.css";
-import SideNav from "@/app/pharmacy/components/SideNav/page";
-import Header from "@/app/pharmacy/components/Header/page";
+import "../css/admin-style.css";
+import SideNav from "@/app/admin/components/SideNav/page";
+import Header from "@/app/admin/components/Header/page";
 import { useAppDispatch, useAppSelector } from "@/lib/hooks";
 
 import type { Supplier } from "@/types/supplier";
@@ -231,7 +231,7 @@ export default function Supplier() {
                                   className={`status ${
                                     p.status === "Active"
                                       ? "status-active"
-                                      : "status-deactive"
+                                      : "status-inactive"
                                   } ${
                                     togglingStatusId === p.id
                                       ? "opacity-50 pointer-events-none"

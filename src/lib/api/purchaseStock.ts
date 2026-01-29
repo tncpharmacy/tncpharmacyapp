@@ -54,3 +54,7 @@ export const getPharmacistByIdApi = (id: number) => {
 export const getPharmacistListApi = () => {
   return api.get(ENDPOINTS.PURCHASE_STOCK.GET_PHARMACIST_LIST);
 };
+
+export const getStockListSuperAdminApi = () => {
+  return api.get(ENDPOINTS.PURCHASE_STOCK.GET_STOCK_LIST_FOR_SUPERADMIN);
+};

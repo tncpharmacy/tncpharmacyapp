@@ -28,6 +28,7 @@ import Footer from "@/app/user/components/footer/footer";
 import { useShuffledOnce } from "@/lib/hooks/useShuffledOnce";
 import { HealthBag } from "@/types/healthBag";
 import dynamic from "next/dynamic";
+import TncLoader from "@/app/components/TncLoader/TncLoader";
 const mediaBase = process.env.NEXT_PUBLIC_MEDIA_BASE_URL;
 
 export default function HomePage() {
@@ -38,7 +39,10 @@ export default function HomePage() {
   const [open, setOpen] = useState(false);
   const despatch = useAppDispatch();
   const router = useRouter();
-  const { groupCare } = useAppSelector((state) => state.medicine);
+  const { groupCare, groupCareLoading } = useAppSelector(
+    (state) => state.medicine
+  );
+  const [sliderReady, setSliderReady] = useState(false);
 
   // start for increse header count code
   const buyer = useAppSelector((state) => state.buyer.buyer);
@@ -101,6 +105,16 @@ export default function HomePage() {
   const getIconPath = (groupName: string): string => {
     return CARE_GROUP_ICONS[groupName] || CARE_GROUP_ICONS.DEFAULT;
   };
+
+  useEffect(() => {
+    if (isClient) {
+      const t = setTimeout(() => {
+        setSliderReady(true);
+      }, 0); // 👈 next tick
+
+      return () => clearTimeout(t);
+    }
+  }, [isClient]);
 
   useEffect(() => {
     const timeout = setTimeout(() => {
@@ -300,10 +314,13 @@ export default function HomePage() {
             Browse by Health Conditions
           </h2>
           <div className="slider-container">
-            {/*Slider Implementation */}
-            {isClient && (
+            {!sliderReady ? (
+              <div className="d-flex justify-content-center align-items-center py-4">
+                <TncLoader />
+              </div>
+            ) : (
               <Slider {...settings}>
-                {groupCare?.map((group, index) => (
+                {groupCare.map((group, index) => (
                   <div key={group.id}>
                     <div
                       className="category_item"
@@ -319,14 +336,12 @@ export default function HomePage() {
                       >
                         <Image
                           src={getIconPath(group.group_name)}
-                          alt={`${group.group_name} Icon`}
+                          alt={group.group_name}
                         />
                       </div>
 
                       <div>
                         <h2 className="category_title">{group.group_name}</h2>
-
-                        {/* View Now sirf visual ke liye */}
                         <span className="category_link">
                           View Now <i className="bi bi-arrow-right-short"></i>
                         </span>
@@ -453,7 +468,9 @@ export default function HomePage() {
                   );
                 })
             ) : (
-              <p>Loading medicines...</p>
+              <div className="d-flex justify-content-center align-items-center">
+                <TncLoader />
+              </div>
             )}
           </div>
         </div>
@@ -700,7 +717,9 @@ export default function HomePage() {
                   );
                 })
             ) : (
-              <p>Loading medicines...</p>
+              <div className="d-flex justify-content-center align-items-center">
+                <TncLoader />
+              </div>
             )}
           </div>
         </div>
@@ -869,7 +888,9 @@ export default function HomePage() {
                   );
                 })
             ) : (
-              <p>Loading medicines...</p>
+              <div className="d-flex justify-content-center align-items-center">
+                <TncLoader />
+              </div>
             )}
           </div>
         </div>

@@ -13,12 +13,16 @@ interface PharmacyState {
   list: Supplier[];
   loading: boolean;
   error: string | null;
+  loadingList: boolean; // table loader
+  togglingStatusId: number | null; // silent toggle
 }
 
 const initialState: PharmacyState = {
   list: [],
   loading: false,
   error: null,
+  loadingList: false, // table loader
+  togglingStatusId: null, // silent toggle
 };
 
 // 🔥 FSupplier
@@ -118,19 +122,19 @@ const supplierSlice = createSlice({
     builder
       // ✅ fetch
       .addCase(fetchSupplier.pending, (state) => {
-        state.loading = true;
+        state.loading = true; // 🔥 old components safe
+        state.loadingList = true; // 🔥 table loader
         state.error = null;
       })
-      .addCase(
-        fetchSupplier.fulfilled,
-        (state, action: PayloadAction<Supplier[]>) => {
-          state.loading = false;
-          state.list = action.payload;
-        }
-      )
+      .addCase(fetchSupplier.fulfilled, (state, action) => {
+        state.loading = false;
+        state.loadingList = false;
+        state.list = action.payload;
+      })
       .addCase(fetchSupplier.rejected, (state, action) => {
         state.loading = false;
-        state.error = (action.payload as string) ?? "Failed to load pharmacies";
+        state.loadingList = false;
+        state.error = action.payload as string;
       })
 
       // 📌 Fetch Supplier by ID
@@ -157,20 +161,19 @@ const supplierSlice = createSlice({
       })
 
       // ✅ status
+      .addCase(toggleSupplierStatus.pending, (state, action) => {
+        state.togglingStatusId = action.meta.arg; // 🔥 clicked supplier id
+      })
       .addCase(toggleSupplierStatus.fulfilled, (state, action) => {
-        state.loading = false;
+        state.togglingStatusId = null;
+
         const updated = action.payload;
         state.list = state.list.map((p) =>
           p.id === updated.id ? { ...p, status: updated.status } : p
         );
       })
-      .addCase(toggleSupplierStatus.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
-      .addCase(toggleSupplierStatus.rejected, (state, action) => {
-        state.loading = false;
-        state.error = (action.payload as string) ?? "Status update failed";
+      .addCase(toggleSupplierStatus.rejected, (state) => {
+        state.togglingStatusId = null;
       })
       // ✅ Add pharmacy
       .addCase(addSupplier.pending, (state) => {

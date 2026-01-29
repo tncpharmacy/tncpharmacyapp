@@ -7,7 +7,7 @@ const mediaBase = process.env.NEXT_PUBLIC_MEDIA_BASE_URL;
 
 export default function HeaderProfilePic() {
   const { user } = useAppSelector((state) => state.auth);
-  console.log("userrr0", user);
+  //console.log("userrr0", user);
   // Capitalize helper
   const capitalize = (str: string) => {
     if (!str) return "";

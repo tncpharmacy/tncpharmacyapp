@@ -189,6 +189,7 @@ export const ENDPOINTS = {
     QUANTITY_DECREASE: (cartId: number) =>
       `/cart/pharmacist/quantity/${cartId}/?quantity=Decrease`,
 
+    // for pharmacist & pharmacy
     GET_BUYER_LIST: "/cart/buyer/list/",
     GET_BUYER_LIST_BY_ID: (buyerId: number) =>
       `/cart/pharmacist/view/buyer/${buyerId}/`,
@@ -198,6 +199,10 @@ export const ENDPOINTS = {
       `/cart/pharmacist/update/buyer/${cartId}/?quantity=Increase`,
     BUYER_QUANTITY_DECREASE: (cartId: number) =>
       `/cart/pharmacist/update/buyer/${cartId}/?quantity=Decrease`,
+
+    // for admin
+    GET_BUYER_LIST_BY_ID__FOR_ADMIN: (buyerId: number) =>
+      `cart/superadmin/view/buyer/${buyerId}/`,
   },
 
   PHARMACIST_ORDER: {
@@ -208,6 +213,8 @@ export const ENDPOINTS = {
       `/order/pharmacist/list/${buyerId}/`,
     GET_ORDER_BY_ORDERID: (orderId: number) => `/order/detail/${orderId}/`,
     GET_ORDER_LIST: "/order/list/",
+    // GET_ORDER_LIST_BY_ID_SUPERADMIN: (orderId: number) => `/order/detail/${orderId}/`,
+    // GET_ORDER_LIST_SUPERADMIN: "/order/list/",
   },
 
   // address
@@ -229,6 +236,7 @@ export const ENDPOINTS = {
       `/stock/pharmacy/${id}/stock-details/`,
     GET_PHARMACIST_LIST: "/stock/purchase/",
     GET_PHARMACIST_BY_ID: (id: number) => `/stock/purchase/${id}`,
+    GET_STOCK_LIST_FOR_SUPERADMIN: "/stock/superadmin/stock-details/",
   },
 
   // Supplier Crud

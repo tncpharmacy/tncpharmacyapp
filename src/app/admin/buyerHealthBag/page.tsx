@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Button, Image, Modal, OverlayTrigger, Tooltip } from "react-bootstrap";
 import "../css/admin-style.css";
 import SideNav from "@/app/admin/components/SideNav/page";
@@ -17,13 +17,10 @@ import {
 import TableLoader from "@/app/components/TableLoader/TableLoader";
 import { PharmacistOrder } from "@/types/pharmacistOrder";
 import InfiniteScroll from "@/app/components/InfiniteScrollS/InfiniteScrollS";
-import {
-  getPharmacyBuyersThunk,
-  getSuperAdminBuyersThunk,
-} from "@/lib/features/pharmacistBuyerListSlice/pharmacistBuyerListSlice";
+import { getPharmacyBuyersThunk } from "@/lib/features/pharmacistBuyerListSlice/pharmacistBuyerListSlice";
 import { getUser } from "@/lib/auth/auth";
 import {
-  getBuyerById,
+  getBuyerByIdForAdmin,
   getBuyerList,
   putBuyerById,
   removeBuyerById,
@@ -86,22 +83,23 @@ export default function OrderList() {
   // LOCAL COPY — prevent flickering
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [localItems, setLocalItems] = useState<any[]>([]);
+  const {
+    buyers,
+    buyer: buyerById,
+    loading,
+  } = useAppSelector((state) => state.healthBagBuyerByPharmacist);
 
-  const { superAdminBuyers, loadingSuperAdminBuyers } = useAppSelector(
-    (state) => state.pharmacistBuyerList
+  const { list: durationList } = useAppSelector(
+    (state) => state.productDuration
   );
 
-  const buyersResponse = superAdminBuyers as unknown as {
-    data?: BuyerData[];
-  };
-
-  const buyerList: BuyerData[] = useMemo(() => {
-    return Array.isArray(buyersResponse?.data) ? buyersResponse.data : [];
-  }, [buyersResponse]);
-
+  const { list: instructionList } = useAppSelector(
+    (state) => state.productInstruction
+  );
   useEffect(() => {
-    dispatch(getSuperAdminBuyersThunk());
-  }, []);
+    dispatch(getProductDurations());
+    dispatch(getProductInstructions());
+  }, [dispatch]);
 
   // Sync only when parent updates
   useEffect(() => {
@@ -109,36 +107,141 @@ export default function OrderList() {
   }, [modalItems]);
   // UI filtering directly render ke time
   useEffect(() => {
-    setFilteredData(buyerList);
-  }, [buyerList]);
+    setFilteredData(buyers);
+  }, [buyers]);
+
+  useEffect(() => {
+    dispatch(getBuyerList());
+  }, []);
 
   // filtered records by search box + status filter
   useEffect(() => {
-    let data: BuyerData[] = buyerList;
+    let data: BuyerData[] = buyers || [];
 
-    if (searchTerm.trim()) {
+    if (searchTerm) {
       const lower = searchTerm.toLowerCase().trim();
 
-      data = data.filter((item) =>
-        Object.values(item).some((val) =>
-          String(val ?? "")
+      data = data.filter((item: BuyerData) => {
+        return Object.keys(item).some((key) => {
+          const value = String(item[key as keyof BuyerData] ?? "")
             .toLowerCase()
-            .includes(lower)
-        )
-      );
+            .trim();
+
+          if (key === "gender") {
+            // gender exact match hona chahiye
+            return value === lower;
+          }
+
+          // baaki fields substring match
+          return value.includes(lower);
+        });
+      });
     }
 
     setFilteredData(data);
-  }, [searchTerm, buyerList]);
-
+  }, [searchTerm, buyers]);
   //infinte scroll records
   const loadMore = () => {
-    if (loadings || visibleCount >= buyerList.length) return;
+    if (loadings || visibleCount >= buyers.length) return;
     setLoadings(true);
     setTimeout(() => {
       setVisibleCount((prev) => prev + 5);
       setLoadings(false);
     }, 3000); // spinner for 3 sec
+  };
+
+  //   const handleExport = () => {
+  //     if (!startDate || !endDate) {
+  //       alert("Please select both start and end dates.");
+  //       return;
+  //     }
+  //     if (new Date(startDate) > new Date(endDate)) {
+  //       alert("Start Date cannot be after End Date!");
+  //       return;
+  //     }
+  //     console.log("Generating report from", startDate, "to", endDate);
+  //     // 🔽 yahan export / API call logic likho
+  //     setShowReport(false);
+  //   };
+
+  const handleHistory = (buyerID: number) => {
+    setShowHistory(true);
+    setModalLoading(true);
+
+    dispatch(getBuyerByIdForAdmin(buyerID))
+      .unwrap()
+      .then((res) => {
+        setModalItems(
+          Array.isArray(res) ? res : Array.isArray(res?.data) ? res.data : []
+        );
+      })
+      .finally(() => setModalLoading(false));
+  };
+
+  const handleRemoveItem = (id: number) => {
+    dispatch(removeBuyerById(id));
+    setModalItems((prev) => {
+      if (!Array.isArray(prev)) return []; // Prevent error
+      return prev.filter((item) => item.id !== id);
+    });
+  };
+
+  const saveField = async (id: number, field: string, value: string) => {
+    try {
+      await dispatch(
+        putBuyerById({
+          id,
+          payload: { [field]: value },
+        })
+      ).unwrap();
+
+      // Local state update
+      setModalItems((prev) =>
+        prev.map((item) =>
+          item.id === id ? { ...item, [field]: value } : item
+        )
+      );
+
+      setEditing(null);
+    } catch (error) {
+      console.error("PUT Error:", error);
+    }
+  };
+
+  const handleQtyChange = (
+    e: React.ChangeEvent<HTMLInputElement>,
+    index: number
+  ) => {
+    const raw = e.target.value;
+
+    // allow only digits
+    if (!/^\d*$/.test(raw)) return;
+
+    // live typing state
+    setEditingQty((prev) => ({
+      ...prev,
+      [index]: raw,
+    }));
+
+    // 🔥 LIVE UPDATE total price because we also update modalItems
+    setModalItems((prevItems) =>
+      prevItems.map((it, i) =>
+        i === index ? { ...it, qty: raw === "" ? "" : Number(raw) } : it
+      )
+    );
+  };
+
+  const handleQtyBlur = async (index: number) => {
+    const newQty = editingQty[index] ?? localItems[index].qty;
+
+    await saveField(localItems[index].id, "qty", newQty);
+
+    // remove temporary editing
+    setEditingQty((prev) => {
+      const updated = { ...prev };
+      delete updated[index];
+      return updated;
+    });
   };
 
   return (
@@ -204,10 +307,11 @@ export default function OrderList() {
                         <th className="fw-bold text-start">Email</th>
                         <th className="fw-bold text-start">UHID</th>
                         <th className="fw-bold text-start">Status</th>
+                        <th className="fw-bold text-center">Action</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {loadingSuperAdminBuyers ? (
+                      {loading ? (
                         <TableLoader colSpan={9} text="Loading records..." />
                       ) : (
                         <>
@@ -257,6 +361,15 @@ export default function OrderList() {
                                     <td className="text-start">
                                       {p.status ?? ""}
                                     </td>
+                                    <td className="text-center">
+                                      <button
+                                        className="btn btn-light btn-sm"
+                                        title="Patient HealthBag"
+                                        onClick={() => handleHistory(p.id)}
+                                      >
+                                        <i className="bi bi-cart-plus-fill"></i>
+                                      </button>
+                                    </td>
                                   </tr>
                                 );
                               })}
@@ -267,23 +380,21 @@ export default function OrderList() {
                         <TableLoader colSpan={9} text="Loading more..." />
                       )}
                       {/* No more records */}
-                      {!loadingSuperAdminBuyers &&
-                        !loadings &&
-                        buyerList.length === 0 && (
-                          <tr>
-                            <td
-                              colSpan={9}
-                              className="text-center py-2 text-muted fw-bold fs-6"
-                            >
-                              No records found
-                            </td>
-                          </tr>
-                        )}
+                      {!loading && !loadings && buyers.length === 0 && (
+                        <tr>
+                          <td
+                            colSpan={9}
+                            className="text-center py-2 text-muted fw-bold fs-6"
+                          >
+                            No records found
+                          </td>
+                        </tr>
+                      )}
 
-                      {!loadingSuperAdminBuyers &&
+                      {!loading &&
                         !loadings &&
-                        buyerList.length > 0 &&
-                        visibleCount >= buyerList.length && (
+                        buyers.length > 0 &&
+                        visibleCount >= buyers.length && (
                           <tr>
                             <td
                               colSpan={9}
@@ -301,6 +412,121 @@ export default function OrderList() {
           </InfiniteScroll>
         </div>
       </div>
+      {/* ===========================
+    PATIENT DETAILS MODAL
+=========================== */}
+      <Modal
+        show={showHistory}
+        onHide={() => setShowHistory(false)}
+        size="xl"
+        centered
+        style={{
+          backdropFilter: "blur(4px)",
+        }}
+      >
+        <Modal.Header
+          closeButton
+          style={{
+            padding: "18px 24px",
+            borderBottom: "1px solid #eaeaea",
+            background: "#f9f9f9",
+          }}
+        >
+          <Modal.Title style={{ fontSize: "20px", fontWeight: 700 }}>
+            <i className="bi bi-cart"></i> Health Bag / Billing Cart{" "}
+            <span style={{ fontWeight: 700, color: "#555" }}>
+              ({buyerById?.length ?? 0} items)
+            </span>
+          </Modal.Title>
+        </Modal.Header>
+
+        <Modal.Body
+          style={{
+            padding: "22px",
+            background: "#ffffff",
+            maxHeight: "70vh",
+            overflowY: "auto",
+          }}
+        >
+          {modalLoading ? (
+            <div className="text-center p-4">
+              <div className="spinner-border text-primary"></div>
+            </div>
+          ) : (
+            <div
+              className="table-responsive"
+              style={{
+                borderRadius: "10px",
+                overflow: "hidden",
+                border: "1px solid #e5e5e5",
+              }}
+            >
+              <table
+                className="table"
+                style={{
+                  margin: 0,
+                  fontSize: "14px",
+                  background: "white",
+                }}
+              >
+                <thead
+                  style={{
+                    background: "#f2f2f2",
+                    fontSize: "14px",
+                    fontWeight: 700,
+                  }}
+                >
+                  <tr>
+                    <th className="fw-bold text-start">Medicine Name</th>
+                    <th className="fw-bold text-start">Qty</th>
+                    <th className="fw-bold text-start">Doses</th>
+                    <th className="fw-bold text-start">Instruction</th>
+                    <th className="fw-bold text-start">Duration</th>
+                    <th className="fw-bold text-start">MRP/Unit</th>
+                    <th className="fw-bold text-start">Total Price</th>
+                    <th></th>
+                  </tr>
+                </thead>
+
+                <tbody>
+                  {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+                  {modalItems?.map((item: any) => (
+                    <tr key={item.id}>
+                      <td className="text-start">{item.productname ?? "-"}</td>
+
+                      <td className="text-start">{item.qty ?? "-"}</td>
+
+                      <td className="text-start">{item.doses ?? "-"}</td>
+
+                      <td className="text-start">{item.instruction ?? "-"}</td>
+
+                      <td className="text-start">{item.duration ?? "-"}</td>
+
+                      <td className="text-start">
+                        ₹{formatAmount(Number(item.mrp || 0))}
+                      </td>
+
+                      <td className="text-start">
+                        ₹
+                        {formatAmount(
+                          Number(item.qty || 0) * Number(item.mrp || 0)
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </Modal.Body>
+
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowHistory(false)}>
+            Close
+          </Button>
+          {/* <Button variant="primary">Add To Patient HealthBag</Button> */}
+        </Modal.Footer>
+      </Modal>
     </>
   );
 }

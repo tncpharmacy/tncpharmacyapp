@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo, useRef } from "react";
 import MedicineCard from "./MedicineCard";
 import { Image } from "react-bootstrap";
 import { Medicine } from "@/types/medicine";
+import TncLoader from "@/app/components/TncLoader/TncLoader";
 
 interface MedicineListProps {
   medicines: Medicine[] | undefined | null;
@@ -88,7 +89,7 @@ const MedicineList: React.FC<MedicineListProps> = ({ medicines, loading }) => {
       {/* First time loader */}
       {loading && (
         <div className="text-center my-4">
-          <div className="spinner-border text-primary"></div>
+          <TncLoader />
         </div>
       )}
       {/* Medicines */}

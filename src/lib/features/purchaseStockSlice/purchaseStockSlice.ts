@@ -4,6 +4,7 @@ import {
   fetchPharmacyStock,
   getPharmacistByIdApi,
   getPharmacistListApi,
+  getStockListSuperAdminApi,
 } from "@/lib/api/purchaseStock";
 import { PurchasePayload, PurchaseResponse } from "@/types/purchase";
 import { StockItem, StockResponse } from "@/types/stock";
@@ -97,6 +98,23 @@ export const getPharmacistList = createAsyncThunk<
   }
 });
 
+// 2️⃣ Get Stock List For Super Admin
+export const getStockListSuperAdmin = createAsyncThunk<
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  any,
+  void,
+  { rejectValue: string }
+>("stock/getStockListSuperAdmin", async (_, { rejectWithValue }) => {
+  try {
+    const res = await getStockListSuperAdminApi();
+    return res.data;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } catch (err: any) {
+    console.log("API ERROR ====", err); // 👈 ADD THIS
+    return rejectWithValue(err.response?.data?.message || "Failed");
+  }
+});
+
 // 🔹 Slice definition
 const purchaseSlice = createSlice({
   name: "purchase",
@@ -177,6 +195,19 @@ const purchaseSlice = createSlice({
         state.purchaseStockList = action.payload?.data || [];
       })
       .addCase(getPharmacistList.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload || "Failed to fetch orders";
+      })
+      // GET STOCK LIST SUPER ADMIN
+      .addCase(getStockListSuperAdmin.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(getStockListSuperAdmin.fulfilled, (state, action) => {
+        state.loading = false;
+        state.purchaseStockList = action.payload?.data || [];
+      })
+      .addCase(getStockListSuperAdmin.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload || "Failed to fetch orders";
       });
