@@ -61,8 +61,8 @@ export default function OrderList() {
   const router = useRouter();
   const dispatch = useAppDispatch();
   const qtyRefs = useRef<(HTMLInputElement | null)[]>([]);
-  const pharmacy = getUser();
-  const pharmacyId = Number(pharmacy?.pharmacy_id) || 0;
+  // const pharmacy = getUser();
+  // const pharmacyId = Number(pharmacy?.pharmacy_id) || 0;
   const [showHistory, setShowHistory] = useState(false);
 
   // Infinite scroll state
