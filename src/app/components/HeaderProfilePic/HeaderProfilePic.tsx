@@ -2,12 +2,52 @@
 
 import { useAppSelector } from "@/lib/hooks";
 import { Image } from "react-bootstrap";
+import { useEffect, useState } from "react";
 
 const mediaBase = process.env.NEXT_PUBLIC_MEDIA_BASE_URL;
 
 export default function HeaderProfilePic() {
   const { user } = useAppSelector((state) => state.auth);
-  //console.log("userrr0", user);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // ⛔ IMPORTANT: server + first client render SAME rahe
+  if (!mounted) {
+    return (
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: "12px",
+          padding: "12px 16px",
+          borderRadius: "12px",
+          backgroundColor: "#FFFFFF",
+        }}
+      >
+        <div
+          style={{
+            height: "32px",
+            width: "32px",
+            borderRadius: "50%",
+            backgroundColor: "#000000",
+          }}
+        />
+        <span
+          style={{
+            fontSize: "16px",
+            fontWeight: "500",
+            color: "#111827",
+          }}
+        >
+          Hi:
+        </span>
+      </div>
+    );
+  }
+
   // Capitalize helper
   const capitalize = (str: string) => {
     if (!str) return "";
@@ -20,12 +60,7 @@ export default function HeaderProfilePic() {
   const rawPic = user && "profile_pic" in user ? user.profile_pic : null;
 
   const profilePicUrl =
-    rawPic &&
-    rawPic !== "null" &&
-    rawPic !== "undefined" &&
-    rawPic !== "" &&
-    rawPic !== null &&
-    rawPic !== undefined
+    rawPic && rawPic !== "null" && rawPic !== "undefined" && rawPic !== ""
       ? `${mediaBase}${rawPic}`
       : null;
 
@@ -40,7 +75,7 @@ export default function HeaderProfilePic() {
         backgroundColor: "#FFFFFF",
       }}
     >
-      {/* Avatar Circle */}
+      {/* Avatar */}
       {profilePicUrl ? (
         <Image
           src={profilePicUrl}
@@ -50,7 +85,7 @@ export default function HeaderProfilePic() {
             width: "32px",
             borderRadius: "50%",
             objectFit: "cover",
-            border: "3px solid #E5E7EB", // 👈 White-ish border
+            border: "3px solid #E5E7EB",
             background: "#fff",
           }}
         />
@@ -74,7 +109,6 @@ export default function HeaderProfilePic() {
         </div>
       )}
 
-      {/* Greeting */}
       <span style={{ fontSize: "16px", fontWeight: "500", color: "#111827" }}>
         Hi: {userName}
       </span>

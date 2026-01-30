@@ -70,7 +70,9 @@ const authSlice = createSlice({
       state.restoreComplete = true;
       state.loading = false;
       state.error = null;
-      localStorage.clear();
+      localStorage.removeItem("accessToken");
+      localStorage.removeItem("refreshToken");
+      localStorage.removeItem("user");
     },
     markRestoreComplete: (state) => {
       state.restoreComplete = true;

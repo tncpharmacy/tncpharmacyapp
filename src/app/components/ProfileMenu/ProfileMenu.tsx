@@ -1,31 +1,49 @@
 "use client";
 
-import { fetchPharmacy } from "@/lib/features/pharmacySlice/pharmacySlice";
-import { useAppDispatch, useAppSelector } from "@/lib/hooks";
-import { useEffect } from "react";
+import { useAppSelector } from "@/lib/hooks";
+import { useEffect, useState } from "react";
 
 export default function ProfileMenu() {
-  const dispatch = useAppDispatch();
   const { user } = useAppSelector((state) => state.auth);
-  const { list } = useAppSelector((state) => state.pharmacy);
+  const [mounted, setMounted] = useState(false);
 
-  // Helper to capitalize first letter
-  const capitalize = (str: string) => {
-    if (!str) return "";
-    return str.charAt(0).toUpperCase() + str.slice(1);
-  };
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
-  const role = capitalize(user?.role_name ?? "N/A");
-  const mobile = user?.login_id ?? "N/A";
-  const email = user?.email_id ?? "N/A";
-  const pharmacyId = user?.pharmacy_id ?? "N/A";
-  const pharmacyIdCode = user?.pharmacy_id_code ?? "N/A";
-  const pharmacyName = user?.pharmacy_name ?? "N/A";
+  // 🔒 server + first client render SAME
+  if (!mounted) {
+    return (
+      <div
+        style={{
+          width: "250px",
+          padding: "16px",
+          borderRadius: "12px",
+          backgroundColor: "#FFFFFF",
+        }}
+      >
+        {/* static placeholder */}
+        <div
+          style={{
+            height: "14px",
+            width: "180px",
+            backgroundColor: "#E5E7EB",
+            borderRadius: "4px",
+          }}
+        />
+      </div>
+    );
+  }
 
-  // useEffect(() => {
-  //   dispatch(fetchPharmacy());
-  // }, [dispatch]);
-  // console.log("list", list);
+  // Helper
+  const capitalize = (str: string) =>
+    str ? str.charAt(0).toUpperCase() + str.slice(1) : "";
+
+  const role = capitalize(user?.role_name ?? "");
+  const mobile = user?.login_id ?? "";
+  const email = user?.email_id ?? "";
+  const pharmacyIdCode = user?.pharmacy_id_code ?? "";
+  const pharmacyName = user?.pharmacy_name ?? "";
 
   return (
     <div
@@ -39,7 +57,6 @@ export default function ProfileMenu() {
         backgroundColor: "#FFFFFF",
       }}
     >
-      {/* User Details */}
       <div
         style={{
           display: "flex",
@@ -49,55 +66,34 @@ export default function ProfileMenu() {
           width: "100%",
         }}
       >
-        {pharmacyIdCode === "N/A" ? (
-          ""
-        ) : (
-          <span
-            style={{ fontSize: "14px", fontWeight: "600", color: "#111827" }}
-          >
+        {pharmacyIdCode && (
+          <span style={{ fontSize: "14px", fontWeight: "600" }}>
             Pharmacy code:{" "}
             <span style={{ fontWeight: "400" }}>{pharmacyIdCode}</span>
           </span>
         )}
-        {pharmacyName === "N/A" ? (
-          ""
-        ) : (
-          <span
-            style={{ fontSize: "14px", fontWeight: "600", color: "#111827" }}
-          >
+
+        {pharmacyName && (
+          <span style={{ fontSize: "14px", fontWeight: "600" }}>
             Pharmacy Name:{" "}
             <span style={{ fontWeight: "400" }}>{pharmacyName}</span>
           </span>
         )}
-        {role === "N/A" ? (
-          ""
-        ) : (
-          <span
-            style={{ fontSize: "14px", fontWeight: "600", color: "#111827" }}
-          >
+
+        {role && (
+          <span style={{ fontSize: "14px", fontWeight: "600" }}>
             Role: <span style={{ fontWeight: "400" }}>{role}</span>
           </span>
         )}
-        {email === "N/A" ? (
-          ""
-        ) : (
-          <span
-            style={{
-              fontSize: "14px",
-              fontWeight: "600",
-              color: "#111827",
-              whiteSpace: "nowrap",
-            }}
-          >
+
+        {email && (
+          <span style={{ fontSize: "14px", fontWeight: "600" }}>
             Email: <span style={{ fontWeight: 400 }}>{email}</span>
           </span>
         )}
-        {mobile === "N/A" ? (
-          ""
-        ) : (
-          <span
-            style={{ fontSize: "14px", fontWeight: "600", color: "#111827" }}
-          >
+
+        {mobile && (
+          <span style={{ fontSize: "14px", fontWeight: "600" }}>
             Mobile: <span style={{ fontWeight: "400" }}>{mobile}</span>
           </span>
         )}

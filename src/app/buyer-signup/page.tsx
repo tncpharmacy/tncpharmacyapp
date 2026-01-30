@@ -259,7 +259,7 @@ export default function BuyerSignupModal({
                       className="txtlogin"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      maxLength={25}
+                      maxLength={50}
                       onKeyDown={(e) => handleKeyDown(e, "email")}
                     />
                   </div>

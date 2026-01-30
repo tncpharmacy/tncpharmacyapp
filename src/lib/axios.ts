@@ -8,6 +8,7 @@ import { safeLocalStorage } from "@/lib/utils/safeLocalStorage"; // << add this
 
 const api = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_BASE_URL,
+  timeout: 30000,
 });
 
 // 🔹 Unauthorized callback
@@ -54,28 +55,59 @@ api.interceptors.request.use(
 );
 
 // 🔹 Response Interceptor
+// api.interceptors.response.use(
+//   (response: AxiosResponse) => response,
+//   async (error: AxiosError) => {
+//     if (error.response?.status === 401) {
+//       const buyerRefreshToken = safeLocalStorage.getItem("buyerRefreshToken");
+//       const adminRefreshToken = safeLocalStorage.getItem("refreshToken");
+//       const refreshToken = buyerRefreshToken || adminRefreshToken;
+
+//       if (refreshToken) {
+//         try {
+//           // ⚠️ when refresh endpoint added, put code here
+
+//           // No refresh endpoint → trigger logout
+//           if (onUnauthorized) onUnauthorized();
+//           return Promise.reject(error);
+//         } catch {
+//           if (onUnauthorized) onUnauthorized();
+//           return Promise.reject(error);
+//         }
+//       } else {
+//         if (onUnauthorized) onUnauthorized();
+//         return Promise.reject(error);
+//       }
+//     }
+
+//     return Promise.reject(error);
+//   }
+// );
+
+// export default api;
 api.interceptors.response.use(
   (response: AxiosResponse) => response,
-  async (error: AxiosError) => {
-    if (error.response?.status === 401) {
-      const buyerRefreshToken = safeLocalStorage.getItem("buyerRefreshToken");
-      const adminRefreshToken = safeLocalStorage.getItem("refreshToken");
-      const refreshToken = buyerRefreshToken || adminRefreshToken;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  (error: AxiosError<any>) => {
+    const status = error.response?.status;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const data: any = error.response?.data;
 
-      if (refreshToken) {
-        try {
-          // ⚠️ when refresh endpoint added, put code here
+    const message = data?.detail || data?.message || data?.error || "";
 
-          // No refresh endpoint → trigger logout
-          if (onUnauthorized) onUnauthorized();
-          return Promise.reject(error);
-        } catch {
-          if (onUnauthorized) onUnauthorized();
-          return Promise.reject(error);
-        }
-      } else {
-        if (onUnauthorized) onUnauthorized();
-        return Promise.reject(error);
+    /**
+     * 🚨 TOKEN INVALID CASES
+     * - 401 Unauthorized
+     * - 403 Forbidden
+     * - Backend custom "token expired" messages
+     */
+    if (
+      status === 401 ||
+      status === 403 ||
+      (typeof message === "string" && message.toLowerCase().includes("token"))
+    ) {
+      if (onUnauthorized) {
+        onUnauthorized();
       }
     }
 

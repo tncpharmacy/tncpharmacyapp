@@ -1,4 +1,3 @@
-// app/layout.tsx
 import type { Metadata } from "next";
 import "bootstrap/dist/css/bootstrap.min.css";
 import ToastProvider from "@/components/ToastProvider/ToastProvider";
@@ -8,12 +7,14 @@ import Providers from "./Provider";
 import { setUnauthorizedHandler } from "@/lib/axios";
 import { store } from "@/lib/store";
 import { logout } from "@/lib/features/authSlice/authSlice";
+import AuthInitializer from "@/components/AuthInitializer/AuthInitializer";
+import LayoutFix from "@/components/LayoutFix/LayoutFix";
 
 // run 1 time on app start
-setUnauthorizedHandler(() => {
-  store.dispatch(logout());
-  window.location.href = "/";
-});
+// setUnauthorizedHandler(() => {
+//   store.dispatch(logout());
+//   window.location.href = "/";
+// });
 
 export const metadata: Metadata = {
   title: "TnC PHARMACY",
@@ -35,7 +36,10 @@ export default function RootLayout({
       </head>
 
       <body>
-        <Providers>{children}</Providers>
+        <LayoutFix />
+        <Providers>
+          <AuthInitializer /> {children}
+        </Providers>
         <ToastProvider />
       </body>
     </html>
