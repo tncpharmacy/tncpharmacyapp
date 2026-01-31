@@ -1,5 +1,6 @@
 "use client";
 
+export const dynamic = "force-dynamic";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Button, Modal, OverlayTrigger, Tooltip } from "react-bootstrap";
@@ -49,8 +50,8 @@ type PharmacyBuyerResponse = {
 export default function OrderList() {
   const router = useRouter();
   const dispatch = useAppDispatch();
-  // const pharmacy = getUser();
-  // const pharmacyId = Number(pharmacy?.pharmacy_id) || 0;
+  const pharmacy = getUser();
+  const pharmacyId = Number(pharmacy?.pharmacy_id) || 0;
   const [showPrint, setShowPrint] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
 
@@ -71,15 +72,6 @@ export default function OrderList() {
   const [modalLoading, setModalLoading] = useState(false);
   // export loading
   const [exportLoading, setExportLoading] = useState(false);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [pharmacy, setPharmacy] = useState<any>(null);
-
-  useEffect(() => {
-    setPharmacy(getUser());
-  }, []);
-
-  const pharmacyId = Number(pharmacy?.pharmacy_id) || 0;
-
   // bill print state
   const [isBillPreviewOpen, setIsBillPreviewOpen] = useState(false);
   const [billPreviewData, setBillPreviewData] = useState({
