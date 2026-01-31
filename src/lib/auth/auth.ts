@@ -1,9 +1,12 @@
 import api from "@/lib/axios";
 import { ENDPOINTS } from "@/lib/config";
 import { LoginResponse } from "@/types/login";
-import { jwtDecode } from "jwt-decode"; // named import
+import { jwtDecode } from "jwt-decode";
 
-// Token ke andar se jo bhi user data chahiye, uska interface
+// ===== helpers =====
+const isBrowser = () => typeof window !== "undefined";
+
+// ===== types =====
 export interface DecodedToken {
   token_type: string;
   exp: number;
@@ -22,7 +25,7 @@ export interface DecodedToken {
   is_superuser: boolean;
   user_name: string;
   login_id: string;
-  raw_password?: string; // optional, agar token me ho
+  raw_password?: string;
   status: string;
   created_on: string;
   updated_on: string;
@@ -35,6 +38,7 @@ export interface DecodedToken {
   role_name: string;
 }
 
+// ===== auth =====
 export const login = async (
   login_id: string,
   password: string
@@ -46,25 +50,39 @@ export const login = async (
 
   const { access, refresh } = res.data.tokens;
 
-  // ✅ Token save
-  localStorage.setItem("accessToken", access);
-  localStorage.setItem("refreshToken", refresh);
+  if (isBrowser()) {
+    localStorage.setItem("accessToken", access);
+    localStorage.setItem("refreshToken", refresh);
 
-  // ✅ Decode access token aur user save
-  const decoded: DecodedToken = jwtDecode(access);
-  localStorage.setItem("user", JSON.stringify(decoded));
+    const decoded: DecodedToken = jwtDecode(access);
+    localStorage.setItem("user", JSON.stringify(decoded));
+  }
 
   return res.data;
 };
 
-// Optional helpers
+// ===== SAFE GETTERS =====
 export const getUser = (): DecodedToken | null => {
-  const user = localStorage.getItem("user");
-  return user ? (JSON.parse(user) as DecodedToken) : null;
+  if (!isBrowser()) return null;
+
+  try {
+    const user = localStorage.getItem("user");
+    return user ? (JSON.parse(user) as DecodedToken) : null;
+  } catch {
+    return null;
+  }
 };
 
-export const getAccessToken = () => localStorage.getItem("accessToken");
-export const getRefreshToken = () => localStorage.getItem("refreshToken");
+export const getAccessToken = (): string | null => {
+  if (!isBrowser()) return null;
+  return localStorage.getItem("accessToken");
+};
+
+export const getRefreshToken = (): string | null => {
+  if (!isBrowser()) return null;
+  return localStorage.getItem("refreshToken");
+};
+
 export const getUserId = (): number | null => {
   const user = getUser();
   return user?.id ?? null;
