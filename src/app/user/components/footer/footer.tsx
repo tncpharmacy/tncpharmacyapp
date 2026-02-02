@@ -146,7 +146,7 @@ const Footer = () => {
               </li>
               <li>
                 <i className="bi bi-whatsapp"></i>
-                <a href="#">+91 9625768741 </a>
+                <a href="#">+91 8062521280 </a>
                 <span>(24x7 hrs)</span>
               </li>
               <li>

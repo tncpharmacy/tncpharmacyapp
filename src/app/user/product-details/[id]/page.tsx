@@ -7,7 +7,7 @@ import Slider from "react-slick";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 import { Modal } from "react-bootstrap";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { decodeId } from "@/lib/utils/encodeDecode";
 import HorizontalAccordionTabs from "@/app/user/product-details/HorizontalAccordionTabs";
 import { useAppDispatch, useAppSelector } from "@/lib/hooks";
@@ -26,6 +26,7 @@ import Image from "next/image";
 import Footer from "@/app/user/components/footer/footer";
 import { useHealthBag } from "@/lib/hooks/useHealthBag";
 import { HealthBag } from "@/types/healthBag";
+import { formatAmount } from "@/lib/utils/formatAmount";
 
 // Types
 interface PackOption {
@@ -161,6 +162,7 @@ const PriceBox: React.FC<{
 const mediaBase = process.env.NEXT_PUBLIC_MEDIA_BASE_URL;
 // Main Page
 export default function ProductPage() {
+  const router = useRouter();
   const { id: params } = useParams();
   const dispatch = useAppDispatch();
   const decodedId = decodeId(params);
@@ -362,7 +364,8 @@ export default function ProductPage() {
   const decrease = () => setQuantity((q) => (q > 1 ? q - 1 : 1));
 
   // ✅ Final total price (depends on qty)
-  const totalPrice = (discountedPrice * quantity).toFixed(2);
+  // const totalPrice = (discountedPrice * quantity).toFixed(2);
+  const totalPrice = Number((discountedPrice * quantity).toFixed(2));
 
   useEffect(() => {
     const handleScroll = () => {
@@ -655,13 +658,17 @@ export default function ProductPage() {
                   {/* MRP and Discount */}
                   <div className="pd_price">
                     <span className="old_price">
-                      <del>MRP ₹{mrp}</del> {discount}% off
+                      <del>MRP ₹{formatAmount(mrp ?? 0).toLocaleString()}</del>{" "}
+                      {discount}% off
                     </span>
                   </div>
 
                   {/* Discounted (final) price */}
                   <div className="pd_price">
-                    <span className="new_price">₹{totalPrice}</span>
+                    <span className="new_price">
+                      {" "}
+                      ₹{formatAmount(totalPrice ?? 0).toLocaleString()}
+                    </span>
                   </div>
                   <small>Inclusive of all taxes</small>
 
@@ -688,11 +695,11 @@ export default function ProductPage() {
 
                   <button
                     className={`btn btn-sm mb-2 py-2 w-100 ${
-                      isInBag ? "btn-outline-danger" : "btn-primary"
+                      isInBag ? "btn-primary" : "btn-primary"
                     }`}
                     onClick={() => {
                       if (isInBag) {
-                        handleRemove(id);
+                        router.push("/health-bag"); // redirect page
                       } else {
                         handleAdd({
                           product_id: id,
@@ -704,7 +711,7 @@ export default function ProductPage() {
                     {processingIds.includes(id)
                       ? "Processing..."
                       : isInBag
-                      ? "Remove from Health Bag"
+                      ? "Go To Health Bag"
                       : "Add to Health Bag"}
                   </button>
                 </div>

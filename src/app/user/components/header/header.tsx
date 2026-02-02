@@ -69,6 +69,10 @@ const SiteHeader = () => {
   const listRef = useRef<HTMLUListElement>(null);
   const wrapperRef = useRef<HTMLDivElement>(null);
 
+  // for mobile view state
+  const [showMobileMenu, setShowMobileMenu] = useState(false);
+  const [openCategoryId, setOpenCategoryId] = useState<number | null>(null);
+
   // ---------- INITIAL LOAD ----------
   useEffect(() => {
     setMounted(true);
@@ -358,6 +362,10 @@ const SiteHeader = () => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  const toggleCategory = (categoryId: number) => {
+    setOpenCategoryId((prev) => (prev === categoryId ? null : categoryId));
+  };
+
   // ---------- RENDER ----------
   return (
     <header id="header">
@@ -547,7 +555,7 @@ const SiteHeader = () => {
                   </span>
                   <div
                     className="dropdown-user-content"
-                    style={{ zIndex: "5" }}
+                    style={{ zIndex: "9999" }}
                   >
                     {!mounted ? (
                       <p>
@@ -621,7 +629,7 @@ const SiteHeader = () => {
                 </Link>
               </li>
               <li className="mobileMenu">
-                <span className="micon">
+                <span className="micon" onClick={() => setShowMobileMenu(true)}>
                   <i className="bi bi-grid-3x3-gap-fill"></i>
                 </span>
               </li>
@@ -721,6 +729,99 @@ const SiteHeader = () => {
           </ul>
         </div>
       </div>
+      {/* ---------- MOBILE SIDE MENU ---------- */}
+      {showMobileMenu && (
+        <>
+          {/* Overlay */}
+          <div
+            className="mobile-menu-overlay"
+            onClick={() => setShowMobileMenu(false)}
+          />
+
+          {/* Drawer */}
+          <div className="mobile-side-menu">
+            <div className="mobile-menu-header">
+              <span>Hello, {buyer ? buyer.name : "Guest"}</span>
+              <button
+                className="btn btn-danger"
+                onClick={() => setShowMobileMenu(false)}
+              >
+                ✕
+              </button>
+            </div>
+
+            <ul className="mobile-menu-list">
+              {/* {!buyer && (
+                <li onClick={() => setShowBuyerLogin(true)}>Login / Sign Up</li>
+              )} */}
+              <li className="mobile-category">
+                <div
+                  className="category-title"
+                  onClick={() => router.push("/all-medicine")}
+                >
+                  All Medicine
+                </div>
+              </li>
+
+              {shuffledCategories
+                .filter((c) => c.category_name !== "Medicines")
+                .map((cat) => (
+                  <li key={cat.id} className="mobile-category">
+                    <div
+                      className="category-title"
+                      onClick={() => toggleCategory(cat.id)}
+                    >
+                      <span>{cat.category_name}</span>
+                      <span>{openCategoryId === cat.id ? "▲" : "▼"}</span>
+                    </div>
+
+                    {openCategoryId === cat.id && (
+                      <ul className="sub-menu">
+                        {subcategories
+                          .filter(
+                            (s) => String(s.category_id) === String(cat.id)
+                          )
+                          .map((sub) => (
+                            <li
+                              key={sub.id}
+                              onClick={() => {
+                                setShowMobileMenu(false);
+                                handleCategoryClick(cat.id, sub.id);
+                              }}
+                            >
+                              {sub.sub_category_name}
+                            </li>
+                          ))}
+                      </ul>
+                    )}
+                  </li>
+                ))}
+            </ul>
+            {/* ---- Upload Prescription (Mobile) ---- */}
+            <div className="mobile-upload-wrap">
+              <button
+                className="mobile-upload-btn"
+                onClick={() => {
+                  setShowMobileMenu(false);
+                  setShowModal(true); // PrescriptionUploadModal
+                }}
+              >
+                <span>Upload Prescription</span>
+                <Image
+                  src="/images/icons/icon-upload.svg"
+                  width={22}
+                  height={22}
+                  alt="Upload"
+                />
+              </button>
+            </div>
+          </div>
+        </>
+      )}
+      <PrescriptionUploadModal
+        show={showModal}
+        handleClose={() => setShowModal(false)}
+      />
     </header>
   );
 };

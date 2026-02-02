@@ -515,6 +515,116 @@ ul.no-subcategories li {
         display: none;
     }
 
+ /* Overlay */
+.mobile-menu-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.4);
+  z-index: 998;
+}
+
+/* Drawer */
+.mobile-side-menu {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 80%;
+  max-width: 323px;
+  height: 100vh;
+  background: #fff;
+  z-index: 999;
+  padding: 16px;
+  animation: slideIn 0.3s ease forwards;
+}
+
+@media (max-width: 768px) {
+  .mobile-upload-wrap {
+    position: sticky;
+    bottom: 0;
+    background: #fff;
+    padding: 12px;
+    border-top: 1px solid #eee;
+  }
+
+  .mobile-upload-btn {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #0d6efd; /* same as desktop theme */
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 18px 20px;
+    font-weight: 600;
+  }
+
+  .mobile-upload-btn span {
+    line-height: 1.2;
+    text-align: left;
+  }
+}
+
+
+@keyframes slideIn {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+.mobile-menu-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-weight: 600;
+  margin-bottom: 16px;
+}
+
+.mobile-menu-list {
+  list-style: none;
+  padding: 0;
+}
+
+.mobile-menu-list > li {
+  padding: 12px 0;
+  border-bottom: 1px solid #eee;
+  font-weight: 500;
+}
+
+.sub-menu {
+  list-style: none;
+  padding-left: 15px;
+  font-size: 14px;
+  color: #555;
+}
+   
+.mobile-category {
+  border-bottom: 1px solid #eee;
+}
+
+.category-title {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 0;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.sub-menu {
+  padding-left: 15px;
+  padding-bottom: 10px;
+}
+
+.sub-menu li {
+  padding: 8px 0;
+  font-size: 14px;
+  color: #555;
+}
+
 @media screen and (min-width:320px) and (max-width:767px){
     .logo img {
     height: 40px;
@@ -634,6 +744,8 @@ span.user_p i .count {
     width: 8%;
     transform: scale(0.8);
 }
+
+
 
 
 }

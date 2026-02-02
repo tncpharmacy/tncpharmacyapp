@@ -26,6 +26,8 @@ import { getAddress } from "@/lib/features/addressSlice/addressSlice";
 import AddressBar from "../components/AddressBar/AddressBar";
 import toast from "react-hot-toast";
 import { formatAmount } from "@/lib/utils/formatAmount";
+import TncLoader from "@/app/components/TncLoader/TncLoader";
+import BuyerLoginModal from "@/app/buyer-login/page";
 const mediaBase = process.env.NEXT_PUBLIC_MEDIA_BASE_URL;
 
 export interface Medicine {
@@ -89,6 +91,8 @@ export default function HealthBags() {
     number | null | undefined
   >(null);
 
+  // for login popup
+  const [showBuyerLogin, setShowBuyerLogin] = useState(false);
   // --- Local states for instant UI ---
   const [localBag, setLocalBag] = useState<number[]>([]);
   const [processingIds, setProcessingIds] = useState<number[]>([]);
@@ -357,7 +361,7 @@ export default function HealthBags() {
 
   const handleContinue = () => {
     if (!buyer?.id) {
-      toast.error("Please login to continue with your order!");
+      setShowBuyerLogin(true);
       return;
     }
 
@@ -574,9 +578,7 @@ export default function HealthBags() {
             <div className="row g-3">
               {shuffled7 && shuffled7.length > 0 ? (
                 shuffled7.slice(0, 5).map((item) => {
-                  const mrp = item.MRP
-                    ? parseFloat(item.MRP.toString())
-                    : Math.floor(Math.random() * (1000 - 100 + 1)) + 100;
+                  const mrp = Number(item.mrp) || 0;
 
                   const discount = parseFloat(item.Discount) || 0;
                   const discountedPrice = Math.round(
@@ -672,7 +674,9 @@ export default function HealthBags() {
                   );
                 })
               ) : (
-                <p>Loading medicines...</p>
+                <div className="d-flex justify-content-center align-items-center">
+                  <TncLoader />
+                </div>
               )}
             </div>
           </div>
@@ -695,9 +699,7 @@ export default function HealthBags() {
             <div className="row g-3">
               {shuffled5 && shuffled5.length > 0 ? (
                 shuffled5.slice(0, 5).map((item) => {
-                  const mrp = item.MRP
-                    ? parseFloat(item.MRP.toString())
-                    : Math.floor(Math.random() * (1000 - 100 + 1)) + 100;
+                  const mrp = Number(item.mrp) || 0;
 
                   const discount = parseFloat(item.Discount) || 0;
                   const discountedPrice = Math.round(
@@ -792,7 +794,9 @@ export default function HealthBags() {
                   );
                 })
               ) : (
-                <p>Loading medicines...</p>
+                <div className="d-flex justify-content-center align-items-center">
+                  <TncLoader />
+                </div>
               )}
             </div>
           </div>
@@ -815,9 +819,7 @@ export default function HealthBags() {
             <div className="row g-3">
               {shuffled9 && shuffled9.length > 0 ? (
                 shuffled9.slice(0, 5).map((item) => {
-                  const mrp = item.MRP
-                    ? parseFloat(item.MRP.toString())
-                    : Math.floor(Math.random() * (1000 - 100 + 1)) + 100;
+                  const mrp = Number(item.mrp) || 0;
 
                   const discount = parseFloat(item.Discount) || 0;
                   const discountedPrice = Math.round(
@@ -913,13 +915,18 @@ export default function HealthBags() {
                   );
                 })
               ) : (
-                <p>Loading medicines...</p>
+                <div className="d-flex justify-content-center align-items-center">
+                  <TncLoader />
+                </div>
               )}
             </div>
           </div>
         </div>
       </section>
-
+      <BuyerLoginModal
+        show={showBuyerLogin}
+        handleClose={() => setShowBuyerLogin(false)}
+      />
       <Footer />
     </>
   );
