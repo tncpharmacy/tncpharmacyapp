@@ -11,14 +11,14 @@ interface GenericListProps {
   genericListByMedicine: Medicine[];
 }
 const HorizontalAccordionTabs: React.FC<IDProps> = ({ id }) => {
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(true);
   const dispatch = useAppDispatch();
   const contentRef = useRef<HTMLDivElement>(null);
   const genericListByMedicineRaw = useAppSelector(
     (state) => state.medicine.genericAlternativesMedicines
   );
   const toggleAccordion = () => {
-    setIsOpen(!isOpen);
+    setIsOpen((prev) => !prev);
   };
 
   const genericListByMedicine: Medicine[] = Array.isArray(
@@ -46,15 +46,17 @@ const HorizontalAccordionTabs: React.FC<IDProps> = ({ id }) => {
 
   // Accordion Body के लिए Dynamic Styles
   const bodyStyle: React.CSSProperties = {
-    // Transition सिर्फ max-height property पर लगाएं
     transition: "max-height 0.5s ease-in-out",
-    overflow: "hidden", // जब max-height 0 हो तो content छुप जाए
-
-    // max-height को dynamically सेट करें
-    maxHeight: isOpen
-      ? `${contentRef.current ? contentRef.current.scrollHeight : 0}px`
-      : "0px",
+    overflow: "hidden",
+    maxHeight: isOpen ? "1000px" : "0px", // large enough
   };
+
+  useEffect(() => {
+    if (isOpen && contentRef.current) {
+      contentRef.current.parentElement!.style.maxHeight =
+        contentRef.current.scrollHeight + "px";
+    }
+  }, [isOpen, genericListByMedicine.length]);
 
   return (
     <div className="accordion" id="singleAccordionExample">
@@ -66,7 +68,7 @@ const HorizontalAccordionTabs: React.FC<IDProps> = ({ id }) => {
             type="button"
             onClick={toggleAccordion}
             aria-expanded={isOpen}
-            aria-controls="collapseOne"
+            // aria-controls="collapseOne"
             style={headerButtonStyle}
           >
             TnC Trusted Generic
