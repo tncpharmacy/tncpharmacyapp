@@ -908,44 +908,48 @@ export default function HomePage() {
             <div className="col-6 col-sm-3">
               <div className="why_box">
                 <div>
-                  <Image src="images/icons/icon-shipping.svg" alt="" />
+                  <Image src="images/icons/icon-discount.svg" alt="" />
                 </div>
                 <div>
-                  <h4>Free & Fast Shipping</h4>
-                  <p>Orders All Over INR 100</p>
+                  <h4>100% Genuine Medicines</h4>
+                  <p>Up to 70% off on Generic Medicines</p>
                 </div>
               </div>
             </div>
             <div className="col-6 col-sm-3">
               <div className="why_box">
                 <div>
-                  <Image src="images/icons/icon-money-bag.svg" alt="" />
+                  <Image
+                    src="images/icons/icon-pharmacist-verified.svg"
+                    alt=""
+                  />
                 </div>
                 <div>
-                  <h4>Money Back Guarantee</h4>
-                  <p>With a 30 Day minimum</p>
+                  <h4>Pharmacist Verified Orders</h4>
+                  <p>Sourced From TnC Trusted Brand</p>
                 </div>
               </div>
             </div>
+            <div className="col-6 col-sm-3">
+              <div className="why_box">
+                <div>
+                  <Image src="images/icons/icon-shipping.svg" alt="" />
+                </div>
+                <div>
+                  <h4>Free & Fast Shipping</h4>
+                  <p>Orders All Over</p>
+                </div>
+              </div>
+            </div>
+
             <div className="col-6 col-sm-3">
               <div className="why_box">
                 <div>
                   <Image src="images/icons/icon-secure.svg" alt="" />
                 </div>
                 <div>
-                  <h4>All Secure Payment</h4>
-                  <p>Up to 12 months installments</p>
-                </div>
-              </div>
-            </div>
-            <div className="col-6 col-sm-3">
-              <div className="why_box">
-                <div>
-                  <Image src="images/icons/icon-discount.svg" alt="" />
-                </div>
-                <div>
-                  <h4>Upto 20% Off on Purchase</h4>
-                  <p>Incredible discounts on your favorite items</p>
+                  <h4>Secure Payment Options</h4>
+                  <p>UPI or Cash on Delivery</p>
                 </div>
               </div>
             </div>
