@@ -14,6 +14,7 @@ import { safeLocalStorage } from "@/lib/utils/safeLocalStorage";
 import { createBuyerOrder } from "@/lib/features/buyerSlice/buyerSlice";
 import type { OrderPayload } from "@/types/order";
 import { useHealthBag } from "@/lib/hooks/useHealthBag";
+import { formatAmount } from "@/lib/utils/formatAmount";
 
 export default function Checkout() {
   const dispatch = useAppDispatch();
@@ -179,8 +180,8 @@ export default function Checkout() {
             {paymentType === "qr" && (
               <>
                 <Image
-                  src={`https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=upi://pay?pa=9876543210@upi&pn=HealthBag&am=${checkoutData?.amount}&cu=INR`}
-                  alt="QR"
+                  src="/images/payment-pr-buyer.jpeg"
+                  alt="UPI QR Code"
                   className="img-fluid"
                 />
 
@@ -188,7 +189,7 @@ export default function Checkout() {
                   Scan the QR to Pay
                 </p>
                 <h6 className="text-center fw-semibold text-success">
-                  Amount: ₹{checkoutData?.amount}
+                  Amount: ₹{formatAmount(Number(checkoutData?.amount || 0))}
                 </h6>
               </>
             )}

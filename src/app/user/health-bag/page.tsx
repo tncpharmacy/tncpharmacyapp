@@ -84,7 +84,8 @@ export interface Medicine {
 }
 
 export default function HealthBags() {
-  const [quantities, setQuantities] = useState<number[]>([1, 1]);
+  const [quantities, setQuantities] = useState<Record<number, number>>({});
+
   const [dose, setDose] = useState("");
   const [mounted, setMounted] = useState(false);
   const [billingAddress, setBillingAddress] = useState<
@@ -191,10 +192,21 @@ export default function HealthBags() {
   //Sync quantities from cart API
   // ✅ FIXED: Convert qty to number ALWAYS
   useEffect(() => {
-    if (bagItem && bagItem.length > 0) {
-      setQuantities(bagItem.map((x) => Number(x.qty) || 1));
-    }
+    if (!bagItem) return;
+
+    const q: Record<number, number> = {};
+    bagItem.forEach((item) => {
+      q[item.productid] = Number(item.qty) || 1;
+    });
+
+    setQuantities(q);
   }, [bagItem]);
+
+  // useEffect(() => {
+  //   if (bagItem && bagItem.length > 0) {
+  //     setQuantities(bagItem.map((x) => Number(x.qty) || 1));
+  //   }
+  // }, [bagItem]);
 
   // --- Handlers ---
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -229,86 +241,124 @@ export default function HealthBags() {
   };
 
   // 🟢 Merge: cart items (from LS/API) + product details (from all product list)
-  const mergedItems = (bagItem || []).map((cartItem) => {
-    const product = productList.find(
-      (p) => p.id === cartItem.productid || p.product_id === cartItem.productid
-    );
-    const available = Number(product?.AvailableQTY || 0);
-    const mrp =
-      product?.MRP !== undefined
-        ? typeof product.MRP === "string"
-          ? parseFloat(product.MRP)
-          : product.MRP
-        : 0;
+  const mergedItems = [...(bagItem || [])]
+    .sort((a, b) => a.id - b.id)
+    .map((cartItem) => {
+      const product = productList.find(
+        (p) =>
+          p.id === cartItem.productid || p.product_id === cartItem.productid
+      );
+      const available = Number(product?.AvailableQTY || 0);
+      const mrp =
+        product?.MRP !== undefined
+          ? typeof product.MRP === "string"
+            ? parseFloat(product.MRP)
+            : product.MRP
+          : 0;
 
-    const discount =
-      product?.discount !== undefined
-        ? typeof product.discount === "string"
-          ? parseFloat(product.discount)
-          : product.discount
-        : 0;
+      const discount =
+        product?.discount !== undefined
+          ? typeof product.discount === "string"
+            ? parseFloat(product.discount)
+            : product.discount
+          : 0;
 
-    const discountMrp = mrp ? mrp - (mrp * discount) / 100 : 0;
+      const discountMrp = mrp ? mrp - (mrp * discount) / 100 : 0;
 
-    return {
-      ...cartItem,
-      id: cartItem.id,
-      name: product?.medicine_name || cartItem.productname || "",
-      category_id: product?.category_id || 0,
-      availableQty: product?.AvailableQTY || 0,
-      manufacturer: product?.Manufacturer || "",
-      pack_size: product?.pack_size || "",
-      mrp,
-      discount,
-      discountMrp,
-      image: product?.primary_image?.document
-        ? mediaBase +
-          product.primary_image.document.replace(/^https?:\/\/[^/]+/, "") // remove any domain
-        : "/images/tnc-default.png",
-    };
-  });
+      return {
+        ...cartItem,
+        id: cartItem.id,
+        name: product?.medicine_name || cartItem.productname || "",
+        category_id: product?.category_id || 0,
+        availableQty: product?.AvailableQTY || 0,
+        manufacturer: product?.Manufacturer || "",
+        pack_size: product?.pack_size || "",
+        mrp,
+        discount,
+        discountMrp,
+        image: product?.primary_image?.document
+          ? mediaBase +
+            product.primary_image.document.replace(/^https?:\/\/[^/]+/, "") // remove any domain
+          : "/images/tnc-default.png",
+      };
+    });
 
-  const handleQuantityChange = async (index: number, delta: number) => {
-    const item = mergedItems[index];
-    if (!item) return;
+  // const handleQuantityChange = async (index: number, delta: number) => {
+  //   const item = mergedItems[index];
+  //   if (!item) return;
 
-    const stock = Number(item.availableQty) || 0;
-    const current = Number(quantities[index]) || 1;
+  //   const stock = Number(item.availableQty) || 0;
+  //   const current = Number(quantities[index]) || 1;
+  //   const updated = current + delta;
+
+  //   // ✅ BLOCK BELOW 1
+  //   if (updated < 1) return;
+
+  //   // ✅ BLOCK ABOVE STOCK
+  //   if (updated > stock) {
+  //     toast.error(`Only ${stock} available in stock`);
+  //     return;
+  //   }
+
+  //   // ✅ INSTANT UI UPDATE
+  //   const q = [...quantities];
+  //   q[index] = updated;
+  //   setQuantities(q);
+
+  //   // ✅ Guest User → Update LocalStorage only
+  //   if (!buyer?.id) {
+  //     updateGuestQuantity(item.productid, updated);
+  //     return;
+  //   }
+
+  //   // ✅ LOGGED USER → USE CORRECT API
+  //   if (delta === 1) {
+  //     await increaseQty(item.id, item.productid, updated);
+  //   } else {
+  //     await decreaseQty(item.id, item.productid, updated);
+  //   }
+  // };
+
+  // ✅ Calculate totals
+  // const handlingCharges = 12;
+  const handleQuantityChange = async (
+    productId: number,
+    cartId: number,
+    delta: number,
+    stock: number
+  ) => {
+    const current = quantities[productId] || 1;
     const updated = current + delta;
 
-    // ✅ BLOCK BELOW 1
     if (updated < 1) return;
-
-    // ✅ BLOCK ABOVE STOCK
     if (updated > stock) {
       toast.error(`Only ${stock} available in stock`);
       return;
     }
 
-    // ✅ INSTANT UI UPDATE
-    const q = [...quantities];
-    q[index] = updated;
-    setQuantities(q);
+    // UI update
+    setQuantities((prev) => ({
+      ...prev,
+      [productId]: updated,
+    }));
 
-    // ✅ Guest User → Update LocalStorage only
+    // Guest
     if (!buyer?.id) {
-      updateGuestQuantity(item.productid, updated);
+      updateGuestQuantity(productId, updated);
       return;
     }
 
-    // ✅ LOGGED USER → USE CORRECT API
+    // Logged user
     if (delta === 1) {
-      await increaseQty(item.id, item.productid, updated);
+      await increaseQty(cartId, productId, updated);
     } else {
-      await decreaseQty(item.id, item.productid, updated);
+      await decreaseQty(cartId, productId, updated);
     }
   };
 
-  // ✅ Calculate totals
-  // const handlingCharges = 12;
   const totals = mergedItems.reduce(
     (acc, item, index) => {
-      const qty = quantities[index] ?? 1;
+      const qty = quantities[item.productid] ?? 1;
 
       acc.totalMrp += (item.mrp ?? 0) * qty;
       acc.totalDiscount += ((item.mrp ?? 0) - item.discountMrp) * qty;
@@ -339,8 +389,8 @@ export default function HealthBags() {
       mrp: item.mrp,
       discount: item.discount,
       rate: item.discountMrp,
-      doses: "", // optional: tu baad me dose field add karega
-      instruction: "", // optional
+      doses: "",
+      instruction: "",
       status: "1",
     }));
 
@@ -384,6 +434,7 @@ export default function HealthBags() {
     isSelecting.current = true;
     handleSelect(item);
   };
+  const isCartEmpty = mergedItems.length === 0;
 
   return (
     <>
@@ -393,7 +444,7 @@ export default function HealthBags() {
         <div className="container">
           <div className="row g-4">
             {/* Left: Items List */}
-            <div className="col-lg-8">
+            <div className={isCartEmpty ? "col-12" : "col-lg-8"}>
               {mounted && buyer?.id ? (
                 <AddressBar
                   address={
@@ -409,14 +460,16 @@ export default function HealthBags() {
                   }
                 />
               ) : null}
-              <h5 className="mb-3 fw-semibold">
-                {mergedItems.length} items added
-              </h5>
+              {!isCartEmpty && (
+                <h5 className="mb-3 fw-semibold">
+                  {mergedItems.length} items added
+                </h5>
+              )}
               <div className="border rounded p-3 mb-3 bg-white">
                 {mergedItems.length > 0 ? (
                   mergedItems.map((item, index) => (
                     <div
-                      key={index}
+                      key={item.id ?? item.productid}
                       className="d-flex align-items-start border-bottom pb-3 mb-3"
                     >
                       <span
@@ -485,21 +538,55 @@ export default function HealthBags() {
                           </span>
                         </h6>
 
-                        <div className="d-inline-flex align-items-center border rounded px-2 py-1">
-                          <Button
-                            variant="link"
-                            className="p-0 text-dark fw-bold"
-                            onClick={() => handleQuantityChange(index, -1)}
+                        <div
+                          className="d-inline-flex align-items-center border rounded px-2 py-1"
+                          style={{ gap: "6px" }}
+                        >
+                          {(quantities[item.productid] ?? 1) > 1 ? (
+                            // ➖ Minus button (qty > 1)
+                            <Button
+                              variant="link"
+                              className="p-0 text-dark fw-bold"
+                              onClick={() =>
+                                handleQuantityChange(
+                                  item.productid,
+                                  item.id,
+                                  -1,
+                                  Number(item.availableQty)
+                                )
+                              }
+                            >
+                              <i className="bi bi-dash-lg"></i>
+                            </Button>
+                          ) : (
+                            // 🗑 Delete button (qty === 1)
+                            <Button
+                              variant="link"
+                              className="p-0 text-danger fw-bold"
+                              onClick={() => handleRemove(item.productid)}
+                            >
+                              <i className="bi bi-trash"></i>
+                            </Button>
+                          )}
+
+                          <span
+                            className="text-center"
+                            style={{ minWidth: "20px" }}
                           >
-                            <i className="bi bi-dash-lg"></i>
-                          </Button>
-
-                          <span className="mx-2">{quantities[index]}</span>
+                            {quantities[item.productid] ?? 1}
+                          </span>
 
                           <Button
                             variant="link"
                             className="p-0 text-dark fw-bold"
-                            onClick={() => handleQuantityChange(index, +1)}
+                            onClick={() =>
+                              handleQuantityChange(
+                                item.productid,
+                                item.id,
+                                +1,
+                                Number(item.availableQty)
+                              )
+                            }
                           >
                             <i className="bi bi-plus-lg"></i>
                           </Button>
@@ -508,55 +595,68 @@ export default function HealthBags() {
                     </div>
                   ))
                 ) : (
-                  <p className="text-muted text-center my-3">
-                    No items in your cart
-                  </p>
+                  <div
+                    className="d-flex flex-column justify-content-center align-items-center bg-white border rounded"
+                    style={{ minHeight: "300px" }}
+                  >
+                    <h5 className="fw-semibold">No items in your cart</h5>
+                    <p className="text-muted mb-3">
+                      Looks like you haven’t added anything yet
+                    </p>
+                    <Button onClick={() => router.push("/")} variant="primary">
+                      Continue To Shopping
+                    </Button>
+                  </div>
                 )}
               </div>
             </div>
 
             {/* Right: Bill Summary */}
-            <div className="col-lg-4">
-              <div className="border rounded p-3 bg-white sticky-summary">
-                <h6 className="fw-semibold mb-3">Bill summary</h6>
+            {!isCartEmpty && (
+              <div className="col-lg-4">
+                <div className="border rounded p-3 bg-white sticky-summary">
+                  <h6 className="fw-semibold mb-3">Bill summary</h6>
 
-                <div className="d-flex justify-content-between mb-2 small">
-                  <span>Item total (MRP)</span>
-                  <span>₹{formatAmount(totals.totalMrp).toLocaleString()}</span>
-                </div>
-                {/* 
+                  <div className="d-flex justify-content-between mb-2 small">
+                    <span>Item total (MRP)</span>
+                    <span>
+                      ₹{formatAmount(totals.totalMrp).toLocaleString()}
+                    </span>
+                  </div>
+                  {/* 
                 <div className="d-flex justify-content-between mb-2 small">
                   <span>Handling charges</span>
                   <span>₹{handlingCharges}</span>
                 </div> */}
 
-                <div className="d-flex justify-content-between mb-2 small">
-                  <span>Total discount</span>
-                  <span className="text-success">
-                    -₹{formatAmount(totals.totalDiscount).toLocaleString()}
-                  </span>
+                  <div className="d-flex justify-content-between mb-2 small">
+                    <span>Total discount</span>
+                    <span className="text-success">
+                      -₹{formatAmount(totals.totalDiscount).toLocaleString()}
+                    </span>
+                  </div>
+
+                  <div className="d-flex justify-content-between mb-2 small">
+                    <span>Shipping fee</span>
+                    <span className="text-muted">As per delivery address</span>
+                  </div>
+
+                  <hr />
+
+                  <div className="d-flex justify-content-between mb-3 fw-semibold">
+                    <span>To be paid</span>
+                    <span>₹{formatAmount(grandTotal).toLocaleString()}</span>
+                  </div>
+
+                  <Button
+                    className="w-100 py-2 fw-semibold continue-btn"
+                    onClick={handleContinue}
+                  >
+                    Continue
+                  </Button>
                 </div>
-
-                <div className="d-flex justify-content-between mb-2 small">
-                  <span>Shipping fee</span>
-                  <span className="text-muted">As per delivery address</span>
-                </div>
-
-                <hr />
-
-                <div className="d-flex justify-content-between mb-3 fw-semibold">
-                  <span>To be paid</span>
-                  <span>₹{formatAmount(grandTotal).toLocaleString()}</span>
-                </div>
-
-                <Button
-                  className="w-100 py-2 fw-semibold continue-btn"
-                  onClick={handleContinue}
-                >
-                  Continue
-                </Button>
               </div>
-            </div>
+            )}
           </div>
         </div>
       </section>
