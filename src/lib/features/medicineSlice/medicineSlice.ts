@@ -38,6 +38,7 @@ interface MedicineState {
   medicines: Medicine[];
   medicinesList: Medicine[];
   groupCareList: Medicine[];
+  groupName: string;
   otherMedicines: Medicine[];
   groupCare: CareGroup[];
   groupCareLoading: boolean;
@@ -60,6 +61,7 @@ const initialState: MedicineState = {
   medicines: [],
   medicinesList: [],
   groupCareList: [],
+  groupName: "",
   otherMedicines: [],
   groupCare: [],
   groupCareLoading: false,
@@ -571,6 +573,7 @@ const medicineSlice = createSlice({
       .addCase(getGroupCareById.fulfilled, (state, action) => {
         state.loading = false;
         state.groupCareList = action.payload.data;
+        state.groupName = action.payload.group_name;
         state.error = null;
       })
       .addCase(getGroupCareById.rejected, (state, action) => {

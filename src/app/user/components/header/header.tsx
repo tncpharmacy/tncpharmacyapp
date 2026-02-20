@@ -58,11 +58,10 @@ const SiteHeader = () => {
   const [shuffledCategories, setShuffledCategories] = useState<Category[]>([]);
   const [headerSearch, setHeaderSearch] = useState("");
 
-  const [filteredList, setFilteredList] = useState<Medicine[]>([]);
+  // const [filteredList, setFilteredList] = useState<Medicine[]>([]);
   const [isArrowNavigation, setIsArrowNavigation] = useState(false);
 
-  const [showList, setShowList] = useState(false);
-  const [localProductList, setLocalProductList] = useState<Medicine[]>([]);
+  // const [localProductList, setLocalProductList] = useState<Medicine[]>([]);
 
   const [highlightIndex, setHighlightIndex] = useState(-1);
   const isSelecting = useRef(false);
@@ -72,6 +71,47 @@ const SiteHeader = () => {
   // for mobile view state
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [openCategoryId, setOpenCategoryId] = useState<number | null>(null);
+
+  // new state for search api
+  const [searchResults, setSearchResults] = useState<Medicine[]>([]);
+  const [loadingSearch, setLoadingSearch] = useState(false);
+  const [showList, setShowList] = useState(false);
+
+  useEffect(() => {
+    const search = headerSearch.trim();
+
+    if (!search) {
+      setSearchResults([]);
+      setShowList(false);
+      return;
+    }
+
+    const timer = setTimeout(async () => {
+      try {
+        setLoadingSearch(true);
+
+        // 👉 SAME API jo search page me use hoti hai
+        const res = await dispatch(getSearchSuggestions(search)).unwrap();
+
+        const list = Array.isArray(res)
+          ? res
+          : Array.isArray(res?.data)
+          ? res.data
+          : [];
+
+        setSearchResults(list);
+        setShowList(list.length > 0);
+      } catch (err) {
+        console.error("Search API error:", err);
+        setSearchResults([]);
+        setShowList(false);
+      } finally {
+        setLoadingSearch(false);
+      }
+    }, 400); // debounce
+
+    return () => clearTimeout(timer);
+  }, [headerSearch, dispatch]);
 
   // ---------- INITIAL LOAD ----------
   useEffect(() => {
@@ -177,42 +217,97 @@ const SiteHeader = () => {
   // ---------- LOGOUT ----------
   const handleLogout = () => dispatch(buyerLogout());
 
+  // useEffect(() => {
+  //   // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  //   dispatch(getProductList()).then((res: any) => {
+  //     console.log("🔥 FULL RES:", res);
+  //     const list = Array.isArray(res?.payload)
+  //       ? res.payload
+  //       : Array.isArray(res?.payload?.data)
+  //       ? res.payload.data
+  //       : [];
+
+  //     setLocalProductList(list);
+  //   });
+  // }, []);
+
+  // useEffect(() => {
+  //   const loadProducts = async () => {
+  //     try {
+  //       const res = await dispatch(getProductList()).unwrap();
+
+  //       // 👉 res is already API response
+  //       const list = Array.isArray(res)
+  //         ? res
+  //         : Array.isArray(res?.data)
+  //         ? res.data
+  //         : [];
+
+  //       console.log("✅ Product List:", list);
+
+  //       setLocalProductList(list);
+  //     } catch (err) {
+  //       console.error("❌ Product API failed:", err);
+  //     }
+  //   };
+
+  //   loadProducts();
+  // }, [dispatch]);
+
+  // useEffect(() => {
+  //   if (isArrowNavigation) return; // ⛔ Arrow movement पर filter नहीं चलेगा
+
+  //   if (headerSearch.trim()) {
+  //     //fetchSuggestions(headerSearch);
+  //     const lower = headerSearch.toLowerCase();
+
+  //     const filtered = localProductList.filter((p) => {
+  //       const nameWords = p.medicine_name?.toLowerCase().split(" ") || [];
+  //       const brandWords = p.Manufacturer?.toLowerCase().split(" ") || [];
+
+  //       return (
+  //         nameWords.some((word) => word.startsWith(lower)) ||
+  //         brandWords.some((word) => word.startsWith(lower))
+  //       );
+  //     });
+
+  //     setSearchResults(filtered.slice(0, 8));
+  //     setShowList(true);
+  //   } else {
+  //     setShowList(false);
+  //   }
+  // }, [headerSearch, localProductList, isArrowNavigation]);
+
   useEffect(() => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    dispatch(getProductList()).then((res: any) => {
-      const list = Array.isArray(res?.payload)
-        ? res.payload
-        : Array.isArray(res?.payload?.data)
-        ? res.payload.data
-        : [];
+    const search = headerSearch.trim();
 
-      setLocalProductList(list);
-    });
-  }, []);
-
-  useEffect(() => {
-    if (isArrowNavigation) return; // ⛔ Arrow movement पर filter नहीं चलेगा
-
-    if (headerSearch.trim()) {
-      //fetchSuggestions(headerSearch);
-      const lower = headerSearch.toLowerCase();
-
-      const filtered = localProductList.filter((p) => {
-        const nameWords = p.medicine_name?.toLowerCase().split(" ") || [];
-        const brandWords = p.Manufacturer?.toLowerCase().split(" ") || [];
-
-        return (
-          nameWords.some((word) => word.startsWith(lower)) ||
-          brandWords.some((word) => word.startsWith(lower))
-        );
-      });
-
-      setFilteredList(filtered.slice(0, 8));
-      setShowList(true);
-    } else {
+    if (!search) {
+      setSearchResults([]);
       setShowList(false);
+      return;
     }
-  }, [headerSearch, localProductList, isArrowNavigation]);
+
+    const timer = setTimeout(async () => {
+      try {
+        const res = await dispatch(getSearchSuggestions(search)).unwrap();
+
+        const list = Array.isArray(res)
+          ? res
+          : Array.isArray(res?.data)
+          ? res.data
+          : [];
+
+        setSearchResults(list);
+        setShowList(list.length > 0);
+      } catch (err) {
+        console.error("Search API error:", err);
+        setSearchResults([]);
+        setShowList(false);
+      }
+    }, 400); // debounce
+
+    return () => clearTimeout(timer);
+  }, [headerSearch, dispatch]);
 
   const apiItems: CombinedSearchItem[] = apiSuggestions.map((item) => ({
     id: item.id,
@@ -220,7 +315,7 @@ const SiteHeader = () => {
     _type: "api" as const,
   }));
 
-  const localItems: CombinedSearchItem[] = filteredList.map((item) => ({
+  const localItems: CombinedSearchItem[] = searchResults.map((item) => ({
     ...item,
     _type: "local" as const,
   }));
@@ -283,42 +378,75 @@ const SiteHeader = () => {
   //   }
   // };
 
+  // const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+  //   if (e.key === "ArrowDown" && searchResults.length) {
+  //     e.preventDefault();
+  //     setIsArrowNavigation(true);
+
+  //     setHighlightIndex((prev) =>
+  //       prev < searchResults.length - 1 ? prev + 1 : 0
+  //     );
+
+  //     // const item = searchResults[highlightIndex + 1];
+  //     // if (item) setHeaderSearch(item.medicine_name);
+  //   }
+
+  //   if (e.key === "ArrowUp" && searchResults.length) {
+  //     e.preventDefault();
+  //     setIsArrowNavigation(true);
+
+  //     setHighlightIndex((prev) =>
+  //       prev > 0 ? prev - 1 : searchResults.length - 1
+  //     );
+
+  //     // const item = searchResults[highlightIndex - 1];
+  //     // if (item) setHeaderSearch(item.medicine_name);
+  //   }
+
+  //   if (e.key === "Enter") {
+  //     e.preventDefault();
+  //     setShowList(false);
+
+  //     // 👉 dropdown selection
+  //     if (highlightIndex >= 0 && searchResults[highlightIndex]) {
+  //       handleProductSelect(searchResults[highlightIndex]);
+  //       return;
+  //     }
+
+  //     // 👉 free text search
+  //     if (headerSearch.trim()) {
+  //       router.push(`/search-text?text=${encodeURIComponent(headerSearch)}`);
+  //     }
+  //   }
+  // };
+
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "ArrowDown" && filteredList.length) {
+    if (!showList || searchResults.length === 0) return;
+
+    if (e.key === "ArrowDown") {
       e.preventDefault();
-      setIsArrowNavigation(true);
-
       setHighlightIndex((prev) =>
-        prev < filteredList.length - 1 ? prev + 1 : 0
+        prev < searchResults.length - 1 ? prev + 1 : 0
       );
-
-      const item = filteredList[highlightIndex + 1];
-      if (item) setHeaderSearch(item.medicine_name);
     }
 
-    if (e.key === "ArrowUp" && filteredList.length) {
+    if (e.key === "ArrowUp") {
       e.preventDefault();
-      setIsArrowNavigation(true);
-
       setHighlightIndex((prev) =>
-        prev > 0 ? prev - 1 : filteredList.length - 1
+        prev > 0 ? prev - 1 : searchResults.length - 1
       );
-
-      const item = filteredList[highlightIndex - 1];
-      if (item) setHeaderSearch(item.medicine_name);
     }
 
     if (e.key === "Enter") {
       e.preventDefault();
-      setShowList(false);
 
-      // 👉 dropdown selection
-      if (highlightIndex >= 0 && filteredList[highlightIndex]) {
-        handleProductSelect(filteredList[highlightIndex]);
+      // 👉 Agar item select hai to us par jao
+      if (highlightIndex >= 0) {
+        handleProductSelect(searchResults[highlightIndex]);
         return;
       }
 
-      // 👉 free text search
+      // 👉 warna normal search page
       if (headerSearch.trim()) {
         router.push(`/search-text?text=${encodeURIComponent(headerSearch)}`);
       }
@@ -414,7 +542,7 @@ const SiteHeader = () => {
                     borderRadius: "4px",
                   }}
                 >
-                  {filteredList.map((item, index) => (
+                  {searchResults.map((item, index) => (
                     <li
                       key={item.id}
                       onClick={() => handleProductSelect(item)}
@@ -487,8 +615,8 @@ const SiteHeader = () => {
                               }}
                             >
                               ₹
-                              {(item.MRP ?? 0) -
-                                ((item.MRP ?? 0) * Number(item.discount ?? 0)) /
+                              {(item.mrp ?? 0) -
+                                ((item.mrp ?? 0) * Number(item.discount ?? 0)) /
                                   100}
                             </span>
                             <span
@@ -499,7 +627,7 @@ const SiteHeader = () => {
                                 fontSize: "12px",
                               }}
                             >
-                              MRP ₹{item.MRP}
+                              MRP ₹{item.mrp}
                             </span>
                           </span>
                         </div>
@@ -529,7 +657,7 @@ const SiteHeader = () => {
                             lineHeight: "1.3",
                           }}
                         >
-                          {item.Manufacturer}
+                          {item.manufacturer_name}
                         </div>
                       </div>
                       {/* )} */}

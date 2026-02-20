@@ -25,7 +25,6 @@ export default function AllGroupCare() {
   const dispatch = useAppDispatch();
 
   const categoryIdNum = Number(decodeId(params));
-
   // -----------------------------
   // INFINITE SCROLL STATES
   // -----------------------------
@@ -46,6 +45,7 @@ export default function AllGroupCare() {
   const medicines = useAppSelector(
     (state) => state.medicine.groupCareList || []
   );
+  const { groupName } = useAppSelector((state) => state.medicine);
   const { loading } = useAppSelector((state) => state.medicine);
   const { list: categories } = useAppSelector((state) => state.category);
 
@@ -214,7 +214,7 @@ export default function AllGroupCare() {
             <div className="body_content">
               <div className="pageTitle">
                 <Image src={"/images/favicon.png"} alt="" /> Product:{" "}
-                {categoryName}
+                {groupName || "Loading..."}
               </div>
 
               {/* SEARCH */}

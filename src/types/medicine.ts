@@ -13,6 +13,7 @@ export interface MedicineFormData {
   id: number;
   medicine_name: string;
   pack_size: string;
+  pack_qty: number;
   HSN_Code?: string;
 
   prescription_required: number;
@@ -56,6 +57,7 @@ export interface Medicine {
   GenericName?: string;
   dose_form?: string;
   pack_size?: string;
+  pack_qty: number;
   Disc?: string | number;
   discount?: string;
   status?: string;
@@ -101,6 +103,7 @@ export interface MedicineResponse {
   message: string;
   count: number;
   data: Medicine[];
+  group_name: string;
 }
 export interface MedicineMenuResponse {
   success: boolean;

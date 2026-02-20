@@ -8,7 +8,7 @@ import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 import { Modal } from "react-bootstrap";
 import { useParams, useRouter } from "next/navigation";
-import { decodeId } from "@/lib/utils/encodeDecode";
+import { decodeId, encodeId } from "@/lib/utils/encodeDecode";
 import HorizontalAccordionTabs from "@/app/user/product-details/HorizontalAccordionTabs";
 import { useAppDispatch, useAppSelector } from "@/lib/hooks";
 import {
@@ -218,6 +218,57 @@ export default function ProductPage() {
     { id: "4", title: "Direction for use" },
     { id: "5", title: "Safety advice" },
   ];
+  const [isMobile, setIsMobile] = useState(false);
+
+  //new state for top 2 generic
+  // const [topGenerics, setTopGenerics] = useState<Medicine[]>([]);
+  const [showGenericModal, setShowGenericModal] = useState(false);
+  const genericListRaw = useAppSelector(
+    (state) => state.medicine.genericAlternativesMedicines
+  );
+
+  const genericList: Medicine[] = Array.isArray(genericListRaw)
+    ? genericListRaw
+    : genericListRaw
+    ? [genericListRaw]
+    : [];
+
+  const getFinalPrice = (
+    mrp?: number | string | null,
+    discount?: number | string | null
+  ) => {
+    const m = parseFloat(String(mrp ?? 0)) || 0;
+    const d = parseFloat(String(discount ?? 0)) || 0;
+
+    return m - (m * d) / 100;
+  };
+  // useEffect(() => {
+  //   if (!genericList.length || !mrp) return;
+
+  //   const currentPrice = Number(mrp) - (Number(mrp) * Number(discount)) / 100;
+
+  //   const cheaperGenerics = genericList
+  //     .filter((g) => g.id !== id) // remove same medicine
+  //     .map((g) => {
+  //       const price = Number(g.mrp ?? 0);
+  //       const disc = Number(g.discount ?? 0);
+  //       const finalPrice = price - (price * disc) / 100;
+
+  //       return { ...g, finalPrice };
+  //     })
+  //     .filter((g) => g.finalPrice < currentPrice) // only cheaper
+  //     .sort((a, b) => a.finalPrice - b.finalPrice) // lowest first
+  //     .slice(0, 2); // TOP 2
+
+  //   setTopGenerics(cheaperGenerics);
+  // }, [genericList, mrp, discount, id]);
+
+  useEffect(() => {
+    const checkScreen = () => setIsMobile(window.innerWidth < 768);
+    checkScreen();
+    window.addEventListener("resize", checkScreen);
+    return () => window.removeEventListener("resize", checkScreen);
+  }, []);
   // 3. Mapping Object (Type-safe and complete)
   const safetyFieldLabelMap: Record<SafetyFieldKeys, SafetyLabelKeys> = {
     alcohol: "alcohol_label",
@@ -281,6 +332,8 @@ export default function ProductPage() {
       ...(others ?? []),
     ];
   }, [images, primaryImage]);
+  // ✅ check if images exist
+  const hasImages = imageList && imageList.length > 0;
 
   const [selectedImage, setSelectedImage] = useState(
     "/images/product-main.jpg"
@@ -336,7 +389,10 @@ export default function ProductPage() {
   const [selectedPack, setSelectedPack] = useState("500g");
 
   useEffect(() => {
-    if (decodedId) dispatch(getMedicinesMenuById(decodedId));
+    if (decodedId) {
+      dispatch(getMedicinesMenuById(decodedId));
+      dispatch(getMedicineByGenericId(decodedId));
+    }
   }, [dispatch, decodedId]);
 
   const product: Product = {
@@ -412,6 +468,84 @@ export default function ProductPage() {
 
   // ✅ Final total price (depends on qty)
   // const totalPrice = (discountedPrice * quantity).toFixed(2);
+
+  const currentPrice = getFinalPrice(mrp, discount);
+  // check if any cheaper generic exists
+  const hasCheaper = genericList.some((g) => {
+    if (Number(g.id) === Number(id)) return false;
+
+    const price = getFinalPrice(g.mrp, g.discount);
+    return price > 0 && price < currentPrice;
+  });
+  // STEP 1 — calculate all generics with price
+  const allGenericsWithPrice = (genericList || [])
+    .filter((g) => Number(g.id) !== Number(id))
+    .map((g) => ({
+      ...g,
+      finalPrice: getFinalPrice(g.mrp, g.discount),
+    }))
+    .filter((g) => g.finalPrice > 0);
+
+  // STEP 2 — ONLY those cheaper than current medicine
+  const cheaperThanCurrent = allGenericsWithPrice.filter(
+    (g) => g.finalPrice < currentPrice
+  );
+
+  // STEP 3 — sort cheapest first
+  const sortedCheaper = cheaperThanCurrent.sort(
+    (a, b) => a.finalPrice - b.finalPrice
+  );
+
+  // STEP 4 — take maximum 2 (may be 1 or 0)
+  const topCheaperGenerics = sortedCheaper.slice(0, 2);
+  const sortedGenerics = topCheaperGenerics;
+  // Take TOP 2 cheaper ones
+  // const top2Cheaper = cheaperGenerics;
+  // ---- Build Generic List (sorted by price)
+  // const sortedGenerics = (genericList || [])
+  //   .filter((g) => g.id !== id)
+  //   .map((g) => ({
+  //     ...g,
+  //     finalPrice: getFinalPrice(g.mrp, g.discount),
+  //   }))
+  //   .filter((g) => g.finalPrice > 0)
+  //   .sort((a, b) => a.finalPrice - b.finalPrice)
+  //   .slice(0, 2); // only 2 alternatives
+
+  // ---- Calculate Saving % vs Current Medicine ----
+  const savingPercents = topCheaperGenerics.map((g) => {
+    const diff = currentPrice - g.finalPrice;
+    return diff > 0 ? Math.round((diff / currentPrice) * 100) : 0;
+  });
+
+  const minSaving = savingPercents.length ? Math.min(...savingPercents) : 0;
+
+  const maxSaving = savingPercents.length ? Math.max(...savingPercents) : 0;
+
+  // Show banner only if real cheaper exists
+  const showSavingBanner = topCheaperGenerics.length > 0;
+
+  // ---- Inject Current Medicine at Top
+  const finalCompareList = [
+    {
+      id,
+      medicine_name,
+      manufacturer_name,
+      generic_name,
+      pack_size,
+      images,
+      finalPrice: currentPrice,
+      isCurrent: true, // 👈 important flag
+    },
+    ...topCheaperGenerics.map((g) => ({ ...g, isCurrent: false })),
+  ];
+  const savingPercent =
+    sortedGenerics.length > 0
+      ? Math.round(
+          ((currentPrice - sortedGenerics[0].finalPrice) / currentPrice) * 100
+        )
+      : 0;
+
   const totalPrice = Number((discountedPrice * quantity).toFixed(2));
 
   useEffect(() => {
@@ -493,6 +627,79 @@ export default function ProductPage() {
     prevArrow: <PrevArrow />,
   };
 
+  const renderGenericCompare = () => {
+    if (!hasCheaper) return null;
+
+    return (
+      <>
+        {showSavingBanner && (
+          <div className="generic-saving-banner">
+            {minSaving === maxSaving
+              ? `Save ${maxSaving}% on alternative generics`
+              : `Save ${minSaving}% to ${maxSaving}% on alternative generics`}
+          </div>
+        )}
+
+        {finalCompareList.map((g, index) => {
+          const gImage =
+            g.images?.find((img) => img.default_image === 1)?.document ||
+            g.images?.[0]?.document ||
+            "/images/tnc-default.png";
+
+          const cleanedBase = (mediaBase || "").replace(/\/+$/, "");
+          const cleanedSrc = (gImage || "").replace(/^\/+/, "");
+          const imageUrl = cleanedBase
+            ? `${cleanedBase}/${cleanedSrc}`
+            : gImage;
+
+          const tabletCount =
+            parseInt(String(g.pack_size).replace(/\D/g, "")) || 1;
+
+          const perTablet = (g.finalPrice / tabletCount).toFixed(2);
+
+          return (
+            <div
+              key={`compare-${g.id}-${index}`}
+              className={`generic-row-card ${g.isCurrent ? "current" : ""}`}
+              onClick={() => {
+                if (!g.isCurrent) {
+                  setShowGenericModal(false);
+                  router.push(`/medicines-details/${encodeId(g.id)}`);
+                }
+              }}
+            >
+              <div className="generic-img-wrap">
+                <img
+                  src={imageUrl}
+                  alt={g.medicine_name}
+                  onError={(e) =>
+                    (e.currentTarget.src = "/images/tnc-default.png")
+                  }
+                />
+              </div>
+
+              <div className="generic-content">
+                <div className="generic-name">{g.medicine_name}</div>
+
+                {g.isCurrent && (
+                  <div className="viewing-badge">Currently Viewing</div>
+                )}
+
+                <div className="generic-composition">{g.generic_name}</div>
+                <div className="generic-company">{g.manufacturer_name}</div>
+
+                <div className="generic-price">
+                  ₹{formatAmount(g.finalPrice)}
+                </div>
+
+                <div className="generic-per">₹{perTablet} / tablet</div>
+              </div>
+            </div>
+          );
+        })}
+      </>
+    );
+  };
   return (
     <>
       <SiteHeader />
@@ -516,7 +723,11 @@ export default function ProductPage() {
             <div className="col-md-9 pe-4">
               <div className="view_box" id="overview">
                 <div className="row">
-                  <div className="col-md-8">
+                  <div
+                    className={`col-md-8 medicine-info-col ${
+                      !hasImages && isMobile ? "col-12" : ""
+                    }`}
+                  >
                     <h1 className="fs-3 fw-bold">{medicine_name}</h1>
                     <div className="mb-4">
                       {typeof prescription_required === "number" ? (
@@ -558,99 +769,117 @@ export default function ProductPage() {
                       <div className="descr">{storage}</div>
                     </div>
                   </div>
-                  <div className="col-md-4 pb-4 justify-content-center align-items-center">
-                    <Slider {...singleImageSlider}>
-                      {imageList && imageList.length > 0 ? (
-                        imageList.map((rawSrc, index) => {
-                          // normalize mediaBase + rawSrc into a full URL safely
-                          const cleanedBase = (mediaBase || "").replace(
-                            /\/+$/,
-                            ""
-                          );
-                          const cleanedSrc = (rawSrc || "").replace(/^\/+/, "");
-                          const fullUrl = cleanedBase
-                            ? `${cleanedBase}/${cleanedSrc}`
-                            : rawSrc;
+                  {(hasImages || !isMobile) && (
+                    <div className="col-md-4 pb-4 justify-content-center align-items-center medicine-image-col">
+                      <Slider {...singleImageSlider}>
+                        {imageList && imageList.length > 0 ? (
+                          imageList.map((rawSrc, index) => {
+                            // normalize mediaBase + rawSrc into a full URL safely
+                            const cleanedBase = (mediaBase || "").replace(
+                              /\/+$/,
+                              ""
+                            );
+                            const cleanedSrc = (rawSrc || "").replace(
+                              /^\/+/,
+                              ""
+                            );
+                            const fullUrl = cleanedBase
+                              ? `${cleanedBase}/${cleanedSrc}`
+                              : rawSrc;
 
-                          // debug log (remove after debugging)
-                          // eslint-disable-next-line no-console
-                          console.log(
-                            `[PRODUCT IMAGE] index=${index} ->`,
-                            fullUrl
-                          );
+                            // debug log (remove after debugging)
+                            // eslint-disable-next-line no-console
+                            console.log(
+                              `[PRODUCT IMAGE] index=${index} ->`,
+                              fullUrl
+                            );
 
-                          return (
-                            <div
-                              key={index}
-                              onClick={() => openModal(index)}
-                              className="product-image-box"
-                            >
-                              <img
-                                src={fullUrl}
-                                alt={`Product ${index + 1}`}
-                                className="product-image"
-                                loading="lazy"
-                                onError={(e) => {
-                                  // show fallback if image load fails
-                                  e.currentTarget.onerror = null;
-                                  e.currentTarget.src =
-                                    "/images/tnc-default.png";
-                                  // eslint-disable-next-line no-console
-                                  console.warn(
-                                    "[PRODUCT IMAGE] failed to load:",
-                                    fullUrl
-                                  );
-                                }}
-                              />
-                            </div>
-                          );
-                        })
-                      ) : (
-                        <div className="product-image-box">
-                          <img
-                            src="/images/tnc-default.png"
-                            alt="No Image Available"
-                            className="product-image"
-                            style={{ opacity: "0.3" }}
-                          />
-                        </div>
-                      )}
-                    </Slider>
-                    {/* 🪟 Modal with Fullscreen Slider */}
-                    <Modal
-                      show={showModal}
-                      onHide={closeModal}
-                      size="lg"
-                      centered
-                    >
-                      <Modal.Body>
-                        <Slider {...modalSliderSettings}>
-                          {imageList.map((src, index) => (
-                            <div key={index}>
-                              <Image
-                                src={`${mediaBase}${src}`}
-                                alt={`Modal Image ${index + 1}`}
-                                width={800} // required
-                                height={600} // required
-                                className="product-modal-img"
-                                style={{
-                                  maxHeight: "80vh",
-                                  objectFit: "contain",
-                                  width: "100%",
-                                  height: "auto",
-                                }}
-                                priority={index === 0} // first image loads fast
-                              />
-                            </div>
-                          ))}
-                        </Slider>
-                      </Modal.Body>
-                    </Modal>
-                  </div>
+                            return (
+                              <div
+                                key={index}
+                                onClick={() => openModal(index)}
+                                className="product-image-box"
+                              >
+                                <img
+                                  src={fullUrl}
+                                  alt={`Product ${index + 1}`}
+                                  className="product-image"
+                                  loading="lazy"
+                                  onError={(e) => {
+                                    // show fallback if image load fails
+                                    e.currentTarget.onerror = null;
+                                    e.currentTarget.src =
+                                      "/images/tnc-default.png";
+                                    // eslint-disable-next-line no-console
+                                    console.warn(
+                                      "[PRODUCT IMAGE] failed to load:",
+                                      fullUrl
+                                    );
+                                  }}
+                                />
+                              </div>
+                            );
+                          })
+                        ) : (
+                          <div className="product-image-box">
+                            <img
+                              src="/images/tnc-default.png"
+                              alt="No Image Available"
+                              className="product-image"
+                              style={{ opacity: "0.3" }}
+                            />
+                          </div>
+                        )}
+                      </Slider>
+                      {/* 🪟 Modal with Fullscreen Slider */}
+                      <Modal
+                        show={showModal}
+                        onHide={closeModal}
+                        size="lg"
+                        centered
+                      >
+                        <Modal.Body>
+                          <Slider {...modalSliderSettings}>
+                            {imageList.map((src, index) => (
+                              <div key={index}>
+                                <Image
+                                  src={`${mediaBase}${src}`}
+                                  alt={`Modal Image ${index + 1}`}
+                                  width={800} // required
+                                  height={600} // required
+                                  className="product-modal-img"
+                                  style={{
+                                    maxHeight: "80vh",
+                                    objectFit: "contain",
+                                    width: "100%",
+                                    height: "auto",
+                                  }}
+                                  priority={index === 0} // first image loads fast
+                                />
+                              </div>
+                            ))}
+                          </Slider>
+                        </Modal.Body>
+                      </Modal>
+                    </div>
+                  )}
                 </div>
-                <div className="accordian-wrapper"></div>
+                {showSavingBanner && (
+                  <div className="generic-switch-link">
+                    <button
+                      type="button"
+                      onClick={() => setShowGenericModal(true)}
+                      className="btn btn-link p-0"
+                    >
+                      {minSaving === maxSaving
+                        ? `${maxSaving}% cheaper alternative available with same composition`
+                        : `${minSaving}% to ${maxSaving}% cheaper alternatives available`}
+                    </button>
+                  </div>
+                )}
+                {!isMobile && <div className="accordian-wrapper"></div>}
               </div>
-              <HorizontalAccordionTabs id={id} />
+              {!isMobile && <HorizontalAccordionTabs id={id} />}
               <div className="herotab">
                 <ul className="herotab_list">
                   {sections.map(({ id, title }) => (
@@ -801,7 +1030,7 @@ export default function ProductPage() {
                 </div>
               </div>
             </div>
-            <div className="col-md-3 ps-0">
+            <div className="col-md-3 ps-0 d-none d-md-block">
               <div className="right_section">
                 <div className="view_box">
                   {/* MRP and Discount */}
@@ -862,6 +1091,7 @@ export default function ProductPage() {
                       ? "Go To Health Bag"
                       : "Add to Health Bag"}
                   </button>
+                  {renderGenericCompare()}
                 </div>
               </div>
             </div>
@@ -923,8 +1153,57 @@ export default function ProductPage() {
           </div>
         </div>
 
+        {/* ===== MOBILE STICKY HEALTH BAG ===== */}
+        {isMobile && (
+          <div className="mobile-sticky-cart d-md-none">
+            <div className="msc-inner">
+              <div className="msc-price">
+                ₹{formatAmount(totalPrice ?? 0).toLocaleString()}
+                <span>Inclusive of all taxes</span>
+              </div>
+
+              <div className="msc-qty">
+                <button onClick={decrease}>−</button>
+                <span>{quantity}</span>
+                <button onClick={increase}>+</button>
+              </div>
+
+              <button
+                className="msc-btn"
+                onClick={() => {
+                  if (isInBag) router.push("/health-bag");
+                  else handleAdd({ product_id: id });
+                }}
+                disabled={processingIds.includes(id)}
+              >
+                {processingIds.includes(id)
+                  ? "Processing..."
+                  : isInBag
+                  ? "Go To Health Bag"
+                  : "Add to Health Bag"}
+              </button>
+            </div>
+          </div>
+        )}
         <Footer />
       </div>
+
+      <Modal
+        show={showGenericModal}
+        onHide={() => setShowGenericModal(false)}
+        centered
+        size="lg"
+      >
+        <Modal.Header closeButton>
+          <Modal.Title>
+            {minSaving === maxSaving
+              ? `Save ${maxSaving}% with generic alternative`
+              : `Save ${minSaving}% to ${maxSaving}% with generic alternatives`}
+          </Modal.Title>
+        </Modal.Header>
+
+        <Modal.Body>{renderGenericCompare()}</Modal.Body>
+      </Modal>
     </>
   );
 }

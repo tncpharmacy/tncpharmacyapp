@@ -208,7 +208,14 @@ export default function ProductPage() {
     { id: "1", title: "Product Introduction" },
     { id: "2", title: "Description" },
   ];
+  const [isMobile, setIsMobile] = useState(false);
 
+  useEffect(() => {
+    const checkScreen = () => setIsMobile(window.innerWidth < 768);
+    checkScreen();
+    window.addEventListener("resize", checkScreen);
+    return () => window.removeEventListener("resize", checkScreen);
+  }, []);
   // 🧩 Utility function — remove domain
   const getRelativePath = (url: string) => {
     try {
@@ -233,6 +240,8 @@ export default function ProductPage() {
       ...(others ?? []),
     ];
   }, [images, primaryImage]);
+
+  const hasImages = imageList && imageList.length > 0;
 
   const [selectedImage, setSelectedImage] = useState(
     "/images/product-main.jpg"
@@ -446,6 +455,50 @@ export default function ProductPage() {
     prevArrow: <PrevArrow />,
   };
 
+  const RenderPriceBox = () => (
+    <div className="right_section">
+      <div className="view_box">
+        <div className="pd_price">
+          <span className="old_price">
+            <del>MRP ₹{formatAmount(mrp ?? 0).toLocaleString()}</del> {discount}
+            % off
+          </span>
+        </div>
+
+        <div className="pd_price">
+          <span className="new_price">
+            ₹{formatAmount(totalPrice ?? 0).toLocaleString()}
+          </span>
+        </div>
+        <small>Inclusive of all taxes</small>
+
+        <div className="d-flex align-items-center my-3">
+          <button onClick={decrease} className="btn btn-outline-secondary px-3">
+            −
+          </button>
+          <span className="mx-3 fs-5">{quantity}</span>
+          <button onClick={increase} className="btn btn-outline-secondary px-3">
+            +
+          </button>
+        </div>
+
+        <button
+          className="btn btn-sm mb-2 py-2 w-100 btn-primary"
+          onClick={() => {
+            if (isInBag) router.push("/health-bag");
+            else handleAdd({ product_id: id });
+          }}
+          disabled={processingIds.includes(id)}
+        >
+          {processingIds.includes(id)
+            ? "Processing..."
+            : isInBag
+            ? "Go To Health Bag"
+            : "Add to Health Bag"}
+        </button>
+      </div>
+    </div>
+  );
   return (
     <>
       <SiteHeader />
@@ -469,7 +522,11 @@ export default function ProductPage() {
             <div className="col-md-9 pe-4">
               <div className="view_box" id="overview">
                 <div className="row">
-                  <div className="col-md-8">
+                  <div
+                    className={`col-md-8 product-info-col ${
+                      !hasImages && isMobile ? "col-12" : ""
+                    }`}
+                  >
                     <h3 className="fw-bold">{medicine_name}</h3>
                     <div className="mb-4">
                       {typeof prescription_required === "number" ? (
@@ -513,99 +570,109 @@ export default function ProductPage() {
                       </ul>
                     </div> */}
                   </div>
-                  <div className="col-md-4 pb-4 justify-content-center align-items-center">
-                    <Slider {...singleImageSlider}>
-                      {imageList && imageList.length > 0 ? (
-                        imageList.map((rawSrc, index) => {
-                          // normalize mediaBase + rawSrc into a full URL safely
-                          const cleanedBase = (mediaBase || "").replace(
-                            /\/+$/,
-                            ""
-                          );
-                          const cleanedSrc = (rawSrc || "").replace(/^\/+/, "");
-                          const fullUrl = cleanedBase
-                            ? `${cleanedBase}/${cleanedSrc}`
-                            : rawSrc;
+                  {(hasImages || !isMobile) && (
+                    <div className="col-md-4 pb-4 justify-content-center align-items-center product-image-col">
+                      <Slider {...singleImageSlider}>
+                        {imageList && imageList.length > 0 ? (
+                          imageList.map((rawSrc, index) => {
+                            // normalize mediaBase + rawSrc into a full URL safely
+                            const cleanedBase = (mediaBase || "").replace(
+                              /\/+$/,
+                              ""
+                            );
+                            const cleanedSrc = (rawSrc || "").replace(
+                              /^\/+/,
+                              ""
+                            );
+                            const fullUrl = cleanedBase
+                              ? `${cleanedBase}/${cleanedSrc}`
+                              : rawSrc;
 
-                          // debug log (remove after debugging)
-                          // eslint-disable-next-line no-console
-                          console.log(
-                            `[PRODUCT IMAGE] index=${index} ->`,
-                            fullUrl
-                          );
+                            // debug log (remove after debugging)
+                            // eslint-disable-next-line no-console
+                            console.log(
+                              `[PRODUCT IMAGE] index=${index} ->`,
+                              fullUrl
+                            );
 
-                          return (
-                            <div
-                              key={index}
-                              onClick={() => openModal(index)}
-                              className="product-image-box"
-                            >
-                              <img
-                                src={fullUrl}
-                                alt={`Product ${index + 1}`}
-                                className="product-image"
-                                loading="lazy"
-                                onError={(e) => {
-                                  // show fallback if image load fails
-                                  e.currentTarget.onerror = null;
-                                  e.currentTarget.src =
-                                    "/images/tnc-default.png";
-                                  // eslint-disable-next-line no-console
-                                  console.warn(
-                                    "[PRODUCT IMAGE] failed to load:",
-                                    fullUrl
-                                  );
-                                }}
-                              />
-                            </div>
-                          );
-                        })
-                      ) : (
-                        <div className="product-image-box">
-                          <img
-                            src="/images/tnc-default.png"
-                            alt="No Image Available"
-                            className="product-image"
-                          />
-                        </div>
-                      )}
-                    </Slider>
+                            return (
+                              <div
+                                key={index}
+                                onClick={() => openModal(index)}
+                                className="product-image-box"
+                              >
+                                <img
+                                  src={fullUrl}
+                                  alt={`Product ${index + 1}`}
+                                  className="product-image"
+                                  loading="lazy"
+                                  onError={(e) => {
+                                    // show fallback if image load fails
+                                    e.currentTarget.onerror = null;
+                                    e.currentTarget.src =
+                                      "/images/tnc-default.png";
+                                    // eslint-disable-next-line no-console
+                                    console.warn(
+                                      "[PRODUCT IMAGE] failed to load:",
+                                      fullUrl
+                                    );
+                                  }}
+                                />
+                              </div>
+                            );
+                          })
+                        ) : (
+                          <div className="product-image-box">
+                            <img
+                              src="/images/tnc-default.png"
+                              alt="No Image Available"
+                              className="product-image"
+                            />
+                          </div>
+                        )}
+                      </Slider>
 
-                    {/* 🪟 Modal with Fullscreen Slider */}
-                    <Modal
-                      show={showModal}
-                      onHide={closeModal}
-                      size="lg"
-                      centered
-                    >
-                      <Modal.Body>
-                        <Slider {...modalSliderSettings}>
-                          {imageList.map((src, index) => (
-                            <div key={index}>
-                              <Image
-                                src={`${mediaBase}${src}`}
-                                alt={`Modal Image ${index + 1}`}
-                                width={800} // required
-                                height={600} // required
-                                className="w-100"
-                                style={{
-                                  maxHeight: "80vh",
-                                  objectFit: "contain",
-                                  width: "100%",
-                                  height: "auto",
-                                }}
-                                priority={index === 0} // first image loads fast
-                              />
-                            </div>
-                          ))}
-                        </Slider>
-                      </Modal.Body>
-                    </Modal>
-                  </div>
+                      {/* 🪟 Modal with Fullscreen Slider */}
+                      <Modal
+                        show={showModal}
+                        onHide={closeModal}
+                        size="lg"
+                        centered
+                      >
+                        <Modal.Body>
+                          <Slider {...modalSliderSettings}>
+                            {imageList.map((src, index) => (
+                              <div key={index}>
+                                <Image
+                                  src={`${mediaBase}${src}`}
+                                  alt={`Modal Image ${index + 1}`}
+                                  width={800} // required
+                                  height={600} // required
+                                  className="w-100"
+                                  style={{
+                                    maxHeight: "80vh",
+                                    objectFit: "contain",
+                                    width: "100%",
+                                    height: "auto",
+                                  }}
+                                  priority={index === 0} // first image loads fast
+                                />
+                              </div>
+                            ))}
+                          </Slider>
+                        </Modal.Body>
+                      </Modal>
+                    </div>
+                  )}
                 </div>
                 <div className="accordian-wrapper"></div>
-              </div>
-              <div className="herotab">
+              </div>{" "}
+              {/* {isMobile && (
+                <div className="mobile-price-box mt-3">
+                  <RenderPriceBox />
+                </div>
+              )} */}
+              <div className="herotab product-tabs">
                 <ul className="herotab_list">
                   {sections.map(({ id, title }) => (
                     <li key={id}>
@@ -624,7 +691,6 @@ export default function ProductPage() {
                   ))}
                 </ul>
               </div>
-
               <div className="view_box">
                 <div id="2" className={activeSectionId === "2" ? "" : "d-none"}>
                   <div className="col-12">
@@ -652,7 +718,7 @@ export default function ProductPage() {
                 </div>
               </div>
             </div>
-            <div className="col-md-3 ps-0">
+            <div className="col-md-3 ps-0 price-box-col d-none d-md-block">
               <div className="right_section">
                 <div className="view_box">
                   {/* MRP and Discount */}
@@ -775,6 +841,38 @@ export default function ProductPage() {
           </div>
         </div>
 
+        {/* MOBILE STICKY ADD TO BAG */}
+        {isMobile && (
+          <div className="mobile-sticky-cart d-md-none">
+            <div className="msc-inner">
+              <div className="msc-price">
+                ₹{formatAmount(totalPrice ?? 0).toLocaleString()}
+                <span>Inclusive of all taxes</span>
+              </div>
+
+              <div className="msc-qty">
+                <button onClick={decrease}>−</button>
+                <span>{quantity}</span>
+                <button onClick={increase}>+</button>
+              </div>
+
+              <button
+                className="msc-btn"
+                onClick={() => {
+                  if (isInBag) router.push("/health-bag");
+                  else handleAdd({ product_id: id });
+                }}
+                disabled={processingIds.includes(id)}
+              >
+                {processingIds.includes(id)
+                  ? "Processing..."
+                  : isInBag
+                  ? "Go To Health Bag"
+                  : "Add to Health Bag"}
+              </button>
+            </div>
+          </div>
+        )}
         <Footer />
       </div>
     </>

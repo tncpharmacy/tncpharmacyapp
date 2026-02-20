@@ -1,6 +1,7 @@
 import { getMedicineByGenericId } from "@/lib/features/medicineSlice/medicineSlice";
 import { useAppDispatch, useAppSelector } from "@/lib/hooks";
 import { encodeId } from "@/lib/utils/encodeDecode";
+import { formatAmount } from "@/lib/utils/formatAmount";
 import { Medicine } from "@/types/medicine";
 import Link from "next/link";
 import React, { useState, useRef, useEffect } from "react";
@@ -98,13 +99,23 @@ const HorizontalAccordionTabs: React.FC<IDProps> = ({ id }) => {
                     {/* Items को फुल width (w-50 हटा दिया) */}
                     {genericListByMedicine.map((item) => {
                       // 1️⃣ Random MRP generate (80 to 500)
-                      const randomMRP =
-                        Math.floor(Math.random() * (500 - 80 + 1)) + 80;
+                      // const randomMRP =
+                      //   Math.floor(Math.random() * (500 - 80 + 1)) + 80;
 
-                      // 2️⃣ Discount logic (convert to number safely)
-                      const discount = Number(item.discount) || 0;
-                      const discountedPrice =
-                        randomMRP - (randomMRP * discount) / 100;
+                      const mrp = Number(item.mrp ?? 0);
+                      const discount = Number(item.discount ?? 0);
+                      const discountedPrice = mrp - (mrp * discount) / 100;
+                      const perCapsule = (
+                        discountedPrice / item.pack_qty
+                      ).toFixed(2);
+                      const unitCode =
+                        item.pack_size?.match(/[A-Z]+/)?.[0] || "";
+                      const unitMap: Record<string, string> = {
+                        CAP: "capsule",
+                        TAB: "tablet",
+                      };
+
+                      const unit = unitMap[unitCode] || unitCode.toLowerCase();
 
                       return (
                         <div
@@ -130,6 +141,17 @@ const HorizontalAccordionTabs: React.FC<IDProps> = ({ id }) => {
                               style={{ color: "#28a745", fontSize: "13px" }}
                             >
                               {item.manufacturer_name}
+                              <br />
+                              <div
+                                className="descr"
+                                style={{
+                                  color: "#d32f2f",
+                                  fontSize: "14px",
+                                  fontWeight: "500",
+                                }}
+                              >
+                                (₹{perCapsule} per {unit})
+                              </div>
                             </div>
                           </div>
 
@@ -145,7 +167,7 @@ const HorizontalAccordionTabs: React.FC<IDProps> = ({ id }) => {
                                     color: "#d32f2f",
                                   }}
                                 >
-                                  ₹{discountedPrice.toFixed(2)}
+                                  ₹{formatAmount(discountedPrice)}
                                 </div>
                                 <div
                                   //className="descr"
@@ -155,7 +177,7 @@ const HorizontalAccordionTabs: React.FC<IDProps> = ({ id }) => {
                                     textDecoration: "line-through",
                                   }}
                                 >
-                                  ₹{randomMRP}
+                                  ₹{formatAmount(mrp)}
                                 </div>
                                 <div
                                   style={{
@@ -177,7 +199,7 @@ const HorizontalAccordionTabs: React.FC<IDProps> = ({ id }) => {
                                     color: "#d32f2f",
                                   }}
                                 >
-                                  ₹{randomMRP}
+                                  ₹{formatAmount(mrp)}
                                 </div>
                                 <div
                                   className="descr"
