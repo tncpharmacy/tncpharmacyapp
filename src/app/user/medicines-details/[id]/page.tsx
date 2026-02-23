@@ -62,9 +62,8 @@ const ThumbnailGallery: React.FC<{
       <button
         key={t}
         onClick={() => setSelectedImage(t)}
-        className={`border rounded-lg p-1 hover:shadow-md transition-all duration-150 ${
-          selectedImage === t ? "ring-2 ring-green-400" : ""
-        }`}
+        className={`border rounded-lg p-1 hover:shadow-md transition-all duration-150 ${selectedImage === t ? "ring-2 ring-green-400" : ""
+          }`}
       >
         <img src={t} alt="thumb" className="w-16 h-16 object-cover rounded" />
       </button>
@@ -97,11 +96,10 @@ const PackSelector: React.FC<{
         <button
           key={opt.id}
           onClick={() => setSelectedPack(opt.id)}
-          className={`border rounded-lg px-3 py-2 text-sm font-medium hover:shadow-sm transition ${
-            selectedPack === opt.id
-              ? "bg-red-50 border-red-300 text-red-700"
-              : "bg-white text-gray-700"
-          }`}
+          className={`border rounded-lg px-3 py-2 text-sm font-medium hover:shadow-sm transition ${selectedPack === opt.id
+            ? "bg-red-50 border-red-300 text-red-700"
+            : "bg-white text-gray-700"
+            }`}
         >
           <div>{opt.label}</div>
           <div className="text-xs mt-1">{formatRs(opt.price)}</div>
@@ -143,7 +141,7 @@ const PriceBox: React.FC<{
         </div>
         <div className="text-xs text-gray-400">Inclusive of all taxes</div>
       </div>
-      <QuantitySelector qty={qty} setQty={() => {}} />
+      <QuantitySelector qty={qty} setQty={() => { }} />
     </div>
     <div className="mt-4">
       <button
@@ -230,8 +228,8 @@ export default function ProductPage() {
   const genericList: Medicine[] = Array.isArray(genericListRaw)
     ? genericListRaw
     : genericListRaw
-    ? [genericListRaw]
-    : [];
+      ? [genericListRaw]
+      : [];
 
   const getFinalPrice = (
     mrp?: number | string | null,
@@ -542,8 +540,8 @@ export default function ProductPage() {
   const savingPercent =
     sortedGenerics.length > 0
       ? Math.round(
-          ((currentPrice - sortedGenerics[0].finalPrice) / currentPrice) * 100
-        )
+        ((currentPrice - sortedGenerics[0].finalPrice) / currentPrice) * 100
+      )
       : 0;
 
   const totalPrice = Number((discountedPrice * quantity).toFixed(2));
@@ -639,7 +637,6 @@ export default function ProductPage() {
               : `Save ${minSaving}% to ${maxSaving}% on alternative generics`}
           </div>
         )}
-
         {finalCompareList.map((g, index) => {
           const gImage =
             g.images?.find((img) => img.default_image === 1)?.document ||
@@ -724,9 +721,8 @@ export default function ProductPage() {
               <div className="view_box" id="overview">
                 <div className="row">
                   <div
-                    className={`col-md-8 medicine-info-col ${
-                      !hasImages && isMobile ? "col-12" : ""
-                    }`}
+                    className={`col-md-8 medicine-info-col ${!hasImages && isMobile ? "col-12" : ""
+                      }`}
                   >
                     <h1 className="fs-3 fw-bold">{medicine_name}</h1>
                     <div className="mb-4">
@@ -1071,9 +1067,8 @@ export default function ProductPage() {
 
                   {/* Add to Health Bag */}
                   <button
-                    className={`btn btn-sm mb-2 py-2 w-100 ${
-                      isInBag ? "btn-primary" : "btn-primary"
-                    }`}
+                    className={`btn btn-sm mb-2 py-2 w-100 ${isInBag ? "btn-primary" : "btn-primary"
+                      }`}
                     onClick={() => {
                       if (isInBag) {
                         router.push("/health-bag"); // redirect page
@@ -1088,8 +1083,8 @@ export default function ProductPage() {
                     {processingIds.includes(id)
                       ? "Processing..."
                       : isInBag
-                      ? "Go To Health Bag"
-                      : "Add to Health Bag"}
+                        ? "Go To Health Bag"
+                        : "Add to Health Bag"}
                   </button>
                   {renderGenericCompare()}
                 </div>
@@ -1179,8 +1174,8 @@ export default function ProductPage() {
                 {processingIds.includes(id)
                   ? "Processing..."
                   : isInBag
-                  ? "Go To Health Bag"
-                  : "Add to Health Bag"}
+                    ? "Go To Health Bag"
+                    : "Add to Health Bag"}
               </button>
             </div>
           </div>
@@ -1202,7 +1197,11 @@ export default function ProductPage() {
           </Modal.Title>
         </Modal.Header>
 
-        <Modal.Body>{renderGenericCompare()}</Modal.Body>
+        <Modal.Body>
+          <div className="generic-row">
+            {renderGenericCompare()}
+          </div>
+        </Modal.Body>
       </Modal>
     </>
   );

@@ -584,12 +584,15 @@ ul.no-subcategories li {
 }
 
 .mobile-menu-list {
-  list-style: none;
-  padding: 0;
+    list-style: none;
+    padding: 0;
+    font-size: 12px;
+    overflow: scroll;
+    height: 100%;
 }
 
 .mobile-menu-list > li {
-  padding: 12px 0;
+  padding:5px 0;
   border-bottom: 1px solid #eee;
   font-weight: 500;
 }
@@ -621,7 +624,7 @@ ul.no-subcategories li {
 
 .sub-menu li {
   padding: 8px 0;
-  font-size: 14px;
+  font-size: 12px;
   color: #555;
 }
 
@@ -690,11 +693,11 @@ span.user_p i .count {
 }
     .search_query {
         position: absolute;
-        /* background: #ff7b00; */
+        background: #ffffff;
         left: 0;
         top: 60px;
         z-index: 111;
-        padding: 10px 12px;
+        padding: 0 10px 10px;
         justify-content: center;
         height: 60px;
     }
