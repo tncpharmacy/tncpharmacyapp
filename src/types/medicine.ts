@@ -130,6 +130,7 @@ export interface Product {
   amount: string;
   location: string;
   applied_discount: string;
+  additional_discount: string;
 }
 
 export type SafetyLabel = {

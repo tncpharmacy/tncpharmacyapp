@@ -45,6 +45,14 @@ const nextConfig: NextConfig = {
         destination: "/user/all-products/:categoryId/:subCategoryId",
       },
       {
+        source: "/all-generic/:id",
+        destination: "/user/all-generic/:id",
+      },
+      {
+        source: "/all-manufacturer/:id",
+        destination: "/user/all-manufacturer/:id",
+      },
+      {
         source: "/product-details/:id",
         destination: "/user/product-details/:id",
       },

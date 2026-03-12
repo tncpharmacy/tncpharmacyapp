@@ -217,13 +217,19 @@ export default function AllProduct() {
         <div className="body_wrap">
           <div className="body_right">
             <div className="body_content">
-              <div className="pageTitle">
-                <Image src={"/images/favicon.png"} alt="" /> Product:{" "}
-                {categoryName}
-              </div>
+              {/* SEARCH */}
+              {/* TITLE + SEARCH IN SAME ROW */}
+              <div className="row align-items-center mb-3">
+                {/* LEFT SIDE : PRODUCT NAME */}
+                <div className="col-md-9">
+                  <div className="pageTitle m-0">
+                    <Image src={"/images/favicon.png"} alt="" /> Product:{" "}
+                    {categoryName || "Loading..."}
+                  </div>
+                </div>
 
-              <div className="row">
-                <div className="col-md-12">
+                {/* RIGHT SIDE : SEARCH BOX */}
+                <div className="col-md-3">
                   <div className="search_query">
                     <a className="query_search_btn" href="javascript:void(0)">
                       <i className="bi bi-search"></i>
@@ -235,7 +241,6 @@ export default function AllProduct() {
                       value={searchTerm}
                       onChange={(e) => {
                         setSearchTerm(e.target.value);
-                        // when user searches, reset limit to initial so search results show from top
                         setLimit(20);
                       }}
                     />

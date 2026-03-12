@@ -116,7 +116,7 @@ export default function SideNav() {
                   <i className="bi bi-building me-2"></i>Manufacturer
                 </Link>
               </li>
-              <li>
+              {/* <li>
                 <Link href="/variant">
                   <i className="bi bi-diagram-3 me-2"></i>Variant
                 </Link>
@@ -125,7 +125,7 @@ export default function SideNav() {
                 <Link href="/dose-form">
                   <i className="bi bi-droplet-half me-2"></i> Dose Form
                 </Link>
-              </li>
+              </li> */}
             </ul>
           )}
         </li>

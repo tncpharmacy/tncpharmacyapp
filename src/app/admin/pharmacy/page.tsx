@@ -17,6 +17,7 @@ import InfiniteScroll from "@/app/components/InfiniteScroll/InfiniteScroll";
 import Link from "next/link";
 import TableLoader from "@/app/components/TableLoader/TableLoader";
 import Input from "@/app/components/Input/Input";
+import { formatDate } from "@/lib/utils/dateFormatter";
 const mediaBase = process.env.NEXT_PUBLIC_MEDIA_BASE_URL;
 
 export default function Pharmacy() {
@@ -173,7 +174,8 @@ export default function Pharmacy() {
                           <td>{p.pharmacy_name ?? "-"}</td>
                           <td>{p.user_name ?? "-"}</td>
                           <td>{p.license_number}</td>
-                          <td>{p.license_valid_upto}</td>
+                          <td>{formatDate(p.license_valid_upto)}</td>
+                          {/* <td>{p.license_valid_upto}</td> */}
                           <td>{p.email_id}</td>
                           <td>{p.login_id ?? "-"}</td>
                           <td>{p.address ?? p.district ?? "-"}</td>

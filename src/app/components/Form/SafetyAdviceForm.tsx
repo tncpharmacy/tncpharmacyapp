@@ -29,22 +29,20 @@ export default function SafetyAdviceForm({ id }: Props) {
   const [loading, setLoading] = useState(false);
 
   const [formData, setFormData] = useState<Partial<SafetyAdvice>>({
-    id: 0,
-    medicine_id: 0,
     alcohol: "",
-    alcohol_label: 0,
+    alcohol_label: undefined,
     pregnancy: "",
-    pregnancy_label: 0,
+    pregnancy_label: undefined,
     breast_feeding: "",
-    breast_feeding_label: 0,
+    breast_feeding_label: undefined,
     driving: "",
-    driving_label: 0,
+    driving_label: undefined,
     kidney: "",
-    kidney_label: 0,
+    kidney_label: undefined,
     liver: "",
-    liver_label: 0,
+    liver_label: undefined,
     heart: "",
-    heart_label: 0,
+    heart_label: undefined,
   });
   const { entity: satetyAdviceById, labelList: safetyAdviceList } =
     useAppSelector((state) => state.safetyAdvice);
@@ -95,7 +93,7 @@ export default function SafetyAdviceForm({ id }: Props) {
     const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
-      [name]: value ? Number(value) : null,
+      [name]: value ? Number(value) : undefined,
     }));
   };
 
@@ -112,8 +110,10 @@ export default function SafetyAdviceForm({ id }: Props) {
 
       const payload = {
         ...formData,
-        medicine_id: id, // 🔥 important
+        medicine_id: id,
       };
+
+      console.log("FINAL PAYLOAD", payload);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       await dispatch(saveSafetyAdviceThunk(payload as any)).unwrap();
 

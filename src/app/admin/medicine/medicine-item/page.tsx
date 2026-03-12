@@ -298,6 +298,7 @@ export default function MedicineList() {
                         <th className="fw-bold text-start">Pack Size</th>
                         <th className="fw-bold text-start">Unit</th>
                         <th className="fw-bold text-start">Manufacture</th>
+                        <th className="fw-bold text-start">Discount %</th>
                         <th className="fw-bold text-center">Status</th>
                         <th className="fw-bold text-center">Action</th>
                       </tr>
@@ -324,6 +325,9 @@ export default function MedicineList() {
                                 <td className="text-start">{p.unit ?? "-"}</td>
                                 <td className="text-start">
                                   {p.manufacturer_name ?? "-"}
+                                </td>
+                                <td className="text-start">
+                                  {p.discount ?? "-"}
                                 </td>
                                 {/* <td>{p.discount ?? "-"}</td>
                               <td>{p.mrp ?? "-"}</td> */}

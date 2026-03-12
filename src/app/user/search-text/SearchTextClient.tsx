@@ -14,6 +14,7 @@ import { Image } from "react-bootstrap";
 import { HealthBag } from "@/types/healthBag";
 import { Medicine } from "@/types/medicine";
 import { encodeId } from "@/lib/utils/encodeDecode";
+import TncLoader from "@/app/components/TncLoader/TncLoader";
 
 const mediaBase = process.env.NEXT_PUBLIC_MEDIA_BASE_URL;
 const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL;
@@ -45,13 +46,14 @@ export default function SearchTextClient() {
 
   const [localBag, setLocalBag] = useState<number[]>([]);
   const [processingIds, setProcessingIds] = useState<number[]>([]);
+  const [hasFetched, setHasFetched] = useState(false);
 
   // -----------------------------
   // API SEARCH CALL (MAIN)
   // -----------------------------
   useEffect(() => {
     if (!searchText) return;
-
+    setHasFetched(false);
     const load = async () => {
       setLoading(true);
       try {
@@ -68,6 +70,7 @@ export default function SearchTextClient() {
 
         setResults(list);
         setLimit(20); // reset paging
+        setHasFetched(true);
       } catch (e) {
         setResults([]);
       } finally {
@@ -189,22 +192,27 @@ export default function SearchTextClient() {
         <div className="body_wrap">
           <div className="body_right">
             <div className="body_content">
-              <div className="pageTitle">
-                <Image src={"/images/favicon.png"} alt="" /> Product:{" "}
-                {searchText}
-              </div>
+              {/* SEARCH */}
+              {/* TITLE + SEARCH IN SAME ROW */}
+              <div className="row align-items-center mb-3">
+                {/* LEFT SIDE : PRODUCT NAME */}
+                <div className="col-md-9">
+                  <div className="pageTitle m-0">
+                    <Image src={"/images/favicon.png"} alt="" /> Product:{" "}
+                    {searchText || "Loading..."}
+                  </div>
+                </div>
 
-              {/* PAGE SEARCH INPUT */}
-              <div className="row">
-                <div className="col-md-12">
+                {/* RIGHT SIDE : SEARCH BOX */}
+                <div className="col-md-3">
                   <div className="search_query">
-                    <a className="query_search_btn">
+                    <a className="query_search_btn" href="javascript:void(0)">
                       <i className="bi bi-search"></i>
                     </a>
                     <input
                       type="text"
                       className="txt1 my-box"
-                      placeholder="Search product within results..."
+                      placeholder="Search product..."
                       value={searchTerm}
                       onChange={(e) => {
                         setSearchTerm(e.target.value);
@@ -214,15 +222,17 @@ export default function SearchTextClient() {
                   </div>
                 </div>
               </div>
-
-              {loading && (
-                <div className="text-center my-4">
-                  <div className="spinner-border text-primary"></div>
-                </div>
-              )}
-
               <div className="pd_list">
-                {!loading &&
+                {!hasFetched || loading ? (
+                  <div
+                    className="d-flex justify-content-center align-items-center"
+                    style={{ marginLeft: "100vh" }}
+                  >
+                    <TncLoader />
+                  </div>
+                ) : visibleList.length === 0 ? (
+                  <p>No products found.</p>
+                ) : (
                   visibleList.map((item) => {
                     const pid = item.product_id ?? item.id;
 
@@ -308,7 +318,8 @@ export default function SearchTextClient() {
                         </div>
                       </div>
                     );
-                  })}
+                  })
+                )}
 
                 {/* SPACER + OBSERVER */}
                 <div style={{ height: 200 }} />

@@ -21,6 +21,7 @@ import {
   fetchProductByGenericId,
   updateMedicine,
   fetchMedicinesEditById,
+  fetchMedicineByManufacturerId,
 } from "@/lib/api/medicine";
 import {
   CareGroup,
@@ -44,6 +45,7 @@ interface MedicineState {
   groupCareLoading: boolean;
   genericAlternatives: Medicine[];
   genericAlternativesMedicines: Medicine[];
+  manufacturerAlternativesMedicines: Medicine[];
   count: number;
   loading: boolean;
   error: string | null;
@@ -67,6 +69,7 @@ const initialState: MedicineState = {
   groupCareLoading: false,
   genericAlternatives: [],
   genericAlternativesMedicines: [],
+  manufacturerAlternativesMedicines: [],
   count: 0,
   loading: false,
   error: null,
@@ -158,6 +161,23 @@ export const getMedicineByGenericId = createAsyncThunk<
 >("medicine/getMedicineIdByGeneric", async (id, { rejectWithValue }) => {
   try {
     const res: MedicineResponse = await fetchMedicineByGenericId(id);
+    return res;
+  } catch (err: unknown) {
+    if (err instanceof Error) {
+      return rejectWithValue(err.message);
+    }
+    return rejectWithValue("Failed to fetch medicines");
+  }
+});
+
+// ✅ Get all medicine id by manufacturer
+export const getMedicineByManufacturerId = createAsyncThunk<
+  MedicineResponse,
+  number,
+  { rejectValue: string }
+>("medicine/getMedicineIdByManufacturer", async (id, { rejectWithValue }) => {
+  try {
+    const res: MedicineResponse = await fetchMedicineByManufacturerId(id);
     return res;
   } catch (err: unknown) {
     if (err instanceof Error) {
@@ -477,6 +497,21 @@ const medicineSlice = createSlice({
         state.error = null;
       })
       .addCase(getMedicineByGenericId.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload || "Something went wrong";
+      })
+      // fetch medicine id by manufacturer
+      .addCase(getMedicineByManufacturerId.pending, (state) => {
+        state.loading = true;
+        state.manufacturerAlternativesMedicines = [];
+      })
+      .addCase(getMedicineByManufacturerId.fulfilled, (state, action) => {
+        state.loading = false;
+        state.manufacturerAlternativesMedicines = action.payload.data;
+        state.count = action.payload.count;
+        state.error = null;
+      })
+      .addCase(getMedicineByManufacturerId.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload || "Something went wrong";
       })

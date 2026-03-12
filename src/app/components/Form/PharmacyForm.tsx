@@ -20,6 +20,11 @@ import { fetchStates } from "@/lib/features/stateSlice/stateSlice";
 import toast from "react-hot-toast";
 import { AxiosError } from "axios";
 import { fetchPharmacy } from "@/lib/features/pharmacySlice/pharmacySlice";
+import LicenseInput from "../Input/LicenseInput";
+import GSTInput from "../Input/GSTInput";
+import MobileInput from "../Input/MobileInput";
+import EmailInput from "../Input/EmailInput";
+import PincodeInput from "../Input/PincodeInput";
 const mediaBase = process.env.NEXT_PUBLIC_MEDIA_BASE_URL;
 interface Props {
   id?: number; // agar edit mode hai to id milegi
@@ -58,6 +63,7 @@ export default function PharmacyForm({ id }: Props) {
     (state) => state.states
   );
   const [password, setPassword] = useState("");
+  const [licenseError, setLicenseError] = useState("");
 
   useEffect(() => {
     dispatch(fetchStates());
@@ -97,6 +103,18 @@ export default function PharmacyForm({ id }: Props) {
       [name]: value,
     }));
 
+    if (name === "license_number") {
+      const regex = /^[A-Z]{4}-[0-9]{6}$/;
+
+      if (value.length > 11) return; // max length control
+
+      if (value && !regex.test(value)) {
+        setLicenseError("Please enter license in this format: DIOL-102882");
+      } else {
+        setLicenseError("");
+      }
+    }
+
     // 👇 Password banane ka logic
     if (name === "user_name" || name === "login_id") {
       const first4 = (name === "user_name" ? value : formData.user_name).slice(
@@ -111,10 +129,69 @@ export default function PharmacyForm({ id }: Props) {
     }
   };
 
+  const validateForm = () => {
+    if (!formData.pharmacy_name.trim()) {
+      toast.error("Pharmacy name is required");
+      return false;
+    }
+
+    if (!formData.user_name.trim()) {
+      toast.error("Contact person is required");
+      return false;
+    }
+
+    if (!formData.gst_number || formData.gst_number.length !== 15) {
+      toast.error("GST number must be 15 characters");
+      return false;
+    }
+
+    if (!formData.license_number || formData.license_number.length < 10) {
+      toast.error("License number must be at least 10 characters");
+      return false;
+    }
+
+    if (!formData.license_valid_upto) {
+      toast.error("Please select license validity date");
+      return false;
+    }
+
+    if (!formData.email_id.includes("@")) {
+      toast.error("Please enter a valid email");
+      return false;
+    }
+
+    if (!formData.login_id || formData.login_id.length !== 10) {
+      toast.error("Mobile number must be 10 digits");
+      return false;
+    }
+
+    if (!formData.address.trim()) {
+      toast.error("Address is required");
+      return false;
+    }
+
+    if (!formData.district.trim()) {
+      toast.error("District is required");
+      return false;
+    }
+
+    if (formData.pincode.length !== 6) {
+      toast.error("Pincode must be 6 digits");
+      return false;
+    }
+
+    if (!formData.state) {
+      toast.error("Please select state");
+      return false;
+    }
+
+    return true;
+  };
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("🚀 handleSubmit called, current formData:", formData);
 
+    //console.log("🚀 handleSubmit called, current formData:", formData);
+    if (!validateForm()) return;
     const formDataToSend = new FormData();
 
     // string / number fields
@@ -229,21 +306,29 @@ export default function PharmacyForm({ id }: Props) {
                   onChange={handleChange}
                   required
                 />
-                <Input
-                  type="text"
+                <GSTInput
                   label="GST Number"
                   name="gst_number"
                   value={formData.gst_number}
-                  onChange={handleChange}
                   required
+                  onChange={(value) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      gst_number: value,
+                    }))
+                  }
                 />
-                <Input
-                  type="text"
+                <LicenseInput
                   label="License Number"
                   name="license_number"
                   value={formData.license_number}
-                  onChange={handleChange}
                   required
+                  onChange={(value) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      license_number: value,
+                    }))
+                  }
                 />
                 <Input
                   label="License Valid Upto"
@@ -253,21 +338,29 @@ export default function PharmacyForm({ id }: Props) {
                   onChange={handleChange}
                   required
                 />
-                <Input
+                <EmailInput
                   label="Email"
-                  type="email"
                   name="email_id"
                   value={formData.email_id}
-                  onChange={handleChange}
                   required
+                  onChange={(value) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      email_id: value,
+                    }))
+                  }
                 />
-                <Input
-                  type="text"
+                <MobileInput
                   label="Mobile"
                   name="login_id"
-                  value={formData.login_id}
-                  onChange={handleChange}
+                  value={formData.login_id || ""}
                   required
+                  onChange={(value) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      login_id: value,
+                    }))
+                  }
                 />
                 <Input
                   type="text"
@@ -285,13 +378,17 @@ export default function PharmacyForm({ id }: Props) {
                   onChange={handleChange}
                   required
                 />
-                <Input
-                  type="text"
+                <PincodeInput
                   label="Pincode"
                   name="pincode"
                   value={formData.pincode}
-                  onChange={handleChange}
                   required
+                  onChange={(value) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      pincode: value,
+                    }))
+                  }
                 />
                 <SelectInput
                   label="State"
@@ -305,7 +402,7 @@ export default function PharmacyForm({ id }: Props) {
                     }))
                   }
                 />
-                <Input
+                {/* <Input
                   label="Status"
                   name="status"
                   type="select"
@@ -315,7 +412,7 @@ export default function PharmacyForm({ id }: Props) {
                     { label: "Inactive", value: "Inactive" },
                   ]}
                   onChange={handleChange}
-                />
+                /> */}
                 <InputFile
                   label="Upload Documents"
                   name="documents"

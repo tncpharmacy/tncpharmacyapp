@@ -33,6 +33,8 @@ interface BillPreviewModalProps {
   customerName: string;
   mobile: string;
   uhid: string;
+  referredByDoctor: string;
+  referredByHospital: string;
   pharmacy_id?: number;
   additionalDiscount: string;
 }
@@ -44,6 +46,8 @@ const BillPreviewModal: React.FC<BillPreviewModalProps> = ({
   customerName,
   mobile,
   uhid,
+  referredByDoctor,
+  referredByHospital,
   additionalDiscount,
 }) => {
   const [initialLoading, setInitialLoading] = useState(true);
@@ -422,7 +426,10 @@ const BillPreviewModal: React.FC<BillPreviewModalProps> = ({
         <TncLoader />
       ) : (
         <>
-          <Modal.Header closeButton className="border-0 pb-0">
+          <Modal.Header
+            closeButton
+            className="border-0 pb-0 d-flex align-items-center"
+          >
             <Modal.Title className="fw-semibold text-primary">
               🧾 Bill Preview
             </Modal.Title>
@@ -484,6 +491,16 @@ const BillPreviewModal: React.FC<BillPreviewModalProps> = ({
                     </div>
                     <div>
                       <strong>Mobile No.:</strong> {mobile || "-"}
+                    </div>
+                  </div>
+                  <div className="d-flex justify-content-between">
+                    <div>
+                      <strong>Referred By Doctor:</strong>{" "}
+                      {referredByDoctor || "Self"}
+                    </div>
+                    <div>
+                      <strong>Referred By Hospital:</strong>{" "}
+                      {referredByHospital || "Self"}
                     </div>
                   </div>
                 </div>

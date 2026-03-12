@@ -76,6 +76,8 @@ export default function OrderList() {
     mobile: "",
     uhId: "",
     pharmacy_id: pharmacyId,
+    referredByDoctor: "",
+    referredByHospital: "",
   });
   const [additionalDiscount, setAdditionalDiscount] = useState<string>("0");
 
@@ -353,6 +355,8 @@ export default function OrderList() {
       mobile: order.buyerNumber || "",
       uhId: order.buyer_uhid || "",
       pharmacy_id: pharmacyId,
+      referredByDoctor: order.referredByDoctor || "",
+      referredByHospital: order.referredByHospital || "",
     });
     setAdditionalDiscount(String(order.additional_discount || "0"));
     setIsBillPreviewOpen(true);
@@ -897,6 +901,8 @@ export default function OrderList() {
         uhid={billPreviewData.uhId}
         pharmacy_id={billPreviewData.pharmacy_id}
         additionalDiscount={additionalDiscount}
+        referredByDoctor={billPreviewData.referredByDoctor}
+        referredByHospital={billPreviewData.referredByHospital}
       />
     </>
   );

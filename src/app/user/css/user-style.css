@@ -1414,3 +1414,306 @@ width: 33%;
   color: #1a7f37;
   margin-bottom: 10px;
 }
+
+/* ===== 1MG MODAL STYLE ===== */
+
+.generic-1mg-wrapper {
+  text-align: center;
+}
+
+.generic-1mg-strip {
+  background: #e6f4ea;
+  color: #1b5e20;
+  padding: 12px;
+  font-weight: 600;
+  border-radius: 4px;
+  margin-bottom: 25px;
+}
+
+/* layout */
+.generic-1mg-compare {
+  display: flex;
+  justify-content: center;
+  gap: 24px;
+  align-items: stretch;
+}
+
+/* card base */
+.generic-1mg-card {
+  width: 230px;
+  border-radius: 12px;
+  padding: 18px;
+  transition: all .25s ease;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 320px;
+}
+
+/* current */
+.generic-1mg-card.current {
+  background: #f7f8fa;
+  border: 2px solid #2a6edb;
+}
+
+/* alternative */
+.generic-1mg-card.alt {
+  background: #fff;
+  border: 1px solid #e0e0e0;
+}
+
+.generic-1mg-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 22px rgba(0,0,0,.12);
+}
+
+.img-wrap {
+  height: 90px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 10px;
+}
+
+.img-wrap img {
+  max-height: 90px;
+  object-fit: contain;
+}
+
+/* text */
+.title {
+  font-weight: 600;
+  font-size: 15px;
+  margin-bottom: 6px;
+}
+
+.company {
+  font-size: 13px;
+  color: #666;
+  margin-bottom: 10px;
+}
+
+/* price */
+.price {
+  font-size: 18px;
+  font-weight: 700;
+  color: #000;
+}
+
+.per {
+  font-size: 12px;
+  color: #777;
+}
+
+/* badges */
+.badge-viewing {
+  background: #e3f2fd;
+  color: #1976d2;
+  font-size: 12px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  display: inline-block;
+  margin-bottom: 6px;
+}
+
+.save-badge {
+  background: #2e7d32;
+  color: #fff;
+  font-size: 12px;
+  padding: 6px;
+  border-radius: 6px;
+  margin-top: 10px;
+}
+
+/* footer */
+.generic-1mg-footer {
+  margin-top: 28px;
+}
+
+.btn-switch {
+  background: #ff6f61;
+  color: #fff;
+  border: none;
+  padding: 14px 40px;
+  font-size: 15px;
+  font-weight: 600;
+  border-radius: 8px;
+}
+
+/* ===== MODAL HEADER POLISH (1MG STYLE) ===== */
+
+.generic-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 18px 22px;
+  border-bottom: 1px solid #f0f0f0;
+  background: #fff;
+  border-top-left-radius: 8px;
+  border-top-right-radius: 8px;
+}
+
+/* title */
+.generic-title {
+  font-size: 20px;
+  font-weight: 600;
+  color: #222;
+  margin: 0;
+  letter-spacing: -.2px;
+}
+
+/* close button */
+.generic-close {
+  border: none;
+  background: transparent;
+  font-size: 26px;
+  line-height: 1;
+  color: #888;
+  cursor: pointer;
+  padding: 4px 8px;
+  transition: all .2s ease;
+}
+
+.generic-close:hover {
+  color: #000;
+  transform: scale(1.1);
+}
+
+.generic-1mg-strip {
+  margin: 18px 22px 25px;
+  border-radius: 6px;
+}
+.generic-modal-wide {
+  max-width: 760px;
+}
+/* ===== PROFESSIONAL PRICE DESIGN ===== */
+
+.price-section {
+  margin-top: 8px;
+  text-align: left;
+}
+
+/* Main Final Price */
+.final-price {
+  font-size: 20px;
+  font-weight: 700;
+  color: #111; /* deep black */
+  margin-bottom: 4px;
+}
+
+/* MRP Row */
+.mrp-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+/* Original Price */
+.mrp {
+  font-size: 13px;
+  color: #777;
+  text-decoration: line-through;
+}
+
+/* Discount Badge */
+.discount-badge {
+  background: #e6f4ea;
+  color: #1b5e20;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 4px;
+}
+
+/* Per Tablet */
+/* Per tablet price styling */
+.per-tablet {
+  color: #0d6efd;          /* Bootstrap Primary Blue */
+  font-weight: 600;
+  font-size: 13px;
+  margin-top: 2px;
+}
+.generic-switch-link {
+  background: #e6f4ea;
+  border: 1px solid #b7dfc4;
+  border-radius: 10px;
+  padding: 14px 18px;
+  margin-top: 16px;
+  transition: all 0.2s ease;
+}
+
+.generic-switch-link.clickable {
+  cursor: pointer;
+}
+
+.generic-switch-link.clickable:hover {
+  background: #d7efe0;
+  transform: translateY(-1px);
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.06);
+}
+
+.generic-switch-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.generic-icon {
+  color: #1e7e34;
+  font-size: 20px;
+  margin-right: 10px;
+}
+
+.generic-text {
+  flex: 1;
+  font-weight: 600;
+  color: #1e7e34;
+  font-size: 15px;
+}
+
+.generic-arrow {
+  color: #1e7e34;
+  font-size: 20px;
+}
+
+/* Radio circle base */
+.radio-indicator {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  border: 3px solid;
+}
+
+/* Blue - current */
+.radio-blue {
+  border-color: #0d6efd;
+  background: #0d6efd;
+}
+
+/* Green - 2nd */
+.radio-green {
+  border-color: #198754;
+  background: #198754;
+}
+
+/* Orange - 3rd */
+.radio-orange {
+  border-color: #fd7e14;
+  background: #fd7e14;
+}
+
+/* Yellow - 4th */
+.radio-yellow {
+  border-color: #ffc107;
+  background: #ffc107;
+}
+
+/* Important: make card relative */
+.generic-1mg-card {
+  position: relative;
+}

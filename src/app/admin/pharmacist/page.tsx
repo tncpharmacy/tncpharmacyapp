@@ -20,6 +20,7 @@ import TableLoader from "@/app/components/TableLoader/TableLoader";
 import Input from "@/app/components/Input/Input";
 import { fetchPharmacy } from "@/lib/features/pharmacySlice/pharmacySlice";
 import toast from "react-hot-toast";
+import { formatDate } from "@/lib/utils/dateFormatter";
 const mediaBase = process.env.NEXT_PUBLIC_MEDIA_BASE_URL;
 
 export default function Pharmacist() {
@@ -236,10 +237,10 @@ export default function Pharmacist() {
                               <td>{p.email_id ?? "-"}</td>
                               <td>{p.login_id ?? "-"}</td>
                               <td>{p.gender ?? "-"}</td>
-                              <td>{p.date_of_birth ?? "-"}</td>
+                              <td>{formatDate(p.date_of_birth ?? "-")}</td>
                               <td>{p.aadhar_number ?? "-"}</td>
                               <td>{p.license_number ?? "-"}</td>
-                              <td>{p.license_valid_upto ?? "-"}</td>
+                              <td>{formatDate(p.license_valid_upto ?? "-")}</td>
                               <td>
                                 <span
                                   onClick={() => handleToggleStatus(p.id)}

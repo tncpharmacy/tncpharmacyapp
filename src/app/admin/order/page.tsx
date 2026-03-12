@@ -28,6 +28,7 @@ import BillPreviewModal from "@/app/components/RetailCounterModal/BillPreviewMod
 import ExcelJS from "exceljs";
 import { saveAs } from "file-saver";
 import TncLoader from "@/app/components/TncLoader/TncLoader";
+import { formatDate } from "@/lib/utils/dateFormatter";
 //import * as XLSX from "xlsx";
 // import XLSX from "xlsx-style";
 
@@ -80,6 +81,8 @@ export default function OrderList() {
     mobile: "",
     uhId: "",
     pharmacy_id: pharmacyId,
+    referredByDoctor: "",
+    referredByHospital: "",
   });
   const [additionalDiscount, setAdditionalDiscount] = useState<string>("0");
 
@@ -320,14 +323,14 @@ export default function OrderList() {
       });
   };
 
-  const formatDate = (dateString: string) => {
-    const d = new Date(dateString);
-    return d.toLocaleString("en-IN", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-    });
-  };
+  // const formatDate = (dateString: string) => {
+  //   const d = new Date(dateString);
+  //   return d.toLocaleString("en-IN", {
+  //     day: "2-digit",
+  //     month: "short",
+  //     year: "numeric",
+  //   });
+  // };
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleReprint = (order: any) => {
     const cartItems =
@@ -349,6 +352,8 @@ export default function OrderList() {
       mobile: order.buyerNumber || "",
       uhId: order.buyer_uhid || "",
       pharmacy_id: pharmacyId,
+      referredByDoctor: order.referredByDoctor || "",
+      referredByHospital: order.referredByHospital || "",
     });
     setAdditionalDiscount(String(order.additional_discount || "0"));
     setIsBillPreviewOpen(true);
@@ -893,6 +898,8 @@ export default function OrderList() {
         uhid={billPreviewData.uhId}
         pharmacy_id={billPreviewData.pharmacy_id}
         additionalDiscount={additionalDiscount}
+        referredByDoctor={billPreviewData.referredByDoctor}
+        referredByHospital={billPreviewData.referredByHospital}
       />
     </>
   );

@@ -14,12 +14,15 @@ export const createPurchase = async (
     );
     return response.data;
   } catch (error: unknown) {
-    console.error("Error creating purchase:", error);
+    console.log("🔥 FULL ERROR:", error);
 
-    // ✅ Check if error is AxiosError
     if (axios.isAxiosError(error)) {
-      // TypeScript now knows error.response exists
+      console.log("🔥 AXIOS ERROR DATA:", error.response?.data);
+      console.log("🔥 AXIOS ERROR STATUS:", error.response?.status);
+      console.log("🔥 AXIOS ERROR HEADERS:", error.response?.headers);
+
       const responseData = error.response?.data as PurchaseResponse | undefined;
+
       throw (
         responseData ?? {
           message: "Unknown API error",
@@ -29,7 +32,6 @@ export const createPurchase = async (
       );
     }
 
-    // ✅ Fallback for unexpected errors
     throw {
       message: "Unexpected error occurred",
       success: false,

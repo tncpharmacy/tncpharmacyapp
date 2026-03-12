@@ -66,6 +66,17 @@ export const fetchMedicineByGenericId = async (
   );
   return res.data; // ✅ res.data is now MedicineResponse
 };
+// ===============================
+// GET MEDICINE ID BY MANUFACTURER
+// ===============================
+export const fetchMedicineByManufacturerId = async (
+  manufacturerId: number
+): Promise<MedicineResponse> => {
+  const res = await axiosInstance.get<MedicineResponse>(
+    ENDPOINTS.MEDICINES.GET_MEDICINE_LIST_BY_MANUFACTURER(manufacturerId)
+  );
+  return res.data; // ✅ res.data is now MedicineResponse
+};
 // =========================
 // GET ALL PRODUCT List
 // =========================

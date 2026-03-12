@@ -70,7 +70,7 @@ export default function PurchaseInvoiceImport() {
     purchase_rate: "",
     amount: "",
     location: "",
-    applied_discount: "",
+    additional_discount: "",
   });
 
   // filtered records by search box + status filter
@@ -244,8 +244,18 @@ export default function PurchaseInvoiceImport() {
     fileInputRef.current?.click(); // 👈 hidden input trigger
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!formData.supplier) {
+      toast.error("Please select supplier");
+      return;
+    }
+
+    if (!formData.invoice_number) {
+      toast.error("Please enter invoice number");
+      return;
+    }
+
     const today = getToday();
     const yesterday = getYesterday();
 
@@ -257,77 +267,96 @@ export default function PurchaseInvoiceImport() {
       return;
     }
 
-    setIsLoading(true); // 🔥 Loader ON immediately
+    if (excelData.length === 0) {
+      toast.error("Please upload Excel file first");
+      return;
+    }
 
-    // ⭐ Give React time to render loader
-    setTimeout(() => {
-      const parseExcelDate = (excelDate: number): string => {
-        if (!excelDate) return new Date().toISOString();
-        const date = new Date((excelDate - 25569) * 86400 * 1000);
-        return date.toISOString();
-      };
+    setIsLoading(true);
 
+    try {
       // Build purchase_details from Excel
       const purchaseDetails = excelData.map((row, i) => ({
-        pharmacy_id,
-        product_id: Number(row["Id"]) || 0,
-        quantity: row["Required QTY"]?.toString() || "0",
+        pharmacy_id: Number(pharmacy_id),
+        product_id: Number(row["Id"]),
+        quantity: String(Number(row["Required QTY"] || 0)),
         batch: row["Batch"]?.toString() || `BATCH-${i + 1}`,
-        expiry_date: parseExcelDate(Number(row["Expiry Date"])),
-        mrp: row["MRP"]?.toString() || "0",
-        discount: row["Discount (%)"]?.toString() || "0",
-        purchase_rate: row["Purchase Rate"]?.toString() || "0",
-        amount: row["Amount"]?.toString() || "0",
-        location: row["Location"]?.toString() || "0",
-        applied_discount: row["Applied Discount"]?.toString() || "0",
+        expiry_date: row["Expiry Date"]
+          ? new Date(row["Expiry Date"]).toISOString().split("T")[0]
+          : "",
+        mrp: String(Number(row["MRP"] || 0)),
+        discount: String(Number(row["Discount (%)"] || 0)),
+        purchase_rate: String(Number(row["Purchase Rate"] || 0)),
+        amount: String(
+          Number(row["Purchase Rate"] || 0) * Number(row["Required QTY"] || 0)
+        ),
+        location: row["Location"]?.toString() || "",
+        additional_discount: String(Number(row["Applied Discount"] || 0)),
       }));
 
-      const payload = {
+      const basePayload = {
         pharmacy_id: Number(pharmacy_id),
-        supplier_id: Number(formData.supplier) || 1,
+        supplier_id: Number(formData.supplier),
         invoice_num: String(formData.invoice_number),
         purchase_date: new Date(
           formData.purchase_date || new Date()
         ).toISOString(),
         status: "Active",
-        purchase_details: purchaseDetails,
       };
+      console.log("Payload check:", {
+        supplier_id: formData.supplier,
+        invoice: formData.invoice_number,
+        rows: purchaseDetails.length,
+      });
+      const chunkSize = 100;
 
-      // 🚀 API CALL
-      dispatch(createPurchaseStock(payload))
-        .unwrap()
-        .then((res) => {
-          toast.success("Purchase Invoice Imported Successfully!");
+      // 🚀 Send in batches
+      for (let i = 0; i < purchaseDetails.length; i += chunkSize) {
+        const chunk = purchaseDetails.slice(i, i + chunkSize);
+        console.log("purchaseDetails sample:", purchaseDetails[0]);
+        console.log("rows:", purchaseDetails.length);
+        await dispatch(
+          createPurchaseStock({
+            ...basePayload,
+            purchase_details: chunk,
+          })
+        ).unwrap();
+      }
 
-          setExcelData([]);
-          if (fileInputRef.current) fileInputRef.current.value = "";
+      toast.success("Purchase Invoice Imported Successfully!");
 
-          setFormData({
-            id: pharmacist_id,
-            supplier: "",
-            medicine_name: "",
-            pack_size: "",
-            purchase_date: "",
-            invoice_number: "",
-            manufacturer_name: "",
-            qty: "",
-            batch: "",
-            expiry_date: "",
-            discount: "",
-            mrp: "",
-            purchase_rate: "",
-            amount: "",
-            location: "",
-            applied_discount: "",
-          });
-        })
-        .catch(() => {
-          toast.error("Failed to create purchase.");
-        })
-        .finally(() => {
-          setIsLoading(false); // 🔥 Loader OFF
-        });
-    }, 1000); // ⭐ Ensures loader shows before heavy work starts
+      // Reset
+      setExcelData([]);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+
+      setFormData({
+        id: pharmacist_id,
+        supplier: "",
+        medicine_name: "",
+        pack_size: "",
+        purchase_date: "",
+        invoice_number: "",
+        manufacturer_name: "",
+        qty: "",
+        batch: "",
+        expiry_date: "",
+        discount: "",
+        mrp: "",
+        purchase_rate: "",
+        amount: "",
+        location: "",
+        additional_discount: "",
+      });
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (err: any) {
+      console.log("❌ FULL ERROR:", err);
+      console.log("❌ RESPONSE:", err?.response?.data);
+      console.log("❌ ERRORS:", err?.response?.data?.errors);
+
+      toast.error(err?.response?.data?.message || "Failed to create purchase.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (

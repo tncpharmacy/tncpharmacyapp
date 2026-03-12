@@ -23,19 +23,20 @@ const MedicineList: React.FC<MedicineListProps> = ({ medicines, loading }) => {
     [medicines]
   );
 
-  // ✅ DERIVED DATA (NO STATE)
-  const visibleData = useMemo(
-    () => safeMedicines.slice(0, limit),
-    [safeMedicines, limit]
-  );
-
-  // Search logic
+  // ✅ STEP 1 : SEARCH ON FULL DATA
   const filteredMedicines = useMemo(() => {
-    if (!searchTerm) return visibleData;
-    return visibleData.filter((m) =>
+    if (!searchTerm) return safeMedicines;
+
+    return safeMedicines.filter((m) =>
       m.medicine_name?.toLowerCase().includes(searchTerm.toLowerCase())
     );
-  }, [visibleData, searchTerm]);
+  }, [safeMedicines, searchTerm]);
+
+  // ✅ STEP 2 : APPLY LIMIT AFTER SEARCH
+  const visibleData = useMemo(
+    () => filteredMedicines.slice(0, limit),
+    [filteredMedicines, limit]
+  );
 
   // ------------------------------
   // 🔥 INTERSECTION OBSERVER LOGIC
@@ -43,44 +44,50 @@ const MedicineList: React.FC<MedicineListProps> = ({ medicines, loading }) => {
   useEffect(() => {
     if (!loadMoreRef.current) return;
 
-    const container = document.querySelector(".body_contain");
+    const observer = new IntersectionObserver((entries) => {
+      if (!entries[0].isIntersecting) return;
 
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting) {
-          setLimit((prev) => prev + 20);
-        }
-      },
-      {
-        root: container, // <<--- IMPORTANT
-        threshold: 1.0,
-      }
-    );
+      setLimit((prev) => {
+        if (prev >= filteredMedicines.length) return prev;
+        return prev + 20;
+      });
+    });
 
     observer.observe(loadMoreRef.current);
-
     return () => observer.disconnect();
-  }, []);
+  }, [filteredMedicines.length]);
 
   return (
     <>
-      <div className="pageTitle">
+      {/* <div className="pageTitle">
         <Image src={"/images/favicon.png"} alt="" /> Medicine
-      </div>
+      </div> */}
 
-      {/* Search */}
-      <div className="row">
-        <div className="col-md-12">
+      {/* SEARCH */}
+      {/* TITLE + SEARCH IN SAME ROW */}
+      <div className="row align-items-center mb-3">
+        {/* LEFT SIDE : PRODUCT NAME */}
+        <div className="col-md-9">
+          <div className="pageTitle m-0">
+            <Image src={"/images/favicon.png"} alt="" /> Medicine
+          </div>
+        </div>
+
+        {/* RIGHT SIDE : SEARCH BOX */}
+        <div className="col-md-3">
           <div className="search_query">
-            <a className="query_search_btn" href="#">
+            <a className="query_search_btn" href="javascript:void(0)">
               <i className="bi bi-search"></i>
             </a>
             <input
               type="text"
               className="txt1 my-box"
-              placeholder="Search medicines..."
+              placeholder="Search medicine..."
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={(e) => {
+                setSearchTerm(e.target.value);
+                setLimit(20); // reset scroll on new search
+              }}
             />
           </div>
         </div>

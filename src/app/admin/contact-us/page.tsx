@@ -171,7 +171,7 @@ export default function ContactUs() {
                   <table className="table cust_table1">
                     <thead>
                       <tr>
-                        <th></th>
+                        {/* <th></th> */}
                         <th className="text-start">Name</th>
                         <th className="text-start">Mobile</th>
                         <th className="text-start">Email</th>
@@ -182,7 +182,7 @@ export default function ContactUs() {
                     <tbody>
                       {filteredData.slice(0, visibleCount).map((p) => (
                         <tr key={p.id}>
-                          <td></td>
+                          {/* <td></td> */}
                           <td className="text-start">{p.name}</td>
                           <td className="text-start">{p.number}</td>
                           <td className="text-start">{p.email}</td>

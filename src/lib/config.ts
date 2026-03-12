@@ -155,8 +155,6 @@ export const ENDPOINTS = {
     GET_MENU_OTHER_MEDICINE: (categoryId: number) =>
       `/website/other/medicine/list/?category_id=${categoryId}`,
     GET_BY_MENU_OTHER_ID: (id: number) => `/website/other/medicine/${id}/`,
-    GET_MEDICINE_LIST_BY_GENERIC: (medicineId: number) =>
-      `website/generic/medicine/${medicineId}/`,
     GET_CATEGORY_ID_BY_SUBCATEGORY: (
       categoryId: number,
       subCategoryId: number
@@ -164,7 +162,11 @@ export const ENDPOINTS = {
       `website/medicine/list/?category_id=${categoryId}&sub_category_id=${subCategoryId}`,
     SEARCH: (text: string) => `website/product/search/?text=${text}`,
     SEARCH_SUGGESTION: (query: string) =>
-      `website/product/search/?text=${query}`,
+      `website/product/search-suggestion/?search=${query}`,
+    GET_MEDICINE_LIST_BY_MANUFACTURER: (manufacturerId: number) =>
+      `website/manufacturer/search/?manufacturer_id=${manufacturerId}`,
+    GET_MEDICINE_LIST_BY_GENERIC: (medicineId: number) =>
+      `website/generic/medicine/${medicineId}/`,
   },
 
   // add to card

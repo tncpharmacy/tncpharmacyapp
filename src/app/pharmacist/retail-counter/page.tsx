@@ -97,6 +97,8 @@ export default function RetailCounter() {
   const [customerName, setCustomerName] = useState("");
   const [mobile, setMobile] = useState("");
   const [uhId, setUhId] = useState("");
+  const [referredByHospital, setReferredByHospital] = useState("");
+  const [referredByDoctor, setReferredByDoctor] = useState("");
 
   const [mobileError, setMobileError] = useState("");
   const [isUploadEnabled, setIsUploadEnabled] = useState(false);
@@ -345,19 +347,24 @@ export default function RetailCounter() {
 
       // 2) Product Array
       const products = cart.map((item) => {
-        const discountAmt = (item.price * (item.Disc ?? 0)) / 100;
-        const finalRate = (item.price - discountAmt) * item.qty;
+        const unitPrice = item.unitPrice || item.MRP || 0;
+        const qty = Number(item.qty);
+        const discountPercent = Number(item.Disc || 0);
+
+        const total = unitPrice * qty;
+        const discountAmt = (total * discountPercent) / 100;
+        const finalRate = total - discountAmt;
 
         return {
           product_id: item.id,
-          quantity: String(item.qty),
-          mrp: String(item.price),
-          discount: String(item.Disc ?? 0),
-          rate: String(finalRate),
+          quantity: qty,
+          mrp: unitPrice,
+          discount: discountPercent,
+          rate: finalRate,
           doses: item.dose_form,
           instruction: item.remarks,
           duration: item.duration,
-          status: "1",
+          status: 1,
         };
       });
 
@@ -372,15 +379,17 @@ export default function RetailCounter() {
       const orderPayload = {
         payment_mode: 1,
         payment_status: "1",
-        amount: String(grandTotal),
+        amount: Number(finalAmount.toFixed(2)),
         order_type: 2,
         pharmacy_id: pharmacy_id,
         address_id: null,
-        additional_discount: additionalDiscount,
+        referred_by_doctor: referredByDoctor || null,
+        referred_by_hospital: referredByHospital || null,
+        additional_discount: Number(additionalDiscount),
         status: "1",
         products,
       };
-
+      console.log("order payload", orderPayload);
       // 5) POST ORDER
       await dispatch(
         createPharmacistOrder({
@@ -434,6 +443,8 @@ export default function RetailCounter() {
     setMobile("");
     setUhId("");
     setCart([]);
+    setReferredByDoctor("");
+    setReferredByHospital("");
     setAdditionalDiscount("0");
     setSelectedMedicine(null);
     toast.success("Form & Items Reset Successfully!");
@@ -576,6 +587,35 @@ export default function RetailCounter() {
                               onChange={(e) => setUhId(e.target.value)}
                               maxLength={10}
                               required
+                            />
+                          </div>
+                        </div>
+                        <div className="col-md-4">
+                          <div className="txt_col">
+                            <label className="lbl1">Referred By Doctor</label>
+                            <input
+                              type="text"
+                              className="form-control"
+                              value={referredByDoctor}
+                              onChange={(e) =>
+                                setReferredByDoctor(e.target.value)
+                              }
+                              maxLength={50}
+                            />
+                          </div>
+                        </div>
+
+                        <div className="col-md-4">
+                          <div className="txt_col">
+                            <label className="lbl1">Referred By Hospital</label>
+                            <input
+                              type="text"
+                              className="form-control"
+                              value={referredByHospital}
+                              onChange={(e) =>
+                                setReferredByHospital(e.target.value)
+                              }
+                              maxLength={50}
                             />
                           </div>
                         </div>
@@ -855,6 +895,8 @@ export default function RetailCounter() {
         customerName={customerName}
         mobile={mobile}
         uhid={uhId}
+        referredByDoctor={referredByDoctor}
+        referredByHospital={referredByHospital}
         pharmacy_id={pharmacy_id}
         additionalDiscount={additionalDiscount}
       />
