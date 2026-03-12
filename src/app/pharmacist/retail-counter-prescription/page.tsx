@@ -149,6 +149,9 @@ export default function RetailCounter() {
     uhId: "",
     pharmacy_id: pharmacy_id || 1, // pharmacy_id defined earlier in your component
   });
+
+  const [referredByHospital, setReferredByHospital] = useState("");
+  const [referredByDoctor, setReferredByDoctor] = useState("");
   const [cart, setCart] = useState<MedicineWithCartFields[]>([]);
   const [shouldSubmit, setShouldSubmit] = useState(false);
   const [showBagModal, setShowBagModal] = useState(false);
@@ -546,6 +549,8 @@ export default function RetailCounter() {
         amount: String(grandTotal),
         order_type: 2,
         pharmacy_id,
+        referred_by_doctor: referredByDoctor || null,
+        referred_by_hospital: referredByHospital || null,
         additionalDiscount,
         address_id: null,
         status: "1",
@@ -911,6 +916,10 @@ export default function RetailCounter() {
         additionalDiscount={additionalDiscount}
         onDiscountChange={(v) => setAdditionalDiscount(v)}
         onUpdateCart={handleUpdateCartFromModal}
+        referredByDoctor={referredByDoctor}
+        referredByHospital={referredByHospital}
+        onDoctorChange={(v) => setReferredByDoctor(v)}
+        onHospitalChange={(v) => setReferredByHospital(v)}
       />
       <BillPreviewModal
         show={isBillPreviewOpen}
@@ -921,6 +930,8 @@ export default function RetailCounter() {
         uhid={billPreviewData.uhId}
         pharmacy_id={billPreviewData.pharmacy_id}
         additionalDiscount={additionalDiscount}
+        referredByDoctor={referredByDoctor}
+        referredByHospital={referredByHospital}
       />
     </>
   );

@@ -33,7 +33,11 @@ interface CartPreviewModalProps {
   cart: CartItem[];
   onGenerate: () => void;
   onRemove: (index: number) => void;
+  referredByDoctor: string;
+  referredByHospital: string;
   additionalDiscount: string;
+  onDoctorChange: (v: string) => void;
+  onHospitalChange: (v: string) => void;
   onDiscountChange: (v: string) => void;
   onUpdateCart?: (updated: CartItem[]) => void;
 }
@@ -47,8 +51,12 @@ const CartPreviewModal = ({
   onGenerate,
   onRemove,
   onDiscountChange,
+  referredByDoctor,
+  referredByHospital,
   additionalDiscount,
   onUpdateCart,
+  onDoctorChange,
+  onHospitalChange,
 }: CartPreviewModalProps) => {
   const dispatch = useAppDispatch();
   const { list: durationList } = useAppSelector(
@@ -117,6 +125,29 @@ const CartPreviewModal = ({
           </Modal.Header>
 
           <Modal.Body>
+            <div className="row mb-3">
+              <div className="col-md-6">
+                <label className="fw-semibold">Referred By Doctor</label>
+                <input
+                  type="text"
+                  className="form-control"
+                  value={referredByDoctor}
+                  maxLength={50}
+                  onChange={(e) => onDoctorChange(e.target.value)}
+                />
+              </div>
+
+              <div className="col-md-6">
+                <label className="fw-semibold">Referred By Hospital</label>
+                <input
+                  type="text"
+                  className="form-control"
+                  value={referredByHospital}
+                  maxLength={50}
+                  onChange={(e) => onHospitalChange(e.target.value)}
+                />
+              </div>
+            </div>
             <Table bordered hover>
               <thead className="table-light">
                 <tr>
