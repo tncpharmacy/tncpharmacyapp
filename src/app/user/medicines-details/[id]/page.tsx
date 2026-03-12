@@ -391,12 +391,19 @@ export default function ProductPage() {
   const [qty, setQty] = useState(1);
   const [selectedPack, setSelectedPack] = useState("500g");
 
+  // medicine details
   useEffect(() => {
     if (decodedId) {
       dispatch(getMedicinesMenuById(decodedId));
-      dispatch(getMedicineByGenericId(decodedId));
     }
   }, [dispatch, decodedId]);
+
+  // generic medicines
+  useEffect(() => {
+    if (getByIdMedicines?.generic_id) {
+      dispatch(getMedicineByGenericId(getByIdMedicines.generic_id));
+    }
+  }, [dispatch, getByIdMedicines?.generic_id]);
 
   const product: Product = {
     title:

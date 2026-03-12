@@ -37,15 +37,21 @@ api.interceptors.request.use(
       "/medicine/product/list/",
       "/website/generic/medicine/",
       "/masterapp/care-group/",
+      "/website/product/search-suggestion/",
     ];
 
-    const isPublic = publicEndpoints.some((endpoint) =>
-      config.url?.includes(endpoint)
-    );
+    const url = config.url || "";
+
+    const isPublic =
+      url.includes("/medicine") ||
+      url.includes("search-suggestion") ||
+      publicEndpoints.some((endpoint) => url.includes(endpoint));
 
     if (!isPublic && token && config.headers) {
       config.headers["Authorization"] = `Bearer ${token}`;
-    } else if (isPublic && config.headers) {
+    }
+
+    if (isPublic && config.headers) {
       delete config.headers["Authorization"];
     }
 
@@ -103,7 +109,6 @@ api.interceptors.response.use(
      */
     if (
       status === 401 ||
-      status === 403 ||
       (typeof message === "string" && message.toLowerCase().includes("token"))
     ) {
       if (onUnauthorized) {

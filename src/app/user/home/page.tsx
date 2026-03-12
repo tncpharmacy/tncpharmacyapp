@@ -29,6 +29,7 @@ import { useShuffledOnce } from "@/lib/hooks/useShuffledOnce";
 import { HealthBag } from "@/types/healthBag";
 import dynamic from "next/dynamic";
 import TncLoader from "@/app/components/TncLoader/TncLoader";
+import { shallowEqual } from "react-redux";
 const mediaBase = process.env.NEXT_PUBLIC_MEDIA_BASE_URL;
 
 export default function HomePage() {
@@ -52,13 +53,18 @@ export default function HomePage() {
 
   // end for increse header count code
   const medicineMenuByCategory5 = useAppSelector(
-    (state) => state.medicine.byCategory[5] || []
+    (state) => state.medicine.byCategory[5] || [],
+    shallowEqual
   );
+
   const medicineMenuByCategory7 = useAppSelector(
-    (state) => state.medicine.byCategory[7] || []
+    (state) => state.medicine.byCategory[7] || [],
+    shallowEqual
   );
+
   const medicineMenuByCategory9 = useAppSelector(
-    (state) => state.medicine.byCategory[9] || []
+    (state) => state.medicine.byCategory[9] || [],
+    shallowEqual
   );
   const { list: categories } = useAppSelector((state) => state.category);
   const categoryNamesById: Record<number, string> = {};
@@ -86,7 +92,11 @@ export default function HomePage() {
     despatch(getMedicinesByCategoryId(5));
     despatch(getMedicinesByCategoryId(7));
     despatch(getMedicinesByCategoryId(9));
-    despatch(getMedicinesMenuByOtherId(0));
+
+    const otherId = 0;
+    if (otherId > 0) {
+      despatch(getMedicinesMenuByOtherId(otherId));
+    }
   }, [despatch]);
 
   const CARE_GROUP_ICONS: Record<string, string> = {

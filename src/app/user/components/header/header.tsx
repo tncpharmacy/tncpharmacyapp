@@ -163,9 +163,9 @@ const SiteHeader = () => {
     }
   }, [highlightIndex]);
 
-  useEffect(() => {
-    console.log("🧮 Updated count from items:", items.length);
-  }, [items]);
+  // useEffect(() => {
+  //   console.log("🧮 Updated count from items:", items.length);
+  // }, [items]);
 
   useEffect(() => {
     if (!mounted) return;
