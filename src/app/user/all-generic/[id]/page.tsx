@@ -293,7 +293,7 @@ export default function AllGeneric() {
 
                     const hasValidMrp = Number.isFinite(mrp) && mrp > 0;
 
-                    const discount = parseFloat(item.Discount) || 0;
+                    const discount = parseFloat(item.discount) || 0;
                     const discountedPrice = Math.round(
                       mrp - (mrp * discount) / 100
                     );
