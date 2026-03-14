@@ -22,6 +22,10 @@ import { fetchPharmacist } from "@/lib/features/pharmacistByPharmacySlice/pharma
 import { fetchPharmacyList } from "@/lib/features/pharmacyListSlice/pharmacyListSlice";
 import { AppDispatch, RootState } from "@/lib/store";
 import { getUserId } from "@/lib/auth/auth";
+import LicenseInput from "../Input/LicenseInput";
+import AadharInput from "../Input/AadharInput";
+import EmailInput from "../Input/EmailInput";
+import MobileInput from "../Input/MobileInput";
 const mediaBase = process.env.NEXT_PUBLIC_MEDIA_BASE_URL;
 interface Props {
   id?: number; // agar edit mode hai to id milegi
@@ -99,10 +103,53 @@ export default function PharmacistByPharmacyForm({ id }: Props) {
       setPassword(first4 + last5);
     }
   };
+  const validateForm = () => {
+    if (!formData.user_name.trim()) {
+      toast.error("Pharmacist name is required");
+      return false;
+    }
 
+    if (!formData.gender) {
+      toast.error("Please select gender");
+      return false;
+    }
+
+    if (!formData.date_of_birth) {
+      toast.error("Date of birth is required");
+      return false;
+    }
+
+    if (formData.login_id.length !== 10) {
+      toast.error("Mobile number is required");
+      return false;
+    }
+
+    if (!formData.email_id.includes("@")) {
+      toast.error("Email Id is required");
+      return false;
+    }
+
+    if (formData.aadhar_number.replace(/-/g, "").length !== 12) {
+      toast.error("Aadhar number is required");
+      return false;
+    }
+
+    if (formData.license_number.length < 12) {
+      toast.error("License number is required");
+      return false;
+    }
+
+    if (!formData.license_valid_upto) {
+      toast.error("License validity date is required");
+      return false;
+    }
+
+    return true;
+  };
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("🚀 handleSubmit called, current formData:", formData);
+    if (!validateForm()) return;
+    //console.log("🚀 handleSubmit called, current formData:", formData);
 
     const formDataToSend = new FormData();
 
@@ -246,39 +293,53 @@ export default function PharmacistByPharmacyForm({ id }: Props) {
                   max={maxDate} // 👈 ab sirf 18 saal pehle tak select ho paayega
                 />
 
-                <Input
-                  type="text"
+                <MobileInput
                   label="Mobile"
                   name="login_id"
-                  value={formData.login_id}
-                  onChange={handleChange}
+                  value={formData.login_id || ""}
                   required
-                  maxLength={10}
+                  onChange={(value) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      login_id: value,
+                    }))
+                  }
                 />
-                <Input
+                <EmailInput
                   label="Email"
-                  type="email"
                   name="email_id"
                   value={formData.email_id}
-                  onChange={handleChange}
                   required
+                  onChange={(value) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      email_id: value,
+                    }))
+                  }
                 />
-                <Input
-                  type="text"
+                <AadharInput
                   label="Aadhar Number"
                   name="aadhar_number"
                   value={formData.aadhar_number}
-                  onChange={handleChange}
                   required
-                  maxLength={12}
+                  onChange={(value) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      aadhar_number: value,
+                    }))
+                  }
                 />
-                <Input
-                  type="text"
+                <LicenseInput
                   label="License Number"
                   name="license_number"
                   value={formData.license_number}
-                  onChange={handleChange}
                   required
+                  onChange={(value) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      license_number: value,
+                    }))
+                  }
                 />
                 <Input
                   label="License Valid Upto"

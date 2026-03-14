@@ -67,10 +67,19 @@ export default function AllGroupCare() {
     }
   }, [medicines, shuffledFromHook]);
 
-  const finalShuffledList =
-    stableShuffledRef.current.length > 0
-      ? stableShuffledRef.current
-      : shuffledFromHook;
+  const finalShuffledList = useMemo(() => {
+    const list =
+      stableShuffledRef.current.length > 0
+        ? stableShuffledRef.current
+        : shuffledFromHook;
+
+    // remove duplicates
+    const unique = Array.from(
+      new Map(list.map((item) => [item.id, item])).values()
+    );
+
+    return unique;
+  }, [shuffledFromHook]);
 
   // -----------------------------
   // CATEGORY NAME
@@ -81,12 +90,14 @@ export default function AllGroupCare() {
 
   // Fetch API calls
   useEffect(() => {
-    setHasFetched(false);
+    if (!categoryIdNum) return;
 
-    dispatch(getGroupCareById(categoryIdNum)).finally(() =>
-      setHasFetched(true)
-    );
+    const fetchData = async () => {
+      await dispatch(getGroupCareById(categoryIdNum));
+      setHasFetched(true);
+    };
 
+    fetchData();
     dispatch(getCategories());
   }, [categoryIdNum, dispatch]);
 
@@ -250,7 +261,7 @@ export default function AllGroupCare() {
               )} */}
               {/* PRODUCT LIST */}
               <div className="pd_list">
-                {!hasFetched || loading ? (
+                {!hasFetched ? (
                   <div
                     className="d-flex justify-content-center align-items-center"
                     style={{ marginLeft: "100vh" }}

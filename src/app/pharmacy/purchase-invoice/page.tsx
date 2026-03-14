@@ -19,6 +19,8 @@ import InfiniteScroll from "@/app/components/InfiniteScrollS/InfiniteScrollS";
 import TableLoader from "@/app/components/TableLoader/TableLoader";
 import { formatAmount } from "@/lib/utils/formatAmount";
 import { formatDateOnly } from "@/utils/dateFormatter";
+import { formatDate } from "@/lib/utils/dateFormatter";
+import TncLoader from "@/app/components/TncLoader/TncLoader";
 
 export default function PurchaseInvoice() {
   const router = useRouter();
@@ -199,7 +201,7 @@ export default function PurchaseInvoice() {
                   <table className="table cust_table1">
                     <thead>
                       <tr>
-                        <th style={{ width: "0px" }}></th>
+                        {/* <th style={{ width: "0px" }}></th> */}
                         <th className="fw-bold text-start">Pharmacy</th>
                         <th className="fw-bold text-start">Supplier</th>
                         <th className="fw-bold text-start">Purchase Date</th>
@@ -220,7 +222,7 @@ export default function PurchaseInvoice() {
                         .map((p: StockItem) => {
                           return (
                             <tr key={p.id}>
-                              <td></td>
+                              {/* <td></td> */}
                               <td className="text-start">
                                 {p.pharmacy_name ?? ""}
                               </td>
@@ -228,18 +230,18 @@ export default function PurchaseInvoice() {
                                 {p.supplier_name ?? ""}
                               </td>
                               <td className="text-start">
-                                {formatDateOnly(p.purchase_date ?? "")}
+                                {formatDate(p.purchase_date ?? "")}
                               </td>
                               <td className="text-start">
                                 {p.invoice_num ?? ""}
                               </td>
                               <td className="text-start">
                                 <button
-                                  className="btn-style1"
+                                  className="btn btn-light btn-sm"
+                                  title="Purchase Details"
                                   onClick={() => handleHistory(p.id)}
                                 >
-                                  <i className="bi bi-card-list"></i> Purchase
-                                  Details
+                                  <i className="bi bi-eye-fill"></i>
                                 </button>
                               </td>
                             </tr>
@@ -286,7 +288,9 @@ export default function PurchaseInvoice() {
 
         <Modal.Body>
           {!purchaseStockById ? (
-            <p>Loading...</p>
+            <div className="py-5 text-center">
+              <TncLoader size={50} text="Loading details..." />
+            </div>
           ) : (
             <div className="container-fluid">
               {/* TOP INFO */}
@@ -352,7 +356,7 @@ export default function PurchaseInvoice() {
                         <td>{item.medicine_name}</td>
                         <td>{item.pack_size}</td>
                         <td>{item.batch}</td>
-                        <td>{formatDateOnly(item.expiry_date)}</td>
+                        <td>{formatDate(item.expiry_date)}</td>
                         <td>{item.available_quantity}</td>
                         <td>{item.quantity}</td>
                         <td className="text-end">

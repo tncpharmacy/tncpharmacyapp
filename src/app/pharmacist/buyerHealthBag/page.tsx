@@ -300,7 +300,7 @@ export default function OrderList() {
                     <thead>
                       <tr>
                         {/* <th style={{ width: "0px" }}></th> */}
-                        <th className="fw-bold text-start">Id</th>
+                        {/* <th className="fw-bold text-start">Id</th> */}
                         <th className="fw-bold text-start">Profile Image</th>
                         <th className="fw-bold text-start">Name</th>
                         <th className="fw-bold text-start">Mobile</th>
@@ -322,7 +322,7 @@ export default function OrderList() {
                                 return (
                                   <tr key={p.id}>
                                     {/* <td></td> */}
-                                    <td className="text-start">{p.id ?? ""}</td>
+                                    {/* <td className="text-start">{p.id ?? ""}</td> */}
 
                                     <td className="text-start">
                                       <Image

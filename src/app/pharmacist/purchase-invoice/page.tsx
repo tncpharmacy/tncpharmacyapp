@@ -20,6 +20,7 @@ import TableLoader from "@/app/components/TableLoader/TableLoader";
 import { formatAmount } from "@/lib/utils/formatAmount";
 import { formatDateOnly } from "@/utils/dateFormatter";
 import TncLoader from "@/app/components/TncLoader/TncLoader";
+import { formatDate } from "@/lib/utils/dateFormatter";
 
 export default function PurchaseInvoice() {
   const router = useRouter();
@@ -238,7 +239,7 @@ export default function PurchaseInvoice() {
                                     {p.supplier_name ?? ""}
                                   </td>
                                   <td className="text-start">
-                                    {formatDateOnly(p.purchase_date ?? "")}
+                                    {formatDate(p.purchase_date ?? "")}
                                   </td>
                                   <td className="text-start">
                                     {p.invoice_num ?? ""}

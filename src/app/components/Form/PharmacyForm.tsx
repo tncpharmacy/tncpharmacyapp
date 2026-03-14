@@ -141,27 +141,27 @@ export default function PharmacyForm({ id }: Props) {
     }
 
     if (!formData.gst_number || formData.gst_number.length !== 15) {
-      toast.error("GST number must be 15 characters");
+      toast.error("GST number is required");
       return false;
     }
 
     if (!formData.license_number || formData.license_number.length < 10) {
-      toast.error("License number must be at least 10 characters");
+      toast.error("License number is required");
       return false;
     }
 
     if (!formData.license_valid_upto) {
-      toast.error("Please select license validity date");
+      toast.error("License validity date is required");
       return false;
     }
 
     if (!formData.email_id.includes("@")) {
-      toast.error("Please enter a valid email");
+      toast.error("Email id is required");
       return false;
     }
 
     if (!formData.login_id || formData.login_id.length !== 10) {
-      toast.error("Mobile number must be 10 digits");
+      toast.error("Mobile number is required");
       return false;
     }
 
@@ -176,7 +176,7 @@ export default function PharmacyForm({ id }: Props) {
     }
 
     if (formData.pincode.length !== 6) {
-      toast.error("Pincode must be 6 digits");
+      toast.error("Pincode is required");
       return false;
     }
 

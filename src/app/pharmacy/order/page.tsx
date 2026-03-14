@@ -23,6 +23,7 @@ import { formatAmount } from "@/lib/utils/formatAmount";
 import BillPreviewModal from "@/app/components/RetailCounterModal/BillPreviewModal";
 import ExcelJS from "exceljs";
 import { saveAs } from "file-saver";
+import { formatDate } from "@/lib/utils/dateFormatter";
 //import * as XLSX from "xlsx";
 // import XLSX from "xlsx-style";
 
@@ -322,14 +323,14 @@ export default function OrderList() {
       });
   };
 
-  const formatDate = (dateString: string) => {
-    const d = new Date(dateString);
-    return d.toLocaleString("en-IN", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-    });
-  };
+  // const formatDate = (dateString: string) => {
+  //   const d = new Date(dateString);
+  //   return d.toLocaleString("en-IN", {
+  //     day: "2-digit",
+  //     month: "short",
+  //     year: "numeric",
+  //   });
+  // };
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleReprint = (order: any) => {
     const cartItems =
@@ -456,7 +457,7 @@ export default function OrderList() {
                   <table className="table cust_table1">
                     <thead>
                       <tr>
-                        <th style={{ width: "0px" }}></th>
+                        {/* <th style={{ width: "0px" }}></th> */}
                         <th className="fw-bold text-start">Order Id</th>
                         <th className="fw-bold text-start">Name</th>
                         <th className="fw-bold text-start">Mobile</th>
@@ -466,7 +467,7 @@ export default function OrderList() {
                         <th className="fw-bold text-start">Mode</th>
                         <th className="fw-bold text-start">Status</th>
                         <th className="fw-bold text-start">Date</th>
-                        <th className="fw-bold text-start">Action</th>
+                        <th className="fw-bold text-center">Action</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -481,7 +482,7 @@ export default function OrderList() {
                         .map((p: PharmacistOrder) => {
                           return (
                             <tr key={p.orderId}>
-                              <td></td>
+                              {/* <td></td> */}
                               <td className="text-start">{p.orderId ?? ""}</td>
                               <td className="text-start">
                                 {p.buyerName ?? ""}
@@ -507,21 +508,22 @@ export default function OrderList() {
                               <td className="text-start">
                                 {formatDate(p.orderDate ?? "")}
                               </td>
-                              <td className="text-start">
+                              <td className="text-center">
                                 <button
-                                  className="btn-style1"
+                                  className="btn btn-light btn-sm"
+                                  title="Order Details"
                                   onClick={() => handleHistory(p.orderId)}
                                 >
-                                  <i className="bi bi-card-list"></i> Order
-                                  Details
+                                  <i className="bi bi-eye-fill"></i>
                                 </button>
                                 <button
-                                  className="btn-style1 ms-2"
+                                  className="btn btn-light btn-sm ms-2"
+                                  title="Order Reprint"
                                   onClick={() =>
                                     handleReprintFromTable(p.orderId)
                                   }
                                 >
-                                  <i className="bi bi-printer-fill"></i> Reprint
+                                  <i className="bi bi-printer-fill"></i>
                                 </button>
                               </td>
                             </tr>

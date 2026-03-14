@@ -20,6 +20,7 @@ import {
 } from "@/lib/features/supplierSlice/supplierSlice";
 import toast from "react-hot-toast";
 import TncLoader from "@/app/components/TncLoader/TncLoader";
+import { formatDate } from "@/lib/utils/dateFormatter";
 const mediaBase = process.env.NEXT_PUBLIC_MEDIA_BASE_URL;
 
 export default function Supplier() {
@@ -215,7 +216,7 @@ export default function Supplier() {
                               {/* <td className="text-start">{p.user_name ?? "-"}</td> */}
                               <td className="text-start">{p.license_number}</td>
                               <td className="text-start">
-                                {p.license_valid_upto}
+                                {formatDate(p.license_valid_upto)}
                               </td>
                               <td className="text-start">{p.email_id}</td>
                               <td className="text-start">
@@ -375,7 +376,7 @@ export default function Supplier() {
                       ["License No.", selectedSupplier.license_number],
                       [
                         "License Validity",
-                        formatDateOnly(selectedSupplier.license_valid_upto),
+                        formatDate(selectedSupplier.license_valid_upto),
                       ],
                       ["Email", selectedSupplier.email_id],
                       ["Mobile", selectedSupplier.login_id ?? "-"],

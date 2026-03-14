@@ -13,6 +13,7 @@ import { useRouter } from "next/navigation";
 import TncLoader from "@/app/components/TncLoader/TncLoader";
 import TableLoader from "@/app/components/TableLoader/TableLoader";
 import toast from "react-hot-toast";
+import { formatDate } from "@/lib/utils/dateFormatter";
 
 const mediaBase = process.env.NEXT_PUBLIC_MEDIA_BASE_URL;
 
@@ -244,7 +245,7 @@ export default function PatientPrescriptionModal({
                       </td>
                       <td>{p.buyer_name}</td>
                       <td>{p.buyer_number}</td>
-                      <td>{new Date(p.created_on).toLocaleDateString()}</td>
+                      <td>{formatDate(p.created_on)}</td>
                       <td>
                         <Button
                           size="sm"

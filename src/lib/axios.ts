@@ -44,6 +44,8 @@ api.interceptors.request.use(
 
     const isPublic =
       url.includes("/medicine") ||
+      url.includes("/masterapp/care-group/") ||
+      url.includes("/website") ||
       url.includes("search-suggestion") ||
       publicEndpoints.some((endpoint) => url.includes(endpoint));
 

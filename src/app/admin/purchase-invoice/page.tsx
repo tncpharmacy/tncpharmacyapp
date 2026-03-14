@@ -321,7 +321,9 @@ export default function PurchaseInvoice() {
               <TncLoader size={50} text="Loading details..." />
             </div>
           ) : !purchaseStockById ? (
-            <p>Loading...</p>
+            <div className="py-5 text-center">
+              <TncLoader size={50} text="Loading details..." />
+            </div>
           ) : (
             <div className="container-fluid">
               {/* TOP INFO */}

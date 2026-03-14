@@ -71,7 +71,11 @@ const GenericOptionsModal: React.FC<GenericOptionsModalProps> = ({
       ) : (
         <>
           <div
-            className="modal-dialog modal-lg"
+            className="modal-dialog"
+            style={{
+              maxWidth: "1200px",
+              width: "95%",
+            }}
             onClick={(e) => e.stopPropagation()}
           >
             <div className="modal-content">

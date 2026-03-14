@@ -139,22 +139,22 @@ export default function PharmacistForm({ id }: Props) {
     }
 
     if (formData.login_id.length !== 10) {
-      toast.error("Mobile number must be 10 digits");
+      toast.error("Mobile number is required");
       return false;
     }
 
     if (!formData.email_id.includes("@")) {
-      toast.error("Please enter valid email");
+      toast.error("Email Id is required");
       return false;
     }
 
     if (formData.aadhar_number.replace(/-/g, "").length !== 12) {
-      toast.error("Aadhar number must be 12 digits");
+      toast.error("Aadhar number is required");
       return false;
     }
 
     if (formData.license_number.length < 12) {
-      toast.error("License number must be at least 12 characters");
+      toast.error("License number is required");
       return false;
     }
 

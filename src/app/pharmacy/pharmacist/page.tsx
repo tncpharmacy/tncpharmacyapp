@@ -18,6 +18,7 @@ import Link from "next/link";
 import TableLoader from "@/app/components/TableLoader/TableLoader";
 import Input from "@/app/components/Input/Input";
 import { fetchPharmacy } from "@/lib/features/pharmacySlice/pharmacySlice";
+import { formatDate } from "@/lib/utils/dateFormatter";
 const mediaBase = process.env.NEXT_PUBLIC_MEDIA_BASE_URL;
 
 export default function Pharmacist() {
@@ -170,9 +171,9 @@ export default function Pharmacist() {
                   <table className="table cust_table1">
                     <thead className="fw-bold text-dark">
                       <tr>
-                        <th className="fw-bold">Sr. No.</th>
-                        <th className="fw-bold">Pharmacy Name</th>
-                        <th className="fw-bold">Contact Person</th>
+                        {/* <th className="fw-bold">Sr. No.</th> */}
+                        {/* <th className="fw-bold">Pharmacy Name</th> */}
+                        <th className="fw-bold">Pharmacist</th>
                         <th className="fw-bold">Email ID</th>
                         <th className="fw-bold">Mobile</th>
                         <th className="fw-bold">Gender</th>
@@ -193,16 +194,16 @@ export default function Pharmacist() {
                           );
                           return (
                             <tr key={p.id}>
-                              <td>{index + 1}</td>
-                              <td>{pharmacy ? pharmacy.pharmacy_name : "-"}</td>
+                              {/* <td>{index + 1}</td> */}
+                              {/* <td>{pharmacy ? pharmacy.pharmacy_name : "-"}</td> */}
                               <td>{p.user_name ?? "-"}</td>
                               <td>{p.email_id ?? "-"}</td>
                               <td>{p.login_id ?? "-"}</td>
                               <td>{p.gender ?? "-"}</td>
-                              <td>{p.date_of_birth ?? "-"}</td>
+                              <td>{formatDate(p.date_of_birth ?? "-")}</td>
                               <td>{p.aadhar_number ?? "-"}</td>
                               <td>{p.license_number ?? "-"}</td>
-                              <td>{p.license_valid_upto ?? "-"}</td>
+                              <td>{formatDate(p.license_valid_upto ?? "-")}</td>
                               <td>
                                 <span
                                   onClick={() => handleDelete(p.id)}

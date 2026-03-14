@@ -24,6 +24,7 @@ import BillPreviewModal from "@/app/components/RetailCounterModal/BillPreviewMod
 import ExcelJS from "exceljs";
 import { saveAs } from "file-saver";
 import TncLoader from "@/app/components/TncLoader/TncLoader";
+import { formatDate } from "@/lib/utils/dateFormatter";
 //import * as XLSX from "xlsx";
 // import XLSX from "xlsx-style";
 
@@ -326,14 +327,14 @@ export default function OrderList() {
       });
   };
 
-  const formatDate = (dateString: string) => {
-    const d = new Date(dateString);
-    return d.toLocaleString("en-IN", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-    });
-  };
+  // const formatDate = (dateString: string) => {
+  //   const d = new Date(dateString);
+  //   return d.toLocaleString("en-IN", {
+  //     day: "2-digit",
+  //     month: "short",
+  //     year: "numeric",
+  //   });
+  // };
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleReprint = (order: any) => {
     const cartItems =

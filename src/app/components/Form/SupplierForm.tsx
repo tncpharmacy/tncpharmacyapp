@@ -29,6 +29,10 @@ import {
 import { updateSupplierApi } from "@/lib/api/supplier";
 import { getUser } from "@/lib/auth/auth";
 import TncLoader from "../TncLoader/TncLoader";
+import MobileInput from "../Input/MobileInput";
+import EmailInput from "../Input/EmailInput";
+import LicenseInput from "../Input/LicenseInput";
+import GSTInput from "../Input/GSTInput";
 
 interface Props {
   id?: number; // agar edit mode hai to id milegi
@@ -114,86 +118,133 @@ export default function SupplierForm({ id }: Props) {
     }));
 
     // 👇 Password banane ka logic
-    if (name === "user_name" || name === "login_id") {
+    if (name === "user_name" || name === "mobile_number") {
       const first4 = (
         name === "user_name" ? value : formData.user_name || ""
       ).slice(0, 4);
+
       const last5 = (
-        name === "login_id" ? value : formData.login_id ?? ""
+        name === "mobile_number" ? value : formData.mobile_number || ""
       ).slice(-5);
 
       setPassword(first4 + last5);
     }
   };
+  const validateForm = () => {
+    if (!formData.supplier_name?.trim()) {
+      toast.error("Supplier name is required");
+      return false;
+    }
 
+    if (!formData.user_name?.trim()) {
+      toast.error("Contact person name is required");
+      return false;
+    }
+
+    if (!formData.mobile_number || formData.mobile_number.length !== 10) {
+      toast.error("Valid mobile number is required");
+      return false;
+    }
+
+    if (!formData.email_id || !formData.email_id.includes("@")) {
+      toast.error("Valid email is required");
+      return false;
+    }
+
+    if (!formData.gst_number || formData.gst_number.length !== 15) {
+      toast.error("Valid GST number is required");
+      return false;
+    }
+
+    if (!formData.license_number || formData.license_number.length < 10) {
+      toast.error("License number is required");
+      return false;
+    }
+
+    if (!formData.license_valid_upto) {
+      toast.error("License validity date is required");
+      return false;
+    }
+
+    if (!formData.address?.trim()) {
+      toast.error("Address is required");
+      return false;
+    }
+
+    if (!formData.district?.trim()) {
+      toast.error("District is required");
+      return false;
+    }
+
+    if (!formData.pincode || formData.pincode.length !== 6) {
+      toast.error("Valid pincode is required");
+      return false;
+    }
+
+    if (!formData.state || formData.state === 0) {
+      toast.error("Please select state");
+      return false;
+    }
+
+    return true;
+  };
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!validateForm()) return;
     if (submitLoading) return;
-    const formDataToSend = new FormData();
-    // 🟩 Common fields
-    formDataToSend.append("supplier_name", formData.supplier_name || "");
-    formDataToSend.append("user_name", formData.user_name || "");
-    formDataToSend.append(
-      "gst_number",
-      (formData.gst_number || "").toUpperCase().trim()
-    );
-    formDataToSend.append("license_number", formData.license_number || "");
-    formDataToSend.append(
-      "license_valid_upto",
-      formData.license_valid_upto || ""
-    );
-    formDataToSend.append("email_id", formData.email_id || "");
-    formDataToSend.append("mobile_number", formData.mobile_number || "");
-    formDataToSend.append("address", formData.address || "");
-    formDataToSend.append("district", formData.district || "");
-    formDataToSend.append("pincode", formData.pincode || "");
-    formDataToSend.append("state", String(formData.state));
-    formDataToSend.append("status", formData.status || "Active");
-    formDataToSend.append("pharmacy_id", String(pharmacy_id));
-
-    // CREATE vs UPDATE MODE
-    if (!id) {
-      formDataToSend.append("password", password);
-    } else {
-      formDataToSend.append("id", String(formData.id));
-      formDataToSend.append(
-        "supplier_id_code",
-        formData.supplier_id_code || ""
-      );
-    }
-
-    // Send IDs of old documents that should be kept
-    if (formData.documents?.length) {
-      formData.documents.forEach((doc) => {
-        formDataToSend.append("existing_document_ids", String(doc.id));
-      });
-    }
-
-    // Add NEW uploaded files only
-    if (formData.uploadedFiles?.length) {
-      formData.uploadedFiles.forEach((file) => {
-        formDataToSend.append("documents", file);
-      });
-    }
-
-    // Debug
-    console.log("====== FINAL FORMDATA ======");
-    for (const [k, v] of formDataToSend.entries()) {
-      console.log(k, v);
-    }
 
     try {
       setSubmitLoading(true);
-      if (id) {
-        await dispatch(editSupplier({ id, data: formDataToSend })).unwrap();
-        toast.success("Supplier successfully updated");
-        await dispatch(fetchSupplier()).unwrap();
-        router.push("/pharmacist/supplier");
-      } else {
-        const res = await dispatch(addSupplier(formDataToSend)).unwrap();
-        toast.success("Supplier successfully added");
-        await dispatch(fetchSupplier()).unwrap();
+
+      const formDataToSend = new FormData();
+
+      // ✅ Required fields
+      formDataToSend.append("supplier_name", formData.supplier_name || "");
+      formDataToSend.append("user_name", formData.user_name || "");
+      formDataToSend.append("license_number", formData.license_number || "");
+      formDataToSend.append(
+        "license_valid_upto",
+        formData.license_valid_upto || ""
+      );
+      formDataToSend.append(
+        "gst_number",
+        (formData.gst_number || "").toUpperCase().trim()
+      );
+      formDataToSend.append("email_id", formData.email_id || "");
+      formDataToSend.append("mobile_number", formData.mobile_number || "");
+      formDataToSend.append("pincode", formData.pincode || "");
+      formDataToSend.append("district", formData.district || "");
+      formDataToSend.append("state", String(formData.state));
+      formDataToSend.append("address", formData.address || "");
+      formDataToSend.append("pharmacy_id", String(pharmacy_id));
+
+      // ✅ Documents
+      if (formData.uploadedFiles?.length) {
+        formData.uploadedFiles.forEach((file) => {
+          formDataToSend.append("documents", file);
+        });
       }
+
+      // 🔎 Debug
+      console.log("====== FINAL FORMDATA ======");
+      for (const [k, v] of formDataToSend.entries()) {
+        console.log(k, v);
+      }
+
+      // 🚀 API call
+      if (id) {
+        formDataToSend.append("id", String(formData.id));
+
+        await dispatch(editSupplier({ id, data: formDataToSend })).unwrap();
+        toast.success("Supplier updated successfully");
+      } else {
+        await dispatch(addSupplier(formDataToSend)).unwrap();
+        toast.success("Supplier added successfully");
+      }
+
+      await dispatch(fetchSupplier()).unwrap();
+      router.push("/pharmacist/supplier");
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       console.log("🔥 FULL ERROR OBJECT:", error?.response?.data || error);
@@ -202,14 +253,12 @@ export default function SupplierForm({ id }: Props) {
         error?.response?.data?.message ||
         error?.response?.data?.detail ||
         error?.response?.data?.error ||
-        JSON.stringify(error?.response?.data) ||
         error?.message ||
         "Unknown error occurred";
 
-      console.error("❌ API call failed:", errorMsg);
       toast.error(errorMsg);
     } finally {
-      setSubmitLoading(false); // 🔥 STOP LOADER
+      setSubmitLoading(false);
     }
   };
 
@@ -267,21 +316,29 @@ export default function SupplierForm({ id }: Props) {
                   onChange={handleChange}
                   required
                 />
-                <Input
-                  type="text"
+                <GSTInput
                   label="GST Number"
                   name="gst_number"
-                  value={formData.gst_number}
-                  onChange={handleChange}
+                  value={formData.gst_number || ""}
                   required
+                  onChange={(value) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      gst_number: value,
+                    }))
+                  }
                 />
-                <Input
-                  type="text"
+                <LicenseInput
                   label="License Number"
                   name="license_number"
-                  value={formData.license_number}
-                  onChange={handleChange}
+                  value={formData.license_number || ""}
                   required
+                  onChange={(value) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      license_number: value,
+                    }))
+                  }
                 />
                 <Input
                   label="License Valid Upto"
@@ -291,21 +348,29 @@ export default function SupplierForm({ id }: Props) {
                   onChange={handleChange}
                   required
                 />
-                <Input
-                  label="Email"
-                  type="email"
-                  name="email_id"
-                  value={formData.email_id}
-                  onChange={handleChange}
-                  required
-                />
-                <Input
-                  type="text"
+                <MobileInput
                   label="Mobile"
                   name="mobile_number"
-                  value={formData.mobile_number}
-                  onChange={handleChange}
+                  value={formData.mobile_number || ""}
                   required
+                  onChange={(value) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      mobile_number: value,
+                    }))
+                  }
+                />
+                <EmailInput
+                  label="Email"
+                  name="email_id"
+                  value={formData.email_id || ""}
+                  required
+                  onChange={(value) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      email_id: value,
+                    }))
+                  }
                 />
                 <Input
                   type="text"
@@ -343,7 +408,7 @@ export default function SupplierForm({ id }: Props) {
                     }))
                   }
                 />
-                <Input
+                {/* <Input
                   label="Status"
                   name="status"
                   type="select"
@@ -353,7 +418,7 @@ export default function SupplierForm({ id }: Props) {
                     { label: "Inactive", value: "Inactive" },
                   ]}
                   onChange={handleChange}
-                />
+                /> */}
                 <InputFile
                   label="Upload Documents"
                   name="documents"
