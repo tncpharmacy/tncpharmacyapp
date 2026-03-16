@@ -134,7 +134,7 @@ export default function AllGeneric() {
     if (!searchTerm) return finalShuffledList;
     const lower = searchTerm.toLowerCase();
     return finalShuffledList.filter((med) =>
-      (med.ProductName || "").toLowerCase().includes(lower)
+      (med.medicine_name || "").toLowerCase().includes(lower)
     );
   }, [finalShuffledList, searchTerm]);
 
@@ -229,6 +229,21 @@ export default function AllGeneric() {
     // we intentionally run this effect only once on mount
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const getMedicineImage = (medicine: any) => {
+    if (medicine.primary_image) return medicine.primary_image;
+
+    if (medicine.images?.length) {
+      const primary =
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        medicine.images.find((i: any) => i.default_image === 1) ||
+        medicine.images[0];
+
+      return `${mediaBase}${primary.document}`;
+    }
+
+    return "/images/tnc-default.png";
+  };
 
   return (
     <>
@@ -298,11 +313,7 @@ export default function AllGeneric() {
                       mrp - (mrp * discount) / 100
                     );
 
-                    const imageUrl = item.DefaultImageURL
-                      ? item.DefaultImageURL.startsWith("http")
-                        ? item.DefaultImageURL
-                        : `${mediaBase}${item.DefaultImageURL}`
-                      : "/images/tnc-default.png";
+                    const imageUrl = getMedicineImage(item);
 
                     const isInBag =
                       localBag.includes(item.id) ||

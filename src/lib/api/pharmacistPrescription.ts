@@ -93,3 +93,16 @@ export const updatePrescriptionStatusPharmacist = async (
 
   return response.data;
 };
+
+// Delete Prescription by Pharmacist
+export const deletePrescriptionByPharmacist = async (
+  prescriptionId: number
+) => {
+  const response = await api.delete(
+    ENDPOINTS.PRESCRIPTION_UPLOAD.PRESCRIPTION_DELETE_BY_PHARMACIST(
+      prescriptionId
+    )
+  );
+
+  return response.data;
+};

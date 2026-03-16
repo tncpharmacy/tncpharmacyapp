@@ -68,6 +68,7 @@ export default function SingleSelectDropdown({
       </label>
 
       <Select<OptionType, false, GroupBase<OptionType>>
+        instanceId={id}
         inputId={id}
         isClearable={true}
         options={selectOptions}

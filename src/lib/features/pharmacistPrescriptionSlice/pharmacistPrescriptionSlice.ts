@@ -1,6 +1,7 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import { PrescriptionItem } from "@/types/prescription";
 import {
+  deletePrescriptionByPharmacist,
   fetchPrescriptionListPharmacist,
   receivePrescriptionByPharmacist,
   ReceivePrescriptionResponse,
@@ -142,6 +143,25 @@ export const updatePrescriptionStatusPharmacistThunk = createAsyncThunk<
   }
 );
 
+export const deletePrescriptionPharmacistThunk = createAsyncThunk<
+  number,
+  { prescriptionId: number },
+  { rejectValue: string }
+>(
+  "pharmacistPrescription/delete",
+  async ({ prescriptionId }, { rejectWithValue }) => {
+    try {
+      await deletePrescriptionByPharmacist(prescriptionId);
+      return prescriptionId;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (err: any) {
+      return rejectWithValue(
+        err.response?.data?.message || "Failed to delete prescription"
+      );
+    }
+  }
+);
+
 // 🔹 Slice
 const pharmacistPrescriptionSlice = createSlice({
   name: "pharmacistPrescription",
@@ -241,6 +261,22 @@ const pharmacistPrescriptionSlice = createSlice({
             action.payload || "Failed to update prescription status";
         }
       );
+    builder
+      .addCase(deletePrescriptionPharmacistThunk.fulfilled, (state, action) => {
+        const deletedId = action.payload;
+
+        // remove from list
+        state.list = state.list.filter((p) => p.id !== deletedId);
+
+        // clear current prescription if same
+        if (state.prescription?.id === deletedId) {
+          state.prescription = null;
+        }
+      })
+      .addCase(deletePrescriptionPharmacistThunk.rejected, (state, action) => {
+        state.error =
+          action.payload || "Failed to delete prescription by pharmacist";
+      });
   },
 });
 

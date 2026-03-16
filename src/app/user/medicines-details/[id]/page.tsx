@@ -400,10 +400,17 @@ export default function ProductPage() {
 
   // generic medicines
   useEffect(() => {
-    if (getByIdMedicines?.generic_id) {
-      dispatch(getMedicineByGenericId(getByIdMedicines.generic_id));
+    if (!getByIdMedicines) return;
+
+    console.log("Medicine:", getByIdMedicines.id);
+    console.log("Generic ID:", getByIdMedicines.generic_id);
+
+    const genericId = Number(getByIdMedicines.generic_id);
+
+    if (genericId > 0) {
+      dispatch(getMedicineByGenericId(genericId));
     }
-  }, [dispatch, getByIdMedicines?.generic_id]);
+  }, [dispatch, getByIdMedicines]);
 
   const product: Product = {
     title:
@@ -638,6 +645,21 @@ export default function ProductPage() {
     nextArrow: <NextArrow />,
     prevArrow: <PrevArrow />,
   };
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const getMedicineImage = (medicine: any) => {
+    if (medicine.primary_image) return medicine.primary_image;
+
+    if (medicine.images?.length) {
+      const primary =
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        medicine.images.find((i: any) => i.default_image === 1) ||
+        medicine.images[0];
+
+      return `${mediaBase}${primary.document}`;
+    }
+
+    return "/images/tnc-default.png";
+  };
 
   const renderGenericCompare = () => {
     if (!hasCheaper) return null;
@@ -652,21 +674,18 @@ export default function ProductPage() {
           </div>
         )}
         {finalCompareList.map((g, index) => {
-          const gImage =
-            g.images?.find((img) => img.default_image === 1)?.document ||
-            g.images?.[0]?.document ||
-            "/images/tnc-default.png";
-
-          const cleanedBase = (mediaBase || "").replace(/\/+$/, "");
-          const cleanedSrc = (gImage || "").replace(/^\/+/, "");
-          const imageUrl = cleanedBase
-            ? `${cleanedBase}/${cleanedSrc}`
-            : gImage;
+          const imageUrl = getMedicineImage(g);
 
           const tabletCount =
             parseInt(String(g.pack_size).replace(/\D/g, "")) || 1;
 
           const perTablet = (g.finalPrice / tabletCount).toFixed(2);
+          const unitCode = g.pack_size?.match(/[A-Z]+/)?.[0] || "";
+          const unitMap: Record<string, string> = {
+            TAB: "tablet",
+            CAP: "capsule",
+          };
+          const unit = unitMap[unitCode] || null;
 
           return (
             <div
@@ -683,9 +702,13 @@ export default function ProductPage() {
                 <img
                   src={imageUrl}
                   alt={g.medicine_name}
-                  onError={(e) =>
-                    (e.currentTarget.src = "/images/tnc-default.png")
-                  }
+                  style={{
+                    opacity: imageUrl.includes("tnc-default") ? 0.35 : 1,
+                  }}
+                  onError={(e) => {
+                    e.currentTarget.src = "/images/tnc-default.png";
+                    e.currentTarget.style.opacity = "0.35";
+                  }}
                 />
               </div>
 
@@ -703,7 +726,11 @@ export default function ProductPage() {
                   ₹{formatAmount(g.finalPrice)}
                 </div>
 
-                <div className="generic-per">₹{perTablet} / tablet</div>
+                {unit && (
+                  <div className="generic-per">
+                    ₹{perTablet} / {unit}
+                  </div>
+                )}
               </div>
             </div>
           );
@@ -1268,11 +1295,14 @@ export default function ProductPage() {
             {/* Compare Section */}
             <div className="generic-1mg-compare">
               {finalCompareList.map((g, index) => {
-                const imageUrl = getSafeImageUrl(g.images);
+                const imageUrl = getMedicineImage(g);
                 const tabletCount =
-                  parseInt(String(g.pack_size).replace(/\D/g, "")) || 1;
+                  parseInt(String(g.pack_size).replace(/\D/g, "")) || 0;
 
-                const perTablet = (g.finalPrice / tabletCount).toFixed(2);
+                const perTablet =
+                  tabletCount > 0
+                    ? (g.finalPrice / tabletCount).toFixed(2)
+                    : "";
 
                 const compareSaving =
                   currentPrice > 0
@@ -1280,6 +1310,15 @@ export default function ProductPage() {
                         ((currentPrice - g.finalPrice) / currentPrice) * 100
                       )
                     : 0;
+
+                const unitCode = g.pack_size?.match(/[A-Z]+/)?.[0] || "";
+
+                const unitMap: Record<string, string> = {
+                  TAB: "tablet",
+                  CAP: "capsule",
+                };
+
+                const unit = unitMap[unitCode] || null;
 
                 return (
                   <div
@@ -1309,11 +1348,14 @@ export default function ProductPage() {
                     <div className="img-wrap">
                       <img
                         src={imageUrl}
-                        onError={(e) => {
-                          e.currentTarget.onerror = null;
-                          e.currentTarget.src = "/images/tnc-default.png";
-                        }}
                         alt={g.medicine_name}
+                        style={{
+                          opacity: imageUrl.includes("tnc-default") ? 0.35 : 1,
+                        }}
+                        onError={(e) => {
+                          e.currentTarget.src = "/images/tnc-default.png";
+                          e.currentTarget.style.opacity = "0.35";
+                        }}
                       />
                     </div>
 
@@ -1347,7 +1389,11 @@ export default function ProductPage() {
                       )}
 
                       {/* Per Tablet */}
-                      <div className="per-tablet">₹{perTablet} per unit</div>
+                      {unit && (
+                        <div className="per-tablet">
+                          ₹{perTablet} per {unit}
+                        </div>
+                      )}
                     </div>
 
                     {!g.isCurrent && compareSaving > 0 && (

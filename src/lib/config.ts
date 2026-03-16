@@ -132,6 +132,8 @@ export const ENDPOINTS = {
       `/ocr/pharmacist/prescription/upload/${pharmacistId}/`,
     PRESCRIPTION_STATUS_UPDATED_PHARMACIST: (prescriptionId: number) =>
       `/ocr/update/prescription/${prescriptionId}/`,
+    PRESCRIPTION_DELETE_BY_PHARMACIST: (prescriptionId: number) =>
+      `/ocr/prescription/delete/${prescriptionId}/`,
   },
 
   // medicines

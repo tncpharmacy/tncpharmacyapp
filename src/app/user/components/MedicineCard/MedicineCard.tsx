@@ -7,6 +7,7 @@ import { useAppSelector } from "@/lib/hooks";
 import { useHealthBag } from "@/lib/hooks/useHealthBag";
 import { HealthBag } from "@/types/healthBag";
 import { Image } from "react-bootstrap";
+import { formatAmount } from "@/lib/utils/formatAmount";
 
 const mediaBase = process.env.NEXT_PUBLIC_MEDIA_BASE_URL;
 
@@ -233,7 +234,7 @@ export default function MedicineCard({
                 <div className="d-flex flex-column align-items-start">
                   {/* Discounted Price */}
                   <p className="text-success fw-bold mb-1">
-                    ₹{formatCurrency(discountedPrice)}
+                    ₹{formatAmount(discountedPrice)}
                   </p>
 
                   {/* Original MRP + Discount Percent */}
@@ -245,7 +246,7 @@ export default function MedicineCard({
                         fontSize: "13px",
                       }}
                     >
-                      MRP ₹{formatCurrency(originalMrp)}
+                      MRP ₹{formatAmount(originalMrp)}
                     </span>{" "}
                     <span
                       className="text-danger fw-bold"
@@ -256,7 +257,7 @@ export default function MedicineCard({
                   </p>
                 </div>
               ) : (
-                <p className="medicine-mrp">₹{formatCurrency(originalMrp)}</p>
+                <p className="medicine-mrp">₹{formatAmount(originalMrp)}</p>
               )}
             </div>
           )}

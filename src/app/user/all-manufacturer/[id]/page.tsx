@@ -136,7 +136,7 @@ export default function AllManufacturer() {
     if (!searchTerm) return finalShuffledList;
     const lower = searchTerm.toLowerCase();
     return finalShuffledList.filter((med) =>
-      (med.ProductName || "").toLowerCase().includes(lower)
+      (med.medicine_name || "").toLowerCase().includes(lower)
     );
   }, [finalShuffledList, searchTerm]);
 
@@ -301,10 +301,10 @@ export default function AllManufacturer() {
                       mrp - (mrp * discount) / 100
                     );
 
-                    const imageUrl = item.DefaultImageURL
-                      ? item.DefaultImageURL.startsWith("http")
-                        ? item.DefaultImageURL
-                        : `${mediaBase}${item.DefaultImageURL}`
+                    const imageUrl = item.primary_image?.document
+                      ? item.primary_image.document.startsWith("http")
+                        ? item.primary_image.document
+                        : `${mediaBase}${item.primary_image.document}`
                       : "/images/tnc-default.png";
 
                     const isInBag =

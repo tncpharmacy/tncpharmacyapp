@@ -30,9 +30,9 @@ const HorizontalAccordionTabs: React.FC<IDProps> = ({ id }) => {
     ? [genericListByMedicineRaw]
     : [];
 
-  useEffect(() => {
-    if (id) dispatch(getMedicineByGenericId(id));
-  }, [id]);
+  // useEffect(() => {
+  //   if (id) dispatch(getMedicineByGenericId(id));
+  // }, [id]);
   // Header Button के लिए Styles (BG और Shadow हटा दिया गया)
   const headerButtonStyle: React.CSSProperties = {
     backgroundColor: "transparent",
@@ -96,123 +96,125 @@ const HorizontalAccordionTabs: React.FC<IDProps> = ({ id }) => {
                       For informational purposes only. Consult a doctor before
                       taking any medicines.
                     </div>
-                    {/* Items को फुल width (w-50 हटा दिया) */}
-                    {genericListByMedicine.map((item) => {
-                      // 1️⃣ Random MRP generate (80 to 500)
-                      // const randomMRP =
-                      //   Math.floor(Math.random() * (500 - 80 + 1)) + 80;
+                    {genericListByMedicine
+                      .filter((item) => Number(item.id) !== Number(id))
+                      .map((item) => {
+                        const mrp = Number(item.mrp ?? 0);
+                        const discount = Number(item.discount ?? 0);
+                        const discountedPrice = mrp - (mrp * discount) / 100;
+                        const perCapsule = (
+                          discountedPrice / item.pack_qty
+                        ).toFixed(2);
+                        const unitCode =
+                          item.pack_size?.match(/[A-Z]+/)?.[0] || "";
+                        const unitMap: Record<string, string> = {
+                          CAP: "capsule",
+                          TAB: "tablet",
+                        };
 
-                      const mrp = Number(item.mrp ?? 0);
-                      const discount = Number(item.discount ?? 0);
-                      const discountedPrice = mrp - (mrp * discount) / 100;
-                      const perCapsule = (
-                        discountedPrice / item.pack_qty
-                      ).toFixed(2);
-                      const unitCode =
-                        item.pack_size?.match(/[A-Z]+/)?.[0] || "";
-                      const unitMap: Record<string, string> = {
-                        CAP: "capsule",
-                        TAB: "tablet",
-                      };
+                        const unit =
+                          unitMap[unitCode] || unitCode.toLowerCase();
 
-                      const unit = unitMap[unitCode] || unitCode.toLowerCase();
-
-                      return (
-                        <div
-                          className="d-flex justify-content-between align-items-center my-2"
-                          key={item.id}
-                          style={{
-                            borderBottom: "1px solid #eee",
-                            paddingBottom: "8px",
-                            paddingTop: "8px",
-                          }}
-                        >
-                          {/* Left Side */}
-                          <div>
+                        return (
+                          <div
+                            className="d-flex justify-content-between align-items-center my-2"
+                            key={item.id}
+                            style={{
+                              borderBottom: "1px solid #eee",
+                              paddingBottom: "8px",
+                              paddingTop: "8px",
+                            }}
+                          >
+                            {/* Left Side */}
                             <div>
-                              <Link
-                                href={`/medicines-details/${encodeId(item.id)}`}
-                              >
-                                {item.medicine_name}
-                              </Link>
-                            </div>
-                            <div
-                              className="descr"
-                              style={{ color: "#28a745", fontSize: "13px" }}
-                            >
-                              {item.manufacturer_name}
-                              <br />
+                              <div>
+                                <Link
+                                  href={`/medicines-details/${encodeId(
+                                    item.id
+                                  )}`}
+                                >
+                                  {item.medicine_name}
+                                </Link>
+                              </div>
                               <div
                                 className="descr"
-                                style={{
-                                  color: "#d32f2f",
-                                  fontSize: "14px",
-                                  fontWeight: "500",
-                                }}
+                                style={{ color: "#28a745", fontSize: "13px" }}
                               >
-                                (₹{perCapsule} per {unit})
+                                {item.manufacturer_name}
+                                <br />
+                                {unit && item.pack_qty ? (
+                                  <div
+                                    className="descr"
+                                    style={{
+                                      color: "#d32f2f",
+                                      fontSize: "14px",
+                                      fontWeight: "500",
+                                    }}
+                                  >
+                                    (₹{perCapsule} per {unit})
+                                  </div>
+                                ) : null}
                               </div>
                             </div>
-                          </div>
 
-                          {/* Right Side */}
-                          <div className="text-end">
-                            {discount > 0 ? (
-                              <>
-                                <div
-                                  className="title"
-                                  style={{
-                                    fontSize: "15px",
-                                    fontWeight: "600",
-                                    color: "#d32f2f",
-                                  }}
-                                >
-                                  ₹{formatAmount(discountedPrice)}
-                                </div>
-                                <div
-                                  //className="descr"
-                                  style={{
-                                    fontSize: "13px",
-                                    color: "#888",
-                                    textDecoration: "line-through",
-                                  }}
-                                >
-                                  ₹{formatAmount(mrp)}
-                                </div>
-                                <div
-                                  style={{
-                                    fontSize: "12px",
-                                    color: "#007bff",
-                                    fontWeight: 500,
-                                  }}
-                                >
-                                  {discount}% off
-                                </div>
-                              </>
-                            ) : (
-                              <>
-                                <div
-                                  className="title"
-                                  style={{
-                                    fontSize: "15px",
-                                    fontWeight: "600",
-                                    color: "#d32f2f",
-                                  }}
-                                >
-                                  ₹{formatAmount(mrp)}
-                                </div>
-                                <div
-                                  className="descr"
-                                  style={{ fontSize: "13px", color: "#555" }}
-                                >
-                                  same price
-                                </div>
-                              </>
-                            )}
+                            {/* Right Side */}
+                            <div className="text-end">
+                              {discount > 0 ? (
+                                <>
+                                  <div
+                                    className="title"
+                                    style={{
+                                      fontSize: "15px",
+                                      fontWeight: "600",
+                                      color: "#d32f2f",
+                                    }}
+                                  >
+                                    ₹{formatAmount(discountedPrice)}
+                                  </div>
+                                  <div
+                                    //className="descr"
+                                    style={{
+                                      fontSize: "13px",
+                                      color: "#888",
+                                      textDecoration: "line-through",
+                                    }}
+                                  >
+                                    ₹{formatAmount(mrp)}
+                                  </div>
+                                  <div
+                                    style={{
+                                      fontSize: "12px",
+                                      color: "#007bff",
+                                      fontWeight: 500,
+                                    }}
+                                  >
+                                    {discount}% off
+                                  </div>
+                                </>
+                              ) : (
+                                <>
+                                  <div
+                                    className="title"
+                                    style={{
+                                      fontSize: "15px",
+                                      fontWeight: "600",
+                                      color: "#d32f2f",
+                                    }}
+                                  >
+                                    ₹{formatAmount(mrp)}
+                                  </div>
+                                  <div
+                                    className="descr"
+                                    style={{ fontSize: "13px", color: "#555" }}
+                                  >
+                                    same price
+                                  </div>
+                                </>
+                              )}
+                            </div>
                           </div>
-                        </div>
-                      );
-                    })}
+                        );
+                      })}
                   </div>
                 </div>
               </div>

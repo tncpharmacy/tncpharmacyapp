@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Button, Image, Modal } from "react-bootstrap";
 import { useAppDispatch, useAppSelector } from "@/lib/hooks";
 import {
+  deletePrescriptionPharmacistThunk,
   getPrescriptionListPharmacistThunk,
   receivePrescriptionThunk,
 } from "@/lib/features/pharmacistPrescriptionSlice/pharmacistPrescriptionSlice";
@@ -123,6 +124,24 @@ export default function PatientPrescriptionModal({
       );
     } catch {
       toast.error("Failed to receive prescription");
+      setActionLoading(false);
+    }
+  };
+
+  const handleDeletePrescription = async (p: PrescriptionItem) => {
+    try {
+      setActionLoading(true);
+
+      await dispatch(
+        deletePrescriptionPharmacistThunk({
+          prescriptionId: p.id,
+        })
+      ).unwrap();
+
+      toast.success("Prescription deleted successfully");
+    } catch {
+      toast.error("Failed to delete prescription");
+    } finally {
       setActionLoading(false);
     }
   };
@@ -264,6 +283,14 @@ export default function PatientPrescriptionModal({
                             : isHandledByMe
                             ? "Continue Scan"
                             : "Receive & Scan"}
+                        </Button>{" "}
+                        <Button
+                          size="sm"
+                          variant="outline-danger"
+                          className="delete-btn"
+                          onClick={() => handleDeletePrescription(p)}
+                        >
+                          <i className="bi bi-trash delete-icon"></i>
                         </Button>
                       </td>
                     </tr>
@@ -290,7 +317,7 @@ export default function PatientPrescriptionModal({
           {/* 🔥 MODAL LOADER */}
           {previewLoading && (
             <div
-              className="position-absolute top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center"
+              className="position-absolute top-0 start-0 w-100 h-100 d-flex justify-content-center align-ps-center"
               style={{
                 background: "rgba(255,255,255,0.75)",
                 backdropFilter: "blur(2px)",
