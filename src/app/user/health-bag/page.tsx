@@ -2,7 +2,7 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import SiteHeader from "@/app/user/components/header/header";
-import { Button, Form, Image } from "react-bootstrap";
+import { Button, Form, Image, Modal } from "react-bootstrap";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "../css/site-style.css";
 import "../css/user-style.css";
@@ -97,9 +97,13 @@ export default function HealthBags() {
   // --- Local states for instant UI ---
   const [localBag, setLocalBag] = useState<number[]>([]);
   const [processingIds, setProcessingIds] = useState<number[]>([]);
+  // for precription upload state
+  const [showPrescriptionModal, setShowPrescriptionModal] = useState(false);
+  const [prescriptionFile, setPrescriptionFile] = useState<File | null>(null);
   const dispatch = useAppDispatch();
   const router = useRouter();
   const isSelecting = useRef(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   // start for increse header count code
   const buyer = useAppSelector((state) => state.buyer.buyer);
   const {
@@ -255,7 +259,7 @@ export default function HealthBags() {
             ? parseFloat(product.MRP)
             : product.MRP
           : 0;
-
+      console.log("product", product);
       const discount =
         product?.discount !== undefined
           ? typeof product.discount === "string"
@@ -273,6 +277,7 @@ export default function HealthBags() {
         availableQty: product?.AvailableQTY || 0,
         manufacturer: product?.Manufacturer || "",
         pack_size: product?.pack_size || "",
+        // prescription_required: product?.prescription_required || 0,
         mrp,
         discount,
         discountMrp,
@@ -409,16 +414,69 @@ export default function HealthBags() {
     //toast.success("Checkout data saved!");
   };
 
+  // const handleContinue = () => {
+  //   if (!buyer?.id) {
+  //     setShowBuyerLogin(true);
+  //     return;
+  //   }
+
+  //   checkoutData(); // ✅ Save checkout info in LS
+  //   router.push("/checkout"); // Go to checkout page
+  // };
+
   const handleContinue = () => {
     if (!buyer?.id) {
       setShowBuyerLogin(true);
       return;
     }
 
-    checkoutData(); // ✅ Save checkout info in LS
-    router.push("/checkout"); // Go to checkout page
+    if (!billingAddress) {
+      toast.error("Please select delivery address!");
+      return;
+    }
+
+    // 👉 Modal open instead of redirect
+    setShowPrescriptionModal(true);
   };
 
+  // remove handler
+  const handleRemoveFile = () => {
+    setPrescriptionFile(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const allowedTypes = [
+      "image/jpeg",
+      "image/jpg",
+      "image/png",
+      "application/pdf",
+    ];
+
+    if (!allowedTypes.includes(file.type)) {
+      toast.error("Only JPG, JPEG, PNG, PDF allowed!");
+      return;
+    }
+
+    setPrescriptionFile(file);
+  };
+
+  const handleFinalContinue = () => {
+    checkoutData();
+
+    // optionally save prescription
+    if (prescriptionFile) {
+      console.log("Uploaded file:", prescriptionFile);
+    }
+
+    setShowPrescriptionModal(false);
+    router.push("/checkout");
+  };
   const handleSelect = (product: Medicine) => {
     const actualId = product.product_id || product.productid || product.id; // ✅ safe ID fallback
 
@@ -1027,6 +1085,86 @@ export default function HealthBags() {
         show={showBuyerLogin}
         handleClose={() => setShowBuyerLogin(false)}
       />
+      <Modal
+        show={showPrescriptionModal}
+        onHide={() => setShowPrescriptionModal(false)}
+        centered
+      >
+        <Modal.Header closeButton>
+          <Modal.Title>Upload Prescription</Modal.Title>
+        </Modal.Header>
+
+        <Modal.Body>
+          <div className="mb-3">
+            <Form.Label>Upload Prescription</Form.Label>
+            <Form.Control
+              type="file"
+              accept=".jpg,.jpeg,.png,.pdf"
+              onChange={handleFileChange}
+              ref={fileInputRef}
+            />
+          </div>
+
+          {/* 👇 Preview */}
+          {prescriptionFile && (
+            <div className="mt-3">
+              <p className="fw-semibold">Preview:</p>
+
+              {/* 🖼 Image Preview */}
+              {prescriptionFile.type.startsWith("image/") && (
+                <Image
+                  src={URL.createObjectURL(prescriptionFile)}
+                  alt="preview"
+                  style={{
+                    width: "100%",
+                    maxHeight: "250px",
+                    objectFit: "contain",
+                    borderRadius: "8px",
+                  }}
+                />
+              )}
+
+              {/* 📄 PDF Preview */}
+              {prescriptionFile.type === "application/pdf" && (
+                <div className="d-flex flex-column gap-2">
+                  <p>{prescriptionFile.name}</p>
+
+                  <Button
+                    variant="outline-primary"
+                    onClick={() =>
+                      window.open(
+                        URL.createObjectURL(prescriptionFile),
+                        "_blank"
+                      )
+                    }
+                  >
+                    View PDF
+                  </Button>
+                </div>
+              )}
+
+              {/* ❌ Remove Button */}
+              <div className="mt-2">
+                <Button variant="danger" size="sm" onClick={handleRemoveFile}>
+                  <i className="bi bi-trash me-1"></i>
+                </Button>
+              </div>
+            </div>
+          )}
+        </Modal.Body>
+
+        <Modal.Footer>
+          <Button
+            variant="secondary"
+            onClick={() => setShowPrescriptionModal(false)}
+          >
+            Cancel
+          </Button>
+          <Button variant="primary" onClick={handleFinalContinue}>
+            Continue
+          </Button>
+        </Modal.Footer>
+      </Modal>
       <Footer />
     </>
   );

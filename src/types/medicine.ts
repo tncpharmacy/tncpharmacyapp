@@ -15,6 +15,7 @@ export interface MedicineFormData {
   pack_size: string;
   pack_qty: number;
   HSN_Code?: string;
+  brand_category: string;
 
   prescription_required: number;
   H1_Restricted: number;
@@ -30,6 +31,7 @@ export interface MedicineFormData {
   discount?: number;
   GST?: number;
   variant?: string;
+  mrp: string;
 
   product_introduction: string;
   description: string;

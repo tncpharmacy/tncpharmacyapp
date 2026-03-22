@@ -95,6 +95,7 @@ export default function OtherMedicineForm({ id }: Props) {
     GST: 0,
     variant: "1",
     category: null,
+    mrp: "",
     sub_category: null,
     description: "",
     status: "Active",
@@ -235,20 +236,104 @@ export default function OtherMedicineForm({ id }: Props) {
   //   }
   // }, [id]);
 
+  // const handleChange = (
+  //   e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  // ) => {
+  //   const { name, value } = e.target;
+
+  //   setFormData((prev) => ({
+  //     ...prev,
+  //     [name]: value,
+  //   }));
+  // };
+
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
     const { name, value } = e.target;
 
+    let updatedValue = value;
+
+    switch (name) {
+      // ✅ Product Name (alpha + digit, max 50)
+      case "medicine_name":
+        if (/^[a-zA-Z0-9 ]*$/.test(value)) {
+          updatedValue = value.slice(0, 50);
+        } else return;
+        break;
+
+      // ✅ Pack Size (alpha + digit, max 10)
+      case "pack_size":
+        if (/^[a-zA-Z0-9 ]*$/.test(value)) {
+          updatedValue = value.slice(0, 20);
+        } else return;
+        break;
+
+      // ✅ HSN Code (alpha + digit, max 10)
+      case "HSN_Code":
+        if (/^[a-zA-Z0-9]*$/.test(value)) {
+          updatedValue = value.slice(0, 10);
+        } else return;
+        break;
+
+      // ✅ GST (only number, max 2 digit)
+      case "GST":
+        if (/^\d*$/.test(value)) {
+          updatedValue = value.slice(0, 2);
+        } else return;
+        break;
+
+      // ✅ Discount (only number, max 2 digit)
+      case "discount":
+        if (/^\d*$/.test(value)) {
+          updatedValue = value.slice(0, 2);
+        } else return;
+        break;
+
+      // ✅ MRP (only number, max 6 digit)
+      case "mrp":
+        if (/^\d*$/.test(value)) {
+          updatedValue = value.slice(0, 6);
+        } else return;
+        break;
+    }
+
     setFormData((prev) => ({
       ...prev,
-      [name]: value,
+      [name]: updatedValue,
     }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    if (!formData.medicine_name) {
+      return toast.error("Product Name is required");
+    }
+
+    if (formData.medicine_name.length > 50) {
+      return toast.error("Product Name max 50 characters");
+    }
+
+    if (formData.pack_size && formData.pack_size.length > 20) {
+      return toast.error("Pack Size max 20 characters");
+    }
+
+    if (formData.HSN_Code && formData.HSN_Code.length > 10) {
+      return toast.error("HSN Code max 10 characters");
+    }
+
+    if (formData.GST && Number(formData.GST) > 99) {
+      return toast.error("GST max 2 digit only");
+    }
+
+    if (formData.discount && Number(formData.discount) > 99) {
+      return toast.error("Discount max 2 digit only");
+    }
+
+    if (formData.mrp && formData.mrp.length > 6) {
+      return toast.error("MRP max 6 digit only");
+    }
     const formDataToSend = new FormData();
 
     // 🔹 Basic fields
@@ -294,6 +379,7 @@ export default function OtherMedicineForm({ id }: Props) {
     formDataToSend.append("discount", String(formData.discount || 0));
     formDataToSend.append("H1_Restricted", String(formData.H1_Restricted ?? 0));
     formDataToSend.append("HSN_Code", formData.HSN_Code || "");
+    //formDataToSend.append("mrp", formData.mrp || "");
     formDataToSend.append("status", formData.status || "Active");
 
     // // 🔹 Images (multiple)
@@ -393,14 +479,6 @@ export default function OtherMedicineForm({ id }: Props) {
                   //required
                 />
                 <Input
-                  label="Discount"
-                  type="text"
-                  name="discount"
-                  value={formData.discount || ""}
-                  onChange={handleChange}
-                  //required
-                />
-                <Input
                   label="Prescription Required"
                   type="select"
                   name="prescription_required"
@@ -460,6 +538,23 @@ export default function OtherMedicineForm({ id }: Props) {
                       dose_form_id: Number(value),
                     }))
                   }
+                />
+                <Input
+                  label="Discount"
+                  type="text"
+                  name="discount"
+                  value={formData.discount || ""}
+                  onChange={handleChange}
+                  //required
+                />
+
+                <Input
+                  label="MRP"
+                  type="text"
+                  name="mrp"
+                  value={formData.mrp || ""}
+                  onChange={handleChange}
+                  //required
                 />
                 {/* <MultiSelectDropdown
                   label="Categories"

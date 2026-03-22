@@ -325,6 +325,11 @@ const SiteHeader = () => {
     setOpenCategoryId((prev) => (prev === categoryId ? null : categoryId));
   };
 
+  const filteredCategories = shuffledCategories.filter(
+    (cat) => cat.category_name !== "Medicines" && cat.status === "Active"
+  );
+
+  console.log("filteredCategories", filteredCategories);
   // ---------- RENDER ----------
   return (
     <header id="header">
@@ -611,43 +616,40 @@ const SiteHeader = () => {
               </Link>
             </li>
 
-            {shuffledCategories
-              .filter((cat) => cat.category_name !== "Medicines")
-              .slice(0, 5)
-              .map((cat, index) => {
-                const filteredSubcategories = subcategories.filter(
-                  (sub) => String(sub.category_id) === String(cat.id)
-                );
-                return (
-                  <li key={`${cat.id}-${index}`}>
-                    <Link href={`/all-product/${encodeId(cat.id)}`}>
-                      {cat.category_name}
-                    </Link>
-                    <div className="megamenu-panel">
-                      {filteredSubcategories.length > 0 ? (
-                        <ul className="megamenu-list">
-                          {filteredSubcategories.map((sub) => (
-                            <li key={sub.id}>
-                              <Link
-                                href="#"
-                                onClick={() =>
-                                  handleCategoryClick(cat.id, sub.id)
-                                }
-                              >
-                                {sub.sub_category_name}
-                              </Link>
-                            </li>
-                          ))}
-                        </ul>
-                      ) : (
-                        <ul className="no-subcategories">
-                          <li>No Subcategories</li>
-                        </ul>
-                      )}
-                    </div>
-                  </li>
-                );
-              })}
+            {filteredCategories.slice(0, 5).map((cat, index) => {
+              const filteredSubcategories = subcategories.filter(
+                (sub) => String(sub.category_id) === String(cat.id)
+              );
+              return (
+                <li key={`${cat.id}-${index}`}>
+                  <Link href={`/all-product/${encodeId(cat.id)}`}>
+                    {cat.category_name}
+                  </Link>
+                  <div className="megamenu-panel">
+                    {filteredSubcategories.length > 0 ? (
+                      <ul className="megamenu-list">
+                        {filteredSubcategories.map((sub) => (
+                          <li key={sub.id}>
+                            <Link
+                              href="#"
+                              onClick={() =>
+                                handleCategoryClick(cat.id, sub.id)
+                              }
+                            >
+                              {sub.sub_category_name}
+                            </Link>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <ul className="no-subcategories">
+                        <li>No Subcategories</li>
+                      </ul>
+                    )}
+                  </div>
+                </li>
+              );
+            })}
 
             {/* More Menu */}
             {shuffledCategories.length > 5 && (
@@ -655,16 +657,13 @@ const SiteHeader = () => {
                 <a href="#">More</a>
                 <div className="megamenu-panel2">
                   <ul className="megamenu-list">
-                    {shuffledCategories
-                      .slice(5)
-                      .filter((cat) => cat.category_name !== "Medicines")
-                      .map((cat) => (
-                        <li key={cat.id}>
-                          <Link href={`/all-product/${encodeId(cat.id)}`}>
-                            {cat.category_name}
-                          </Link>
-                        </li>
-                      ))}
+                    {filteredCategories.slice(5).map((cat) => (
+                      <li key={cat.id}>
+                        <Link href={`/all-product/${encodeId(cat.id)}`}>
+                          {cat.category_name}
+                        </Link>
+                      </li>
+                    ))}
                   </ul>
                 </div>
               </li>
