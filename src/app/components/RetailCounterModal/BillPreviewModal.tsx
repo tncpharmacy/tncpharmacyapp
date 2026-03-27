@@ -56,11 +56,16 @@ const BillPreviewModal: React.FC<BillPreviewModalProps> = ({
   const userPharmacy = getUser();
   const pharmacist_id = Number(userPharmacy?.id) || 0;
   const pharmacy_name = userPharmacy?.pharmacy_name || "";
-  const pharmacy_email_id = userPharmacy?.pharmacy_email_id || "";
-  const pharmacy_login_id = userPharmacy?.pharmacy_login_id || "";
-  const pharmacy_address = userPharmacy?.pharmacy_address || "";
-  const pharmacy_district = userPharmacy?.pharmacy_district || "";
-  const pharmacy_pincode = userPharmacy?.pharmacy_pincode || "";
+  const pharmacy_email_id =
+    userPharmacy?.pharmacy_email_id || userPharmacy?.email_id || "";
+  const pharmacy_login_id =
+    userPharmacy?.pharmacy_login_id || userPharmacy?.login_id || "";
+  const pharmacy_address =
+    userPharmacy?.pharmacy_address || userPharmacy?.address || "";
+  const pharmacy_district =
+    userPharmacy?.pharmacy_district || userPharmacy?.district || "";
+  const pharmacy_pincode =
+    userPharmacy?.pharmacy_pincode || userPharmacy?.pincode || "";
 
   // --- Translation State and Logic ---
   const [language, setLanguage] = useState("en");

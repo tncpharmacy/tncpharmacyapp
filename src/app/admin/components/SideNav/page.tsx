@@ -116,6 +116,38 @@ export default function SideNav() {
                   <i className="bi bi-building me-2"></i>Manufacturer
                 </Link>
               </li>
+
+              <li>
+                <Link href="/manufacture-bulk-upload" className="link">
+                  <i className="bi bi-file-earmark-arrow-up"></i> Manufacturer
+                  Upload
+                </Link>
+              </li>
+
+              <li>
+                <Link href="/medicine-bulk-upload" className="link">
+                  <i className="bi bi-file-earmark-arrow-up"></i> Medicine
+                  Upload
+                </Link>
+              </li>
+              <li>
+                <Link href="/medicine-document-bulk-upload" className="link">
+                  <i className="bi bi-file-earmark-arrow-up"></i> Medicine
+                  Document Upload
+                </Link>
+              </li>
+              <li>
+                <Link href="/medicine-images-bulk-download" className="link">
+                  <i className="bi bi-file-earmark-arrow-down"></i> Medicine
+                  Image Download
+                </Link>
+              </li>
+              <li>
+                <Link href="/safety-advice-bulk-upload" className="link">
+                  <i className="bi bi-file-earmark-arrow-up"></i> Safety Advice
+                  Upload
+                </Link>
+              </li>
               {/* <li>
                 <Link href="/variant">
                   <i className="bi bi-diagram-3 me-2"></i>Variant

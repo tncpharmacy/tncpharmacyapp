@@ -186,6 +186,7 @@ export default function PurchaseInvoiceExport() {
       )
       .map((item) => ({
         Id: item.id ?? "-",
+        "Medicine Code": item.medicine_code ?? "-",
         Product: item.medicine_name ?? "-",
         "Pack Size": item.pack_size ?? "-",
         Manufacture: item.manufacturer_name ?? "-",
@@ -312,6 +313,9 @@ export default function PurchaseInvoiceExport() {
                               {/* Select All */}
                             </th>
                             {/* <th className="fw-bold text-start">ID</th> */}
+                            <th className="fw-bold text-start">
+                              Medicine Code
+                            </th>
                             <th className="fw-bold text-start">Product</th>
                             <th className="fw-bold text-start">Pack Size</th>
                             <th className="fw-bold text-start">Manufacture</th>
@@ -343,6 +347,9 @@ export default function PurchaseInvoiceExport() {
                                         handleLeftCheckbox(m, e.target.checked)
                                       }
                                     />
+                                  </td>
+                                  <td className="text-start">
+                                    {m.medicine_code || "-"}
                                   </td>
                                   {/* <td className="text-start">{m.id}</td> */}
                                   <td className="text-start">
@@ -377,6 +384,9 @@ export default function PurchaseInvoiceExport() {
                             <tr>
                               <th className="fw-bold text-center">Select</th>
                               {/* <th className="fw-bold text-start">ID</th> */}
+                              <th className="fw-bold text-start">
+                                Medicine Code
+                              </th>
                               <th className="fw-bold text-start">Product</th>
                               <th className="fw-bold text-start">Pack Size</th>
                               <th className="fw-bold text-start">
@@ -408,6 +418,9 @@ export default function PurchaseInvoiceExport() {
                                     />
                                   </td>
                                   {/* <td className="text-start">{m.id}</td> */}
+                                  <td className="text-start">
+                                    {m.medicine_code || "-"}
+                                  </td>
                                   <td className="text-start">
                                     {m.medicine_name}
                                   </td>

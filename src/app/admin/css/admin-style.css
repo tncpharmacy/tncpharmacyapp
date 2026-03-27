@@ -769,3 +769,28 @@ body {
     }
 }
 
+.scroll_table {
+  width: 100%;
+}
+
+.scroll_table table {
+  min-width: 1500px; /* ya 1500px */
+  border-collapse: collapse;
+}
+
+.scroll_table th,
+.scroll_table td {
+  white-space: nowrap; /* text wrap na ho */
+  padding: 8px;
+}
+.scroll_table td {
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+thead th {
+  position: sticky;
+  top: 0;
+  background: #fff;
+  z-index: 2;
+}

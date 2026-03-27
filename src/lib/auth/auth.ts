@@ -15,6 +15,10 @@ export interface DecodedToken {
   user_id: string;
   id: number;
   pharmacy_name?: string;
+  email_id?: string;
+  address?: string;
+  district?: string;
+  pincode?: string;
   pharmacy_email_id?: string;
   pharmacy_login_id?: string;
   pharmacy_address?: string;

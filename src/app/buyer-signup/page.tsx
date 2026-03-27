@@ -333,7 +333,7 @@ export default function BuyerSignupModal({
               {/* {message && <p style={{ color: "green" }}>{message}</p>} */}
               {serverOtp && (
                 <p className="text-muted mt-2" style={{ fontSize: "13px" }}>
-                  (Debug OTP: {serverOtp})
+                  {/* (Debug OTP: {serverOtp}) */}
                 </p>
               )}
             </div>

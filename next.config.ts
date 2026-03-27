@@ -137,6 +137,26 @@ const nextConfig: NextConfig = {
         destination: "/admin/admin-dashboard",
       },
       {
+        source: "/manufacture-bulk-upload",
+        destination: "/admin/bulkUpload/manufactureBulkUpload",
+      },
+      {
+        source: "/medicine-bulk-upload",
+        destination: "/admin/bulkUpload/medicineBulkUpload",
+      },
+      {
+        source: "/medicine-document-bulk-upload",
+        destination: "/admin/bulkUpload/medicineDocumentBulkUpload",
+      },
+      {
+        source: "/medicine-images-bulk-download",
+        destination: "/admin/bulkUpload/medicineImagesBulkDownload",
+      },
+      {
+        source: "/safety-advice-bulk-upload",
+        destination: "/admin/bulkUpload/safetyAdviceBulkUpload",
+      },
+      {
         source: "/stock",
         destination: "/admin/stock",
       },
