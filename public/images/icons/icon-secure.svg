@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" width="512" height="512" x="0" y="0" viewBox="0 0 32 32" style="enable-background:new 0 0 512 512" xml:space="preserve" class="">
+  <g>
+    <g fill="#000">
+      <path d="M15.537 2.156a1 1 0 0 0-1.074 0l-2.225 1.416a15 15 0 0 1-6.695 2.284l-1.634.148A1 1 0 0 0 3 7v9.51a11 11 0 0 0 5.094 9.28l6.37 4.054a1 1 0 0 0 1.073 0l1.799-1.145a9.04 9.04 0 0 1-1.672-1.307l-.664.423-5.832-3.711A9 9 0 0 1 5 16.51V7.913l.724-.066a17 17 0 0 0 7.588-2.588L15 4.185l1.688 1.074a17 17 0 0 0 7.588 2.588l.724.066v4.6c.712.25 1.383.59 2 1.003V7a1 1 0 0 0-.91-.996l-1.633-.148a15 15 0 0 1-6.695-2.284z" fill="#ff7b00" opacity="1" data-original="#000000"/>
+      <path d="M25.332 19.555a1 1 0 0 0-1.664-1.11l-2.323 3.485-1.138-1.137a1 1 0 0 0-1.414 1.414l2 2a1 1 0 0 0 1.54-.152z" fill="#ff7b00" opacity="1" data-original="#000000"/>
+      <path fill-rule="evenodd" d="M15 21a7 7 0 1 1 14 0 7 7 0 0 1-14 0zm7-5a5 5 0 1 0 0 10 5 5 0 0 0 0-10z" clip-rule="evenodd" fill="#ff7b00" opacity="1" data-original="#000000"/>
+    </g>
+  </g>
+</svg>

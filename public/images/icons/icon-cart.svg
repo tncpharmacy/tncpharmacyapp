@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" width="512" height="512" x="0" y="0" viewBox="0 0 32 32" style="enable-background:new 0 0 512 512" xml:space="preserve" class="">
+  <g>
+    <g data-name="6-Shopping Bag">
+      <path d="M21 10a1 1 0 0 1-1-1 4 4 0 0 0-8 0 1 1 0 0 1-2 0 6 6 0 0 1 12 0 1 1 0 0 1-1 1z" fill="#123a64" opacity="1" data-original="#000000" class=""/>
+      <path d="M23.1 31H8.9a4.5 4.5 0 0 1-4.42-3.66l-2.67-14A4.49 4.49 0 0 1 6.23 8h19.54a4.49 4.49 0 0 1 4.42 5.34l-2.67 14A4.5 4.5 0 0 1 23.1 31zM3.77 13l2.67 14a2.51 2.51 0 0 0 2.46 2h14.2a2.51 2.51 0 0 0 2.46-2l2.67-14a2.51 2.51 0 0 0-2.46-3H6.23a2.51 2.51 0 0 0-2.46 3z" fill="#123a64" opacity="1" data-original="#000000" class=""/>
+      <path d="M21 15H11a1 1 0 0 1 0-2h10a1 1 0 0 1 0 2z" fill="#123a64" opacity="1" data-original="#000000" class=""/>
+    </g>
+  </g>
+</svg>
