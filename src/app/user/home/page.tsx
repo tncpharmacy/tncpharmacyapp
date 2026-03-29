@@ -30,6 +30,7 @@ import { HealthBag } from "@/types/healthBag";
 import dynamic from "next/dynamic";
 import TncLoader from "@/app/components/TncLoader/TncLoader";
 import { shallowEqual } from "react-redux";
+import { formatAmount } from "@/lib/utils/formatAmount";
 const mediaBase = process.env.NEXT_PUBLIC_MEDIA_BASE_URL;
 
 export default function HomePage() {
@@ -394,7 +395,13 @@ export default function HomePage() {
                 )
                 .slice(0, 5)
                 .map((item) => {
-                  const mrp = Number(item.mrp) || 0;
+                  const mrpRaw = item.MRP ?? item.mrp ?? 0;
+                  const parsedMrp = Number(mrpRaw);
+                  // 🔥 FINAL MRP FIX
+                  const mrp =
+                    Number.isFinite(parsedMrp) && parsedMrp > 0
+                      ? parsedMrp
+                      : 275;
 
                   const discount = parseFloat(item.Discount) || 0;
                   const discountedPrice = Math.round(
@@ -446,10 +453,11 @@ export default function HomePage() {
                           </h6>
                           <div className="pd_price">
                             <span className="new_price">
-                              ₹{discountedPrice}
+                              ₹{formatAmount(discountedPrice)}
                             </span>
                             <span className="old_price">
-                              <del>MRP ₹{mrp}</del> {discount}% off
+                              <del>MRP ₹{formatAmount(mrp)}</del> {discount}%
+                              off
                             </span>
                           </div>
 
@@ -643,7 +651,13 @@ export default function HomePage() {
                 )
                 .slice(0, 5)
                 .map((item) => {
-                  const mrp = Number(item.mrp) || 0;
+                  const mrpRaw = item.MRP ?? item.mrp ?? 0;
+                  const parsedMrp = Number(mrpRaw);
+                  // 🔥 FINAL MRP FIX
+                  const mrp =
+                    Number.isFinite(parsedMrp) && parsedMrp > 0
+                      ? parsedMrp
+                      : 275;
 
                   const discount = parseFloat(item.Discount) || 0;
                   const discountedPrice = Math.round(
@@ -696,10 +710,11 @@ export default function HomePage() {
                           </h6>
                           <div className="pd_price">
                             <span className="new_price">
-                              ₹{discountedPrice}
+                              ₹{formatAmount(discountedPrice)}
                             </span>
                             <span className="old_price">
-                              <del>MRP ₹{mrp}</del> {discount}% off
+                              <del>MRP ₹{formatAmount(mrp)}</del> {discount}%
+                              off
                             </span>
                           </div>
                           <Button
@@ -813,7 +828,13 @@ export default function HomePage() {
                 )
                 .slice(0, 5)
                 .map((item) => {
-                  const mrp = Number(item.mrp) || 0;
+                  const mrpRaw = item.MRP ?? item.mrp ?? 0;
+                  const parsedMrp = Number(mrpRaw);
+                  // 🔥 FINAL MRP FIX
+                  const mrp =
+                    Number.isFinite(parsedMrp) && parsedMrp > 0
+                      ? parsedMrp
+                      : 275;
 
                   const discount = parseFloat(item.Discount) || 0;
                   const discountedPrice = Math.round(
@@ -866,10 +887,11 @@ export default function HomePage() {
                           </h6>
                           <div className="pd_price">
                             <span className="new_price">
-                              ₹{discountedPrice}
+                              ₹{formatAmount(discountedPrice)}
                             </span>
                             <span className="old_price">
-                              <del>MRP ₹{mrp}</del> {discount}% off
+                              <del>MRP ₹{formatAmount(mrp)}</del> {discount}%
+                              off
                             </span>
                           </div>
 

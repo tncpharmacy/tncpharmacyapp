@@ -43,7 +43,7 @@ export interface Medicine {
   medicine_name?: string; // Full medicine name
   productname?: string; // Alternate name field
   manufacturer?: string; // Manufacturer name
-  category_id: number; // Category mapping
+  category_id?: number; // Category mapping
 
   // --- Pricing & Offers ---
   mrp: number | null; // Original price
@@ -69,7 +69,7 @@ export interface Medicine {
   uses?: string;
   side_effects?: string;
   storage?: string;
-  prescription_required?: boolean;
+  prescription_required?: number;
 
   // --- Meta Info ---
   created_at?: string;
@@ -83,6 +83,19 @@ export interface Medicine {
   message?: string;
 }
 
+type CartItem = {
+  id: number;
+  productid: number;
+  name: string;
+  manufacturer: string;
+  pack_size: string;
+  prescription_required: number; // ✅ number hi rahega
+  qty: number;
+  mrp: number;
+  discount: number;
+  discountMrp: number;
+  image: string;
+};
 export default function HealthBags() {
   const [quantities, setQuantities] = useState<Record<number, number>>({});
 
@@ -198,12 +211,17 @@ export default function HealthBags() {
   useEffect(() => {
     if (!bagItem) return;
 
-    const q: Record<number, number> = {};
-    bagItem.forEach((item) => {
-      q[item.productid] = Number(item.qty) || 1;
-    });
+    setQuantities((prev) => {
+      const updated = { ...prev };
 
-    setQuantities(q);
+      bagItem.forEach((item) => {
+        if (!updated[item.productid]) {
+          updated[item.productid] = Number(item.qty) || 1;
+        }
+      });
+
+      return updated;
+    });
   }, [bagItem]);
 
   // useEffect(() => {
@@ -245,48 +263,30 @@ export default function HealthBags() {
   };
 
   // 🟢 Merge: cart items (from LS/API) + product details (from all product list)
-  const mergedItems = [...(bagItem || [])]
-    .sort((a, b) => a.id - b.id)
-    .map((cartItem) => {
-      const product = productList.find(
-        (p) =>
-          p.id === cartItem.productid || p.product_id === cartItem.productid
-      );
-      const available = Number(product?.AvailableQTY || 0);
-      const mrp =
-        product?.MRP !== undefined
-          ? typeof product.MRP === "string"
-            ? parseFloat(product.MRP)
-            : product.MRP
-          : 0;
-      console.log("product", product);
-      const discount =
-        product?.discount !== undefined
-          ? typeof product.discount === "string"
-            ? parseFloat(product.discount)
-            : product.discount
-          : 0;
+  const mergedItems = (bagItem || []).map((item) => {
+    const mrp = Number(item.mrp) || 0;
+    const discount = Number(item.discount) || 0;
 
-      const discountMrp = mrp ? mrp - (mrp * discount) / 100 : 0;
+    const discountMrp = mrp ? mrp - (mrp * discount) / 100 : 0;
 
-      return {
-        ...cartItem,
-        id: cartItem.id,
-        name: product?.medicine_name || cartItem.productname || "",
-        category_id: product?.category_id || 0,
-        availableQty: product?.AvailableQTY || 0,
-        manufacturer: product?.Manufacturer || "",
-        pack_size: product?.pack_size || "",
-        // prescription_required: product?.prescription_required || 0,
-        mrp,
-        discount,
-        discountMrp,
-        image: product?.primary_image?.document
-          ? mediaBase +
-            product.primary_image.document.replace(/^https?:\/\/[^/]+/, "") // remove any domain
-          : "/images/tnc-default.png",
-      };
-    });
+    return {
+      id: item.id,
+      productid: item.productid,
+
+      name: item.productname || "",
+      manufacturer: item.manufacturer || "",
+      pack_size: item.pack_size || "",
+      prescription_required: item.prescription_required || 0,
+
+      qty: Number(item.qty) || 1,
+
+      mrp,
+      discount,
+      discountMrp,
+
+      image: item.medicine_image || "/images/tnc-default.png",
+    };
+  });
 
   // const handleQuantityChange = async (index: number, delta: number) => {
   //   const item = mergedItems[index];
@@ -326,44 +326,24 @@ export default function HealthBags() {
 
   // ✅ Calculate totals
   // const handlingCharges = 12;
-  const handleQuantityChange = async (
-    productId: number,
-    cartId: number,
-    delta: number,
-    stock: number
-  ) => {
-    const current = quantities[productId] || 1;
-    const updated = current + delta;
 
-    if (updated < 1) return;
-    if (updated > stock) {
-      toast.error(`Only ${stock} available in stock`);
-      return;
-    }
+  const handleQuantityChange = (productId: number, delta: number) => {
+    setQuantities((prev) => {
+      const current = prev[productId] || 1;
+      const updated = current + delta;
 
-    // UI update
-    setQuantities((prev) => ({
-      ...prev,
-      [productId]: updated,
-    }));
+      if (updated < 1) return prev;
 
-    // Guest
-    if (!buyer?.id) {
-      updateGuestQuantity(productId, updated);
-      return;
-    }
-
-    // Logged user
-    if (delta === 1) {
-      await increaseQty(cartId, productId, updated);
-    } else {
-      await decreaseQty(cartId, productId, updated);
-    }
+      return {
+        ...prev,
+        [productId]: updated,
+      };
+    });
   };
 
   const totals = mergedItems.reduce(
     (acc, item, index) => {
-      const qty = quantities[item.productid] ?? 1;
+      const qty = quantities[item.productid] ?? item.qty ?? 1;
 
       acc.totalMrp += (item.mrp ?? 0) * qty;
       acc.totalDiscount += ((item.mrp ?? 0) - item.discountMrp) * qty;
@@ -390,7 +370,7 @@ export default function HealthBags() {
     // Prepare product data
     const products = mergedItems.map((item, index) => ({
       product_id: item.productid,
-      quantity: quantities[index] ?? 1,
+      quantity: quantities[item.productid] ?? item.qty ?? 1,
       mrp: item.mrp,
       discount: item.discount,
       rate: item.discountMrp,
@@ -404,7 +384,6 @@ export default function HealthBags() {
       payment_status: "1",
       amount: grandTotal,
       order_type: 1, // pharmacy
-      pharmacy_id: 15, // static for now
       address_id: billingAddress,
       status: "1",
       products,
@@ -435,8 +414,17 @@ export default function HealthBags() {
       return;
     }
 
-    // 👉 Modal open instead of redirect
-    setShowPrescriptionModal(true);
+    // ✅ check prescription_required
+    const hasPrescriptionItem = mergedItems.some(
+      (item) => item.prescription_required === 1
+    );
+
+    if (hasPrescriptionItem) {
+      setShowPrescriptionModal(true); // 🔥 open modal
+    } else {
+      checkoutData(); // 🔥 direct checkout
+      router.push("/checkout");
+    }
   };
 
   // remove handler
@@ -488,7 +476,7 @@ export default function HealthBags() {
     router.push(path);
   };
 
-  const handleItemSelect = (item: Medicine) => {
+  const handleItemSelect = (item: CartItem) => {
     isSelecting.current = true;
     handleSelect(item);
   };
@@ -547,6 +535,31 @@ export default function HealthBags() {
                       </span>
                       <div className="flex-grow-1">
                         <h6 className="fw-semibold mb-1">{item.name}</h6>
+                        {item.prescription_required === 1 && (
+                          <div
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: "4px",
+                            }}
+                          >
+                            <Image
+                              src="/images/RX-small.png"
+                              alt="Prescription Required"
+                              style={{
+                                width: "22px",
+                                height: "22px",
+                                objectFit: "contain",
+                              }}
+                            />
+                            <span
+                              className="fw-semibold"
+                              style={{ fontSize: "13px", color: "#ff5722" }}
+                            >
+                              Prescription Required
+                            </span>
+                          </div>
+                        )}
                         <p
                           className="mb-1 fw-semibold  small"
                           style={{ fontSize: "14px" }}
@@ -606,12 +619,7 @@ export default function HealthBags() {
                               variant="link"
                               className="p-0 text-dark fw-bold"
                               onClick={() =>
-                                handleQuantityChange(
-                                  item.productid,
-                                  item.id,
-                                  -1,
-                                  Number(item.availableQty)
-                                )
+                                handleQuantityChange(item.productid, -1)
                               }
                             >
                               <i className="bi bi-dash-lg"></i>
@@ -638,12 +646,7 @@ export default function HealthBags() {
                             variant="link"
                             className="p-0 text-dark fw-bold"
                             onClick={() =>
-                              handleQuantityChange(
-                                item.productid,
-                                item.id,
-                                +1,
-                                Number(item.availableQty)
-                              )
+                              handleQuantityChange(item.productid, +1)
                             }
                           >
                             <i className="bi bi-plus-lg"></i>
@@ -736,7 +739,13 @@ export default function HealthBags() {
             <div className="row g-3">
               {shuffled7 && shuffled7.length > 0 ? (
                 shuffled7.slice(0, 5).map((item) => {
-                  const mrp = Number(item.mrp) || 0;
+                  const mrpRaw = item.MRP ?? item.mrp ?? 0;
+                  const parsedMrp = Number(mrpRaw);
+                  // 🔥 FINAL MRP FIX
+                  const mrp =
+                    Number.isFinite(parsedMrp) && parsedMrp > 0
+                      ? parsedMrp
+                      : 275;
 
                   const discount = parseFloat(item.Discount) || 0;
                   const discountedPrice = Math.round(
@@ -793,7 +802,7 @@ export default function HealthBags() {
                           <div className="d-flex align-items-center justify-content-between">
                             <div>
                               <div className="fw-semibold">
-                                ₹{discountedPrice}
+                                ₹{formatAmount(discountedPrice)}
                               </div>
                               {discountedPrice ? (
                                 <div className="text-success small">
@@ -802,7 +811,7 @@ export default function HealthBags() {
                               ) : null}
                               {discountedPrice ? (
                                 <small className="text-muted text-decoration-line-through">
-                                  MRP ₹{mrp}
+                                  MRP ₹{formatAmount(mrp)}
                                 </small>
                               ) : null}
                             </div>
@@ -857,8 +866,13 @@ export default function HealthBags() {
             <div className="row g-3">
               {shuffled5 && shuffled5.length > 0 ? (
                 shuffled5.slice(0, 5).map((item) => {
-                  const mrp = Number(item.mrp) || 0;
-
+                  const mrpRaw = item.MRP ?? item.mrp ?? 0;
+                  const parsedMrp = Number(mrpRaw);
+                  // 🔥 FINAL MRP FIX
+                  const mrp =
+                    Number.isFinite(parsedMrp) && parsedMrp > 0
+                      ? parsedMrp
+                      : 275;
                   const discount = parseFloat(item.Discount) || 0;
                   const discountedPrice = Math.round(
                     mrp - (mrp * discount) / 100
@@ -913,7 +927,7 @@ export default function HealthBags() {
                           <div className="d-flex align-items-center justify-content-between">
                             <div>
                               <div className="fw-semibold">
-                                ₹{discountedPrice}
+                                ₹{formatAmount(discountedPrice)}
                               </div>
                               {discountedPrice ? (
                                 <div className="text-success small">
@@ -922,7 +936,7 @@ export default function HealthBags() {
                               ) : null}
                               {discountedPrice ? (
                                 <small className="text-muted text-decoration-line-through">
-                                  MRP ₹{mrp}
+                                  MRP ₹{formatAmount(mrp)}
                                 </small>
                               ) : null}
                             </div>
@@ -977,7 +991,13 @@ export default function HealthBags() {
             <div className="row g-3">
               {shuffled9 && shuffled9.length > 0 ? (
                 shuffled9.slice(0, 5).map((item) => {
-                  const mrp = Number(item.mrp) || 0;
+                  const mrpRaw = item.MRP ?? item.mrp ?? 0;
+                  const parsedMrp = Number(mrpRaw);
+                  // 🔥 FINAL MRP FIX
+                  const mrp =
+                    Number.isFinite(parsedMrp) && parsedMrp > 0
+                      ? parsedMrp
+                      : 275;
 
                   const discount = parseFloat(item.Discount) || 0;
                   const discountedPrice = Math.round(
@@ -1034,7 +1054,7 @@ export default function HealthBags() {
                           <div className="d-flex align-items-center justify-content-between">
                             <div>
                               <div className="fw-semibold">
-                                ₹{discountedPrice}
+                                ₹{formatAmount(discountedPrice)}
                               </div>
                               {discountedPrice ? (
                                 <div className="text-success small">
@@ -1043,7 +1063,7 @@ export default function HealthBags() {
                               ) : null}
                               {discountedPrice ? (
                                 <small className="text-muted text-decoration-line-through">
-                                  MRP ₹{mrp}
+                                  MRP ₹{formatAmount(mrp)}
                                 </small>
                               ) : null}
                             </div>

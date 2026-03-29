@@ -3,7 +3,10 @@ import { Modal } from "react-bootstrap";
 import { toast } from "react-hot-toast";
 import { Address, AddressResponse } from "@/types/address";
 import "../../user/css/user-style.css";
-import { addAddress } from "@/lib/features/addressSlice/addressSlice";
+import {
+  addAddress,
+  getAddress,
+} from "@/lib/features/addressSlice/addressSlice";
 import { useAppDispatch, useAppSelector } from "@/lib/hooks";
 import { useRouter } from "next/navigation";
 
@@ -192,7 +195,7 @@ export default function ConfirmLocationModal({
       console.log("✅ API Response:", resultAction);
       // ✅ Parent ko batado data refresh kare
       onSubmit(resultAction);
-
+      await dispatch(getAddress(userId));
       // ✅ Modal close karo
       onClose();
 

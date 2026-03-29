@@ -105,9 +105,9 @@ export default function AddressList() {
   };
 
   const handleRefreshList = () => {
-    // if (userId) {
-    //   dispatch(getAddress(userId));
-    // }
+    if (userId) {
+      dispatch(getAddress(userId));
+    }
   };
 
   // const handleEdit = (addressId: number) => {

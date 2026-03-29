@@ -11,5 +11,5 @@ export const formatAmount = (value: number): string => {
     finalValue = Math.ceil(value); // e.g., 656.55 → 657
   }
 
-  return finalValue.toFixed(2); // return "656.00"
+  return finalValue.toFixed(); // return "656.00"
 };
