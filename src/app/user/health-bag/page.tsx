@@ -404,7 +404,7 @@ export default function HealthBags() {
       payment_status: "1",
       amount: grandTotal,
       order_type: 1, // pharmacy
-      pharmacy_id: 1, // static for now
+      pharmacy_id: 15, // static for now
       address_id: billingAddress,
       status: "1",
       products,

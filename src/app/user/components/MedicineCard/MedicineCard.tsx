@@ -40,7 +40,9 @@ export default function MedicineCard({
   //const originalMrp = mrp ?? Math.floor(Math.random() * (5000 - 200 + 1)) + 200;
   // const discountPercent = parseFloat(discount || "0");
   // const discountedPrice = originalMrp - (originalMrp * discountPercent) / 100;
-  const originalMrp = mrp || 0;
+  // const originalMrp = mrp || 0;
+  const originalMrp =
+    mrp !== null && mrp !== undefined && Number(mrp) > 0 ? mrp : 275;
   const hasValidMrp =
     originalMrp !== null &&
     originalMrp !== undefined &&
@@ -226,44 +228,40 @@ export default function MedicineCard({
         {/* Bottom section */}
         <div className="medicine-bottom">
           {/* If no valid MRP => OUT OF STOCK */}
-          {!hasValidMrp ? (
-            <p className="text-danger fw-bold">OUT OF STOCK</p>
-          ) : (
-            <div style={{ cursor: "pointer" }} onClick={() => handleClick(id)}>
-              {discountPercent > 0 ? (
-                <div className="d-flex flex-column align-items-start">
-                  {/* Discounted Price */}
-                  <p className="text-success fw-bold mb-1">
-                    ₹{formatAmount(discountedPrice)}
-                  </p>
+          <div style={{ cursor: "pointer" }} onClick={() => handleClick(id)}>
+            {discountPercent > 0 ? (
+              <div className="d-flex flex-column align-items-start">
+                {/* Discounted Price */}
+                <p className="text-success fw-bold mb-1">
+                  ₹{formatAmount(discountedPrice)}
+                </p>
 
-                  {/* Original MRP + Discount Percent */}
-                  <p className="text-muted mb-0">
-                    <span
-                      className="medicine-mrp text-muted mb-0"
-                      style={{
-                        textDecoration: "line-through",
-                        fontSize: "13px",
-                      }}
-                    >
-                      MRP ₹{formatAmount(originalMrp)}
-                    </span>{" "}
-                    <span
-                      className="text-danger fw-bold"
-                      style={{ fontSize: "13px" }}
-                    >
-                      ({discountPercent}% OFF)
-                    </span>
-                  </p>
-                </div>
-              ) : (
-                <p className="medicine-mrp">₹{formatAmount(originalMrp)}</p>
-              )}
-            </div>
-          )}
+                {/* Original MRP + Discount */}
+                <p className="text-muted mb-0">
+                  <span
+                    className="medicine-mrp text-muted mb-0"
+                    style={{
+                      textDecoration: "line-through",
+                      fontSize: "13px",
+                    }}
+                  >
+                    MRP ₹{formatAmount(originalMrp)}
+                  </span>{" "}
+                  <span
+                    className="text-danger fw-bold"
+                    style={{ fontSize: "13px" }}
+                  >
+                    ({discountPercent}% OFF)
+                  </span>
+                </p>
+              </div>
+            ) : (
+              <p className="medicine-mrp">₹{formatAmount(originalMrp || 0)}</p>
+            )}
+          </div>
           {/* <p className="medicine-mrp">MRP ₹{formatCurrency(mrp)}</p>; */}
           <div className="text-end">
-            <button
+            {/* <button
               className={`btn-1 btn-HO ${isInBag ? "remove" : "add"}`}
               disabled={!hasValidMrp || processingIds.includes(id)}
               style={{
@@ -271,6 +269,17 @@ export default function MedicineCard({
                 cursor: !hasValidMrp ? "not-allowed" : "pointer",
                 pointerEvents: !hasValidMrp ? "none" : "auto",
               }}
+              onClick={() => (isInBag ? handleRemove(id) : handleAdd(id))}
+            >
+              {processingIds.includes(id)
+                ? "Processing..."
+                : isInBag
+                ? "REMOVE"
+                : "ADD"}
+            </button> */}
+            <button
+              className={`btn-1 btn-HO ${isInBag ? "remove" : "add"}`}
+              disabled={processingIds.includes(id)}
               onClick={() => (isInBag ? handleRemove(id) : handleAdd(id))}
             >
               {processingIds.includes(id)

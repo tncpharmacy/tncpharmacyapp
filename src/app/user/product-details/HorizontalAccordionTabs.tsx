@@ -15,6 +15,8 @@ const HorizontalAccordionTabs: React.FC<IDProps> = ({ id }) => {
   const [isOpen, setIsOpen] = useState(true);
   const dispatch = useAppDispatch();
   const contentRef = useRef<HTMLDivElement>(null);
+  //for pagination
+  const [visibleCount, setVisibleCount] = useState(10);
   const genericListByMedicineRaw = useAppSelector(
     (state) => state.medicine.genericAlternativesMedicines
   );
@@ -52,13 +54,23 @@ const HorizontalAccordionTabs: React.FC<IDProps> = ({ id }) => {
     maxHeight: isOpen ? "1000px" : "0px", // large enough
   };
 
+  const filteredList = genericListByMedicine.filter(
+    (item) => Number(item.id) !== Number(id)
+  );
+  const visibleData = filteredList.slice(
+    0,
+    Math.min(visibleCount, filteredList.length)
+  );
+
   useEffect(() => {
     if (isOpen && contentRef.current) {
       contentRef.current.parentElement!.style.maxHeight =
         contentRef.current.scrollHeight + "px";
     }
-  }, [isOpen, genericListByMedicine.length]);
-
+  }, [isOpen, genericListByMedicine.length, visibleCount]);
+  useEffect(() => {
+    setVisibleCount(10);
+  }, [id]);
   return (
     <div className="accordion" id="singleAccordionExample">
       <div className="accordion-item">
@@ -96,125 +108,136 @@ const HorizontalAccordionTabs: React.FC<IDProps> = ({ id }) => {
                       For informational purposes only. Consult a doctor before
                       taking any medicines.
                     </div>
-                    {genericListByMedicine
-                      .filter((item) => Number(item.id) !== Number(id))
-                      .map((item) => {
-                        const mrp = Number(item.mrp ?? 0);
-                        const discount = Number(item.discount ?? 0);
-                        const discountedPrice = mrp - (mrp * discount) / 100;
-                        const perCapsule = (
-                          discountedPrice / item.pack_qty
-                        ).toFixed(2);
-                        const unitCode =
-                          item.pack_size?.match(/[A-Z]+/)?.[0] || "";
-                        const unitMap: Record<string, string> = {
-                          CAP: "capsule",
-                          TAB: "tablet",
-                        };
+                    {visibleData.map((item) => {
+                      const mrp = Number(item.mrp ?? 0);
+                      const discount = Number(item.discount ?? 0);
+                      const discountedPrice = mrp - (mrp * discount) / 100;
+                      const perCapsule = (
+                        discountedPrice / item.pack_qty
+                      ).toFixed(2);
+                      const unitCode =
+                        item.pack_size?.match(/[A-Z]+/)?.[0] || "";
+                      const unitMap: Record<string, string> = {
+                        CAP: "capsule",
+                        TAB: "tablet",
+                      };
 
-                        const unit =
-                          unitMap[unitCode] || unitCode.toLowerCase();
+                      const unit = unitMap[unitCode] || unitCode.toLowerCase();
 
-                        return (
-                          <div
-                            className="d-flex justify-content-between align-items-center my-2"
-                            key={item.id}
-                            style={{
-                              borderBottom: "1px solid #eee",
-                              paddingBottom: "8px",
-                              paddingTop: "8px",
-                            }}
-                          >
-                            {/* Left Side */}
+                      return (
+                        <div
+                          className="d-flex justify-content-between align-items-center my-2"
+                          key={item.id}
+                          style={{
+                            borderBottom: "1px solid #eee",
+                            paddingBottom: "8px",
+                            paddingTop: "8px",
+                          }}
+                        >
+                          {/* Left Side */}
+                          <div>
                             <div>
-                              <div>
-                                <Link
-                                  href={`/medicines-details/${encodeId(
-                                    item.id
-                                  )}`}
-                                >
-                                  {item.medicine_name}
-                                </Link>
-                              </div>
-                              <div
-                                className="descr"
-                                style={{ color: "#28a745", fontSize: "13px" }}
+                              <Link
+                                href={`/medicines-details/${encodeId(item.id)}`}
                               >
-                                {item.manufacturer_name}
-                                <br />
-                                {unit && item.pack_qty ? (
-                                  <div
-                                    className="descr"
-                                    style={{
-                                      color: "#d32f2f",
-                                      fontSize: "14px",
-                                      fontWeight: "500",
-                                    }}
-                                  >
-                                    (₹{perCapsule} per {unit})
-                                  </div>
-                                ) : null}
-                              </div>
+                                {item.medicine_name}
+                              </Link>
                             </div>
-
-                            {/* Right Side */}
-                            <div className="text-end">
-                              {discount > 0 ? (
-                                <>
-                                  <div
-                                    className="title"
-                                    style={{
-                                      fontSize: "15px",
-                                      fontWeight: "600",
-                                      color: "#d32f2f",
-                                    }}
-                                  >
-                                    ₹{formatAmount(discountedPrice)}
-                                  </div>
-                                  <div
-                                    //className="descr"
-                                    style={{
-                                      fontSize: "13px",
-                                      color: "#888",
-                                      textDecoration: "line-through",
-                                    }}
-                                  >
-                                    ₹{formatAmount(mrp)}
-                                  </div>
-                                  <div
-                                    style={{
-                                      fontSize: "12px",
-                                      color: "#007bff",
-                                      fontWeight: 500,
-                                    }}
-                                  >
-                                    {discount}% off
-                                  </div>
-                                </>
-                              ) : (
-                                <>
-                                  <div
-                                    className="title"
-                                    style={{
-                                      fontSize: "15px",
-                                      fontWeight: "600",
-                                      color: "#d32f2f",
-                                    }}
-                                  >
-                                    ₹{formatAmount(mrp)}
-                                  </div>
-                                  <div
-                                    className="descr"
-                                    style={{ fontSize: "13px", color: "#555" }}
-                                  >
-                                    same price
-                                  </div>
-                                </>
-                              )}
+                            <div
+                              className="descr"
+                              style={{ color: "#28a745", fontSize: "13px" }}
+                            >
+                              {item.manufacturer_name}
+                              <br />
+                              {unit && item.pack_qty ? (
+                                <div
+                                  className="descr"
+                                  style={{
+                                    color: "#d32f2f",
+                                    fontSize: "14px",
+                                    fontWeight: "500",
+                                  }}
+                                >
+                                  (₹{perCapsule} per {"unit"})
+                                </div>
+                              ) : null}
                             </div>
                           </div>
-                        );
-                      })}
+
+                          {/* Right Side */}
+                          <div className="text-end">
+                            {discount > 0 ? (
+                              <>
+                                <div
+                                  className="title"
+                                  style={{
+                                    fontSize: "15px",
+                                    fontWeight: "600",
+                                    color: "#d32f2f",
+                                  }}
+                                >
+                                  ₹{formatAmount(discountedPrice)}
+                                </div>
+                                <div
+                                  //className="descr"
+                                  style={{
+                                    fontSize: "13px",
+                                    color: "#888",
+                                    textDecoration: "line-through",
+                                  }}
+                                >
+                                  ₹{formatAmount(mrp)}
+                                </div>
+                                <div
+                                  style={{
+                                    fontSize: "12px",
+                                    color: "#007bff",
+                                    fontWeight: 500,
+                                  }}
+                                >
+                                  {discount}% off
+                                </div>
+                              </>
+                            ) : (
+                              <>
+                                <div
+                                  className="title"
+                                  style={{
+                                    fontSize: "15px",
+                                    fontWeight: "600",
+                                    color: "#d32f2f",
+                                  }}
+                                >
+                                  ₹{formatAmount(mrp)}
+                                </div>
+                                <div
+                                  className="descr"
+                                  style={{ fontSize: "13px", color: "#555" }}
+                                >
+                                  same price
+                                </div>
+                              </>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                    {visibleCount < filteredList.length && (
+                      <div className="text-center mt-3">
+                        <button
+                          className="btn btn-outline-primary"
+                          onClick={() => {
+                            setVisibleCount((prev) =>
+                              prev + 10 > filteredList.length
+                                ? filteredList.length
+                                : prev + 10
+                            );
+                          }}
+                        >
+                          Show More
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>

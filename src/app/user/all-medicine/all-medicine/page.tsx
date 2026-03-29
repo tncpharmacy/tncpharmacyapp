@@ -17,7 +17,7 @@ export default function AllMedicine() {
   );
   const { loading } = useAppSelector((state) => state.medicine);
   useEffect(() => {
-    dispatch(getMenuMedicinesList());
+    dispatch(getMenuMedicinesList(null));
   }, [dispatch]);
   return (
     <>

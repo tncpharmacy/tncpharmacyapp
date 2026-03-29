@@ -38,6 +38,7 @@ api.interceptors.request.use(
       "/website/generic/medicine/",
       "/masterapp/care-group/",
       "/website/product/search-suggestion/",
+      "/website/manufacturer/search/",
     ];
 
     const url = config.url || "";
@@ -53,7 +54,13 @@ api.interceptors.request.use(
       config.headers["Authorization"] = `Bearer ${token}`;
     }
 
-    if (isPublic && config.headers) {
+    // if (isPublic && config.headers) {
+    //   delete config.headers["Authorization"];
+    // }
+    if (
+      url.includes("search-suggestion") ||
+      url.includes("manufacturer/search")
+    ) {
       delete config.headers["Authorization"];
     }
 
@@ -100,9 +107,13 @@ api.interceptors.response.use(
     const status = error.response?.status;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const data: any = error.response?.data;
-
+    const url = error.config?.url || "";
     const message = data?.detail || data?.message || data?.error || "";
-
+    // 🔥 ✅ ADD THIS BLOCK HERE (TOP PE)
+    if (url.includes("manufacturer/search")) {
+      // console.log("🚫 Ignoring manufacturer API error");
+      return Promise.reject(error); // ❌ logout mat kar
+    }
     /**
      * 🚨 TOKEN INVALID CASES
      * - 401 Unauthorized

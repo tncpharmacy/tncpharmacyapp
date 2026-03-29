@@ -23,6 +23,7 @@ import { buyerLogout } from "@/lib/features/buyerSlice/buyerSlice";
 import { getSubcategoriesList } from "@/lib/features/subCategorySlice/subCategorySlice";
 import { fetchHealthBag } from "@/lib/api/healthBag";
 import { loadLocalHealthBag } from "@/lib/features/healthBagSlice/healthBagSlice";
+import { formatAmount } from "@/lib/utils/formatAmount";
 
 type SearchMatch = {
   _matchType: "medicine" | "generic" | "manufacturer";
@@ -89,24 +90,45 @@ const SiteHeader = () => {
 
         const manufacturerSet = new Set();
 
+        // list.forEach((item) => {
+        //   const med = item.medicine_name?.toLowerCase() || "";
+        //   const gen = item.generic_name?.toLowerCase() || "";
+        //   const man = item.manufacturer_name?.toLowerCase() || "";
+
+        //   if (med.startsWith(search)) {
+        //     medicineMatches.push({ _matchType: "medicine", data: item });
+        //   } else if (gen.startsWith(search)) {
+        //     genericMatches.push({ _matchType: "generic", data: item });
+        //   } else if (man.startsWith(search)) {
+        //     if (!manufacturerSet.has(man)) {
+        //       manufacturerSet.add(man);
+
+        //       manufacturerMatches.push({
+        //         _matchType: "manufacturer",
+        //         data: item,
+        //       });
+        //     }
+        //   }
+        // });
+
         list.forEach((item) => {
-          const med = item.medicine_name?.toLowerCase() || "";
-          const gen = item.generic_name?.toLowerCase() || "";
-          const man = item.manufacturer_name?.toLowerCase() || "";
+          // 👉 Medicine always push
+          medicineMatches.push({ _matchType: "medicine", data: item });
 
-          if (med.startsWith(search)) {
-            medicineMatches.push({ _matchType: "medicine", data: item });
-          } else if (gen.startsWith(search)) {
+          // 👉 Generic (avoid duplicates)
+          if (item.generic_name) {
             genericMatches.push({ _matchType: "generic", data: item });
-          } else if (man.startsWith(search)) {
-            if (!manufacturerSet.has(man)) {
-              manufacturerSet.add(man);
+          }
 
-              manufacturerMatches.push({
-                _matchType: "manufacturer",
-                data: item,
-              });
-            }
+          // 👉 Manufacturer (unique)
+          const man = item.manufacturer_name?.toLowerCase();
+          if (man && !manufacturerSet.has(man)) {
+            manufacturerSet.add(man);
+
+            manufacturerMatches.push({
+              _matchType: "manufacturer",
+              data: item,
+            });
           }
         });
 
@@ -413,6 +435,7 @@ const SiteHeader = () => {
                               marginRight: "10px",
                               flex: 1,
                               lineHeight: "1.3",
+                              marginBottom: "4px", // 👈 ADD THIS
                             }}
                           >
                             {item._matchType === "medicine" &&
@@ -434,10 +457,12 @@ const SiteHeader = () => {
                                 }}
                               >
                                 ₹
-                                {(item.data.mrp ?? 0) -
-                                  ((item.data.mrp ?? 0) *
-                                    Number(item.data.discount ?? 0)) /
-                                    100}
+                                {formatAmount(
+                                  (item.data.mrp ?? 0) -
+                                    ((item.data.mrp ?? 0) *
+                                      Number(item.data.discount ?? 0)) /
+                                      100
+                                )}
                               </span>
 
                               <span
@@ -448,7 +473,7 @@ const SiteHeader = () => {
                                   fontSize: "12px",
                                 }}
                               >
-                                MRP ₹{item.data.mrp}
+                                MRP ₹{formatAmount(item.data.mrp || 0)}
                               </span>
                             </span>
                           ) : (
@@ -475,7 +500,8 @@ const SiteHeader = () => {
                               justifyContent: "space-between",
                               fontSize: "12px",
                               color: "#555",
-                              marginBottom: "6px",
+                              marginBottom: "10px",
+                              marginTop: "2px", // 👈 ADD THIS
                             }}
                           >
                             <span>{item.data.pack_size}</span>
@@ -494,6 +520,7 @@ const SiteHeader = () => {
                               fontWeight: 600,
                               color: "green",
                               lineHeight: "1.3",
+                              marginTop: "2px", // 👈 ADD THIS
                             }}
                           >
                             {item.data.manufacturer_name}

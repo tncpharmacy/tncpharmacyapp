@@ -236,12 +236,16 @@ export default function SearchTextClient() {
                   visibleList.map((item) => {
                     const pid = item.product_id ?? item.id;
 
-                    const mrp = item.mrp || 0;
-                    const hasValidMrp =
-                      mrp !== null &&
-                      mrp !== undefined &&
-                      mrp !== 0 &&
-                      Number(mrp) > 0;
+                    const mrpRaw =
+                      item.MRP ?? item.mrp ?? item.Mrp ?? item.price ?? 0;
+
+                    const parsedMrp = Number(mrpRaw);
+
+                    // 🔥 FINAL MRP FIX
+                    const mrp =
+                      Number.isFinite(parsedMrp) && parsedMrp > 0
+                        ? parsedMrp
+                        : 275;
                     const discount = parseFloat(item.discount) || 0;
                     const discounted = Math.round(mrp - (mrp * discount) / 100);
 
@@ -283,32 +287,21 @@ export default function SearchTextClient() {
                           <h6 className="pd-title fw-bold">
                             {item.manufacturer_name}
                           </h6>
-                          {!hasValidMrp ? (
-                            <p className="text-danger fw-bold">OUT OF STOCK</p>
-                          ) : (
-                            <div className="pd_price">
-                              <span className="new_price">₹{discounted}</span>
-                              {mrp > 0 && (
-                                <span className="old_price">
-                                  <del>MRP ₹{mrp}</del> {discount}% off
-                                </span>
-                              )}
-                            </div>
-                          )}
+
+                          <div className="pd_price">
+                            <span className="new_price">₹{discounted}</span>
+                            {mrp > 0 && (
+                              <span className="old_price">
+                                <del>MRP ₹{mrp}</del> {discount}% off
+                              </span>
+                            )}
+                          </div>
 
                           <button
                             className={`btn-1 btn-HO ${
                               isInBag ? "remove" : "add"
                             }`}
-                            disabled={
-                              !hasValidMrp ||
-                              processingIds.includes(item.product_id)
-                            }
-                            style={{
-                              opacity: !hasValidMrp ? 0.5 : 1,
-                              cursor: !hasValidMrp ? "not-allowed" : "pointer",
-                              pointerEvents: !hasValidMrp ? "none" : "auto",
-                            }}
+                            disabled={processingIds.includes(item.product_id)}
                             onClick={() =>
                               isInBag ? handleRemove(pid) : handleAdd(item)
                             }

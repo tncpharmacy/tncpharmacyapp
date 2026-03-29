@@ -90,7 +90,7 @@ export interface Medicine {
   };
   documents: DocumentFile[];
   images?: MedicineImage[];
-
+  search_type_name: string;
   product_id: number;
   ProductName: string;
   varient: string;
@@ -105,8 +105,10 @@ export interface MedicineResponse {
   statusCode: number;
   message: string;
   count: number;
+  total_count: number;
   data: Medicine[];
   group_name: string;
+  next: string;
 }
 export interface MedicineMenuResponse {
   success: boolean;

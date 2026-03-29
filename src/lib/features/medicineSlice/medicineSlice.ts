@@ -56,6 +56,7 @@ interface MedicineState {
   selectedMedicine: Medicine | null;
   searchResults: Medicine[];
   suggestions: Medicine[];
+  next: string | null;
 }
 
 const initialState: MedicineState = {
@@ -78,6 +79,7 @@ const initialState: MedicineState = {
   selectedMedicine: null,
   searchResults: [],
   suggestions: [],
+  next: null,
 };
 
 // ✅ Get all medicines menu List
@@ -189,13 +191,15 @@ export const getMedicineByManufacturerId = createAsyncThunk<
 
 // ✅ Get all menu medicines List
 export const getMenuMedicinesList = createAsyncThunk<
-  MedicineResponse, // ✅ returning full object
-  void,
+  MedicineResponse,
+  string | null,
   { rejectValue: string }
->("medicine/getMenuMedicineList", async (_, { rejectWithValue }) => {
+>("medicine/getMenuMedicineList", async (url, { rejectWithValue }) => {
   try {
-    const res: MedicineResponse = await fetchMenuMedicinesList();
-    return res; // ✅ return full response (includes success, count, data)
+    const res: MedicineResponse = await fetchMenuMedicinesList(
+      url || undefined
+    );
+    return res;
   } catch (err: unknown) {
     if (err instanceof Error) {
       return rejectWithValue(err.message);
@@ -440,6 +444,10 @@ const medicineSlice = createSlice({
     clearSearchResults: (state) => {
       state.searchResults = [];
     },
+    resetMedicinesList: (state) => {
+      state.medicinesList = [];
+      state.next = null;
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -463,7 +471,20 @@ const medicineSlice = createSlice({
       })
       .addCase(getMenuMedicinesList.fulfilled, (state, action) => {
         state.loading = false;
-        state.medicinesList = action.payload.data;
+
+        const safeCurrent = Array.isArray(state.medicinesList)
+          ? state.medicinesList
+          : [];
+
+        const safeIncoming = Array.isArray(action.payload.data)
+          ? action.payload.data
+          : [];
+
+        state.medicinesList = !action.meta.arg
+          ? safeIncoming
+          : [...safeCurrent, ...safeIncoming];
+
+        state.next = action.payload.next;
         state.count = action.payload.count;
         state.error = null;
       })
@@ -508,7 +529,7 @@ const medicineSlice = createSlice({
       .addCase(getMedicineByManufacturerId.fulfilled, (state, action) => {
         state.loading = false;
         state.manufacturerAlternativesMedicines = action.payload.data;
-        state.count = action.payload.count;
+        state.count = action.payload.total_count;
         state.error = null;
       })
       .addCase(getMedicineByManufacturerId.rejected, (state, action) => {
@@ -768,6 +789,6 @@ const medicineSlice = createSlice({
   },
 });
 
-export const { clearSelectedMedicine, clearSearchResults } =
+export const { clearSelectedMedicine, clearSearchResults, resetMedicinesList } =
   medicineSlice.actions;
 export default medicineSlice.reducer;

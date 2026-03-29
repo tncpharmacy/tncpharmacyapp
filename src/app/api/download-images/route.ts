@@ -61,7 +61,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const baseDir = path.join(process.cwd(), "public/product-img/5000.39");
+    const baseDir = path.join(process.cwd(), "public/products");
 
     if (!fs.existsSync(baseDir)) {
       fs.mkdirSync(baseDir, { recursive: true });

@@ -41,7 +41,7 @@ export default function AllManufacturer() {
   const decodedId = decodeId(params.id as string);
   const dispatch = useAppDispatch();
   const categoryIdNum = Number(decodedId);
-
+  console.log("ID:", categoryIdNum);
   const buyer = useAppSelector((state) => state.buyer.buyer);
   const { items, addItem, removeItem, mergeGuestCart } = useHealthBag({
     userId: buyer?.id || null,
@@ -292,9 +292,13 @@ export default function AllManufacturer() {
                     const mrpRaw =
                       item.MRP ?? item.mrp ?? item.Mrp ?? item.price ?? 0;
 
-                    const mrp = Number(mrpRaw);
+                    const parsedMrp = Number(mrpRaw);
 
-                    const hasValidMrp = Number.isFinite(mrp) && mrp > 0;
+                    // 🔥 FINAL MRP FIX
+                    const mrp =
+                      Number.isFinite(parsedMrp) && parsedMrp > 0
+                        ? parsedMrp
+                        : 275;
 
                     const discount = parseFloat(item.discount) || 0;
                     const discountedPrice = Math.round(
@@ -352,36 +356,22 @@ export default function AllManufacturer() {
                             <h6 className="pd-title fw-bold">
                               {item.manufacturer_name || ""}
                             </h6>
-                            {!hasValidMrp ? (
-                              <p className="text-danger fw-bold">
-                                OUT OF STOCK
-                              </p>
-                            ) : (
-                              <div className="pd_price">
-                                <span className="new_price">
-                                  ₹{discountedPrice}
-                                </span>
-                                <span className="old_price">
-                                  <del>MRP ₹{mrp}</del> {discount}% off
-                                </span>
-                              </div>
-                            )}
+
+                            <div className="pd_price">
+                              <span className="new_price">
+                                ₹{discountedPrice}
+                              </span>
+                              <span className="old_price">
+                                <del>MRP ₹{mrp}</del> {discount}% off
+                              </span>
+                            </div>
                           </div>
                           <div>
                             <button
                               className={`btn-1 btn-HO ${
                                 isInBag ? "remove" : "add"
                               }`}
-                              disabled={
-                                !hasValidMrp || processingIds.includes(item.id)
-                              }
-                              style={{
-                                opacity: !hasValidMrp ? 0.5 : 1,
-                                cursor: !hasValidMrp
-                                  ? "not-allowed"
-                                  : "pointer",
-                                pointerEvents: !hasValidMrp ? "none" : "auto",
-                              }}
+                              disabled={processingIds.includes(item.id)}
                               onClick={() =>
                                 isInBag
                                   ? handleRemove(item.id)

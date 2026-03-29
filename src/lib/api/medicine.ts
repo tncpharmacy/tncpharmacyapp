@@ -17,11 +17,13 @@ export const fetchMedicinesAllList = async (): Promise<MedicineResponse> => {
 // =========================
 // GET ALL MEDICINES MENU List
 // =========================
-export const fetchMenuMedicinesList = async (): Promise<MedicineResponse> => {
-  const res = await axiosInstance.get<MedicineResponse>(
-    ENDPOINTS.MEDICINES.GET_MENU_MEDICINE
+export const fetchMenuMedicinesList = async (
+  url?: string
+): Promise<MedicineResponse> => {
+  const res = await axiosInstance.get(
+    url || ENDPOINTS.MEDICINES.GET_MENU_MEDICINE
   );
-  return res.data; // ✅ res.data is now MedicineResponse
+  return res.data;
 };
 // =========================
 // GET GET BY MENU ID

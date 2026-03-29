@@ -3,6 +3,12 @@ import MedicineCard from "./MedicineCard";
 import { Image } from "react-bootstrap";
 import { Medicine } from "@/types/medicine";
 import TncLoader from "@/app/components/TncLoader/TncLoader";
+import { useAppDispatch, useAppSelector } from "@/lib/hooks";
+import {
+  getMenuMedicinesList,
+  getSearchSuggestions,
+  resetMedicinesList,
+} from "@/lib/features/medicineSlice/medicineSlice";
 
 interface MedicineListProps {
   medicines: Medicine[] | undefined | null;
@@ -12,68 +18,70 @@ interface MedicineListProps {
 const MedicineList: React.FC<MedicineListProps> = ({ medicines, loading }) => {
   const [searchTerm, setSearchTerm] = useState("");
 
-  // const [visibleData, setVisibleData] = useState<Medicine[]>([]);
-  const [limit, setLimit] = useState(20);
-  const [isLoadingMore, setIsLoadingMore] = useState(false);
-
+  const dispatch = useAppDispatch();
+  const { next } = useAppSelector((state) => state.medicine);
+  const { suggestions } = useAppSelector((state) => state.medicine);
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
 
+  // ✅ Safe medicines
   const safeMedicines = useMemo(
     () => (Array.isArray(medicines) ? medicines : []),
     [medicines]
   );
 
-  // ✅ STEP 1 : SEARCH ON FULL DATA
-  const filteredMedicines = useMemo(() => {
-    if (!searchTerm) return safeMedicines;
+  // ✅ SEARCH (only on loaded data)
+  // const filteredMedicines = useMemo(() => {
+  //   if (!searchTerm) return safeMedicines;
 
-    return safeMedicines.filter((m) =>
-      m.medicine_name?.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-  }, [safeMedicines, searchTerm]);
+  //   return safeMedicines.filter((m) => {
+  //     const firstWord = m.medicine_name?.toLowerCase().split(" ")[0];
+  //     return firstWord?.startsWith(searchTerm.toLowerCase());
+  //   });
+  // }, [safeMedicines, searchTerm]);
+  useEffect(() => {
+    if (!searchTerm) return;
 
-  // ✅ STEP 2 : APPLY LIMIT AFTER SEARCH
-  const visibleData = useMemo(
-    () => filteredMedicines.slice(0, limit),
-    [filteredMedicines, limit]
+    const delay = setTimeout(() => {
+      dispatch(getSearchSuggestions(searchTerm));
+    }, 400); // debounce
+
+    return () => clearTimeout(delay);
+  }, [searchTerm, dispatch]);
+
+  const onlyMedicines = suggestions.filter(
+    (item) => item.search_type_name === "medicine"
   );
-
+  const displayData =
+    searchTerm && onlyMedicines.length > 0 ? onlyMedicines : safeMedicines;
   // ------------------------------
-  // 🔥 INTERSECTION OBSERVER LOGIC
+  // 🔥 API BASED INFINITE SCROLL
   // ------------------------------
   useEffect(() => {
-    if (!loadMoreRef.current) return;
+    if (!loadMoreRef.current || !next) return;
+
+    // 🔥 search active → scroll closed
+    if (searchTerm) return;
 
     const observer = new IntersectionObserver((entries) => {
       if (!entries[0].isIntersecting) return;
 
-      setLimit((prev) => {
-        if (prev >= filteredMedicines.length) return prev;
-        return prev + 20;
-      });
+      dispatch(getMenuMedicinesList(next));
     });
 
     observer.observe(loadMoreRef.current);
     return () => observer.disconnect();
-  }, [filteredMedicines.length]);
+  }, [next, searchTerm, dispatch]);
 
   return (
     <>
-      {/* <div className="pageTitle">
-        <Image src={"/images/favicon.png"} alt="" /> Medicine
-      </div> */}
-
-      {/* SEARCH */}
-      {/* TITLE + SEARCH IN SAME ROW */}
+      {/* HEADER + SEARCH */}
       <div className="row align-items-center mb-3">
-        {/* LEFT SIDE : PRODUCT NAME */}
         <div className="col-md-9">
           <div className="pageTitle m-0">
             <Image src={"/images/favicon.png"} alt="" /> Medicine
           </div>
         </div>
 
-        {/* RIGHT SIDE : SEARCH BOX */}
         <div className="col-md-3">
           <div className="search_query">
             <a className="query_search_btn" href="javascript:void(0)">
@@ -85,28 +93,44 @@ const MedicineList: React.FC<MedicineListProps> = ({ medicines, loading }) => {
               placeholder="Search medicine..."
               value={searchTerm}
               onChange={(e) => {
-                setSearchTerm(e.target.value);
-                setLimit(20); // reset scroll on new search
+                const value = e.target.value;
+                setSearchTerm(value);
+
+                if (!value) {
+                  // 🔥 search clear → reset + first API call
+                  dispatch(resetMedicinesList());
+                  dispatch(getMenuMedicinesList(null));
+                  // 🔥 scroll top
+                  window.scrollTo({ top: 0, behavior: "smooth" });
+                }
               }}
             />
           </div>
         </div>
       </div>
 
-      {/* First time loader */}
-      {loading && (
+      {/* First loader */}
+      {loading && safeMedicines.length === 0 && (
         <div className="text-center my-4">
           <TncLoader />
         </div>
       )}
-      {/* Medicines */}
+
+      {/* Medicine Grid */}
       <div className="medicine-grid">
-        {visibleData.map((med, i) => (
+        {displayData.map((med, i) => (
           <MedicineCard key={i} {...med} />
         ))}
       </div>
 
-      {/* 👇 This div triggers infinite scroll */}
+      {/* Bottom loader (while fetching next page) */}
+      {loading && safeMedicines.length > 0 && (
+        <div className="text-center my-3">
+          <TncLoader />
+        </div>
+      )}
+
+      {/* 👇 Infinite scroll trigger */}
       <div
         ref={loadMoreRef}
         style={{ height: "40px", marginTop: "20px" }}

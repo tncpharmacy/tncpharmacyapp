@@ -305,9 +305,13 @@ export default function AllProducts() {
                     const mrpRaw =
                       item.MRP ?? item.mrp ?? item.Mrp ?? item.price ?? 0;
 
-                    const mrp = Number(mrpRaw);
+                    const parsedMrp = Number(mrpRaw);
 
-                    const hasValidMrp = Number.isFinite(mrp) && mrp > 0;
+                    // 🔥 FINAL MRP FIX
+                    const mrp =
+                      Number.isFinite(parsedMrp) && parsedMrp > 0
+                        ? parsedMrp
+                        : 275;
 
                     const discount = parseFloat(item.Discount) || 0;
                     const discountedPrice = mrp
@@ -366,39 +370,24 @@ export default function AllProducts() {
                             <h6 className="pd-title fw-bold">
                               {item.Manufacturer}
                             </h6>
-                            {!hasValidMrp ? (
-                              <p className="text-danger fw-bold">
-                                OUT OF STOCK
-                              </p>
-                            ) : (
-                              <div className="pd_price">
-                                <span className="new_price">
-                                  ₹{discountedPrice}
+
+                            <div className="pd_price">
+                              <span className="new_price">
+                                ₹{discountedPrice}
+                              </span>
+                              {mrp > 0 && (
+                                <span className="old_price">
+                                  <del>MRP ₹{mrp}</del> {discount}% off
                                 </span>
-                                {mrp > 0 && (
-                                  <span className="old_price">
-                                    <del>MRP ₹{mrp}</del> {discount}% off
-                                  </span>
-                                )}
-                              </div>
-                            )}
+                              )}
+                            </div>
                           </div>
                           <div>
                             <button
                               className={`btn-1 btn-HO ${
                                 isInBag ? "remove" : "add"
                               }`}
-                              disabled={
-                                !hasValidMrp ||
-                                processingIds.includes(item.product_id)
-                              }
-                              style={{
-                                opacity: !hasValidMrp ? 0.5 : 1,
-                                cursor: !hasValidMrp
-                                  ? "not-allowed"
-                                  : "pointer",
-                                pointerEvents: !hasValidMrp ? "none" : "auto",
-                              }}
+                              disabled={processingIds.includes(item.product_id)}
                               onClick={() =>
                                 isInBag
                                   ? handleRemove(item.product_id)
