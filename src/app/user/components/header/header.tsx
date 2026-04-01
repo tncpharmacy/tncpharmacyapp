@@ -22,7 +22,10 @@ import { useHealthBag } from "@/lib/hooks/useHealthBag";
 import { buyerLogout } from "@/lib/features/buyerSlice/buyerSlice";
 import { getSubcategoriesList } from "@/lib/features/subCategorySlice/subCategorySlice";
 import { fetchHealthBag } from "@/lib/api/healthBag";
-import { loadLocalHealthBag } from "@/lib/features/healthBagSlice/healthBagSlice";
+import {
+  clearLocalHealthBag,
+  loadLocalHealthBag,
+} from "@/lib/features/healthBagSlice/healthBagSlice";
 import { formatAmount } from "@/lib/utils/formatAmount";
 
 type SearchMatch = {
@@ -230,8 +233,17 @@ const SiteHeader = () => {
   }, []);
 
   // ---------- LOGOUT ----------
-  const handleLogout = () => dispatch(buyerLogout());
+  // const handleLogout = () => dispatch(buyerLogout());
 
+  const handleLogout = () => {
+    dispatch(buyerLogout());
+    dispatch(clearLocalHealthBag());
+
+    // 🔥 FORCE RESET HOOK STATE
+    setTimeout(() => {
+      window.dispatchEvent(new Event("storage"));
+    }, 0);
+  };
   const handleProductSelect = (item: Medicine) => {
     setShowList(false);
     setHeaderSearch("");

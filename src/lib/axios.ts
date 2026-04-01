@@ -12,8 +12,8 @@ const api = axios.create({
 });
 
 // 🔹 Unauthorized callback
-let onUnauthorized: (() => void) | null = null;
-export const setUnauthorizedHandler = (handler: () => void) => {
+let onUnauthorized: ((url?: string) => void) | null = null;
+export const setUnauthorizedHandler = (handler: (url?: string) => void) => {
   onUnauthorized = handler;
 };
 
@@ -120,13 +120,8 @@ api.interceptors.response.use(
      * - 403 Forbidden
      * - Backend custom "token expired" messages
      */
-    if (
-      status === 401 ||
-      (typeof message === "string" && message.toLowerCase().includes("token"))
-    ) {
-      if (onUnauthorized) {
-        onUnauthorized();
-      }
+    if (error.response?.status === 401) {
+      onUnauthorized?.(error.config?.url); // ✅ URL pass karo
     }
 
     return Promise.reject(error);

@@ -17,6 +17,7 @@ import Footer from "@/app/user/components/footer/footer";
 import { useShuffledProduct } from "@/lib/hooks/useShuffledProduct";
 import { HealthBag } from "@/types/healthBag";
 import TncLoader from "@/app/components/TncLoader/TncLoader";
+import { loadLocalHealthBag } from "@/lib/features/healthBagSlice/healthBagSlice";
 
 const mediaBase = process.env.NEXT_PUBLIC_MEDIA_BASE_URL;
 
@@ -97,10 +98,14 @@ export default function AllProducts() {
     }
   }, [uniqueMedicines, shuffledFromHook]);
 
-  const finalShuffledList =
-    stableShuffledRef.current.length > 0
-      ? stableShuffledRef.current
-      : shuffledFromHook;
+  const finalShuffledList = useMemo(() => {
+    const list =
+      stableShuffledRef.current.length > 0
+        ? stableShuffledRef.current
+        : shuffledFromHook;
+
+    return [...list]; // new reference control
+  }, [shuffledFromHook]);
 
   // -------------------------------
   // 🔹 CATEGORY NAME
@@ -207,32 +212,86 @@ export default function AllProducts() {
     return () => observer.disconnect();
   }, []);
 
-  // -------------------------------
-  // 🔹 CART HANDLERS
-  // -------------------------------
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [guestItems, setGuestItems] = useState<any[]>([]);
+  useEffect(() => {
+    if (!buyer?.id) {
+      const lsData = localStorage.getItem("healthbag");
+
+      if (!lsData) {
+        setGuestItems([]); // 🔥 ensure empty
+        return;
+      }
+
+      try {
+        setGuestItems(JSON.parse(lsData));
+      } catch {
+        setGuestItems([]);
+      }
+    }
+  }, [buyer?.id]);
+
+  // --- Handlers ---
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleAdd = async (item: any) => {
-    setLocalBag((prev) => [...prev, item.product_id]);
-    setProcessingIds((prev) => [...prev, item.product_id]);
-
-    try {
+    if (buyer?.id) {
       await addItem({
         id: 0,
-        buyer_id: buyer?.id || 0,
+        buyer_id: buyer?.id,
         product_id: item.product_id,
         quantity: 1,
       } as HealthBag);
-    } finally {
-      setProcessingIds((prev) => prev.filter((id) => id !== item.product_id));
+    } else {
+      const newItem = {
+        id: 0,
+        productid: item.product_id,
+        qty: 1,
+
+        // 🔥 STORE FULL DATA
+        name: item.ProductName || item.productname,
+        manufacturer: item.Manufacturer || item.manufacturer,
+        pack_size: item.PackSize || item.pack_size,
+        mrp: Number(item.MRP ?? item.mrp ?? 0),
+        discount: Number(item.Discount ?? item.discount ?? 0),
+        image: item.DefaultImageURL || item.medicine_image || null, // 🔥 important
+      };
+
+      const exists = guestItems.find((i) => i.productid === item.product_id);
+
+      let updated;
+
+      if (exists) {
+        updated = guestItems.map((i) =>
+          i.productid === item.product_id ? { ...i, qty: i.qty + 1 } : i
+        );
+      } else {
+        updated = [...guestItems, newItem];
+      }
+
+      localStorage.setItem("healthbag", JSON.stringify(updated));
+      setGuestItems(updated);
+      dispatch(loadLocalHealthBag());
     }
   };
 
   const handleRemove = async (productId: number) => {
-    setLocalBag((prev) => prev.filter((id) => id !== productId));
     setProcessingIds((prev) => [...prev, productId]);
 
     try {
-      await removeItem(productId);
+      // 🟢 LOGIN USER
+      if (buyer?.id) {
+        await removeItem(productId);
+      }
+      // 🔵 GUEST USER
+      else {
+        const updated = guestItems.filter(
+          (item) => (item.productid ?? item.product_id) !== productId
+        );
+
+        localStorage.setItem("healthbag", JSON.stringify(updated));
+        setGuestItems(updated);
+        dispatch(loadLocalHealthBag());
+      }
     } finally {
       setProcessingIds((prev) => prev.filter((id) => id !== productId));
     }
@@ -291,7 +350,7 @@ export default function AllProducts() {
               )} */}
               {/* PRODUCT LIST */}
               <div className="pd_list">
-                {!hasFetched || loading ? (
+                {loading && !hasFetched ? (
                   <div
                     className="d-flex justify-content-center align-items-center"
                     style={{ marginLeft: "100vh" }}
@@ -324,13 +383,16 @@ export default function AllProducts() {
                         : `${mediaBase}${item.DefaultImageURL}`
                       : "/images/tnc-default.png";
 
-                    const isInBag =
-                      localBag.includes(item.product_id) ||
-                      items.some(
-                        (i) =>
-                          i.productid === item.product_id ||
-                          i.product_id === item.product_id
-                      );
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    const getProductId = (item: any) => {
+                      return item.productid ?? item.product_id ?? item.id;
+                    };
+                    const source = buyer?.id ? items : guestItems;
+
+                    const isInBag = source.some(
+                      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                      (i: any) => getProductId(i) === item.product_id
+                    );
 
                     return (
                       <div

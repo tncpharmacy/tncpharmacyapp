@@ -16,6 +16,7 @@ import Footer from "@/app/user/components/footer/footer";
 import { useShuffledProduct } from "@/lib/hooks/useShuffledProduct";
 import { HealthBag } from "@/types/healthBag";
 import TncLoader from "@/app/components/TncLoader/TncLoader";
+import { loadLocalHealthBag } from "@/lib/features/healthBagSlice/healthBagSlice";
 
 const mediaBase = process.env.NEXT_PUBLIC_MEDIA_BASE_URL;
 
@@ -177,34 +178,88 @@ export default function AllGroupCare() {
     return () => observer.disconnect();
   }, [limit, isLoadingMore]);
 
-  // -----------------------------
-  // CART FUNCTIONS
-  // -----------------------------
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [guestItems, setGuestItems] = useState<any[]>([]);
+  useEffect(() => {
+    if (!buyer?.id) {
+      const lsData = localStorage.getItem("healthbag");
+
+      if (!lsData) {
+        setGuestItems([]); // 🔥 ensure empty
+        return;
+      }
+
+      try {
+        setGuestItems(JSON.parse(lsData));
+      } catch {
+        setGuestItems([]);
+      }
+    }
+  }, [buyer?.id]);
+
+  // --- Handlers ---
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleAdd = async (item: any) => {
-    setLocalBag((prev) => [...prev, item.medicine_id]);
-    setProcessingIds((prev) => [...prev, item.medicine_id]);
-
-    try {
+    if (buyer?.id) {
       await addItem({
         id: 0,
-        buyer_id: buyer?.id || 0,
+        buyer_id: buyer?.id,
         product_id: item.medicine_id,
         quantity: 1,
       } as HealthBag);
-    } finally {
-      setProcessingIds((prev) => prev.filter((id) => id !== item.medicine_id));
+    } else {
+      const newItem = {
+        id: 0,
+        productid: item.medicine_id,
+        qty: 1,
+
+        // 🔥 STORE FULL DATA
+        name: item.ProductName || item.medicine_name,
+        manufacturer: item.Manufacturer || item.manufacturer_name,
+        pack_size: item.PackSize || item.pack_size,
+        mrp: Number(item.MRP ?? item.mrp ?? 0),
+        discount: Number(item.Discount ?? item.discount ?? 0),
+        image: item.DefaultImageURL || item.medicine_image || null, // 🔥 important
+      };
+
+      const exists = guestItems.find((i) => i.productid === item.medicine_id);
+
+      let updated;
+
+      if (exists) {
+        updated = guestItems.map((i) =>
+          i.productid === item.medicine_id ? { ...i, qty: i.qty + 1 } : i
+        );
+      } else {
+        updated = [...guestItems, newItem];
+      }
+
+      localStorage.setItem("healthbag", JSON.stringify(updated));
+      setGuestItems(updated);
+      dispatch(loadLocalHealthBag());
     }
   };
 
-  const handleRemove = async (id: number) => {
-    setLocalBag((prev) => prev.filter((i) => i !== id));
-    setProcessingIds((prev) => [...prev, id]);
+  const handleRemove = async (productId: number) => {
+    setProcessingIds((prev) => [...prev, productId]);
 
     try {
-      await removeItem(id);
+      // 🟢 LOGIN USER
+      if (buyer?.id) {
+        await removeItem(productId);
+      }
+      // 🔵 GUEST USER
+      else {
+        const updated = guestItems.filter(
+          (item) => (item.productid ?? item.product_id ?? item.id) !== productId
+        );
+
+        localStorage.setItem("healthbag", JSON.stringify(updated));
+        setGuestItems(updated);
+        dispatch(loadLocalHealthBag());
+      }
     } finally {
-      setProcessingIds((prev) => prev.filter((i) => i !== id));
+      setProcessingIds((prev) => prev.filter((id) => id !== productId));
     }
   };
 
@@ -293,15 +348,18 @@ export default function AllGroupCare() {
                         ? item.default_image
                         : `${mediaBase}${item.default_image}`
                       : "/images/tnc-default.png";
-
-                    const isInBag =
-                      localBag.includes(item.medicine_id) ||
-                      items.some(
-                        (i) =>
-                          i.productid === item.medicine_id ||
-                          i.product_id === item.medicine_id
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    const getProductId = (item: any) => {
+                      return (
+                        item.productid ?? item.product_id ?? item.medicine_id
                       );
+                    };
+                    const source = buyer?.id ? items : guestItems;
 
+                    const isInBag = source.some(
+                      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                      (i: any) => getProductId(i) === item.medicine_id
+                    );
                     return (
                       <div
                         className="pd_box shadow"
@@ -360,7 +418,7 @@ export default function AllGroupCare() {
                               )}
                               onClick={() =>
                                 isInBag
-                                  ? handleRemove(item.medicine_id)
+                                  ? handleRemove(item.id)
                                   : handleAdd(item)
                               }
                             >

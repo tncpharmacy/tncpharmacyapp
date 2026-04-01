@@ -3,11 +3,15 @@ import "../../css/medicine.css";
 import { Medicine } from "@/types/medicine";
 import { useRouter } from "next/navigation";
 import { encodeId } from "@/lib/utils/encodeDecode";
-import { useAppSelector } from "@/lib/hooks";
+import { useAppDispatch, useAppSelector } from "@/lib/hooks";
 import { useHealthBag } from "@/lib/hooks/useHealthBag";
 import { HealthBag } from "@/types/healthBag";
 import { Image } from "react-bootstrap";
 import { formatAmount } from "@/lib/utils/formatAmount";
+import {
+  loadLocalHealthBag,
+  removeLocalHealthBag,
+} from "@/lib/features/healthBagSlice/healthBagSlice";
 
 const mediaBase = process.env.NEXT_PUBLIC_MEDIA_BASE_URL;
 
@@ -24,6 +28,7 @@ export default function MedicineCard({
   primary_image,
 }: Medicine) {
   const router = useRouter();
+  const dispatch = useAppDispatch();
   // zooming box state
   const [isHovered, setIsHovered] = useState(false);
   const [openUpward, setOpenUpward] = useState(false);
@@ -60,13 +65,13 @@ export default function MedicineCard({
   });
 
   // ---------- CHECK IF IN CART ----------
-  const isInBag =
-    localBag.includes(id) ||
-    items.some(
-      (i) =>
-        i.productid === id || // backend
-        i.product_id === id // local/guest
-    );
+  // const isInBag =
+  //   localBag.includes(id) ||
+  //   items.some(
+  //     (i) =>
+  //       i.productid === id || // backend
+  //       i.product_id === id // local/guest
+  //   );
 
   // ---------- SYNC LOCAL CART ----------
   useEffect(() => {
@@ -84,31 +89,128 @@ export default function MedicineCard({
     if (buyer?.id) mergeGuestCart();
   }, [buyer?.id, mergeGuestCart]);
 
-  // ---------- HANDLERS ----------
-  const handleAdd = async (productId: number) => {
-    setProcessingIds((prev) => [...prev, productId]);
-    try {
+  // // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // const [guestItems, setGuestItems] = useState<any[]>([]);
+  // useEffect(() => {
+  //   if (!buyer?.id) {
+  //     const lsData = localStorage.getItem("healthbag");
+
+  //     if (!lsData) {
+  //       setGuestItems([]); // 🔥 ensure empty
+  //       return;
+  //     }
+
+  //     try {
+  //       setGuestItems(JSON.parse(lsData));
+  //     } catch {
+  //       setGuestItems([]);
+  //     }
+  //   }
+  // }, [buyer?.id]);
+
+  // --- Handlers ---
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const handleAdd = async (item: any) => {
+    // 🟢 LOGIN USER
+    if (buyer?.id) {
       await addItem({
         id: 0,
-        buyer_id: buyer?.id || 0,
-        product_id: productId,
+        buyer_id: buyer?.id,
+        product_id: id,
         quantity: 1,
       } as HealthBag);
-      setLocalBag((prev) => [...prev, productId]);
-    } finally {
-      setProcessingIds((prev) => prev.filter((id) => id !== productId));
+    }
+
+    // 🔵 GUEST USER (FULL DATA STORE)
+    else {
+      const lsData = localStorage.getItem("healthbag");
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      let current: any[] = [];
+
+      try {
+        current = lsData ? JSON.parse(lsData) : [];
+      } catch {
+        current = [];
+      }
+
+      const newItem = {
+        id: 0,
+        productid: id,
+        qty: 1,
+
+        name: item?.ProductName || medicine_name,
+        manufacturer: item?.Manufacturer || manufacturer_name,
+        pack_size: item?.PackSize || pack_size,
+        mrp: Number(item?.MRP ?? mrp ?? 0),
+        discount: Number(item?.Discount ?? discount ?? 0),
+        image: item?.DefaultImageURL || primary_image || null,
+      };
+
+      const exists = current.find((i) => i.productid === id);
+
+      let updated;
+
+      if (exists) {
+        updated = current.map((i) =>
+          i.productid === id ? { ...i, qty: i.qty + 1 } : i
+        );
+      } else {
+        updated = [...current, newItem];
+      }
+
+      // ✅ SAVE FULL DATA IN LS
+      localStorage.setItem("healthbag", JSON.stringify(updated));
+
+      // ✅ ONLY SYNC REDUX (NO LOCAL STATE)
+      dispatch(loadLocalHealthBag());
     }
   };
 
   const handleRemove = async (productId: number) => {
     setProcessingIds((prev) => [...prev, productId]);
+
     try {
-      await removeItem(productId);
-      setLocalBag((prev) => prev.filter((id) => id !== productId));
+      // 🟢 LOGIN USER
+      if (buyer?.id) {
+        await removeItem(productId);
+      }
+
+      // 🔵 GUEST USER
+      else {
+        const lsData = localStorage.getItem("healthbag");
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        let current: any[] = [];
+
+        try {
+          current = lsData ? JSON.parse(lsData) : [];
+        } catch {
+          current = [];
+        }
+
+        const updated = current.filter(
+          (item) => (item.productid ?? item.product_id ?? item.id) !== productId
+        );
+
+        localStorage.setItem("healthbag", JSON.stringify(updated));
+
+        // ✅ sync redux
+        dispatch(loadLocalHealthBag());
+      }
     } finally {
       setProcessingIds((prev) => prev.filter((id) => id !== productId));
     }
   };
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const getProductId = (item: any) => {
+    return item.productid ?? item.product_id ?? id;
+  };
+
+  const source = items;
+
+  const isInBag = source.some(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (i: any) => getProductId(i) === id
+  );
 
   // 👇 onClick function
   const handleClick = (id: number) => {

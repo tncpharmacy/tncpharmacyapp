@@ -20,6 +20,7 @@ import Footer from "@/app/user/components/footer/footer";
 import { useShuffledProduct } from "@/lib/hooks/useShuffledProduct";
 import { HealthBag } from "@/types/healthBag";
 import TncLoader from "@/app/components/TncLoader/TncLoader";
+import { loadLocalHealthBag } from "@/lib/features/healthBagSlice/healthBagSlice";
 
 const mediaBase = process.env.NEXT_PUBLIC_MEDIA_BASE_URL;
 
@@ -150,32 +151,91 @@ export default function AllGeneric() {
     filteredRef.current = filteredMedicines;
   }, [filteredMedicines]);
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [guestItems, setGuestItems] = useState<any[]>([]);
+  useEffect(() => {
+    if (!buyer?.id) {
+      const lsData = localStorage.getItem("healthbag");
+
+      if (!lsData) {
+        setGuestItems([]); // 🔥 ensure empty
+        return;
+      }
+
+      try {
+        setGuestItems(JSON.parse(lsData));
+      } catch {
+        setGuestItems([]);
+      }
+    }
+  }, [buyer?.id]);
+
   // --- Handlers ---
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleAdd = async (item: any) => {
-    setLocalBag((prev) => [...prev, item.id]);
-    setProcessingIds((prev) => [...prev, item.id]);
-    try {
+    if (buyer?.id) {
       await addItem({
         id: 0,
-        buyer_id: buyer?.id || 0,
+        buyer_id: buyer?.id,
         product_id: item.id,
         quantity: 1,
       } as HealthBag);
-    } finally {
-      setProcessingIds((prev) => prev.filter((id) => id !== item.id));
+    } else {
+      const newItem = {
+        id: 0,
+        productid: item.id,
+        qty: 1,
+
+        // 🔥 STORE FULL DATA
+        name: item.ProductName || item.medicine_name,
+        manufacturer: item.Manufacturer || item.manufacturer_name,
+        pack_size: item.PackSize || item.pack_size,
+        mrp: Number(item.MRP ?? item.mrp ?? 0),
+        discount: Number(item.Discount ?? item.discount ?? 0),
+        image: item.DefaultImageURL || item.medicine_image || null, // 🔥 important
+      };
+
+      const exists = guestItems.find((i) => i.productid === item.id);
+
+      let updated;
+
+      if (exists) {
+        updated = guestItems.map((i) =>
+          i.productid === item.id ? { ...i, qty: i.qty + 1 } : i
+        );
+      } else {
+        updated = [...guestItems, newItem];
+      }
+
+      localStorage.setItem("healthbag", JSON.stringify(updated));
+      setGuestItems(updated);
+      dispatch(loadLocalHealthBag());
     }
   };
 
   const handleRemove = async (productId: number) => {
-    setLocalBag((prev) => prev.filter((id) => id !== productId));
     setProcessingIds((prev) => [...prev, productId]);
+
     try {
-      await removeItem(productId);
+      // 🟢 LOGIN USER
+      if (buyer?.id) {
+        await removeItem(productId);
+      }
+      // 🔵 GUEST USER
+      else {
+        const updated = guestItems.filter(
+          (item) => (item.productid ?? item.product_id ?? item.id) !== productId
+        );
+
+        localStorage.setItem("healthbag", JSON.stringify(updated));
+        setGuestItems(updated);
+        dispatch(loadLocalHealthBag());
+      }
     } finally {
       setProcessingIds((prev) => prev.filter((id) => id !== productId));
     }
   };
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleClick = (item: any) => {
     if (item.category_id === 1) {
@@ -319,13 +379,16 @@ export default function AllGeneric() {
 
                     const imageUrl = getMedicineImage(item);
 
-                    const isInBag =
-                      localBag.includes(item.id) ||
-                      items.some(
-                        (i) =>
-                          i.productid === item.id || // backend data
-                          i.product_id === item.id // guest/local data
-                      );
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    const getProductId = (item: any) => {
+                      return item.productid ?? item.product_id ?? item.id;
+                    };
+                    const source = buyer?.id ? items : guestItems;
+
+                    const isInBag = source.some(
+                      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                      (i: any) => getProductId(i) === item.id
+                    );
 
                     return (
                       <div

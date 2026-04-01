@@ -100,11 +100,11 @@ export default function BuyerSignupModal({
       // ✅ OTP aayi to OTP screen dikha do
       if (payload?.data?.otp) {
         setServerOtp(payload.data.otp);
-        toast.success(`OTP sent successfully: ${payload.data.otp}`);
+        toast.success(`OTP sent successfully your whatsapp}`);
         setStep("otp");
       } else {
         toast.success(
-          "Signup successful, please verify OTP sent to your number!"
+          "Signup successful, please verify OTP sent to your whatsapp number!"
         );
         setStep("otp");
       }

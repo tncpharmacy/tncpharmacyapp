@@ -22,6 +22,9 @@ export default function Login({ show, handleClose }: LoginFormProps) {
   const [password, setPassword] = useState("");
   const [mounted, setMounted] = useState(false);
 
+  const [localError, setLocalError] = useState("");
+  const errorText = localError.toLowerCase();
+
   // ✅ Properly typed refs
   const loginInputRef = useRef<HTMLInputElement | null>(null);
   const passwordInputRef = useRef<HTMLInputElement | null>(null);
@@ -63,16 +66,36 @@ export default function Login({ show, handleClose }: LoginFormProps) {
     if (user) redirectUser(user.user_type);
   }, [restoreComplete, user, redirectUser]);
 
-  const handleLogin = async () => {
+  const handleLogin = async (e?: React.FormEvent) => {
+    e?.preventDefault(); // ✅ YE LINE ADD KAR (MOST IMPORTANT)
+
+    setLocalError("");
+
+    if (!login_id && !password) {
+      setLocalError("Login ID and Password are required");
+      return;
+    }
+    if (!login_id) {
+      setLocalError("Login ID is required");
+      return;
+    }
+    if (!password) {
+      setLocalError("Password is required");
+      return;
+    }
+
     localStorage.removeItem("user");
     localStorage.removeItem("accessToken");
     localStorage.removeItem("refreshToken");
     dispatch(clearState());
 
     const res = await dispatch(loginUser({ login_id, password }));
+
     if (loginUser.fulfilled.match(res)) {
       redirectUser(res.payload.user.user_type);
-      handleClose(); // close modal after success
+      handleClose();
+    } else {
+      setLocalError("❌ Incorrect Login ID or Password");
     }
   };
 
@@ -120,8 +143,28 @@ export default function Login({ show, handleClose }: LoginFormProps) {
                   type="text"
                   className="txtlogin"
                   value={login_id}
-                  onChange={(e) => setLoginId(e.target.value)}
+                  onChange={(e) => {
+                    const value = e.target.value;
+
+                    // check agar sirf digits hai (mobile case)
+                    if (/^\d*$/.test(value)) {
+                      // mobile → max 10 digit
+                      if (value.length <= 10) {
+                        setLoginId(value);
+                      }
+                    } else {
+                      // character login id → max 6 length
+                      if (value.length <= 6) {
+                        setLoginId(value);
+                      }
+                    }
+                  }}
                   onKeyDown={(e) => handleKeyDown(e, "login_id")}
+                  style={{
+                    border: errorText.includes("login id")
+                      ? "1px solid red"
+                      : "",
+                  }}
                 />
               </div>
               <div className="row_login">
@@ -131,18 +174,43 @@ export default function Login({ show, handleClose }: LoginFormProps) {
                   type="password"
                   className="txtlogin"
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={(e) => {
+                    const value = e.target.value;
+
+                    if (value.length <= 15) {
+                      setPassword(value);
+                    }
+                  }}
                   onKeyDown={(e) => handleKeyDown(e, "password")}
+                  style={{
+                    border: errorText.includes("password")
+                      ? "1px solid red"
+                      : "",
+                  }}
                 />
               </div>
               <button
-                onClick={handleLogin}
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  handleLogin();
+                }}
                 disabled={loading}
                 className="btnlogin"
               >
                 {loading ? "Logging in..." : "Login"}
               </button>
-              {error && <p style={{ color: "red" }}>{error}</p>}
+              {(localError || error) && (
+                <p
+                  style={{
+                    color: "red",
+                    marginTop: "10px",
+                    fontSize: "14px",
+                  }}
+                >
+                  {localError || "❌ Incorrect Login ID or Password"}
+                </p>
+              )}
             </div>
           </div>
         </div>

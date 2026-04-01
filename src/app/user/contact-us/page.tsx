@@ -30,12 +30,59 @@ export default function ContactUs() {
       HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
     >
   ) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+
+    // Mobile: only digits + max 10
+    if (name === "mobile") {
+      const numericValue = value.replace(/\D/g, ""); // remove non-digit
+      if (numericValue.length <= 10) {
+        setFormData({ ...formData, [name]: numericValue });
+      }
+      return;
+    }
+
+    // Name max 25
+    if (name === "name" && value.length > 25) return;
+
+    // Subject max 40
+    if (name === "subject" && value.length > 40) return;
+
+    setFormData({ ...formData, [name]: value });
+  };
+
+  const validateForm = () => {
+    const { name, email, mobile, subject, message } = formData;
+
+    // Name max 25
+    if (!name.trim()) return "Name is required";
+    if (name.length > 25) return "Name cannot exceed 25 characters";
+
+    // Email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) return "Invalid email format";
+
+    // Mobile: only digits + max 10
+    const mobileRegex = /^[0-9]{10}$/;
+    if (!mobileRegex.test(mobile)) return "Mobile must be exactly 10 digits";
+
+    // Subject max 40
+    if (!subject.trim()) return "Subject is required";
+    if (subject.length > 40) return "Subject cannot exceed 40 characters";
+
+    // Message
+    if (!message.trim()) return "Message is required";
+
+    return null;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const error = validateForm();
 
+    if (error) {
+      toast.error(error);
+      return;
+    }
     setLoading(true);
 
     try {

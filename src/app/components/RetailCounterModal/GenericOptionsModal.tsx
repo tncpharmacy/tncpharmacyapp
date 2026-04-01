@@ -1,5 +1,5 @@
 import { Medicine } from "@/types/medicine";
-import React, { useEffect } from "react";
+import React, { useEffect, useMemo } from "react";
 import "../../pharmacist/css/pharmacy-style.css";
 import { formatAmount } from "@/lib/utils/formatAmount";
 import TncLoader from "../TncLoader/TncLoader";
@@ -32,6 +32,63 @@ const GenericOptionsModal: React.FC<GenericOptionsModalProps> = ({
   selectedOriginalItem,
 }) => {
   const [initialLoading, setInitialLoading] = React.useState(true);
+
+  const normalize = (str: string) =>
+    str?.toLowerCase().replace(/\s+/g, "").trim();
+  console.log(
+    "FULL LIST:",
+    productListByGeneric.map((i) => i.medicine_name)
+  );
+
+  console.log("SELECTED:", selectedOriginalItem?.medicine_name);
+
+  const processedList = React.useMemo(() => {
+    if (!productListByGeneric || productListByGeneric.length === 0) return [];
+
+    const sorted = [...productListByGeneric].sort(
+      (a, b) => Number(a.MRP || 0) - Number(b.MRP || 0)
+    );
+
+    let finalList = sorted.slice(0, 10);
+
+    if (selectedOriginalItem) {
+      const normalize = (str: string) =>
+        str?.toLowerCase().replace(/\s+/g, "").trim();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const matchFn = (item: any) =>
+        normalize(item.medicine_name) ===
+        normalize(selectedOriginalItem.medicine_name);
+
+      const existsInFullList = sorted.some(matchFn);
+
+      // ❗ CASE 1: API me hi nahi hai → FORCE ADD
+      if (!existsInFullList) {
+        finalList.pop();
+        finalList.unshift({
+          ...selectedOriginalItem,
+          MRP: selectedOriginalItem.mrp || selectedOriginalItem.MRP,
+        });
+      } else {
+        // normal logic
+        const exists = finalList.some(matchFn);
+
+        if (!exists) {
+          const selectedFromFullList = sorted.find(matchFn);
+          if (selectedFromFullList) {
+            finalList.pop();
+            finalList.unshift(selectedFromFullList);
+          }
+        } else {
+          const selected = finalList.find(matchFn);
+          finalList = selected
+            ? [selected, ...finalList.filter((i) => !matchFn(i))]
+            : finalList;
+        }
+      }
+    }
+
+    return finalList;
+  }, [productListByGeneric, selectedOriginalItem]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -106,7 +163,7 @@ const GenericOptionsModal: React.FC<GenericOptionsModalProps> = ({
                       <tr>
                         <th>Product</th>
                         <th>Manufacturer</th>
-                        <th>Stock</th>
+                        {/* <th>Stock</th> */}
                         <th>Pack Size</th>
                         <th>MRP</th>
                         <th>Action</th>
@@ -123,52 +180,80 @@ const GenericOptionsModal: React.FC<GenericOptionsModalProps> = ({
                             Loading alternatives...
                           </td>
                         </tr>
-                      ) : productListByGeneric.length === 0 ? (
+                      ) : processedList.length === 0 ? (
                         <tr>
                           <td colSpan={5} className="text-center text-muted">
                             No alternatives found.
                           </td>
                         </tr>
                       ) : (
-                        productListByGeneric.map((item) => (
-                          <tr
-                            key={item.id}
-                            className={
-                              item.id === selectedOriginalItem?.id
-                                ? "table-info fw-bold"
-                                : ""
-                            }
-                          >
-                            <td>{item.medicine_name}</td>
-                            <td>{item.Manufacturer || "N/A"}</td>
-                            <td>{item.AvailableQty || "N/A"}</td>
-                            <td>{item.pack_size || "N/A"}</td>
-                            <td>₹ {formatAmount(Number(item.MRP)) || "N/A"}</td>
-                            <td>
-                              <button
-                                className="btn btn-success btn-sm"
-                                onClick={() => {
-                                  const selectedWithGeneric = {
-                                    ...item,
-                                    generic_name:
-                                      item.generic_name ||
-                                      item.GenericName ||
-                                      selectedOriginalItem?.generic_name ||
-                                      selectedOriginalItem?.GenericName ||
-                                      productListByGeneric[0]?.generic_name ||
-                                      productListByGeneric[0]?.GenericName ||
-                                      "N/A",
-                                  };
-                                  // ✅ Add to Cart Logic
-                                  onAddToCart(item);
-                                  onClose(); // Modal बंद करें
-                                }}
-                              >
-                                Add to Cart
-                              </button>
-                            </td>
-                          </tr>
-                        ))
+                        processedList.map((item) => {
+                          const isSelected =
+                            normalize(item.medicine_name) ===
+                            normalize(
+                              selectedOriginalItem?.medicine_name || ""
+                            );
+                          return (
+                            <tr
+                              key={item.id}
+                              style={
+                                isSelected
+                                  ? {
+                                      background: "#e6f4ff",
+                                      borderLeft: "4px solid #0d6efd",
+                                      fontWeight: 600,
+                                    }
+                                  : {}
+                              }
+                            >
+                              <td>
+                                {item.medicine_name}
+
+                                {isSelected && (
+                                  <span
+                                    style={{
+                                      marginLeft: "8px",
+                                      fontSize: "11px",
+                                      color: "#0d6efd",
+                                      fontWeight: 600,
+                                    }}
+                                  >
+                                    (Selected)
+                                  </span>
+                                )}
+                              </td>
+                              <td>{item.Manufacturer || "N/A"}</td>
+                              {/* <td>{item.AvailableQty || "N/A"}</td> */}
+                              <td>{item.pack_size || "N/A"}</td>
+                              <td>
+                                ₹ {formatAmount(Number(item.MRP)) || "N/A"}
+                              </td>
+                              <td>
+                                <button
+                                  className="btn btn-success btn-sm"
+                                  onClick={() => {
+                                    const selectedWithGeneric = {
+                                      ...item,
+                                      generic_name:
+                                        item.generic_name ||
+                                        item.GenericName ||
+                                        selectedOriginalItem?.generic_name ||
+                                        selectedOriginalItem?.GenericName ||
+                                        productListByGeneric[0]?.generic_name ||
+                                        productListByGeneric[0]?.GenericName ||
+                                        "N/A",
+                                    };
+                                    // ✅ Add to Cart Logic
+                                    onAddToCart(item);
+                                    onClose(); // Modal बंद करें
+                                  }}
+                                >
+                                  Add to Cart
+                                </button>
+                              </td>
+                            </tr>
+                          );
+                        })
                       )}
                     </tbody>
                   </table>

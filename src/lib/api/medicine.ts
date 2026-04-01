@@ -82,11 +82,13 @@ export const fetchMedicineByManufacturerId = async (
 // =========================
 // GET ALL PRODUCT List
 // =========================
-export const fetchProductAllList = async (): Promise<MedicineResponse> => {
+export const fetchProductAllList = async (
+  url?: string
+): Promise<MedicineResponse> => {
   const res = await axiosInstance.get<MedicineResponse>(
-    ENDPOINTS.MEDICINES.GET_ALL_PRODUCT_LIST
+    url || ENDPOINTS.MEDICINES.GET_ALL_PRODUCT_LIST
   );
-  return res.data; // ✅ res.data is now MedicineResponse
+  return res.data;
 };
 // =========================
 // GET BY PRODUCT ID

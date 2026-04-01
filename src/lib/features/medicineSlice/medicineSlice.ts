@@ -210,13 +210,13 @@ export const getMenuMedicinesList = createAsyncThunk<
 
 // ✅ Get all product List
 export const getProductList = createAsyncThunk<
-  MedicineResponse, // ✅ returning full object
-  void,
+  MedicineResponse,
+  string | null,
   { rejectValue: string }
->("medicine/getAllProductList", async (_, { rejectWithValue }) => {
+>("medicine/getAllProductList", async (url, { rejectWithValue }) => {
   try {
-    const res: MedicineResponse = await fetchProductAllList();
-    return res; // ✅ return full response (includes success, count, data)
+    const res: MedicineResponse = await fetchProductAllList(url || undefined);
+    return res;
   } catch (err: unknown) {
     if (err instanceof Error) {
       return rejectWithValue(err.message);
@@ -565,18 +565,24 @@ const medicineSlice = createSlice({
         state.error = action.payload || "Failed to fetch medicines by category";
       })
       // fetch product list
-      .addCase(getProductList.pending, (state) => {
-        state.loading = true;
-      })
       .addCase(getProductList.fulfilled, (state, action) => {
         state.loading = false;
-        state.medicines = action.payload.data;
+
+        const safeCurrent = Array.isArray(state.medicines)
+          ? state.medicines
+          : [];
+
+        const safeIncoming = Array.isArray(action.payload.data)
+          ? action.payload.data
+          : [];
+
+        state.medicines = !action.meta.arg
+          ? safeIncoming
+          : [...safeCurrent, ...safeIncoming];
+
+        state.next = action.payload.next; // ⭐ important
         state.count = action.payload.count;
         state.error = null;
-      })
-      .addCase(getProductList.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload || "Something went wrong";
       })
       // fetch product id by generic
       .addCase(getProductByGenericId.pending, (state) => {

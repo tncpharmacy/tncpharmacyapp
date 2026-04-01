@@ -36,7 +36,7 @@ export default function AuthInitializer() {
       console.log("🚨 401 → auto logout");
 
       dispatch(logout()); // clears redux + storage
-      window.location.href = "/";
+      router.push("/");
     });
   }, [dispatch, router]);
 

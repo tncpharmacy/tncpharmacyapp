@@ -38,6 +38,7 @@ import {
   getProductInstructions,
 } from "@/lib/features/productInstructionSlice/productInstructionSlice";
 import SmartCreateInput from "@/app/components/RetailCounterModal/SmartCreateInput";
+import GlobalSearchBox from "@/app/components/GlobalSearchBox/GlobalSearchBox";
 type EditingCell = {
   rowIndex: number | null;
   field: "qty" | "dose_form" | "remarks" | "duration" | "Disc" | null;
@@ -131,7 +132,7 @@ export default function RetailCounter() {
   });
   // Initial product list fetch
   useEffect(() => {
-    dispatch(getProductList());
+    dispatch(getProductList(null));
     //dispatch(getPharmacy());
   }, [dispatch]);
 
@@ -230,7 +231,7 @@ export default function RetailCounter() {
   const handleCloseModal = useCallback(() => {
     setIsModalOpen(false);
     setSelectedGenericId(null);
-    setSelectedMedicine(null); // Dropdown clear करने के लिए
+    // setSelectedMedicine(null); // Dropdown clear करने के लिए
   }, []);
 
   const handleRemoveItem = (itemId: number) => {
@@ -480,7 +481,7 @@ export default function RetailCounter() {
                 <div className="row g-3 align-items-end">
                   <div className="col-md-8">
                     <div className="txt_col">
-                      <SingleSelectDropdown
+                      {/* <SingleSelectDropdown
                         medicines={productList}
                         selected={
                           selectedMedicine
@@ -491,10 +492,26 @@ export default function RetailCounter() {
                             : null
                         }
                         onChange={handleSelectMedicine}
+                      /> */}
+                      <GlobalSearchBox
+                        placeholder="Search product..."
+                        onSelect={(item) => {
+                          const med = item.data;
+                          setSelectedMedicine(med);
+                          if (med.category_id === 1) {
+                            dispatch(getProductByGenericId(med.id));
+                            setSelectedGenericId(med.id);
+                          } else {
+                            handleSkipGenericModal(med);
+                          }
+                        }}
                       />
                     </div>
                   </div>
-                  <div className="col-md-4 text-end">
+                  <div
+                    className="col-md-4 text-end"
+                    style={{ marginBottom: "25px" }}
+                  >
                     <div className="txt_col">
                       <button
                         className="btn-style1"
