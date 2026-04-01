@@ -206,7 +206,7 @@ export default function RetailCounter() {
   };
 
   useEffect(() => {
-    dispatch(getProductList());
+    dispatch(getProductList(null));
   }, [dispatch]);
 
   const handleSubmit = async (e?: React.FormEvent) => {

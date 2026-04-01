@@ -68,7 +68,7 @@ export default function RetailCounter() {
   };
   // Initial product list fetch
   useEffect(() => {
-    dispatch(getProductList());
+    dispatch(getProductList(null));
   }, [dispatch]);
 
   const handleSkipGenericModal = (item: Medicine) => {

@@ -116,7 +116,7 @@ export default function OcrExtractionLogic({
 
   // ✔️ Fetch full medicine list for dropdown
   useEffect(() => {
-    dispatch(getProductList());
+    dispatch(getProductList(null));
   }, [dispatch]);
 
   // -------------------------------------------------------------------
