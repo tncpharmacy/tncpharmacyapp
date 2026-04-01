@@ -315,7 +315,9 @@ export default function HealthBags() {
   };
 
   // 🟢 Merge: cart items (from LS/API) + product details (from all product list)
-  const sourceItems = buyer?.id ? bagItem : guestItems;
+  const sourceItems = buyer?.id
+    ? [...bagItem].sort((a, b) => a.productid - b.productid)
+    : guestItems;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const mergedItems = sourceItems.map((item: any) => {
     const mrp = Number(item.mrp) || 0;
@@ -374,19 +376,33 @@ export default function HealthBags() {
   };
 
   const totals = mergedItems.reduce(
-    (acc, item, index) => {
+    (acc, item) => {
       const qty = quantities[item.productid] ?? item.qty ?? 1;
 
-      acc.totalMrp += (item.mrp ?? 0) * qty;
-      acc.totalDiscount += ((item.mrp ?? 0) - item.discountMrp) * qty;
-      acc.totalPay += item.discountMrp * qty;
+      const mrp = Number(item.mrp) || 0;
+      const discount = Number(item.discount) || 0;
+
+      // ✅ final price (safe)
+      const finalPrice =
+        item.discountMrp && item.discountMrp > 0
+          ? Number(item.discountMrp)
+          : mrp - (mrp * discount) / 100;
+
+      // ✅ discount amount (accurate)
+      const discountAmount = mrp - finalPrice;
+
+      acc.totalMrp += mrp * qty;
+      acc.totalDiscount += discountAmount * qty;
+      acc.totalPay += finalPrice * qty;
 
       return acc;
     },
     { totalMrp: 0, totalDiscount: 0, totalPay: 0 }
   );
 
-  const grandTotal = totals.totalPay;
+  const grandTotal = Math.round(totals.totalPay);
+
+  // const grandTotal = totals.totalPay;
 
   const checkoutData = () => {
     if (!buyer?.id) {
@@ -549,7 +565,7 @@ export default function HealthBags() {
                     const imageUrl = getImageUrl(item.image);
                     return (
                       <div
-                        key={`${item.productid}-${index}`}
+                        key={item.productid}
                         className="d-flex align-items-start border-bottom pb-3 mb-3"
                       >
                         <span
@@ -725,25 +741,23 @@ export default function HealthBags() {
                 <div className="border rounded p-3 bg-white sticky-summary">
                   <h6 className="fw-semibold mb-3">Bill summary</h6>
 
+                  {/* Total MRP */}
                   <div className="d-flex justify-content-between mb-2 small">
-                    <span>Item total (MRP)</span>
+                    <span>Total MRP</span>
                     <span>
                       ₹{formatAmount(totals.totalMrp).toLocaleString()}
                     </span>
                   </div>
-                  {/* 
-                <div className="d-flex justify-content-between mb-2 small">
-                  <span>Handling charges</span>
-                  <span>₹{handlingCharges}</span>
-                </div> */}
 
-                  <div className="d-flex justify-content-between mb-2 small">
-                    <span>Total discount</span>
-                    <span className="text-success">
-                      -₹{formatAmount(totals.totalDiscount).toLocaleString()}
+                  {/* You Saved */}
+                  <div className="d-flex justify-content-between mb-2 small text-success">
+                    <span>You saved</span>
+                    <span>
+                      - ₹{formatAmount(totals.totalDiscount).toLocaleString()}
                     </span>
                   </div>
 
+                  {/* Shipping */}
                   <div className="d-flex justify-content-between mb-2 small">
                     <span>Shipping fee</span>
                     <span className="text-muted">As per delivery address</span>
@@ -751,10 +765,20 @@ export default function HealthBags() {
 
                   <hr />
 
-                  <div className="d-flex justify-content-between mb-3 fw-semibold">
-                    <span>To be paid</span>
+                  {/* Final Pay */}
+                  <div className="d-flex justify-content-between mb-1 fw-semibold">
+                    <span>To Pay</span>
                     <span>₹{formatAmount(grandTotal).toLocaleString()}</span>
                   </div>
+
+                  {/* Extra highlight */}
+                  {totals.totalDiscount > 0 && (
+                    <div className="text-success small mb-3">
+                      🎉 You saved ₹
+                      {formatAmount(totals.totalDiscount).toLocaleString()} on
+                      this order
+                    </div>
+                  )}
 
                   <Button
                     className="w-100 py-2 fw-semibold continue-btn"

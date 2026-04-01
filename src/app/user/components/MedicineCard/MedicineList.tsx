@@ -51,8 +51,7 @@ const MedicineList: React.FC<MedicineListProps> = ({ medicines, loading }) => {
   const onlyMedicines = suggestions.filter(
     (item) => item.search_type_name === "medicine"
   );
-  const displayData =
-    searchTerm && onlyMedicines.length > 0 ? onlyMedicines : safeMedicines;
+  const displayData = searchTerm ? onlyMedicines : safeMedicines;
   // ------------------------------
   // 🔥 API BASED INFINITE SCROLL
   // ------------------------------
@@ -108,7 +107,11 @@ const MedicineList: React.FC<MedicineListProps> = ({ medicines, loading }) => {
           </div>
         </div>
       </div>
-
+      {searchTerm && displayData.length === 0 && !loading && (
+        <div className="text-start my-4">
+          <h6>No products found</h6>
+        </div>
+      )}
       {/* First loader */}
       {loading && safeMedicines.length === 0 && (
         <div className="text-center my-4">
@@ -119,7 +122,7 @@ const MedicineList: React.FC<MedicineListProps> = ({ medicines, loading }) => {
       {/* Medicine Grid */}
       <div className="medicine-grid">
         {displayData.map((med, i) => (
-          <MedicineCard key={i} {...med} />
+          <MedicineCard key={med.id} {...med} />
         ))}
       </div>
 

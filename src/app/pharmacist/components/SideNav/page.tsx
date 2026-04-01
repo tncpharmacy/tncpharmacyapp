@@ -37,7 +37,7 @@ export default function SideNav() {
             <i className="bi bi-clipboard-check"></i> Order
           </Link>
         </li>
-        <li>
+        {/* <li>
           <Link href="/pharmacist/purchase-invoice" className="link">
             <i className="bi bi-receipt-cutoff"></i> Purchase Invoice
           </Link>
@@ -46,7 +46,7 @@ export default function SideNav() {
           <Link href="/pharmacist/stock" className="link">
             <i className="bi bi-box"></i> Stock
           </Link>
-        </li>
+        </li> */}
         {/* <li>
           <div onClick={() => toggleMenu("product")} className="link arrow">
             <i className="bi bi-box-seam"></i> Product Master
@@ -81,11 +81,11 @@ export default function SideNav() {
             <i className="bi bi-file-earmark-text"></i> Billing & Sales
           </div>
         </li> */}
-        <li>
+        {/* <li>
           <Link href="/pharmacist/supplier" className="link">
             <i className="bi bi-truck"></i> Supplier
           </Link>
-        </li>
+        </li> */}
         <li>
           <div onClick={() => toggleMenu("settings")} className="link arrow">
             <i className="bi bi-gear-wide-connected"></i> Profile & Settings

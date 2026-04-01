@@ -35,10 +35,10 @@ const GenericOptionsModal: React.FC<GenericOptionsModalProps> = ({
 
   const normalize = (str: string) =>
     str?.toLowerCase().replace(/\s+/g, "").trim();
-  console.log(
-    "FULL LIST:",
-    productListByGeneric.map((i) => i.medicine_name)
-  );
+  // console.log(
+  //   "FULL LIST:",
+  //   productListByGeneric.map((i) => i.medicine_name)
+  // );
 
   console.log("SELECTED:", selectedOriginalItem?.medicine_name);
 

@@ -172,7 +172,7 @@ const Footer = () => {
         <div className="border-top pt-3 mt-3">
           <div className="row">
             <div className="col-sm-6">
-              <h5 className="ftr_title">We are social</h5>
+              <h5 className="ftr_title">We are on</h5>
               <ul className="ftr_sociallink">
                 <li>
                   <Link

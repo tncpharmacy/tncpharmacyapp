@@ -776,7 +776,7 @@ export default function RetailCounter() {
                                   />
                                 </td>
 
-                                <td>{item.price}</td>
+                                <td>{formatAmount(item.price)}</td>
                                 {/* Editable Discount */}
                                 <td>
                                   <input

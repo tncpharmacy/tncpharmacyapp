@@ -46,7 +46,7 @@ const AddBillingItemModal: React.FC<AddBillingItemModalProps> = ({
   const [duration, setDuration] = useState("");
 
   // AvailableQty Validation
-  const availableQty = item?.AvailableQty || 0; // 🚨 Assuming your Medicine type has 'AvailableQty'
+  // const availableQty = item?.AvailableQty || 0; // 🚨 Assuming your Medicine type has 'AvailableQty'
   const { list: durationList } = useAppSelector(
     (state) => state.productDuration
   );
@@ -79,58 +79,71 @@ const AddBillingItemModal: React.FC<AddBillingItemModalProps> = ({
   // Form Reset on Item Change
   useEffect(() => {
     if (item) {
-      // 1. AvailableQty = 0 है तो Qty को 0 पर सेट करें
-      if (availableQty === 0) {
-        setQty(0);
-        toast.error("Item is out of stock. Available Qty is 0.");
-      } else {
-        // 2. Default Qty 1 सेट करें (जब stock हो)
-        setQty(1);
-      }
+      // if (availableQty === 0) {
+      //   setQty(0);
+      //   toast.error("Item is out of stock. Available Qty is 0.");
+      // } else {
+      //   setQty(1);
+      // }
+      setQty(1);
       setSelectedDoseValue("");
       setRemarks("");
       setDuration("");
     }
-  }, [item, availableQty]);
+  }, [item]);
 
   if (!isOpen || !item) return null;
 
   // Validation Handler
+  // const handleQtyChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  //   const rawValue = e.target.value;
+
+  //   // Allow empty value "" (React number input me hota hi hai)
+  //   if (rawValue === "") {
+  //     setQty(0); // ⚠️ blank ko 0 treat karo taaki type mismatch na ho
+  //     return;
+  //   }
+
+  //   const value = Number(rawValue);
+
+  //   // Stock 0 → always 0
+  //   if (availableQty === 0) {
+  //     setQty(0);
+  //     return;
+  //   }
+
+  //   // Invalid input OR negative → do nothing
+  //   if (isNaN(value) || value < 0) {
+  //     return;
+  //   }
+
+  //   // Allow 0 (remove ke liye)
+  //   if (value === 0) {
+  //     setQty(0);
+  //     return;
+  //   }
+
+  //   // More than available stock → set to availableQty
+  //   if (value > availableQty) {
+  //     setQty(availableQty);
+  //     return;
+  //   }
+
+  //   // Valid qty
+  //   setQty(value);
+  // };
   const handleQtyChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const rawValue = e.target.value;
 
-    // Allow empty value "" (React number input me hota hi hai)
     if (rawValue === "") {
-      setQty(0); // ⚠️ blank ko 0 treat karo taaki type mismatch na ho
+      setQty(0);
       return;
     }
 
     const value = Number(rawValue);
 
-    // Stock 0 → always 0
-    if (availableQty === 0) {
-      setQty(0);
-      return;
-    }
+    if (isNaN(value) || value < 0) return;
 
-    // Invalid input OR negative → do nothing
-    if (isNaN(value) || value < 0) {
-      return;
-    }
-
-    // Allow 0 (remove ke liye)
-    if (value === 0) {
-      setQty(0);
-      return;
-    }
-
-    // More than available stock → set to availableQty
-    if (value > availableQty) {
-      setQty(availableQty);
-      return;
-    }
-
-    // Valid qty
     setQty(value);
   };
 
@@ -212,9 +225,9 @@ const AddBillingItemModal: React.FC<AddBillingItemModalProps> = ({
                 <p>
                   <strong>MRP:</strong> ₹{item.MRP || 0}
                 </p>
-                <p className="text-success color-green fw-bold">
+                {/* <p className="text-success color-green fw-bold">
                   Available Stock: {availableQty}
-                </p>
+                </p> */}
                 <hr />
 
                 {/* Qty Input */}
@@ -225,14 +238,14 @@ const AddBillingItemModal: React.FC<AddBillingItemModalProps> = ({
                     className="form-control"
                     value={qty === 0 ? "" : qty} // 👈 input blank handle
                     onChange={handleQtyChange}
-                    max={availableQty}
+                    // max={availableQty}
                   />
-
+                  {/* 
                   {qty > availableQty && (
                     <div className="text-danger mt-1">
                       Error: Max available quantity is {availableQty}.
                     </div>
-                  )}
+                  )} */}
                 </div>
 
                 {/* Dose Form Input (Select/Input based on your requirement) */}
