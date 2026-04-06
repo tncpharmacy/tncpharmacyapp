@@ -402,13 +402,13 @@ export default function ProductPage() {
   useEffect(() => {
     if (!getByIdMedicines) return;
 
-    console.log("Medicine:", getByIdMedicines.id);
-    console.log("Generic ID:", getByIdMedicines.generic_id);
+    // console.log("Medicine:", getByIdMedicines.id);
+    // console.log("Generic ID:", getByIdMedicines.generic_id);
 
     const genericId = Number(getByIdMedicines.generic_id);
 
     if (genericId > 0) {
-      dispatch(getMedicineByGenericId(genericId));
+      dispatch(getMedicineByGenericId({ id: genericId }));
     }
   }, [dispatch, getByIdMedicines]);
 
