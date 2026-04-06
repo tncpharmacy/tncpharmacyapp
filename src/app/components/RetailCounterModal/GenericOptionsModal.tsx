@@ -1,5 +1,5 @@
 import { Medicine } from "@/types/medicine";
-import React, { useEffect, useMemo } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import "../../pharmacist/css/pharmacy-style.css";
 import { formatAmount } from "@/lib/utils/formatAmount";
 import TncLoader from "../TncLoader/TncLoader";
@@ -31,8 +31,9 @@ const GenericOptionsModal: React.FC<GenericOptionsModalProps> = ({
   onAddToCart, // Use the new prop
   selectedOriginalItem,
 }) => {
-  const [initialLoading, setInitialLoading] = React.useState(true);
-
+  const [initialLoading, setInitialLoading] = useState(true);
+  const [selectedIndex, setSelectedIndex] = useState(0);
+  const buttonRefs = useRef<(HTMLButtonElement | null)[]>([]);
   const normalize = (str: string) =>
     str?.toLowerCase().replace(/\s+/g, "").trim();
   // console.log(
@@ -40,7 +41,7 @@ const GenericOptionsModal: React.FC<GenericOptionsModalProps> = ({
   //   productListByGeneric.map((i) => i.medicine_name)
   // );
 
-  console.log("SELECTED:", selectedOriginalItem?.medicine_name);
+  // console.log("SELECTED:", selectedOriginalItem?.medicine_name);
 
   const processedList = React.useMemo(() => {
     if (!productListByGeneric || productListByGeneric.length === 0) return [];
@@ -102,6 +103,54 @@ const GenericOptionsModal: React.FC<GenericOptionsModalProps> = ({
 
     return () => clearTimeout(t);
   }, [isOpen]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleKey = (e: KeyboardEvent) => {
+      if (!processedList.length) return;
+
+      if (e.key === "ArrowDown") {
+        e.preventDefault();
+        setSelectedIndex((prev) => {
+          const next = prev < processedList.length - 1 ? prev + 1 : prev;
+
+          // 🔥 focus button
+          setTimeout(() => {
+            buttonRefs.current[next]?.focus();
+          }, 0);
+
+          return next;
+        });
+      }
+
+      if (e.key === "ArrowUp") {
+        e.preventDefault();
+        setSelectedIndex((prev) => {
+          const next = prev > 0 ? prev - 1 : prev;
+
+          // 🔥 focus button
+          setTimeout(() => {
+            buttonRefs.current[next]?.focus();
+          }, 0);
+
+          return next;
+        });
+      }
+
+      if (e.key === "Enter") {
+        e.preventDefault();
+        const selectedItem = processedList[selectedIndex];
+        if (selectedItem) {
+          onAddToCart(selectedItem);
+          onClose();
+        }
+      }
+    };
+
+    window.addEventListener("keydown", handleKey);
+    return () => window.removeEventListener("keydown", handleKey);
+  }, [isOpen, onAddToCart, onClose, processedList, selectedIndex]);
 
   if (!isOpen) return null;
   const originalMedicineName = selectedOriginalItem?.medicine_name || "N/A";
@@ -187,7 +236,7 @@ const GenericOptionsModal: React.FC<GenericOptionsModalProps> = ({
                           </td>
                         </tr>
                       ) : (
-                        processedList.map((item) => {
+                        processedList.map((item, index) => {
                           const isSelected =
                             normalize(item.medicine_name) ===
                             normalize(
@@ -196,15 +245,20 @@ const GenericOptionsModal: React.FC<GenericOptionsModalProps> = ({
                           return (
                             <tr
                               key={item.id}
-                              style={
-                                isSelected
+                              style={{
+                                ...(isSelected
                                   ? {
                                       background: "#e6f4ff",
                                       borderLeft: "4px solid #0d6efd",
                                       fontWeight: 600,
                                     }
-                                  : {}
-                              }
+                                  : {}),
+                                ...(index === selectedIndex
+                                  ? {
+                                      background: "#cfe2ff",
+                                    }
+                                  : {}),
+                              }}
                             >
                               <td>
                                 {item.medicine_name}
@@ -230,6 +284,9 @@ const GenericOptionsModal: React.FC<GenericOptionsModalProps> = ({
                               </td>
                               <td>
                                 <button
+                                  ref={(el) => {
+                                    buttonRefs.current[index] = el;
+                                  }}
                                   className="btn btn-success btn-sm"
                                   onClick={() => {
                                     const selectedWithGeneric = {
@@ -243,9 +300,14 @@ const GenericOptionsModal: React.FC<GenericOptionsModalProps> = ({
                                         productListByGeneric[0]?.GenericName ||
                                         "N/A",
                                     };
-                                    // ✅ Add to Cart Logic
                                     onAddToCart(item);
-                                    onClose(); // Modal बंद करें
+                                    onClose();
+                                  }}
+                                  style={{
+                                    outline:
+                                      index === selectedIndex
+                                        ? "2px solid #0d6efd"
+                                        : "none",
                                   }}
                                 >
                                   Add to Cart

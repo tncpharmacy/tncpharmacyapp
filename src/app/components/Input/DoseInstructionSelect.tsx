@@ -36,7 +36,7 @@ const DoseInstructionSelect: React.FC<InputPropsColSm> = ({
   // ⭐ TABLE MODE → No grid, no labels
   if (isTableEditMode) {
     return (
-      <div style={{ minWidth: "120px" }}>
+      <div>
         <select
           id={name}
           name={name}
@@ -47,6 +47,7 @@ const DoseInstructionSelect: React.FC<InputPropsColSm> = ({
           style={{
             height: "40px",
             fontSize: "14px",
+            // marginTop: "-16px",
           }}
         >
           <option value="">-- Select --</option>
@@ -86,7 +87,7 @@ const DoseInstructionSelect: React.FC<InputPropsColSm> = ({
           value={value ?? ""}
           required={required}
           onChange={onChange}
-          style={{ height: "40px", fontSize: "14px", padding: 0 }}
+          style={{ height: "40px", fontSize: "14px" }}
         >
           <option value="">-- Select --</option>
           {DOSE_INSTRUCTIONS.map((opt, idx) => (

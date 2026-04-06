@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Medicine } from "@/types/medicine";
 import toast from "react-hot-toast";
 import DoseInstructionSelect from "@/app/components/Input/DoseInstructionSelect";
@@ -15,6 +15,7 @@ import {
 } from "@/lib/features/productInstructionSlice/productInstructionSlice";
 import SmartCreateInput from "./SmartCreateInput";
 import TncLoader from "../TncLoader/TncLoader";
+import { formatAmount } from "@/lib/utils/formatAmount";
 
 interface AddBillingItemModalProps {
   isOpen: boolean;
@@ -44,6 +45,12 @@ const AddBillingItemModal: React.FC<AddBillingItemModalProps> = ({
   const [selectedDoseValue, setSelectedDoseValue] = useState("");
   const [remarks, setRemarks] = useState("");
   const [duration, setDuration] = useState("");
+
+  const qtyRef = useRef<HTMLInputElement | null>(null);
+  const doseRef = useRef<HTMLSelectElement | null>(null);
+  const instructionRef = useRef<HTMLInputElement | null>(null);
+  const durationRef = useRef<HTMLInputElement | null>(null);
+  const submitRef = useRef<HTMLButtonElement | null>(null);
 
   // AvailableQty Validation
   // const availableQty = item?.AvailableQty || 0; // 🚨 Assuming your Medicine type has 'AvailableQty'
@@ -170,11 +177,11 @@ const AddBillingItemModal: React.FC<AddBillingItemModalProps> = ({
       onKeyDownCapture={(e) => {
         const target = e.target as HTMLElement;
 
-        // ✅ allow Enter INSIDE inputs
         if (
           e.key === "Enter" &&
           target.tagName !== "INPUT" &&
-          target.tagName !== "TEXTAREA"
+          target.tagName !== "TEXTAREA" &&
+          target.tagName !== "BUTTON" // 👈 YE ADD KAR
         ) {
           e.preventDefault();
           e.stopPropagation();
@@ -223,7 +230,7 @@ const AddBillingItemModal: React.FC<AddBillingItemModalProps> = ({
               <div className="modal-body">
                 {/* Current Price Display */}
                 <p>
-                  <strong>MRP:</strong> ₹{item.MRP || 0}
+                  <strong>MRP:</strong> ₹{formatAmount(item.MRP || 0)}
                 </p>
                 {/* <p className="text-success color-green fw-bold">
                   Available Stock: {availableQty}
@@ -234,11 +241,16 @@ const AddBillingItemModal: React.FC<AddBillingItemModalProps> = ({
                 <div className="txt_col">
                   <label className="lbl1 fw-bold">Quantity</label>
                   <input
+                    ref={qtyRef}
                     type="number"
                     className="form-control"
-                    value={qty === 0 ? "" : qty} // 👈 input blank handle
+                    value={qty === 0 ? "" : qty}
                     onChange={handleQtyChange}
-                    // max={availableQty}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        doseRef.current?.focus();
+                      }
+                    }}
                   />
                   {/* 
                   {qty > availableQty && (
@@ -249,7 +261,16 @@ const AddBillingItemModal: React.FC<AddBillingItemModalProps> = ({
                 </div>
 
                 {/* Dose Form Input (Select/Input based on your requirement) */}
-                <div className="txt_col">
+                <div
+                  className="txt_col"
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                  ref={doseRef as any}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      instructionRef.current?.focus();
+                    }
+                  }}
+                >
                   <label className="lbl1 fw-bold">Doses Instruction</label>
                   <DoseInstructionSelect
                     type="select"
@@ -271,6 +292,13 @@ const AddBillingItemModal: React.FC<AddBillingItemModalProps> = ({
                     createAction={createProductInstruction}
                     refreshAction={getProductInstructions}
                     placeholder=""
+                    inputRef={instructionRef}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        submitRef.current?.focus();
+                      }
+                    }}
                   />
                 </div>
 
@@ -284,6 +312,13 @@ const AddBillingItemModal: React.FC<AddBillingItemModalProps> = ({
                     createAction={createProductDuration}
                     refreshAction={getProductDurations}
                     placeholder=""
+                    inputRef={durationRef}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        submitRef.current?.focus();
+                      }
+                    }}
                   />
                 </div>
               </div>
@@ -296,9 +331,16 @@ const AddBillingItemModal: React.FC<AddBillingItemModalProps> = ({
                   Cancel
                 </button>
                 <button
+                  ref={submitRef}
                   type="button"
                   className="btn btn-success"
                   onClick={handleSubmit}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      handleSubmit();
+                    }
+                  }}
                   disabled={qty === 0}
                 >
                   Add to Bill

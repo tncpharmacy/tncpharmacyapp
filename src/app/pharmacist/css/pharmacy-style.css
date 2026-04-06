@@ -327,7 +327,7 @@ body {
     color: #012774;
     outline: none;
     text-decoration: none;
-    background: #ffffff;
+    background: transparent;
     cursor: pointer;
     font-weight: 400;
     padding: 8px 5px;
@@ -805,4 +805,9 @@ body {
     .header .logo img {
         height: 50px;
     }
+}
+
+.side_menu .side_menu-list .link.activeLink {
+  background-color: #e6f0ff;
+  color: #0d6efd;
 }

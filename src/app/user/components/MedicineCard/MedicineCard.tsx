@@ -335,7 +335,7 @@ export default function MedicineCard({
               <div className="d-flex flex-column align-items-start">
                 {/* Discounted Price */}
                 <p className="text-success fw-bold mb-1">
-                  ₹{formatAmount(discountedPrice)}
+                  ₹{discountedPrice.toFixed(2)}
                 </p>
 
                 {/* Original MRP + Discount */}
@@ -347,7 +347,7 @@ export default function MedicineCard({
                       fontSize: "13px",
                     }}
                   >
-                    MRP ₹{formatAmount(originalMrp)}
+                    MRP ₹{originalMrp.toFixed(2)}
                   </span>{" "}
                   <span
                     className="text-danger fw-bold"

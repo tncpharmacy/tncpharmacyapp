@@ -101,7 +101,7 @@ const CartPreviewModal = ({
 
   const calculateSubtotal = (item: CartItem) => {
     const qty = Number(item.qty);
-    const price = Number(item.price);
+    const price = Number(formatAmount(item.price));
     const disc = Number(item.Disc ?? 0);
 
     const total = qty * price;
@@ -208,49 +208,70 @@ const CartPreviewModal = ({
 
                       {/* Editable Instruction */}
                       <td
-                        style={{
-                          maxWidth: "160px",
-                          position: "relative",
-                        }}
+                        style={{ maxWidth: "160px", verticalAlign: "middle" }}
                       >
-                        <SmartCreateInput
-                          label=""
-                          value={item.remarks ?? ""}
-                          list={instructionList}
-                          createAction={createProductInstruction}
-                          refreshAction={getProductInstructions}
-                          placeholder=""
-                          onChange={(val) => {
-                            if (val.length <= 50) {
-                              handleEditChange(idx, "remarks", val);
-                            }
+                        <div
+                          style={{
+                            height: "38px",
+                            display: "flex",
+                            alignItems: "center",
+                            marginTop: "-11px",
                           }}
-                        />
+                        >
+                          <SmartCreateInput
+                            label=""
+                            value={item.remarks ?? ""}
+                            list={instructionList}
+                            createAction={createProductInstruction}
+                            refreshAction={getProductInstructions}
+                            placeholder=""
+                            onChange={(val) => {
+                              if (val.length <= 50) {
+                                handleEditChange(idx, "remarks", val);
+                              }
+                            }}
+                          />
+                        </div>
                       </td>
 
                       {/* Editable Duration */}
                       <td
-                        style={{
-                          maxWidth: "120px",
-                          position: "relative", // 🔥 MUST
-                        }}
+                        style={{ maxWidth: "120px", verticalAlign: "middle" }}
                       >
-                        <SmartCreateInput
-                          label=""
-                          value={item.duration ?? ""}
-                          list={durationList}
-                          createAction={createProductDuration}
-                          refreshAction={getProductDurations}
-                          placeholder=""
-                          onChange={(val) => {
-                            if (val.length <= 10) {
-                              handleEditChange(idx, "duration", val);
-                            }
+                        <div
+                          style={{
+                            height: "38px",
+                            display: "flex",
+                            alignItems: "center",
+                            marginTop: "-11px",
                           }}
-                        />
+                        >
+                          <SmartCreateInput
+                            label=""
+                            value={item.duration ?? ""}
+                            list={durationList}
+                            createAction={createProductDuration}
+                            refreshAction={getProductDurations}
+                            placeholder=""
+                            onChange={(val) => {
+                              if (val.length <= 10) {
+                                handleEditChange(idx, "duration", val);
+                              }
+                            }}
+                          />
+                        </div>
                       </td>
 
-                      <td>₹{formatAmount(item.price)}</td>
+                      <td>
+                        <input
+                          type="text"
+                          className="form-control"
+                          value={`₹${formatAmount(item.price)}`}
+                          tabIndex={-1}
+                          readOnly
+                          style={{ width: "90px", backgroundColor: "#f5f5f5" }}
+                        />
+                      </td>
 
                       {/* Editable Discount */}
                       <td>
@@ -275,7 +296,16 @@ const CartPreviewModal = ({
                         />
                       </td>
 
-                      <td>₹{formatAmount(subtotal)}</td>
+                      <td>
+                        <input
+                          type="text"
+                          className="form-control"
+                          value={`₹${formatAmount(subtotal)}`}
+                          tabIndex={-1}
+                          readOnly
+                          style={{ width: "100px", backgroundColor: "#f5f5f5" }}
+                        />
+                      </td>
 
                       <td>
                         <Button

@@ -774,7 +774,7 @@ body {
 }
 
 .scroll_table table {
-  min-width: 1500px; /* ya 1500px */
+  /* min-width: 1500px; */
   border-collapse: collapse;
 }
 

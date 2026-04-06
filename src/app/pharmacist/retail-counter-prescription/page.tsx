@@ -37,6 +37,7 @@ import {
   updateBuyerForPharmacistThunk,
 } from "@/lib/features/pharmacistBuyerListSlice/pharmacistBuyerListSlice";
 import TncLoader from "@/app/components/TncLoader/TncLoader";
+import GlobalSearchBox from "@/app/components/GlobalSearchBox/GlobalSearchBox";
 const PreviewBox = dynamic(() => import("./PreviewBox"), {
   ssr: false,
 });
@@ -114,6 +115,10 @@ export default function RetailCounter() {
   const [matchedMedicines, setMatchedMedicines] = useState<
     { id: number; name: string }[] | null
   >(null);
+
+  // ref for focus
+  const healthBagRef = useRef<HTMLButtonElement | null>(null);
+  const [isUploadFocused, setIsUploadFocused] = useState(false);
 
   const {
     medicines: productList,
@@ -209,104 +214,155 @@ export default function RetailCounter() {
     dispatch(getProductList(null));
   }, [dispatch]);
 
+  // const handleSubmit = async (e?: React.FormEvent) => {
+  //   if (e) e.preventDefault();
+
+  //   if (submitLoading) return;
+
+  //   try {
+  //     if (!mobile || !customerName || !prescriptionFile) {
+  //       toast.error("Please fill all fields");
+  //       return;
+  //     }
+
+  //     setSubmitLoading(true);
+
+  //     let buyer_id: number | null = null;
+
+  //     const loginRes = await dispatch(
+  //       buyerLogin({ login_id: mobile })
+  //     ).unwrap();
+
+  //     if (loginRes?.data?.id) {
+  //       buyer_id = loginRes.data.id;
+  //       setBuyerId(buyer_id);
+  //       // ⭐ If buyer exists but UHID missing → update UHID
+  //       if (
+  //         (!loginRes.data.uhid || loginRes.data.uhid === "") &&
+  //         uhId.trim() !== ""
+  //       ) {
+  //         await dispatch(
+  //           updateBuyerForPharmacistThunk({
+  //             buyerId: buyer_id,
+  //             payload: { uhid: uhId },
+  //           })
+  //         ).unwrap();
+  //       }
+  //     }
+  //     if (!buyer_id) {
+  //       const registerPayload = {
+  //         name: customerName,
+  //         email: "",
+  //         number: mobile,
+  //         uhid: uhId,
+  //       };
+  //       const regRes = await dispatch(buyerRegister(registerPayload)).unwrap();
+  //       buyer_id = regRes?.data?.id;
+  //       setBuyerId(buyer_id);
+  //     }
+
+  //     if (!buyer_id) {
+  //       toast.error("Buyer ID missing");
+  //       return;
+  //     }
+
+  //     // The REAL CORRECT form-data
+  //     const formData = new FormData();
+  //     formData.append("buyer_id", String(buyer_id));
+  //     formData.append(
+  //       "prescription_pic",
+  //       prescriptionFile,
+  //       prescriptionFile.name
+  //     );
+
+  //     const uploadRes = await dispatch(
+  //       uploadPrescriptionPharmacistThunk({
+  //         pharmacistId: pharmacist_id,
+  //         payload: formData,
+  //       })
+  //     ).unwrap();
+
+  //     toast.success("Prescription uploaded!");
+
+  //     // 🔹 STEP 5: Build full image/PDF URL
+  //     const picPath =
+  //       uploadRes?.data?.prescription_pic || uploadRes?.prescription_pic || "";
+  //     const fullUrl = picPath.startsWith("http")
+  //       ? picPath
+  //       : mediaBase + picPath;
+  //     setUploadedUrl(fullUrl);
+  //     setShowForm(false);
+  //     // 🟢 Use backend OCR (medicines)
+  //     if (uploadRes?.product_list?.medicines) {
+  //       const meds: MatchedMedicine[] = uploadRes.product_list.medicines.map(
+  //         (m: OCRMedicine): MatchedMedicine => ({
+  //           id: m.product_id,
+  //           name: m.medicine_name,
+  //           category_id: m.category_id,
+  //         })
+  //       );
+
+  //       setMatchedMedicines(meds);
+  //     }
+
+  //     // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  //   } catch (err: any) {
+  //     console.error("Upload Rejection Details:", err); // Log the full error object
+  //     console.error("FULL ERROR:", err);
+  //     console.error("PAYLOAD:", err?.payload);
+  //     console.error("PAYLOAD.MESSAGE:", err?.payload?.message);
+  //     // 💡 Thunk rejection payload is often nested in err.payload
+  //     const rejectMessage =
+  //       err?.payload?.message ||
+  //       err?.payload ||
+  //       err?.message ||
+  //       "Failed to upload prescription";
+  //     toast.error("Error: " + rejectMessage);
+  //   } finally {
+  //     setSubmitLoading(false);
+  //   }
+  // };
+
   const handleSubmit = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
 
     if (submitLoading) return;
 
     try {
-      if (!mobile || !customerName || !prescriptionFile) {
+      // ✅ basic validation (file hata diya)
+      if (!mobile || !customerName) {
         toast.error("Please fill all fields");
         return;
       }
 
       setSubmitLoading(true);
 
-      let buyer_id: number | null = null;
+      // 🟢 MOCK BUYER ID (optional)
+      const buyer_id = 1;
+      setBuyerId(buyer_id);
 
-      const loginRes = await dispatch(
-        buyerLogin({ login_id: mobile })
-      ).unwrap();
-
-      if (loginRes?.data?.id) {
-        buyer_id = loginRes.data.id;
-        setBuyerId(buyer_id);
-        // ⭐ If buyer exists but UHID missing → update UHID
-        if (
-          (!loginRes.data.uhid || loginRes.data.uhid === "") &&
-          uhId.trim() !== ""
-        ) {
-          await dispatch(
-            updateBuyerForPharmacistThunk({
-              buyerId: buyer_id,
-              payload: { uhid: uhId },
-            })
-          ).unwrap();
-        }
-      }
-      if (!buyer_id) {
-        const registerPayload = {
-          name: customerName,
-          email: "",
-          number: mobile,
-          uhid: uhId,
-        };
-        const regRes = await dispatch(buyerRegister(registerPayload)).unwrap();
-        buyer_id = regRes?.data?.id;
-        setBuyerId(buyer_id);
-      }
-
-      if (!buyer_id) {
-        toast.error("Buyer ID missing");
-        return;
-      }
-
-      // The REAL CORRECT form-data
-      const formData = new FormData();
-      formData.append("buyer_id", String(buyer_id));
-      formData.append(
-        "prescription_pic",
-        prescriptionFile,
-        prescriptionFile.name
+      // 🟢 MOCK uploaded URL (preview ke liye)
+      setUploadedUrl(
+        "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf"
       );
 
-      const uploadRes = await dispatch(
-        uploadPrescriptionPharmacistThunk({
-          pharmacistId: pharmacist_id,
-          payload: formData,
-        })
-      ).unwrap();
+      // 🟢 MOCK OCR medicines (important 🔥)
+      const dummyMeds = [
+        { id: 101, name: "Paracetamol 500mg", category_id: 2 },
+        { id: 102, name: "Azithromycin 250mg", category_id: 1 },
+        { id: 103, name: "Dolo 650", category_id: 2 },
+        { id: 104, name: "Amoxicillin 500mg", category_id: 1 },
+      ];
 
-      toast.success("Prescription uploaded!");
+      setMatchedMedicines(dummyMeds);
 
-      // 🔹 STEP 5: Build full image/PDF URL
-      const picPath =
-        uploadRes?.data?.prescription_pic || uploadRes?.prescription_pic || "";
-      const fullUrl = picPath.startsWith("http")
-        ? picPath
-        : mediaBase + picPath;
-      setUploadedUrl(fullUrl);
+      // 🟢 UI switch (MOST IMPORTANT)
       setShowForm(false);
-      // 🟢 Use backend OCR (medicines)
-      if (uploadRes?.product_list?.medicines) {
-        const meds: MatchedMedicine[] = uploadRes.product_list.medicines.map(
-          (m: OCRMedicine): MatchedMedicine => ({
-            id: m.product_id,
-            name: m.medicine_name,
-            category_id: m.category_id,
-          })
-        );
 
-        setMatchedMedicines(meds);
-      }
-
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (err: any) {
-      console.error("Upload Rejection Details:", err); // Log the full error object
-      // 💡 Thunk rejection payload is often nested in err.payload
-      const rejectMessage =
-        err.payload || err.message || "Failed to upload prescription";
-      toast.error("Error: " + rejectMessage);
+      toast.success("Mock Prescription processed!");
+    } catch (err) {
+      console.error("Mock Error:", err);
+      toast.error("Something went wrong (mock)");
     } finally {
       setSubmitLoading(false);
     }
@@ -357,7 +413,7 @@ export default function RetailCounter() {
       ...item,
       generic_name: item.generic_name || item.GenericName || "N/A",
     };
-    console.log("📦 handleSkipGenericModal itemWithGeneric:", itemWithGeneric);
+    // console.log("📦 handleSkipGenericModal itemWithGeneric:", itemWithGeneric);
     setItemToConfirm(itemWithGeneric);
     setIsQtyModalOpen(true);
   };
@@ -379,7 +435,7 @@ export default function RetailCounter() {
       )
     );
 
-    console.log("matched (from OCR click)", matched);
+    // console.log("matched (from OCR click)", matched);
 
     if (!matched) {
       alert(`No matching product found for ${med.name}`);
@@ -658,7 +714,7 @@ export default function RetailCounter() {
                   <div className="row g-3 align-items-end">
                     <div className="col-md-8">
                       <div className="txt_col">
-                        <SingleSelectDropdown
+                        {/* <SingleSelectDropdown
                           medicines={productList}
                           selected={
                             selectedMedicine &&
@@ -671,15 +727,53 @@ export default function RetailCounter() {
                               : null
                           }
                           onChange={handleSelectMedicine}
+                        /> */}
+                        <GlobalSearchBox
+                          placeholder="Search product..."
+                          onSelect={(item) => {
+                            const med = item.data;
+
+                            setSelectedMedicine(med);
+                            setSelectedProduct(med); // 👈 optional but recommended
+
+                            if (med.category_id === 1) {
+                              dispatch(getProductByGenericId(med.id));
+                              setSelectedGenericId(med.id);
+                              setIsModalOpen(true); // 🔥 FIX
+                            } else {
+                              handleSkipGenericModal(med);
+                            }
+                          }}
+                          onKeyDown={(e) => {
+                            if (e.key === "Tab") {
+                              e.preventDefault();
+                              healthBagRef.current?.focus(); // 🔥 direct jump
+                            }
+                          }}
                         />
                       </div>
                     </div>
-                    <div className="col-md-4 text-end">
+                    <div
+                      className="col-md-4 text-end"
+                      style={{ marginBottom: "25px" }}
+                    >
                       <div className="txt_col">
                         {/* 🎯 Health Bag Button */}
                         <button
+                          ref={healthBagRef}
                           className="btn btn-primary px-4 mb-2"
                           onClick={openBagModal}
+                          onFocus={() => setIsUploadFocused(true)}
+                          onBlur={() => setIsUploadFocused(false)}
+                          style={{
+                            outline: isUploadFocused
+                              ? "2px solid #007bff"
+                              : "none",
+                            boxShadow: isUploadFocused
+                              ? "0 0 6px rgba(0, 123, 255, 0.5)"
+                              : "none",
+                            transition: "0.2s",
+                          }}
                           disabled={cart.length === 0}
                         >
                           🛒 Health Bag ({cart.length})

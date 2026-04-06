@@ -469,12 +469,12 @@ const SiteHeader = () => {
                                 }}
                               >
                                 ₹
-                                {formatAmount(
+                                {(
                                   (item.data.mrp ?? 0) -
-                                    ((item.data.mrp ?? 0) *
-                                      Number(item.data.discount ?? 0)) /
-                                      100
-                                )}
+                                  ((item.data.mrp ?? 0) *
+                                    Number(item.data.discount ?? 0)) /
+                                    100
+                                ).toFixed(2)}
                               </span>
 
                               <span
@@ -485,7 +485,7 @@ const SiteHeader = () => {
                                   fontSize: "12px",
                                 }}
                               >
-                                MRP ₹{formatAmount(item.data.mrp || 0)}
+                                MRP ₹{Number(item?.data?.mrp || 0).toFixed(2)}
                               </span>
                             </span>
                           ) : (

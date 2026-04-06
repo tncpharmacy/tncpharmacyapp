@@ -197,9 +197,9 @@ export default function HealthBags() {
   //console.log("medicineMenuByCategory5", medicineMenuByCategory5);
   useEffect(() => {
     dispatch(getCategories());
-    dispatch(getMedicinesByCategoryId(5));
-    dispatch(getMedicinesByCategoryId(7));
-    dispatch(getMedicinesByCategoryId(9));
+    dispatch(getMedicinesByCategoryId({ categoryId: 5 }));
+    dispatch(getMedicinesByCategoryId({ categoryId: 7 }));
+    dispatch(getMedicinesByCategoryId({ categoryId: 9 }));
     dispatch(getMedicinesMenuByOtherId(0));
     dispatch(getProductList(null));
   }, [dispatch]);
@@ -652,10 +652,9 @@ export default function HealthBags() {
 
                         <div className="text-end ms-3">
                           <h6 className="mb-2 text-success">
-                            ₹{formatAmount(item.discountMrp).toLocaleString()}{" "}
+                            ₹{item.discountMrp.toFixed(2)}{" "}
                             <small className="text-muted text-decoration-line-through">
-                              MRP ₹
-                              {formatAmount(item.mrp ?? 0).toLocaleString()}
+                              MRP ₹{item.mrp.toFixed(2)}
                             </small>
                             <br />
                             <span className="text-danger small">
@@ -744,17 +743,13 @@ export default function HealthBags() {
                   {/* Total MRP */}
                   <div className="d-flex justify-content-between mb-2 small">
                     <span>Total MRP</span>
-                    <span>
-                      ₹{formatAmount(totals.totalMrp).toLocaleString()}
-                    </span>
+                    <span>₹{totals.totalMrp.toFixed(2)}</span>
                   </div>
 
                   {/* You Saved */}
                   <div className="d-flex justify-content-between mb-2 small text-success">
                     <span>You saved</span>
-                    <span>
-                      - ₹{formatAmount(totals.totalDiscount).toLocaleString()}
-                    </span>
+                    <span>- ₹{totals.totalDiscount.toFixed(2)}</span>
                   </div>
 
                   {/* Shipping */}
@@ -768,15 +763,14 @@ export default function HealthBags() {
                   {/* Final Pay */}
                   <div className="d-flex justify-content-between mb-1 fw-semibold">
                     <span>To Pay</span>
-                    <span>₹{formatAmount(grandTotal).toLocaleString()}</span>
+                    <span>₹{Number(formatAmount(grandTotal)).toFixed(2)}</span>
                   </div>
 
                   {/* Extra highlight */}
                   {totals.totalDiscount > 0 && (
                     <div className="text-success small mb-3">
-                      🎉 You saved ₹
-                      {formatAmount(totals.totalDiscount).toLocaleString()} on
-                      this order
+                      🎉 You saved ₹{totals.totalDiscount.toFixed(2)} on this
+                      order
                     </div>
                   )}
 
@@ -813,15 +807,18 @@ export default function HealthBags() {
                   const mrpRaw = item.MRP ?? item.mrp ?? 0;
                   const parsedMrp = Number(mrpRaw);
                   // 🔥 FINAL MRP FIX
-                  const mrp =
+                  const baseMrp =
                     Number.isFinite(parsedMrp) && parsedMrp > 0
                       ? parsedMrp
                       : 275;
+
+                  const mrp = Number(baseMrp.toFixed(2));
                   // console.log("mrp", mrp);
                   const discount = parseFloat(item.Discount) || 0;
-                  const discountedPrice = Math.round(
-                    mrp - (mrp * discount) / 100
-                  );
+                  const discountedPrice = (
+                    mrp -
+                    (mrp * discount) / 100
+                  ).toFixed(2);
 
                   const imageUrl = item.DefaultImageURL
                     ? item.DefaultImageURL.startsWith("http")
@@ -876,7 +873,7 @@ export default function HealthBags() {
                           <div className="d-flex align-items-center justify-content-between">
                             <div>
                               <div className="fw-semibold">
-                                ₹{formatAmount(discountedPrice)}
+                                ₹{discountedPrice}
                               </div>
                               {discountedPrice ? (
                                 <div className="text-success small">
@@ -885,7 +882,7 @@ export default function HealthBags() {
                               ) : null}
                               {discountedPrice ? (
                                 <small className="text-muted text-decoration-line-through">
-                                  MRP ₹{formatAmount(mrp)}
+                                  MRP ₹{mrp}
                                 </small>
                               ) : null}
                             </div>
@@ -943,14 +940,18 @@ export default function HealthBags() {
                   const mrpRaw = item.MRP ?? item.mrp ?? 0;
                   const parsedMrp = Number(mrpRaw);
                   // 🔥 FINAL MRP FIX
-                  const mrp =
+                  const baseMrp =
                     Number.isFinite(parsedMrp) && parsedMrp > 0
                       ? parsedMrp
                       : 275;
+
+                  const mrp = Number(baseMrp.toFixed(2));
+
                   const discount = parseFloat(item.Discount) || 0;
-                  const discountedPrice = Math.round(
-                    mrp - (mrp * discount) / 100
-                  );
+                  const discountedPrice = (
+                    mrp -
+                    (mrp * discount) / 100
+                  ).toFixed(2);
 
                   const imageUrl = item.DefaultImageURL
                     ? item.DefaultImageURL.startsWith("http")
@@ -1004,7 +1005,7 @@ export default function HealthBags() {
                           <div className="d-flex align-items-center justify-content-between">
                             <div>
                               <div className="fw-semibold">
-                                ₹{formatAmount(discountedPrice)}
+                                ₹{discountedPrice}
                               </div>
                               {discountedPrice ? (
                                 <div className="text-success small">
@@ -1013,7 +1014,7 @@ export default function HealthBags() {
                               ) : null}
                               {discountedPrice ? (
                                 <small className="text-muted text-decoration-line-through">
-                                  MRP ₹{formatAmount(mrp)}
+                                  MRP ₹{mrp}
                                 </small>
                               ) : null}
                             </div>
@@ -1071,15 +1072,18 @@ export default function HealthBags() {
                   const mrpRaw = item.MRP ?? item.mrp ?? 0;
                   const parsedMrp = Number(mrpRaw);
                   // 🔥 FINAL MRP FIX
-                  const mrp =
+                  const baseMrp =
                     Number.isFinite(parsedMrp) && parsedMrp > 0
                       ? parsedMrp
                       : 275;
 
+                  const mrp = Number(baseMrp.toFixed(2));
+
                   const discount = parseFloat(item.Discount) || 0;
-                  const discountedPrice = Math.round(
-                    mrp - (mrp * discount) / 100
-                  );
+                  const discountedPrice = (
+                    mrp -
+                    (mrp * discount) / 100
+                  ).toFixed(2);
 
                   const imageUrl = item.DefaultImageURL
                     ? item.DefaultImageURL.startsWith("http")
@@ -1134,7 +1138,7 @@ export default function HealthBags() {
                           <div className="d-flex align-items-center justify-content-between">
                             <div>
                               <div className="fw-semibold">
-                                ₹{formatAmount(discountedPrice)}
+                                ₹{discountedPrice}
                               </div>
                               {discountedPrice ? (
                                 <div className="text-success small">
@@ -1143,7 +1147,7 @@ export default function HealthBags() {
                               ) : null}
                               {discountedPrice ? (
                                 <small className="text-muted text-decoration-line-through">
-                                  MRP ₹{formatAmount(mrp)}
+                                  MRP ₹{mrp}
                                 </small>
                               ) : null}
                             </div>

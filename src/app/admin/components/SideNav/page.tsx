@@ -23,11 +23,11 @@ export default function SideNav() {
             <i className="bi bi-bag-check"></i> Order
           </Link>
         </li>
-        <li>
+        {/* <li>
           <Link href="/stock" className="link">
             <i className="bi bi-box-seam"></i> Stock
           </Link>
-        </li>
+        </li> */}
         <li>
           <Link href="/medicine" className="link">
             <i className="bi bi-box-seam"></i> Product Master
@@ -54,11 +54,11 @@ export default function SideNav() {
             <i className="bi bi-person"></i> Patient HealthBag
           </Link>
         </li>
-        <li>
+        {/* <li>
           <Link href="purchase-invoice" className="link">
             <i className="bi bi-receipt-cutoff"></i> Purchase Invoice
           </Link>
-        </li>
+        </li> */}
         {/* <li>
           <div onClick={() => toggleMenu("product")} className="link arrow">
             <i className="bi bi-box-seam"></i> Product Master
@@ -79,11 +79,11 @@ export default function SideNav() {
           )}
         </li> */}
 
-        <li>
+        {/* <li>
           <Link href="/supplier" className="link">
             <i className="bi bi-truck"></i> Supplier
           </Link>
-        </li>
+        </li> */}
 
         <li>
           <div onClick={() => toggleMenu("admins")} className="link arrow">

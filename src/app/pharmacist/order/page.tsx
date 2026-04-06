@@ -356,8 +356,8 @@ export default function OrderList() {
       mobile: order.buyerNumber || "",
       uhId: order.buyer_uhid || "",
       pharmacy_id: pharmacyId,
-      referredByDoctor: order.referredByDoctor || "",
-      referredByHospital: order.referredByHospital || "",
+      referredByDoctor: order.referred_by_doctor || "",
+      referredByHospital: order.referred_by_hospital || "",
     });
     setAdditionalDiscount(String(order.additional_discount || "0"));
     setIsBillPreviewOpen(true);
@@ -710,13 +710,27 @@ export default function OrderList() {
                     </h5>
 
                     <div className="row">
-                      <div className="col-md-4 mb-2">
+                      <div className="col-md-6 mb-2">
                         <strong>Order ID:</strong> {o.orderId}
                       </div>
-                      <div className="col-md-4 mb-2">
+                      <div className="col-md-6 mb-2">
+                        <strong>Referred By Doctor:</strong>{" "}
+                        {o.referred_by_doctor}
+                      </div>
+                    </div>
+
+                    <div className="row">
+                      <div className="col-md-6 mb-2">
                         <strong>Order Date:</strong> {formatDate(o.orderDate)}
                       </div>
-                      <div className="col-md-4 mb-2">
+                      <div className="col-md-6 mb-2">
+                        <strong>Referred By Hospital:</strong>{" "}
+                        {o.referred_by_hospital}
+                      </div>
+                    </div>
+
+                    <div className="row">
+                      <div className="col-md-6 mb-2">
                         <strong>Order Type:</strong> {o.orderType}
                       </div>
                     </div>

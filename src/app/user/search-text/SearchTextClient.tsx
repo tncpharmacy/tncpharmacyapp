@@ -2,7 +2,13 @@
 
 export const dynamic = "force-dynamic";
 
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import "../css/site-style.css";
 import "../css/user-style.css";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -31,7 +37,9 @@ export default function SearchTextClient() {
   // -----------------------------
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [results, setResults] = useState<any[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [nextUrl, setNextUrl] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false); // first load
+  const [loadingMore, setLoadingMore] = useState(false); // scroll load
 
   const [searchTerm, setSearchTerm] = useState(""); // page input filter
   const [limit, setLimit] = useState(20); // infinite-scroll limit
@@ -48,14 +56,16 @@ export default function SearchTextClient() {
 
   const [localBag, setLocalBag] = useState<number[]>([]);
   const [processingIds, setProcessingIds] = useState<number[]>([]);
-  const [hasFetched, setHasFetched] = useState(false);
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [guestItems, setGuestItems] = useState<any[]>([]);
+  const observerRef = useRef<IntersectionObserver | null>(null);
   // -----------------------------
   // API SEARCH CALL (MAIN)
   // -----------------------------
   useEffect(() => {
     if (!searchText) return;
-    setHasFetched(false);
+
     const load = async () => {
       setLoading(true);
       try {
@@ -64,16 +74,9 @@ export default function SearchTextClient() {
         );
         const data = await res.json();
 
-        const list = Array.isArray(data)
-          ? data
-          : Array.isArray(data.data)
-          ? data.data
-          : [];
-
-        setResults(list);
-        setLimit(20); // reset paging
-        setHasFetched(true);
-      } catch (e) {
+        setResults(data.data || []);
+        setNextUrl(data.next); // 🔥 important
+      } catch {
         setResults([]);
       } finally {
         setLoading(false);
@@ -98,57 +101,73 @@ export default function SearchTextClient() {
     if (buyer?.id) mergeGuestCart();
   }, [buyer?.id, mergeGuestCart]);
 
-  // -----------------------------
-  // PAGE LOCAL FILTER
-  // -----------------------------
-  const filteredList = useMemo(() => {
-    const val = searchTerm.toLowerCase();
-    return results.filter((item) =>
-      (item.ProductName || item.medicine_name || "").toLowerCase().includes(val)
-    );
-  }, [results, searchTerm]);
+  const loadMore = useCallback(async () => {
+    if (!nextUrl || loadingMore) return;
 
-  // -----------------------------
-  // UPDATE VISIBLE ITEMS (PAGINATION)
-  // -----------------------------
-  useEffect(() => {
-    const next = filteredList.slice(0, limit);
+    setLoadingMore(true);
 
-    setVisibleList(next);
+    try {
+      const res = await fetch(nextUrl);
+      const data = await res.json();
 
-    filteredRef.current = filteredList; // actual total list
-  }, [filteredList, limit]);
+      setResults((prev) => {
+        const existingIds = new Set(prev.map((i) => i.id));
 
+        const filtered = (data.data || []).filter(
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          (item: any) => item && !existingIds.has(item.id)
+        );
+
+        return [...prev, ...filtered];
+      });
+
+      setNextUrl(data.next);
+    } finally {
+      setLoadingMore(false);
+    }
+  }, [nextUrl, loadingMore]);
   // -----------------------------
   // INFINITE SCROLL
   // -----------------------------
   useEffect(() => {
     if (!loadMoreRef.current) return;
 
+    const el = loadMoreRef.current;
+
     const observer = new IntersectionObserver(
       (entries) => {
-        if (!entries[0].isIntersecting) return;
-
-        const total = filteredRef.current.length;
-
-        if (limit < total) {
-          setLimit((prev) => prev + 20);
+        if (entries[0].isIntersecting) {
+          loadMore();
         }
       },
       {
-        root: null,
-        threshold: 0.2,
-        rootMargin: "0px 0px -100px 0px",
+        threshold: 0,
+        rootMargin: "300px",
       }
     );
 
-    observer.observe(loadMoreRef.current);
+    observer.observe(el);
 
-    return () => observer.disconnect();
-  }, [filteredList, limit]);
+    return () => {
+      observer.disconnect();
+    };
+  }, [loadMore]); // ✅ ONLY loadMore
+  // useEffect(() => {
+  //   const handleScroll = () => {
+  //     if (
+  //       window.innerHeight + window.scrollY >=
+  //         document.body.offsetHeight - 300 &&
+  //       nextUrl &&
+  //       !loadingMore
+  //     ) {
+  //       loadMore();
+  //     }
+  //   };
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [guestItems, setGuestItems] = useState<any[]>([]);
+  //   window.addEventListener("scroll", handleScroll);
+  //   return () => window.removeEventListener("scroll", handleScroll);
+  // }, [nextUrl, loadMore, loadingMore]);
+
   useEffect(() => {
     if (!buyer?.id) {
       const lsData = localStorage.getItem("healthbag");
@@ -254,14 +273,14 @@ export default function SearchTextClient() {
               <div className="row align-items-center mb-3">
                 {/* LEFT SIDE : PRODUCT NAME */}
                 <div className="col-md-9">
-                  <div className="pageTitle m-0">
+                  <div className="pageTitle mt-3 mb-3">
                     <Image src={"/images/favicon.png"} alt="" /> Product:{" "}
                     {searchText || "Loading..."}
                   </div>
                 </div>
 
                 {/* RIGHT SIDE : SEARCH BOX */}
-                <div className="col-md-3">
+                {/* <div className="col-md-3">
                   <div className="search_query">
                     <a className="query_search_btn" href="javascript:void(0)">
                       <i className="bi bi-search"></i>
@@ -277,20 +296,20 @@ export default function SearchTextClient() {
                       }}
                     />
                   </div>
-                </div>
+                </div> */}
               </div>
               <div className="pd_list">
-                {!hasFetched || loading ? (
+                {loading ? (
                   <div
                     className="d-flex justify-content-center align-items-center"
                     style={{ marginLeft: "100vh" }}
                   >
                     <TncLoader />
                   </div>
-                ) : visibleList.length === 0 ? (
+                ) : results.length === 0 ? (
                   <p>No products found.</p>
                 ) : (
-                  visibleList.map((item) => {
+                  results.map((item, index) => {
                     const pid = item.product_id ?? item.id;
 
                     const mrpRaw =
@@ -299,12 +318,16 @@ export default function SearchTextClient() {
                     const parsedMrp = Number(mrpRaw);
 
                     // 🔥 FINAL MRP FIX
-                    const mrp =
+                    const baseMrp =
                       Number.isFinite(parsedMrp) && parsedMrp > 0
                         ? parsedMrp
                         : 275;
+
+                    const mrp = Number(baseMrp.toFixed(2));
                     const discount = parseFloat(item.discount) || 0;
-                    const discounted = Math.round(mrp - (mrp * discount) / 100);
+                    const discounted = (mrp - (mrp * discount) / 100).toFixed(
+                      2
+                    );
 
                     const img = item.primary_image?.document
                       ? item.primary_image.document.startsWith("http")
@@ -324,7 +347,10 @@ export default function SearchTextClient() {
                     );
 
                     return (
-                      <div className="pd_box shadow" key={item.id}>
+                      <div
+                        className="pd_box shadow"
+                        key={`${item.id}-${index}`}
+                      >
                         <div className="pd_img">
                           <Image
                             src={img}
@@ -377,7 +403,16 @@ export default function SearchTextClient() {
 
                 {/* SPACER + OBSERVER */}
                 <div style={{ height: 200 }} />
-                <div ref={loadMoreRef} style={{ height: 20 }}></div>
+                <div ref={loadMoreRef} style={{ height: 20 }}>
+                  {loadingMore && (
+                    <div
+                      className="d-flex justify-content-center align-items-center"
+                      style={{ marginLeft: "60vh" }}
+                    >
+                      <TncLoader />
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </div>

@@ -21,6 +21,8 @@ interface SmartCreateInputProps {
   refreshAction: () => any;
 
   placeholder?: string;
+  inputRef?: React.RefObject<HTMLInputElement | null>;
+  onKeyDown?: (e: React.KeyboardEvent<HTMLInputElement>) => void;
 }
 
 const SmartCreateInput: React.FC<SmartCreateInputProps> = ({
@@ -31,6 +33,8 @@ const SmartCreateInput: React.FC<SmartCreateInputProps> = ({
   createAction,
   refreshAction,
   placeholder,
+  inputRef: externalRef,
+  onKeyDown: externalKeyDown,
 }) => {
   const dispatch = useAppDispatch();
 
@@ -43,8 +47,8 @@ const SmartCreateInput: React.FC<SmartCreateInputProps> = ({
     left: number;
     width: number;
   }>({ top: 0, left: 0, width: 0 });
-  const inputRef = useRef<HTMLInputElement>(null);
-
+  const internalRef = useRef<HTMLInputElement>(null);
+  const inputRef = externalRef || internalRef;
   const wrapperRef = useRef<HTMLDivElement>(null);
   const listRef = useRef<HTMLUListElement>(null);
   const isSavingRef = useRef(false);
@@ -199,7 +203,6 @@ const SmartCreateInput: React.FC<SmartCreateInputProps> = ({
         position: "relative",
         width: "100%",
         overflow: "visible",
-        marginTop: 0,
       }}
     >
       <label className="lbl1 fw-bold">{label}</label>
@@ -220,7 +223,10 @@ const SmartCreateInput: React.FC<SmartCreateInputProps> = ({
           setShowList(true);
           setHighlightIndex(-1);
         }}
-        onKeyDown={handleKeyDown}
+        onKeyDown={(e) => {
+          handleKeyDown(e);
+          externalKeyDown?.(e);
+        }}
         onFocus={() => value && setShowList(true)}
         onBlur={() => {
           if (enterPressedRef.current) {

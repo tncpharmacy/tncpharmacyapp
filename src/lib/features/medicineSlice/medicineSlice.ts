@@ -33,6 +33,7 @@ import {
 interface FetchCategoryPayload {
   categoryId: number;
   subCategoryId: number;
+  url?: string;
 }
 interface MedicineState {
   medicine: MedicineResponse | null;
@@ -119,21 +120,40 @@ export const getMedicinesMenuById = createAsyncThunk<
 // ✅ Get medicines by Other category ID
 export const getMedicinesByCategoryId = createAsyncThunk<
   MedicineResponse,
-  number,
+  { categoryId: number; url?: string },
   { rejectValue: string }
 >(
-  "medicine/getByCategory", // Action type string
-  async (categoryId, { rejectWithValue }) => {
+  "medicine/getByCategory",
+  async ({ categoryId, url }, { rejectWithValue }) => {
     try {
-      const res: MedicineResponse = await fetchMenuOtherMedicinesByCategory(
-        categoryId
+      const res = await fetchMenuOtherMedicinesByCategory(categoryId, url);
+      return res;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (err: any) {
+      return rejectWithValue(err.message);
+    }
+  }
+);
+
+export const getCategoryIdBySubcategory = createAsyncThunk<
+  MedicineResponse,
+  { categoryId: number; subCategoryId: number; url?: string },
+  { rejectValue: string }
+>(
+  "medicine/getCategoryIdBySubcategory",
+  async ({ categoryId, subCategoryId, url }, { rejectWithValue }) => {
+    try {
+      const res = await fetchCategoryIdBySubcategory(
+        categoryId,
+        subCategoryId,
+        url // 🔥 important
       );
       return res;
     } catch (err: unknown) {
       if (err instanceof Error) {
         return rejectWithValue(err.message);
       }
-      return rejectWithValue("Failed to fetch category medicines");
+      return rejectWithValue("Failed to fetch medicines");
     }
   }
 );
@@ -158,36 +178,46 @@ export const getMedicinesMenuByOtherId = createAsyncThunk<
 // ✅ Get all medicine id by generic
 export const getMedicineByGenericId = createAsyncThunk<
   MedicineResponse,
-  number,
+  { id: number; url?: string },
   { rejectValue: string }
->("medicine/getMedicineIdByGeneric", async (id, { rejectWithValue }) => {
-  try {
-    const res: MedicineResponse = await fetchMedicineByGenericId(id);
-    return res;
-  } catch (err: unknown) {
-    if (err instanceof Error) {
-      return rejectWithValue(err.message);
+>(
+  "medicine/getMedicineIdByGeneric",
+  async ({ id, url }, { rejectWithValue }) => {
+    try {
+      const res: MedicineResponse = await fetchMedicineByGenericId(id, url);
+      return res;
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        return rejectWithValue(err.message);
+      }
+      return rejectWithValue("Failed to fetch medicines");
     }
-    return rejectWithValue("Failed to fetch medicines");
   }
-});
+);
 
 // ✅ Get all medicine id by manufacturer
 export const getMedicineByManufacturerId = createAsyncThunk<
   MedicineResponse,
-  number,
+  { id: number; url?: string },
   { rejectValue: string }
->("medicine/getMedicineIdByManufacturer", async (id, { rejectWithValue }) => {
-  try {
-    const res: MedicineResponse = await fetchMedicineByManufacturerId(id);
-    return res;
-  } catch (err: unknown) {
-    if (err instanceof Error) {
-      return rejectWithValue(err.message);
+>(
+  "medicine/getMedicineIdByManufacturer",
+  async ({ id, url }, { rejectWithValue }) => {
+    try {
+      const res: MedicineResponse = await fetchMedicineByManufacturerId(
+        id,
+        url
+      );
+
+      return res;
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        return rejectWithValue(err.message);
+      }
+      return rejectWithValue("Failed to fetch medicines");
     }
-    return rejectWithValue("Failed to fetch medicines");
   }
-});
+);
 
 // ✅ Get all menu medicines List
 export const getMenuMedicinesList = createAsyncThunk<
@@ -241,26 +271,6 @@ export const getProductByGenericId = createAsyncThunk<
     return rejectWithValue("Failed to fetch medicines");
   }
 });
-
-// ✅ Get all category id by sub category
-export const getCategoryIdBySubcategory = createAsyncThunk<
-  MedicineResponse, // ✅ fulfilled me return type
-  FetchCategoryPayload, // ✅ dispatch me pass karne ka arg type
-  { rejectValue: string } // ✅ rejectValue type
->(
-  "medicine/getCategoryIdBySubcategory",
-  async ({ categoryId, subCategoryId }, { rejectWithValue }) => {
-    try {
-      const res = await fetchCategoryIdBySubcategory(categoryId, subCategoryId);
-      return res; // ✅ MedicineResponse return ho raha
-    } catch (err: unknown) {
-      if (err instanceof Error) {
-        return rejectWithValue(err.message);
-      }
-      return rejectWithValue("Failed to fetch medicines");
-    }
-  }
-);
 
 // ✅ Get group care
 export const getGroupCare = createAsyncThunk<
@@ -509,11 +519,29 @@ const medicineSlice = createSlice({
       // fetch medicine id by generic
       .addCase(getMedicineByGenericId.pending, (state) => {
         state.loading = true;
-        state.genericAlternativesMedicines = [];
+        // state.genericAlternativesMedicines = [];
       })
       .addCase(getMedicineByGenericId.fulfilled, (state, action) => {
         state.loading = false;
-        state.genericAlternativesMedicines = action.payload.data;
+
+        const safeCurrent = Array.isArray(state.genericAlternativesMedicines)
+          ? state.genericAlternativesMedicines
+          : [];
+
+        const safeIncoming = Array.isArray(action.payload.data)
+          ? action.payload.data
+          : [];
+
+        const isLoadMore =
+          action.meta.arg.url !== undefined && action.meta.arg.url !== null;
+
+        const combined = isLoadMore
+          ? [...safeCurrent, ...safeIncoming] // 🔥 append
+          : safeIncoming; // first load
+
+        state.genericAlternativesMedicines = combined;
+
+        state.next = action.payload.next;
         state.count = action.payload.count;
         state.error = null;
       })
@@ -524,12 +552,32 @@ const medicineSlice = createSlice({
       // fetch medicine id by manufacturer
       .addCase(getMedicineByManufacturerId.pending, (state) => {
         state.loading = true;
-        state.manufacturerAlternativesMedicines = [];
+        // state.manufacturerAlternativesMedicines = [];
       })
       .addCase(getMedicineByManufacturerId.fulfilled, (state, action) => {
         state.loading = false;
-        state.manufacturerAlternativesMedicines = action.payload.data;
-        state.count = action.payload.total_count;
+
+        const safeCurrent = Array.isArray(
+          state.manufacturerAlternativesMedicines
+        )
+          ? state.manufacturerAlternativesMedicines
+          : [];
+
+        const safeIncoming = Array.isArray(action.payload.data)
+          ? action.payload.data
+          : [];
+
+        const isLoadMore =
+          action.meta.arg.url !== undefined && action.meta.arg.url !== null;
+
+        const combined = isLoadMore
+          ? [...safeCurrent, ...safeIncoming] // 🔥 append
+          : safeIncoming; // first load
+
+        state.manufacturerAlternativesMedicines = combined;
+
+        state.next = action.payload.next;
+        state.count = action.payload.count;
         state.error = null;
       })
       .addCase(getMedicineByManufacturerId.rejected, (state, action) => {
@@ -556,9 +604,15 @@ const medicineSlice = createSlice({
         state.error = null;
       })
       .addCase(getMedicinesByCategoryId.fulfilled, (state, action) => {
-        state.loading = false;
-        state.byCategory[action.meta.arg] = action.payload.data; // categoryId as key
-        state.error = null;
+        const { categoryId, url } = action.meta.arg;
+
+        const existing = state.byCategory[categoryId] || [];
+
+        state.byCategory[categoryId] = url
+          ? [...existing, ...action.payload.data] // 🔥 append
+          : action.payload.data; // first load
+
+        state.next = action.payload.next;
       })
       .addCase(getMedicinesByCategoryId.rejected, (state, action) => {
         state.loading = false;
@@ -606,8 +660,17 @@ const medicineSlice = createSlice({
       })
       .addCase(getCategoryIdBySubcategory.fulfilled, (state, action) => {
         state.loading = false;
-        const key = `${action.meta.arg.categoryId}-${action.meta.arg.subCategoryId}`;
-        state.byCategorySubcategory[key] = action.payload.data;
+
+        const { categoryId, subCategoryId, url } = action.meta.arg;
+        const key = `${categoryId}-${subCategoryId}`;
+
+        const existing = state.byCategorySubcategory[key] || [];
+
+        state.byCategorySubcategory[key] = url
+          ? [...existing, ...action.payload.data] // 🔥 append
+          : action.payload.data; // first load
+
+        state.next = action.payload.next; // 🔥 VERY IMPORTANT
         state.error = null;
       })
       .addCase(getCategoryIdBySubcategory.rejected, (state, action) => {

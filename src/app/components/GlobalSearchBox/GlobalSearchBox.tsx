@@ -18,6 +18,7 @@ type Props = {
   onSelect?: (item: SearchMatch) => void;
   redirectOnSelect?: boolean;
   className?: string;
+  onKeyDown?: (e: React.KeyboardEvent<HTMLInputElement>) => void; //
 };
 
 export default function GlobalSearchBox({
@@ -25,6 +26,7 @@ export default function GlobalSearchBox({
   onSelect,
   redirectOnSelect = false,
   className = "",
+  onKeyDown,
 }: Props) {
   const dispatch = useAppDispatch();
   const router = useRouter();
@@ -193,7 +195,13 @@ export default function GlobalSearchBox({
           setHighlightIndex(-1);
         }}
         onFocus={() => search && setShowList(true)}
-        onKeyDown={handleKeyDown}
+        onKeyDown={(e) => {
+          handleKeyDown(e);
+
+          if (onKeyDown) {
+            onKeyDown(e);
+          }
+        }}
         onKeyUp={handleKeyUp}
       />
 

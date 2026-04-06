@@ -326,22 +326,25 @@ export default function AllGroupCare() {
                 ) : visibleList.length === 0 ? (
                   <p>No products found.</p>
                 ) : (
-                  visibleList.map((item) => {
+                  visibleList.map((item, index) => {
                     const mrpRaw =
                       item.MRP ?? item.mrp ?? item.Mrp ?? item.price ?? 0;
 
                     const parsedMrp = Number(mrpRaw);
 
                     // 🔥 FINAL MRP FIX
-                    const mrp =
+                    const baseMrp =
                       Number.isFinite(parsedMrp) && parsedMrp > 0
                         ? parsedMrp
                         : 275;
 
+                    const mrp = Number(baseMrp.toFixed(2));
+
                     const discount = parseFloat(item.discount || "0");
-                    const discountedPrice = Math.round(
-                      mrp - (mrp * discount) / 100
-                    );
+                    const discountedPrice = (
+                      mrp -
+                      (mrp * discount) / 100
+                    ).toFixed(2);
 
                     const imageUrl = item.default_image
                       ? item.default_image.startsWith("http")
@@ -363,7 +366,7 @@ export default function AllGroupCare() {
                     return (
                       <div
                         className="pd_box shadow"
-                        key={item.medicine_id}
+                        key={`${item.medicine_id}-${index}`}
                         style={{ boxShadow: "0 2px 5px rgba(0, 0, 0, 0.05)" }}
                       >
                         <div className="pd_img">

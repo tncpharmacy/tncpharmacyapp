@@ -1,5 +1,6 @@
 "use client";
 
+import GlobalSearchBox from "@/app/components/GlobalSearchBox/GlobalSearchBox";
 import SingleSelectDropdown from "@/app/components/Input/SingleSelectDropdown";
 import AddBillingItemModal from "@/app/components/RetailCounterModal/AddBillingItemModal";
 import GenericOptionsModal from "@/app/components/RetailCounterModal/GenericOptionsModal";
@@ -18,7 +19,7 @@ import { useAppDispatch, useAppSelector } from "@/lib/hooks";
 import { OptionType } from "@/types/input";
 import { Medicine } from "@/types/medicine";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Row, Col, Alert, ListGroup, Image } from "react-bootstrap";
 import toast from "react-hot-toast";
 
@@ -92,6 +93,9 @@ export default function OcrExtractionLogic({
     genericAlternatives: productListByGeneric,
     loading,
   } = useAppSelector((s) => s.medicine);
+  // ref for focus
+  const healthBagRef = useRef<HTMLButtonElement | null>(null);
+  const [isUploadFocused, setIsUploadFocused] = useState(false);
 
   const [selectedProduct, setSelectedProduct] = useState<Medicine | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -263,7 +267,7 @@ export default function OcrExtractionLogic({
     <Row>
       {/* TOP: Manual Select Dropdown */}
       <div className="col-md-6">
-        <SingleSelectDropdown
+        {/* <SingleSelectDropdown
           medicines={productList}
           selected={
             selectedProduct
@@ -291,14 +295,43 @@ export default function OcrExtractionLogic({
               handleSkipGenericModal(selected);
             }
           }}
+        /> */}
+        <GlobalSearchBox
+          placeholder="Search product..."
+          onSelect={(item) => {
+            const med = item.data;
+            setSelectedProduct(med);
+            if (med.category_id === 1) {
+              dispatch(getProductByGenericId(Number(med.id)));
+              setIsModalOpen(true); // 🔥 IMPORTANT
+            } else {
+              handleSkipGenericModal(med);
+            }
+          }}
+          onKeyDown={(e) => {
+            if (e.key === "Tab") {
+              e.preventDefault();
+              healthBagRef.current?.focus(); // 🔥 direct jump
+            }
+          }}
         />
       </div>
 
       {/* TOP-RIGHT: HEALTH BAG BUTTON */}
       <div className="col-md-6 text-end">
         <button
+          ref={healthBagRef}
           className="btn btn-primary px-4 mb-2"
           onClick={() => setIsHealthBagOpen(true)}
+          onFocus={() => setIsUploadFocused(true)}
+          onBlur={() => setIsUploadFocused(false)}
+          style={{
+            outline: isUploadFocused ? "2px solid #007bff" : "none",
+            boxShadow: isUploadFocused
+              ? "0 0 6px rgba(0, 123, 255, 0.5)"
+              : "none",
+            transition: "0.2s",
+          }}
           disabled={cart.length === 0}
         >
           🛒 Health Bag ({cart.length})

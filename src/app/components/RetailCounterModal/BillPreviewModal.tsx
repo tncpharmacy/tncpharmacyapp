@@ -280,8 +280,15 @@ const BillPreviewModal: React.FC<BillPreviewModalProps> = ({
   `);
 
     win.document.close();
-    win.print();
-    win.close();
+
+    setTimeout(() => {
+      win.focus();
+      win.print();
+
+      win.onafterprint = () => {
+        win.close();
+      };
+    }, 300);
   };
 
   // 🟡 PRINT LABEL — ONLY CARD SECTION
@@ -490,24 +497,29 @@ const BillPreviewModal: React.FC<BillPreviewModalProps> = ({
 
                 {/* Customer Info */}
                 <div className={styles.customerInfo}>
-                  <div className="d-flex justify-content-between">
-                    <div>
-                      <strong>Customer Name:</strong> {customerName || "-"}
-                    </div>
-                    <div>
-                      <strong>Mobile No.:</strong> {mobile || "-"}
-                    </div>
-                  </div>
-                  <div className="d-flex justify-content-between">
-                    <div>
-                      <strong>Referred By Doctor:</strong>{" "}
-                      {referredByDoctor || "Self"}
-                    </div>
-                    <div>
-                      <strong>Referred By Hospital:</strong>{" "}
-                      {referredByHospital || "Self"}
-                    </div>
-                  </div>
+                  <table style={{ width: "100%", marginBottom: "5px" }}>
+                    <tbody>
+                      <tr>
+                        <td>
+                          <strong>Customer Name:</strong> {customerName || "-"}
+                        </td>
+                        <td style={{ textAlign: "right" }}>
+                          <strong>Referred By Doctor:</strong>{" "}
+                          {referredByDoctor || "Self"}
+                        </td>
+                      </tr>
+
+                      <tr>
+                        <td>
+                          <strong>Mobile No.:</strong> {mobile || "-"}
+                        </td>
+                        <td style={{ textAlign: "right" }}>
+                          <strong>Referred By Hospital:</strong>{" "}
+                          {referredByHospital || "Self"}
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
                 </div>
 
                 {/* Billing Table */}

@@ -27,10 +27,15 @@ export default function ChangePassword() {
   const [submitLoading, setSubmitLoading] = useState(false);
 
   // Handle input changes
+  // Handle input changes (MAX LENGTH 15)
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
     const { name, value } = e.target;
+
+    // 🔥 limit to 15 characters
+    if (value.length > 15) return;
+
     setFormData((prev) => ({
       ...prev,
       [name]: value,
@@ -42,6 +47,32 @@ export default function ChangePassword() {
     e.preventDefault();
 
     if (submitLoading) return;
+
+    // 🔥 VALIDATIONS
+    if (!formData.old_password.trim()) {
+      toast.error("Old password is required");
+      return;
+    }
+
+    if (!formData.new_password.trim()) {
+      toast.error("New password is required");
+      return;
+    }
+
+    if (!formData.confirm_password.trim()) {
+      toast.error("Confirm password is required");
+      return;
+    }
+
+    if (formData.new_password.length > 15) {
+      toast.error("Password cannot exceed 15 characters");
+      return;
+    }
+
+    if (formData.new_password !== formData.confirm_password) {
+      toast.error("Passwords do not match");
+      return;
+    }
 
     try {
       setSubmitLoading(true);
@@ -107,6 +138,7 @@ export default function ChangePassword() {
                   name="old_password"
                   value={formData.old_password}
                   onChange={handleChange}
+                  maxLength={15}
                   required
                 />
 
@@ -115,6 +147,7 @@ export default function ChangePassword() {
                   name="new_password"
                   value={formData.new_password}
                   onChange={handleChange}
+                  maxLength={15}
                   required
                 />
 
@@ -123,6 +156,7 @@ export default function ChangePassword() {
                   name="confirm_password"
                   value={formData.confirm_password}
                   onChange={handleChange}
+                  maxLength={15}
                   required
                 />
 

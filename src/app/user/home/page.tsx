@@ -92,9 +92,9 @@ export default function HomePage() {
   useEffect(() => {
     despatch(getGroupCare());
     despatch(getCategories());
-    despatch(getMedicinesByCategoryId(5));
-    despatch(getMedicinesByCategoryId(7));
-    despatch(getMedicinesByCategoryId(9));
+    despatch(getMedicinesByCategoryId({ categoryId: 5 }));
+    despatch(getMedicinesByCategoryId({ categoryId: 7 }));
+    despatch(getMedicinesByCategoryId({ categoryId: 9 }));
 
     const otherId = 0;
     if (otherId > 0) {
@@ -458,15 +458,18 @@ export default function HomePage() {
                   const mrpRaw = item.MRP ?? item.mrp ?? 0;
                   const parsedMrp = Number(mrpRaw);
                   // 🔥 FINAL MRP FIX
-                  const mrp =
+                  const baseMrp =
                     Number.isFinite(parsedMrp) && parsedMrp > 0
                       ? parsedMrp
                       : 275;
 
+                  const mrp = Number(baseMrp.toFixed(2));
+
                   const discount = parseFloat(item.Discount) || 0;
-                  const discountedPrice = Math.round(
-                    mrp - (mrp * discount) / 100
-                  );
+                  const discountedPrice = (
+                    mrp -
+                    (mrp * discount) / 100
+                  ).toFixed(2);
 
                   const imageUrl = item.DefaultImageURL
                     ? item.DefaultImageURL.startsWith("http")
@@ -516,11 +519,10 @@ export default function HomePage() {
                           </h6>
                           <div className="pd_price">
                             <span className="new_price">
-                              ₹{formatAmount(discountedPrice)}
+                              ₹{discountedPrice}
                             </span>
                             <span className="old_price">
-                              <del>MRP ₹{formatAmount(mrp)}</del> {discount}%
-                              off
+                              <del>MRP ₹{mrp}</del> {discount}% off
                             </span>
                           </div>
 
@@ -717,15 +719,18 @@ export default function HomePage() {
                   const mrpRaw = item.MRP ?? item.mrp ?? 0;
                   const parsedMrp = Number(mrpRaw);
                   // 🔥 FINAL MRP FIX
-                  const mrp =
+                  const baseMrp =
                     Number.isFinite(parsedMrp) && parsedMrp > 0
                       ? parsedMrp
                       : 275;
 
+                  const mrp = Number(baseMrp.toFixed(2));
+
                   const discount = parseFloat(item.Discount) || 0;
-                  const discountedPrice = Math.round(
-                    mrp - (mrp * discount) / 100
-                  );
+                  const discountedPrice = (
+                    mrp -
+                    (mrp * discount) / 100
+                  ).toFixed(2);
 
                   const imageUrl = item.DefaultImageURL
                     ? item.DefaultImageURL.startsWith("http")
@@ -776,11 +781,10 @@ export default function HomePage() {
                           </h6>
                           <div className="pd_price">
                             <span className="new_price">
-                              ₹{formatAmount(discountedPrice)}
+                              ₹{discountedPrice}
                             </span>
                             <span className="old_price">
-                              <del>MRP ₹{formatAmount(mrp)}</del> {discount}%
-                              off
+                              <del>MRP ₹{mrp}</del> {discount}% off
                             </span>
                           </div>
                           <Button
@@ -897,15 +901,18 @@ export default function HomePage() {
                   const mrpRaw = item.MRP ?? item.mrp ?? 0;
                   const parsedMrp = Number(mrpRaw);
                   // 🔥 FINAL MRP FIX
-                  const mrp =
+                  const baseMrp =
                     Number.isFinite(parsedMrp) && parsedMrp > 0
                       ? parsedMrp
                       : 275;
 
+                  const mrp = Number(baseMrp.toFixed(2));
+
                   const discount = parseFloat(item.Discount) || 0;
-                  const discountedPrice = Math.round(
-                    mrp - (mrp * discount) / 100
-                  );
+                  const discountedPrice = (
+                    mrp -
+                    (mrp * discount) / 100
+                  ).toFixed(2);
 
                   const imageUrl = item.DefaultImageURL
                     ? item.DefaultImageURL.startsWith("http")
@@ -956,11 +963,10 @@ export default function HomePage() {
                           </h6>
                           <div className="pd_price">
                             <span className="new_price">
-                              ₹{formatAmount(discountedPrice)}
+                              ₹{discountedPrice}
                             </span>
                             <span className="old_price">
-                              <del>MRP ₹{formatAmount(mrp)}</del> {discount}%
-                              off
+                              <del>MRP ₹{mrp}</del> {discount}% off
                             </span>
                           </div>
 

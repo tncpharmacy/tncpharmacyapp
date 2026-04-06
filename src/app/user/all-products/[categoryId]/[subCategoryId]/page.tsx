@@ -26,15 +26,6 @@ export default function AllProducts() {
   const dispatch = useAppDispatch();
   const params = useParams();
 
-  // -------------------------------
-  // 🔹 INFINITE SCROLL STATES
-  // -------------------------------
-  const [limit, setLimit] = useState(20);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  // const [visibleList, setVisibleList] = useState<any[]>([]);
-  const [hasFetched, setHasFetched] = useState(false);
-
-  const [isLoadingMore, setIsLoadingMore] = useState(false);
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const filteredRef = useRef<any[]>([]);
@@ -66,7 +57,7 @@ export default function AllProducts() {
         `${categoryIdNum}-${subCategoryIdNum}`
       ] || []
   );
-
+  const { next: nextUrl } = useAppSelector((state) => state.medicine);
   const { loading } = useAppSelector((state) => state.medicine);
   const { list: categories } = useAppSelector((state) => state.category);
 
@@ -86,26 +77,10 @@ export default function AllProducts() {
     uniqueMedicines,
     `product-page-category-${categoryIdNum}-subcategory-${subCategoryIdNum}`
   );
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const stableShuffledRef = useRef<any[]>([]);
-
-  useEffect(() => {
-    if (uniqueMedicines.length > 0 && stableShuffledRef.current.length === 0) {
-      stableShuffledRef.current = shuffledFromHook;
-    }
-    if (uniqueMedicines.length === 0) {
-      stableShuffledRef.current = [];
-    }
-  }, [uniqueMedicines, shuffledFromHook]);
 
   const finalShuffledList = useMemo(() => {
-    const list =
-      stableShuffledRef.current.length > 0
-        ? stableShuffledRef.current
-        : shuffledFromHook;
-
-    return [...list]; // new reference control
-  }, [shuffledFromHook]);
+    return [...uniqueMedicines].sort(() => Math.random() - 0.5);
+  }, [uniqueMedicines]);
 
   // -------------------------------
   // 🔹 CATEGORY NAME
@@ -116,16 +91,14 @@ export default function AllProducts() {
 
   // Fetch categories & medicines
   useEffect(() => {
-    if (categoryIdNum && subCategoryIdNum) {
-      setHasFetched(false);
+    if (!categoryIdNum || !subCategoryIdNum) return; // 🔥 guard
 
-      dispatch(
-        getCategoryIdBySubcategory({
-          categoryId: categoryIdNum,
-          subCategoryId: subCategoryIdNum,
-        })
-      ).finally(() => setHasFetched(true));
-    }
+    dispatch(
+      getCategoryIdBySubcategory({
+        categoryId: categoryIdNum,
+        subCategoryId: subCategoryIdNum,
+      })
+    );
 
     dispatch(getCategories());
   }, [categoryIdNum, subCategoryIdNum, dispatch]);
@@ -170,47 +143,6 @@ export default function AllProducts() {
   useEffect(() => {
     filteredRef.current = filteredMedicines;
   }, [filteredMedicines]);
-
-  // -------------------------------
-  // 🔹 UPDATE VISIBLE LIST
-  // -------------------------------
-  const visibleList = useMemo(() => {
-    return filteredMedicines.slice(0, limit);
-  }, [filteredMedicines, limit]);
-
-  // -------------------------------
-  // 🔹 INTERSECTION OBSERVER
-  // -------------------------------
-  useEffect(() => {
-    if (!loadMoreRef.current) return;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const entry = entries[0];
-
-        if (!entry.isIntersecting) return;
-        if (isLoadingMore) return;
-
-        const total = filteredRef.current.length;
-        if (limit >= total) return;
-
-        setIsLoadingMore(true);
-
-        setLimit((prev) => Math.min(prev + 20, total));
-
-        setTimeout(() => setIsLoadingMore(false), 300);
-      },
-      {
-        root: null,
-        threshold: 1.0,
-        rootMargin: "0px 0px -200px 0px",
-      }
-    );
-
-    observer.observe(loadMoreRef.current);
-
-    return () => observer.disconnect();
-  }, []);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [guestItems, setGuestItems] = useState<any[]>([]);
@@ -300,7 +232,42 @@ export default function AllProducts() {
   const handleClick = (product_id: number) => {
     router.push(`/product-details/${encodeId(product_id)}`);
   };
+  const safeCategoryId = categoryIdNum;
+  const safeSubCategoryId = subCategoryIdNum;
+  // -------------------------------
+  // 🔹 INTERSECTION OBSERVER
+  // -------------------------------
+  useEffect(() => {
+    if (!loadMoreRef.current) return;
+    if (!safeCategoryId || !safeSubCategoryId) return;
+    const observer = new IntersectionObserver((entries) => {
+      const entry = entries[0];
 
+      if (!entry.isIntersecting) return;
+      if (!nextUrl) return; // 🔥 important
+
+      dispatch(
+        getCategoryIdBySubcategory({
+          categoryId: categoryIdNum,
+          subCategoryId: subCategoryIdNum,
+          url: nextUrl,
+        })
+      );
+    });
+
+    observer.observe(loadMoreRef.current);
+
+    return () => observer.disconnect();
+  }, [
+    dispatch,
+    categoryIdNum,
+    subCategoryIdNum,
+    nextUrl,
+    safeCategoryId,
+    safeSubCategoryId,
+  ]);
+
+  const isInitialLoading = loading && medicines.length === 0;
   // -------------------------------
   // 🔹 UI RETURN
   // -------------------------------
@@ -317,14 +284,14 @@ export default function AllProducts() {
               <div className="row align-items-center mb-3">
                 {/* LEFT SIDE : PRODUCT NAME */}
                 <div className="col-md-9">
-                  <div className="pageTitle m-0">
+                  <div className="pageTitle mt-3 mb-3">
                     <Image src={"/images/favicon.png"} alt="" /> Product:{" "}
                     {categoryName || "Loading..."}
                   </div>
                 </div>
 
                 {/* RIGHT SIDE : SEARCH BOX */}
-                <div className="col-md-3">
+                {/* <div className="col-md-3">
                   <div className="search_query">
                     <a className="query_search_btn" href="javascript:void(0)">
                       <i className="bi bi-search"></i>
@@ -340,7 +307,7 @@ export default function AllProducts() {
                       }}
                     />
                   </div>
-                </div>
+                </div> */}
               </div>
               {/* First time loader */}
               {/* {loading && (
@@ -350,32 +317,34 @@ export default function AllProducts() {
               )} */}
               {/* PRODUCT LIST */}
               <div className="pd_list">
-                {loading && !hasFetched ? (
+                {isInitialLoading ? (
                   <div
                     className="d-flex justify-content-center align-items-center"
                     style={{ marginLeft: "100vh" }}
                   >
                     <TncLoader />
                   </div>
-                ) : visibleList.length === 0 ? (
+                ) : filteredMedicines.length === 0 ? (
                   <p>No products found.</p>
                 ) : (
-                  visibleList.map((item) => {
-                    const mrpRaw =
-                      item.MRP ?? item.mrp ?? item.Mrp ?? item.price ?? 0;
+                  filteredMedicines.map((item, index) => {
+                    const mrpRaw = item.MRP ?? item.mrp ?? 0;
 
                     const parsedMrp = Number(mrpRaw);
 
                     // 🔥 FINAL MRP FIX
-                    const mrp =
+                    const baseMrp =
                       Number.isFinite(parsedMrp) && parsedMrp > 0
                         ? parsedMrp
                         : 275;
 
+                    const mrp = Number(baseMrp.toFixed(2));
+
                     const discount = parseFloat(item.Discount) || 0;
-                    const discountedPrice = mrp
-                      ? Math.round(mrp - (mrp * discount) / 100)
-                      : 0;
+                    const discountedPrice = (
+                      mrp -
+                      (mrp * discount) / 100
+                    ).toFixed(2);
 
                     const imageUrl = item.DefaultImageURL
                       ? item.DefaultImageURL.startsWith("http")
@@ -397,7 +366,7 @@ export default function AllProducts() {
                     return (
                       <div
                         className="pd_box shadow"
-                        key={item.product_id}
+                        key={`${item.product_id}-${index}`}
                         style={{ boxShadow: "0 2px 5px rgba(0,0,0,0.05)" }}
                       >
                         <div className="pd_img">

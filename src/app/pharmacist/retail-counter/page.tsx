@@ -69,12 +69,17 @@ export default function RetailCounter() {
   const router = useRouter();
   // SINGLE SHARED REF FOR ANY CELL
   const doseRef = useRef<HTMLDivElement | null>(null);
+  const qtyRef = useRef<HTMLInputElement | null>(null);
+  const instructionRef = useRef<HTMLInputElement | null>(null);
+  const durationRef = useRef<HTMLInputElement | null>(null);
+  const submitRef = useRef<HTMLInputElement | null>(null);
+  const uploadRef = useRef<HTMLButtonElement | null>(null);
   const userPharmacy = getUser();
   const pharmacy_id = Number(userPharmacy?.pharmacy_id) || 0;
   const dispatch = useAppDispatch();
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [cart, setCart] = useState<any[]>([]);
-
+  const [isUploadFocused, setIsUploadFocused] = useState(false);
   // ✅ Redux State Selector: genericAlternatives और loading स्टेट यहाँ से आ रहे हैं।
   const {
     medicines: productList,
@@ -390,7 +395,7 @@ export default function RetailCounter() {
         status: "1",
         products,
       };
-      console.log("order payload", orderPayload);
+      // console.log("order payload", orderPayload);
       // 5) POST ORDER
       await dispatch(
         createPharmacistOrder({
@@ -505,6 +510,12 @@ export default function RetailCounter() {
                             handleSkipGenericModal(med);
                           }
                         }}
+                        onKeyDown={(e) => {
+                          if (e.key === "Tab") {
+                            e.preventDefault();
+                            uploadRef.current?.focus(); // 🔥 direct jump
+                          }
+                        }}
                       />
                     </div>
                   </div>
@@ -514,12 +525,22 @@ export default function RetailCounter() {
                   >
                     <div className="txt_col">
                       <button
+                        ref={uploadRef}
                         className="btn-style1"
                         onClick={goToRetailCounterPrescription}
-                        // disabled={selectedMedicines.length === 0}
+                        onFocus={() => setIsUploadFocused(true)}
+                        onBlur={() => setIsUploadFocused(false)}
+                        style={{
+                          outline: isUploadFocused
+                            ? "2px solid #007bff"
+                            : "none",
+                          boxShadow: isUploadFocused
+                            ? "0 0 6px rgba(0, 123, 255, 0.5)"
+                            : "none",
+                          transition: "0.2s",
+                        }}
                       >
                         Upload Prescription
-                        {/* <i className="bi bi-upload"></i>  */}
                       </button>
                     </div>
                   </div>
@@ -643,15 +664,19 @@ export default function RetailCounter() {
                     <table className="table table-bordered align-middle">
                       <thead className="table-light">
                         <tr>
-                          <th>Medicine</th>
-                          <th>Qty</th>
-                          <th>Doses</th>
-                          <th>Instruction</th>
-                          <th>Duration</th>
-                          <th>MRP (₹)</th>
-                          <th>Discount (%)</th>
-                          <th>Subtotal (₹)</th>
-                          <th></th>
+                          <th style={{ width: "260px" }}>Medicine</th>
+                          <th style={{ width: "80px", textAlign: "center" }}>
+                            Qty
+                          </th>
+                          <th style={{ width: "110px", textAlign: "center" }}>
+                            Doses
+                          </th>
+                          <th style={{ width: "180px" }}>Instruction</th>
+                          <th style={{ width: "120px" }}>Duration</th>
+                          <th style={{ width: "90px" }}>MRP (₹)</th>
+                          <th style={{ width: "90px" }}>Discount (%)</th>
+                          <th style={{ width: "110px" }}>Subtotal (₹)</th>
+                          <th style={{ width: "60px" }}></th>
                         </tr>
                       </thead>
                       <tbody>
@@ -668,117 +693,196 @@ export default function RetailCounter() {
                               ? (total * item.Disc) / 100
                               : 0;
                             const subtotal = total - discountAmount;
+                            const inputStyle = {
+                              height: "38px",
+                              fontSize: "14px",
+                            };
                             return (
                               <tr key={index}>
-                                <td>{item.medicine_name}</td>
+                                <td style={{ width: "250px" }}>
+                                  {/* Medicine */}
+                                  <div
+                                    style={{
+                                      display: "flex",
+                                      flexDirection: "column",
+                                      overflow: "hidden",
+                                    }}
+                                  >
+                                    <span
+                                      style={{
+                                        fontWeight: 600,
+                                        fontSize: "14px",
+                                        lineHeight: "18px",
+                                        display: "-webkit-box",
+                                        WebkitLineClamp: 2, // 👈 max 2 line
+                                        WebkitBoxOrient: "vertical",
+                                        overflow: "hidden",
+                                        textOverflow: "ellipsis",
+                                      }}
+                                    >
+                                      {item.medicine_name}
+                                    </span>
+
+                                    <span
+                                      style={{
+                                        fontSize: "12px",
+                                        color: "#666",
+                                        marginTop: "2px",
+                                        whiteSpace: "nowrap",
+                                        overflow: "hidden",
+                                        textOverflow: "ellipsis",
+                                      }}
+                                    >
+                                      {item.pack_size || "N/A"}
+                                    </span>
+                                  </div>
+                                </td>
+                                {/* Editable QTY */}
                                 <td
                                   style={{
-                                    cursor: "pointer",
+                                    textAlign: "center",
+                                    width: "70px",
+                                    height: "38px",
+                                  }}
+                                >
+                                  <input
+                                    type="number"
+                                    className="form-control"
+                                    value={item.qty}
+                                    min={1}
+                                    max={99}
+                                    onChange={(e) => {
+                                      const val = e.target.value;
+
+                                      // only 2 digit
+                                      if (/^\d{0,2}$/.test(val)) {
+                                        handleEditChange(
+                                          index,
+                                          "qty",
+                                          val || 0
+                                        );
+                                      }
+                                    }}
+                                    style={{ ...inputStyle, width: "70px" }}
+                                  />
+                                </td>
+                                {/* Editable Doses */}
+                                <td style={{ verticalAlign: "middle" }}>
+                                  <div
+                                    style={{
+                                      height: "38px",
+                                      display: "flex",
+                                      alignItems: "center",
+                                    }}
+                                  >
+                                    <DoseInstructionSelect
+                                      type="select"
+                                      name=""
+                                      label=""
+                                      isTableEditMode={true}
+                                      value={item.dose_form}
+                                      onChange={(e) =>
+                                        handleEditChange(
+                                          index,
+                                          "dose_form",
+                                          e.target.value
+                                        )
+                                      }
+                                    />
+                                  </div>
+                                </td>
+                                {/* Editable Instruction */}
+                                <td
+                                  style={{
                                     maxWidth: "160px",
+                                    verticalAlign: "middle",
+                                  }}
+                                >
+                                  <div
+                                    style={{
+                                      height: "38px",
+                                      display: "flex",
+                                      alignItems: "center",
+                                    }}
+                                  >
+                                    <SmartCreateInput
+                                      label=""
+                                      value={item.remarks ?? ""}
+                                      onChange={(val) => {
+                                        if (val.length <= 50) {
+                                          handleEditChange(
+                                            index,
+                                            "remarks",
+                                            val
+                                          );
+                                        }
+                                      }}
+                                      list={instructionList}
+                                      createAction={createProductInstruction}
+                                      refreshAction={getProductInstructions}
+                                      placeholder=""
+                                    />
+                                  </div>
+                                </td>
+                                {/* Editable Duration */}
+                                <td
+                                  style={{
+                                    maxWidth: "120px",
+                                    verticalAlign: "middle",
+                                  }}
+                                >
+                                  <div
+                                    style={{
+                                      height: "38px",
+                                      display: "flex",
+                                      alignItems: "center",
+                                    }}
+                                  >
+                                    <SmartCreateInput
+                                      label=""
+                                      value={item.duration ?? ""}
+                                      onChange={(val) => {
+                                        if (val.length <= 10) {
+                                          handleEditChange(
+                                            index,
+                                            "duration",
+                                            val
+                                          );
+                                        }
+                                      }}
+                                      list={durationList}
+                                      createAction={createProductDuration}
+                                      refreshAction={getProductDurations}
+                                      placeholder=""
+                                    />
+                                  </div>
+                                </td>
+                                {/* Price Mrp */}
+                                {/* <td>{formatAmount(item.price)}</td> */}
+                                <td
+                                  style={{
+                                    textAlign: "center",
+                                    width: "80px",
+                                    // backgroundColor: "#f5f5f5",
                                   }}
                                 >
                                   <input
                                     type="text"
                                     className="form-control"
-                                    value={`${item.pack_size || ""} × ${
-                                      item.qty
-                                    }`}
-                                    onChange={(e) => {
-                                      const raw = e.target.value;
-
-                                      // =============================
-                                      // Extract only digits from the right side after "×"
-                                      // =============================
-                                      const parts = raw.split("×");
-
-                                      let qty = parts[1] ? parts[1].trim() : "";
-
-                                      // Allow only digits
-                                      qty = qty.replace(/\D/g, "").slice(0, 2);
-
-                                      // Remove leading zeros
-                                      qty = qty.replace(/^0+/, "");
-
-                                      handleEditChange(index, "qty", qty || 0);
-                                    }}
+                                    value={formatAmount(item.price)}
+                                    readOnly
+                                    tabIndex={-1}
                                     style={{
-                                      width: "140px",
-                                      fontSize: "14px",
-                                      height: "38px",
+                                      ...inputStyle,
+                                      width: "80px",
+                                      backgroundColor: "#f5f5f5",
                                     }}
                                   />
                                 </td>
-                                <td>
-                                  <DoseInstructionSelect
-                                    type="select"
-                                    name=""
-                                    label=""
-                                    isTableEditMode={true}
-                                    value={item.dose_form}
-                                    onChange={(e) =>
-                                      handleEditChange(
-                                        index,
-                                        "dose_form",
-                                        e.target.value
-                                      )
-                                    }
-                                  />
-                                </td>
-
-                                <td
-                                  style={{
-                                    maxWidth: "160px",
-                                    position: "relative",
-                                    overflow: "visible",
-                                    verticalAlign: "top",
-                                    zIndex: 2,
-                                  }}
-                                >
-                                  <SmartCreateInput
-                                    label=""
-                                    value={item.remarks ?? ""}
-                                    onChange={(val) => {
-                                      if (val.length <= 50) {
-                                        handleEditChange(index, "remarks", val);
-                                      }
-                                    }}
-                                    list={instructionList}
-                                    createAction={createProductInstruction}
-                                    refreshAction={getProductInstructions}
-                                    placeholder=""
-                                  />
-                                </td>
-
-                                {/* Editable Duration */}
-                                <td
-                                  style={{
-                                    maxWidth: "120px",
-                                    position: "relative",
-                                    overflow: "visible",
-                                  }}
-                                >
-                                  <SmartCreateInput
-                                    label=""
-                                    value={item.duration ?? ""}
-                                    onChange={(val) => {
-                                      if (val.length <= 10) {
-                                        handleEditChange(
-                                          index,
-                                          "duration",
-                                          val
-                                        );
-                                      }
-                                    }}
-                                    list={durationList}
-                                    createAction={createProductDuration}
-                                    refreshAction={getProductDurations}
-                                    placeholder=""
-                                  />
-                                </td>
-
-                                <td>{formatAmount(item.price)}</td>
                                 {/* Editable Discount */}
-                                <td>
+                                <td
+                                  style={{ textAlign: "center", width: "70px" }}
+                                >
                                   <input
                                     type="number"
                                     className="form-control"
@@ -788,7 +892,7 @@ export default function RetailCounter() {
                                     // onChange={(e) =>
                                     //   handleEditChange(idx, "Disc", e.target.value)
                                     // }
-                                    style={{ width: "70px" }}
+                                    style={{ ...inputStyle, width: "80px" }}
                                     onChange={(e) => {
                                       const val = e.target.value;
 
@@ -799,11 +903,32 @@ export default function RetailCounter() {
                                     }}
                                   />
                                 </td>
-
-                                <td>
+                                {/* SubTotal */}
+                                {/* <td>
                                   {formatAmount(
                                     item.subtotal ?? item.qty * item.price
                                   )}
+                                </td> */}
+                                <td
+                                  style={{
+                                    textAlign: "center",
+                                    width: "90px",
+                                  }}
+                                >
+                                  <input
+                                    type="text"
+                                    className="form-control"
+                                    value={formatAmount(
+                                      item.subtotal ?? item.qty * item.price
+                                    )}
+                                    readOnly
+                                    tabIndex={-1}
+                                    style={{
+                                      ...inputStyle,
+                                      width: "80px",
+                                      backgroundColor: "#f5f5f5",
+                                    }}
+                                  />
                                 </td>
 
                                 <td>

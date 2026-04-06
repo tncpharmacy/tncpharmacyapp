@@ -26,14 +26,6 @@ const mediaBase = process.env.NEXT_PUBLIC_MEDIA_BASE_URL;
 
 export default function AllManufacturer() {
   const router = useRouter();
-
-  // Scrolling state
-  const [limit, setLimit] = useState(20);
-  const [hasFetched, setHasFetched] = useState(false);
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  // const [visibleList, setVisibleList] = useState<any[]>([]);
-  const [isLoadingMore, setIsLoadingMore] = useState(false);
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const filteredRef = useRef<any[]>([]); // will hold latest filteredMedicines for observer
@@ -42,7 +34,6 @@ export default function AllManufacturer() {
   const decodedId = decodeId(params.id as string);
   const dispatch = useAppDispatch();
   const categoryIdNum = Number(decodedId);
-  console.log("ID:", categoryIdNum);
   const buyer = useAppSelector((state) => state.buyer.buyer);
   const { items, addItem, removeItem, mergeGuestCart } = useHealthBag({
     userId: buyer?.id || null,
@@ -51,6 +42,8 @@ export default function AllManufacturer() {
   const medicines = useAppSelector(
     (state) => state.medicine.manufacturerAlternativesMedicines || []
   );
+  const nextUrl = useAppSelector((state) => state.medicine.next);
+
   const { loading } = useAppSelector((state) => state.medicine);
 
   const { list: categories } = useAppSelector((state) => state.category);
@@ -61,37 +54,7 @@ export default function AllManufacturer() {
     `product-page-category-${categoryIdNum}`
   );
 
-  // --- Freeze shuffled result once when medicines arrive ---
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const stableShuffledRef = useRef<any[]>([]);
-  useEffect(() => {
-    if (medicines.length > 0 && stableShuffledRef.current.length === 0) {
-      // freeze the shuffled array so it doesn't change on re-renders
-      stableShuffledRef.current = shuffledFromHook;
-    }
-    // if medicines become empty again (rare), we can clear
-    if (medicines.length === 0) {
-      stableShuffledRef.current = [];
-    }
-  }, [medicines, shuffledFromHook]);
-
-  // const finalShuffledList =
-  //   stableShuffledRef.current.length > 0
-  //     ? stableShuffledRef.current
-  //     : shuffledFromHook;
-  const finalShuffledList = useMemo(() => {
-    const list =
-      stableShuffledRef.current.length > 0
-        ? stableShuffledRef.current
-        : shuffledFromHook;
-
-    // remove duplicates
-    const unique = Array.from(
-      new Map(list.map((item) => [item.id, item])).values()
-    );
-
-    return unique;
-  }, [shuffledFromHook]);
+  const finalShuffledList = medicines;
 
   const manufacturerName = medicines?.[0]?.manufacturer_name || "Loading...";
   const categoryName =
@@ -117,8 +80,7 @@ export default function AllManufacturer() {
     if (!categoryIdNum) return;
 
     const fetchData = async () => {
-      await dispatch(getMedicineByManufacturerId(categoryIdNum));
-      setHasFetched(true);
+      await dispatch(getMedicineByManufacturerId({ id: categoryIdNum }));
     };
 
     fetchData();
@@ -140,14 +102,6 @@ export default function AllManufacturer() {
       (med.medicine_name || "").toLowerCase().includes(lower)
     );
   }, [finalShuffledList, searchTerm]);
-
-  // keep filteredRef in sync for observer checks
-  // useEffect(() => {
-  //   filteredRef.current = filteredMedicines;
-  //   if (filteredMedicines.length > 0 && limit === 0) {
-  //     setLimit(20);
-  //   }
-  // }, [filteredMedicines, limit]);
 
   useEffect(() => {
     filteredRef.current = filteredMedicines;
@@ -247,50 +201,39 @@ export default function AllManufacturer() {
     }
   };
 
-  // --- visibleList slice (controls what we render) ---
-  const visibleList = useMemo(() => {
-    return filteredMedicines.slice(0, limit);
-  }, [filteredMedicines, limit]);
-
   // --- IntersectionObserver: create ONCE, read filteredRef.current inside callback ---
+
+  const isFetchingRef = useRef(false);
+
   useEffect(() => {
     if (!loadMoreRef.current) return;
 
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const entry = entries[0];
-        if (!entry.isIntersecting) return;
-        if (isLoadingMore) return;
+    const observer = new IntersectionObserver((entries) => {
+      const entry = entries[0];
 
-        const total = filteredRef.current.length || 0;
-        if (limit >= total) return; // nothing to load
+      if (!entry.isIntersecting) return;
+      if (!nextUrl) return;
+      if (isFetchingRef.current) return; // 🔥 important
 
-        setIsLoadingMore(true);
+      isFetchingRef.current = true;
 
-        // increment safely using latest filteredRef.current
-        setLimit((prev) => {
-          const next = Math.min(prev + 20, total);
-          return next;
-        });
-
-        // small debounce so observer doesn't immediately retrigger
-        setTimeout(() => {
-          setIsLoadingMore(false);
-        }, 350);
-      },
-      {
-        root: null, // window/body scroll (your screenshot showed body scroll)
-        threshold: 1.0,
-        rootMargin: "0px 0px -200px 0px",
-      }
-    );
+      dispatch(
+        getMedicineByManufacturerId({
+          id: categoryIdNum,
+          url: nextUrl,
+        })
+      ).finally(() => {
+        isFetchingRef.current = false;
+      });
+    });
 
     observer.observe(loadMoreRef.current);
 
     return () => observer.disconnect();
-    // we intentionally run this effect only once on mount
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [dispatch, nextUrl, categoryIdNum]);
+
+  const isInitialLoading = loading && medicines.length === 0;
+  // const isLoadingMore = loading && medicines.length > 0;
 
   return (
     <>
@@ -305,14 +248,14 @@ export default function AllManufacturer() {
               <div className="row align-items-center mb-3">
                 {/* LEFT SIDE : PRODUCT NAME */}
                 <div className="col-md-9">
-                  <div className="pageTitle m-0">
+                  <div className="pageTitle mt-3 mb-3">
                     <Image src={"/images/favicon.png"} alt="" /> Manufacturer:{" "}
                     {manufacturerName || "Loading..."}
                   </div>
                 </div>
 
                 {/* RIGHT SIDE : SEARCH BOX */}
-                <div className="col-md-3">
+                {/* <div className="col-md-3">
                   <div className="search_query">
                     <a className="query_search_btn" href="javascript:void(0)">
                       <i className="bi bi-search"></i>
@@ -328,7 +271,7 @@ export default function AllManufacturer() {
                       }}
                     />
                   </div>
-                </div>
+                </div> */}
               </div>
               {/* First time loader */}
               {/* {loading && (
@@ -337,32 +280,34 @@ export default function AllManufacturer() {
                 </div>
               )} */}
               <div className="pd_list">
-                {loading && !hasFetched ? (
+                {isInitialLoading ? (
                   <div
                     className="d-flex justify-content-center align-items-center"
                     style={{ marginLeft: "100vh" }}
                   >
                     <TncLoader />
                   </div>
-                ) : visibleList.length === 0 ? (
+                ) : filteredMedicines.length === 0 ? (
                   <p>No products found.</p>
                 ) : (
-                  visibleList.map((item) => {
-                    const mrpRaw =
-                      item.MRP ?? item.mrp ?? item.Mrp ?? item.price ?? 0;
+                  filteredMedicines.map((item, index) => {
+                    const mrpRaw = item.MRP ?? item.mrp ?? 0;
 
                     const parsedMrp = Number(mrpRaw);
 
                     // 🔥 FINAL MRP FIX
-                    const mrp =
+                    const baseMrp =
                       Number.isFinite(parsedMrp) && parsedMrp > 0
                         ? parsedMrp
                         : 275;
 
-                    const discount = parseFloat(item.discount) || 0;
-                    const discountedPrice = Math.round(
-                      mrp - (mrp * discount) / 100
-                    );
+                    const mrp = Number(baseMrp.toFixed(2));
+
+                    const discount = parseFloat(item.discount || "0") || 0;
+                    const discountedPrice = (
+                      mrp -
+                      (mrp * discount) / 100
+                    ).toFixed(2);
 
                     const imageUrl = item.primary_image?.document
                       ? item.primary_image.document.startsWith("http")
@@ -383,8 +328,8 @@ export default function AllManufacturer() {
 
                     return (
                       <div
+                        key={`${item.id}-${index}`}
                         className="pd_box shadow"
-                        key={item.id}
                         style={{ boxShadow: "0 2px 5px rgba(0, 0, 0, 0.05)" }}
                       >
                         <div className="pd_img">

@@ -76,12 +76,12 @@ const MedicineList: React.FC<MedicineListProps> = ({ medicines, loading }) => {
       {/* HEADER + SEARCH */}
       <div className="row align-items-center mb-3">
         <div className="col-md-9">
-          <div className="pageTitle m-0">
+          <div className="pageTitle mt-3 mb-3">
             <Image src={"/images/favicon.png"} alt="" /> Medicine
           </div>
         </div>
 
-        <div className="col-md-3">
+        {/* <div className="col-md-3">
           <div className="search_query">
             <a className="query_search_btn" href="javascript:void(0)">
               <i className="bi bi-search"></i>
@@ -105,7 +105,7 @@ const MedicineList: React.FC<MedicineListProps> = ({ medicines, loading }) => {
               }}
             />
           </div>
-        </div>
+        </div> */}
       </div>
       {searchTerm && displayData.length === 0 && !loading && (
         <div className="text-start my-4">

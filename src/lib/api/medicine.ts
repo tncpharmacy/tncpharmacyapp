@@ -40,10 +40,13 @@ export const fetchMenuMedicinesById = async (
 // GET MENU OTHER MEDICINE
 // =========================
 export const fetchMenuOtherMedicinesByCategory = async (
-  categoryId: number
+  categoryId: number,
+  url?: string
 ): Promise<MedicineResponse> => {
-  const url = ENDPOINTS.MEDICINES.GET_MENU_OTHER_MEDICINE(categoryId);
-  const res = await axiosInstance.get<MedicineResponse>(url);
+  const finalUrl =
+    url || ENDPOINTS.MEDICINES.GET_MENU_OTHER_MEDICINE(categoryId);
+
+  const res = await axiosInstance.get<MedicineResponse>(finalUrl);
   return res.data;
 };
 // =========================
@@ -61,23 +64,30 @@ export const fetchMenuMedicinesByOtherId = async (
 // GET MEDICINE ID BY GENERIC
 // =========================
 export const fetchMedicineByGenericId = async (
-  medicineId: number
+  medicineId: number,
+  url?: string
 ): Promise<MedicineResponse> => {
-  const res = await axiosInstance.get<MedicineResponse>(
-    ENDPOINTS.MEDICINES.GET_MEDICINE_LIST_BY_GENERIC(medicineId)
-  );
-  return res.data; // ✅ res.data is now MedicineResponse
+  const finalUrl =
+    url || ENDPOINTS.MEDICINES.GET_MEDICINE_LIST_BY_GENERIC(medicineId);
+
+  const res = await axiosInstance.get<MedicineResponse>(finalUrl);
+
+  return res.data;
 };
 // ===============================
 // GET MEDICINE ID BY MANUFACTURER
 // ===============================
 export const fetchMedicineByManufacturerId = async (
-  manufacturerId: number
+  manufacturerId: number,
+  url?: string
 ): Promise<MedicineResponse> => {
-  const res = await axiosInstance.get<MedicineResponse>(
-    ENDPOINTS.MEDICINES.GET_MEDICINE_LIST_BY_MANUFACTURER(manufacturerId)
-  );
-  return res.data; // ✅ res.data is now MedicineResponse
+  const finalUrl =
+    url ||
+    ENDPOINTS.MEDICINES.GET_MEDICINE_LIST_BY_MANUFACTURER(manufacturerId);
+
+  const res = await axiosInstance.get<MedicineResponse>(finalUrl);
+
+  return res.data;
 };
 // =========================
 // GET ALL PRODUCT List
@@ -106,15 +116,18 @@ export const fetchProductByGenericId = async (
 // =================================
 export const fetchCategoryIdBySubcategory = async (
   categoryId: number,
-  subCategoryId: number
+  subCategoryId: number,
+  url?: string
 ): Promise<MedicineResponse> => {
-  const res = await axiosInstance.get<MedicineResponse>(
+  const finalUrl =
+    url ||
     ENDPOINTS.MEDICINES.GET_CATEGORY_ID_BY_SUBCATEGORY(
       categoryId,
       subCategoryId
-    )
-  );
-  return res.data; // ✅ res.data is now MedicineResponse
+    );
+
+  const res = await axiosInstance.get<MedicineResponse>(finalUrl);
+  return res.data;
 };
 // =========================
 // GET GROUP CARE

@@ -61,7 +61,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const baseDir = path.join(process.cwd(), "public/products");
+    const baseDir = path.join(process.cwd(), "public/products/5000.40");
 
     if (!fs.existsSync(baseDir)) {
       fs.mkdirSync(baseDir, { recursive: true });
@@ -90,8 +90,19 @@ export async function POST(req: NextRequest) {
               return;
             }
 
-            const parts = originalName.split("_");
-            const imageIndex = parts[1] || "1.jpg";
+            // ✅ NEW LOGIC
+            const ext = originalName.split(".").pop();
+            const nameWithoutExt = originalName.replace(`.${ext}`, "");
+            const parts = nameWithoutExt.split(".");
+
+            let fileName = "";
+
+            if (parts.length === 1) {
+              fileName = `${medicine_code}.${ext}`;
+            } else {
+              const index = parts[1];
+              fileName = `${medicine_code}_${index}.${ext}`;
+            }
 
             const medicineDir = path.join(baseDir, medicine_code);
 
@@ -99,7 +110,6 @@ export async function POST(req: NextRequest) {
               fs.mkdirSync(medicineDir, { recursive: true });
             }
 
-            const fileName = `${medicine_code}_${imageIndex}`;
             const filePath = path.join(medicineDir, fileName);
 
             // ⚠️ skip if already exists
