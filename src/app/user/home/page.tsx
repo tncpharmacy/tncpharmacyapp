@@ -457,19 +457,23 @@ export default function HomePage() {
                 .map((item) => {
                   const mrpRaw = item.MRP ?? item.mrp ?? 0;
                   const parsedMrp = Number(mrpRaw);
-                  // 🔥 FINAL MRP FIX
                   const baseMrp =
                     Number.isFinite(parsedMrp) && parsedMrp > 0
                       ? parsedMrp
                       : 275;
-
+                  // 🔥 FORMAT FUNCTION
+                  const formatPrice = (num: number) => {
+                    return Number(num.toFixed(2)).toString();
+                  };
+                  // 👉 formatted MRP
                   const mrp = Number(baseMrp.toFixed(2));
-
-                  const discount = parseFloat(item.Discount) || 0;
-                  const discountedPrice = (
-                    mrp -
-                    (mrp * discount) / 100
-                  ).toFixed(2);
+                  const formattedMrp = formatPrice(mrp);
+                  // 👉 discount
+                  const discount = parseFloat(item.Discount || "0") || 0;
+                  // 👉 discounted price
+                  const discountedPriceRaw = mrp - (mrp * discount) / 100;
+                  const formattedDiscountedPrice =
+                    formatPrice(discountedPriceRaw);
 
                   const imageUrl = item.DefaultImageURL
                     ? item.DefaultImageURL.startsWith("http")
@@ -519,10 +523,10 @@ export default function HomePage() {
                           </h6>
                           <div className="pd_price">
                             <span className="new_price">
-                              ₹{discountedPrice}
+                              ₹{formattedDiscountedPrice}
                             </span>
                             <span className="old_price">
-                              <del>MRP ₹{mrp}</del> {discount}% off
+                              <del>MRP ₹{formattedMrp}</del> {discount}% off
                             </span>
                           </div>
 
@@ -718,19 +722,23 @@ export default function HomePage() {
                 .map((item) => {
                   const mrpRaw = item.MRP ?? item.mrp ?? 0;
                   const parsedMrp = Number(mrpRaw);
-                  // 🔥 FINAL MRP FIX
                   const baseMrp =
                     Number.isFinite(parsedMrp) && parsedMrp > 0
                       ? parsedMrp
                       : 275;
-
+                  // 🔥 FORMAT FUNCTION
+                  const formatPrice = (num: number) => {
+                    return Number(num.toFixed(2)).toString();
+                  };
+                  // 👉 formatted MRP
                   const mrp = Number(baseMrp.toFixed(2));
-
-                  const discount = parseFloat(item.Discount) || 0;
-                  const discountedPrice = (
-                    mrp -
-                    (mrp * discount) / 100
-                  ).toFixed(2);
+                  const formattedMrp = formatPrice(mrp);
+                  // 👉 discount
+                  const discount = parseFloat(item.Discount || "0") || 0;
+                  // 👉 discounted price
+                  const discountedPriceRaw = mrp - (mrp * discount) / 100;
+                  const formattedDiscountedPrice =
+                    formatPrice(discountedPriceRaw);
 
                   const imageUrl = item.DefaultImageURL
                     ? item.DefaultImageURL.startsWith("http")
@@ -781,10 +789,10 @@ export default function HomePage() {
                           </h6>
                           <div className="pd_price">
                             <span className="new_price">
-                              ₹{discountedPrice}
+                              ₹{formattedDiscountedPrice}
                             </span>
                             <span className="old_price">
-                              <del>MRP ₹{mrp}</del> {discount}% off
+                              <del>MRP ₹{formattedMrp}</del> {discount}% off
                             </span>
                           </div>
                           <Button
@@ -900,19 +908,23 @@ export default function HomePage() {
                 .map((item) => {
                   const mrpRaw = item.MRP ?? item.mrp ?? 0;
                   const parsedMrp = Number(mrpRaw);
-                  // 🔥 FINAL MRP FIX
                   const baseMrp =
                     Number.isFinite(parsedMrp) && parsedMrp > 0
                       ? parsedMrp
                       : 275;
-
+                  // 🔥 FORMAT FUNCTION
+                  const formatPrice = (num: number) => {
+                    return Number(num.toFixed(2)).toString();
+                  };
+                  // 👉 formatted MRP
                   const mrp = Number(baseMrp.toFixed(2));
-
-                  const discount = parseFloat(item.Discount) || 0;
-                  const discountedPrice = (
-                    mrp -
-                    (mrp * discount) / 100
-                  ).toFixed(2);
+                  const formattedMrp = formatPrice(mrp);
+                  // 👉 discount
+                  const discount = parseFloat(item.Discount || "0") || 0;
+                  // 👉 discounted price
+                  const discountedPriceRaw = mrp - (mrp * discount) / 100;
+                  const formattedDiscountedPrice =
+                    formatPrice(discountedPriceRaw);
 
                   const imageUrl = item.DefaultImageURL
                     ? item.DefaultImageURL.startsWith("http")
@@ -963,10 +975,10 @@ export default function HomePage() {
                           </h6>
                           <div className="pd_price">
                             <span className="new_price">
-                              ₹{discountedPrice}
+                              ₹{formattedDiscountedPrice}
                             </span>
                             <span className="old_price">
-                              <del>MRP ₹{mrp}</del> {discount}% off
+                              <del>MRP ₹{formattedMrp}</del> {discount}% off
                             </span>
                           </div>
 

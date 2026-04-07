@@ -29,6 +29,7 @@ import { formatAmount } from "@/lib/utils/formatAmount";
 import TncLoader from "@/app/components/TncLoader/TncLoader";
 import BuyerLoginModal from "@/app/buyer-login/page";
 import { loadLocalHealthBag } from "@/lib/features/healthBagSlice/healthBagSlice";
+import { formatPrice } from "@/lib/utils/formatPrice";
 const mediaBase = process.env.NEXT_PUBLIC_MEDIA_BASE_URL;
 
 export interface Medicine {
@@ -318,18 +319,24 @@ export default function HealthBags() {
   const sourceItems = buyer?.id
     ? [...bagItem].sort((a, b) => a.productid - b.productid)
     : guestItems;
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const mergedItems = sourceItems.map((item: any) => {
-    const mrp = Number(item.mrp) || 0;
+    const rawMrp = Number(item.mrp) || 0;
+
+    // 🔥 fallback + validation
+    const mrp = Number.isFinite(rawMrp) && rawMrp > 0 ? rawMrp : 275;
+
     const discount = Number(item.discount) || 0;
 
-    const discountMrp = mrp ? mrp - (mrp * discount) / 100 : 0;
+    // 👉 discounted price raw
+    const discountMrpRaw = mrp - (mrp * discount) / 100;
 
     return {
       id: item.id || 0,
       productid: item.productid,
 
-      // 🔥 FIX NAME ISSUE HERE
+      // 🔥 NAME FIX
       name: item.name || item.productname || item.medicine_name || "",
 
       manufacturer: item.manufacturer || "",
@@ -338,13 +345,45 @@ export default function HealthBags() {
 
       qty: Number(item.qty) || 1,
 
+      // 👉 RAW values (for calculations)
       mrp,
       discount,
-      discountMrp,
+      discountMrp: discountMrpRaw,
+
+      // 👉 FORMATTED values (for UI)
+      formattedMrp: formatPrice(mrp),
+      formattedDiscountMrp: formatPrice(discountMrpRaw),
 
       image: item.image || item.medicine_image || "/images/tnc-default.png",
     };
   });
+
+  // const mergedItems = sourceItems.map((item: any) => {
+  //   const mrp = Number(item.mrp) || 0;
+  //   const discount = Number(item.discount) || 0;
+
+  //   const discountMrp = mrp ? mrp - (mrp * discount) / 100 : 0;
+
+  //   return {
+  //     id: item.id || 0,
+  //     productid: item.productid,
+
+  //     // 🔥 FIX NAME ISSUE HERE
+  //     name: item.name || item.productname || item.medicine_name || "",
+
+  //     manufacturer: item.manufacturer || "",
+  //     pack_size: item.pack_size || "",
+  //     prescription_required: item.prescription_required || 0,
+
+  //     qty: Number(item.qty) || 1,
+
+  //     mrp,
+  //     discount,
+  //     discountMrp,
+
+  //     image: item.image || item.medicine_image || "/images/tnc-default.png",
+  //   };
+  // });
 
   const handleQuantityChange = async (
     productId: number,
@@ -382,23 +421,22 @@ export default function HealthBags() {
       const mrp = Number(item.mrp) || 0;
       const discount = Number(item.discount) || 0;
 
-      // ✅ final price (safe)
-      const finalPrice =
-        item.discountMrp && item.discountMrp > 0
-          ? Number(item.discountMrp)
-          : mrp - (mrp * discount) / 100;
-
-      // ✅ discount amount (accurate)
-      const discountAmount = mrp - finalPrice;
+      // 🔥 exact discounted price
+      const finalPrice = mrp - (mrp * discount) / 100;
 
       acc.totalMrp += mrp * qty;
-      acc.totalDiscount += discountAmount * qty;
+      acc.totalDiscount += (mrp - finalPrice) * qty;
       acc.totalPay += finalPrice * qty;
 
       return acc;
     },
     { totalMrp: 0, totalDiscount: 0, totalPay: 0 }
   );
+
+  // 🔥 formatted values (NO .00 issue)
+  const formattedTotalMrp = formatPrice(totals.totalMrp);
+  const formattedTotalDiscount = formatPrice(totals.totalDiscount);
+  const formattedGrandTotal = formatPrice(totals.totalPay);
 
   const grandTotal = Math.round(totals.totalPay);
 
@@ -587,7 +625,15 @@ export default function HealthBags() {
                           />
                         </span>
                         <div className="flex-grow-1">
-                          <h6 className="fw-semibold mb-1">{item.name}</h6>
+                          <h6 className="fw-semibold mb-1">
+                            <span
+                              className="hover-link"
+                              onClick={() => handleItemSelect(item)}
+                              style={{ cursor: "pointer" }}
+                            >
+                              {item.name}
+                            </span>
+                          </h6>
                           {item.prescription_required === 1 && (
                             <div
                               style={{
@@ -652,9 +698,9 @@ export default function HealthBags() {
 
                         <div className="text-end ms-3">
                           <h6 className="mb-2 text-success">
-                            ₹{item.discountMrp.toFixed(2)}{" "}
+                            ₹{item.formattedDiscountMrp}{" "}
                             <small className="text-muted text-decoration-line-through">
-                              MRP ₹{item.mrp.toFixed(2)}
+                              MRP ₹{item.formattedMrp}
                             </small>
                             <br />
                             <span className="text-danger small">
@@ -743,13 +789,13 @@ export default function HealthBags() {
                   {/* Total MRP */}
                   <div className="d-flex justify-content-between mb-2 small">
                     <span>Total MRP</span>
-                    <span>₹{totals.totalMrp.toFixed(2)}</span>
+                    <span>₹{formattedTotalMrp}</span>
                   </div>
 
                   {/* You Saved */}
                   <div className="d-flex justify-content-between mb-2 small text-success">
                     <span>You saved</span>
-                    <span>- ₹{totals.totalDiscount.toFixed(2)}</span>
+                    <span>- ₹{formattedTotalDiscount}</span>
                   </div>
 
                   {/* Shipping */}
@@ -763,14 +809,13 @@ export default function HealthBags() {
                   {/* Final Pay */}
                   <div className="d-flex justify-content-between mb-1 fw-semibold">
                     <span>To Pay</span>
-                    <span>₹{Number(formatAmount(grandTotal)).toFixed(2)}</span>
+                    <span>₹{formattedGrandTotal}</span>
                   </div>
 
                   {/* Extra highlight */}
                   {totals.totalDiscount > 0 && (
                     <div className="text-success small mb-3">
-                      🎉 You saved ₹{totals.totalDiscount.toFixed(2)} on this
-                      order
+                      🎉 You saved ₹{formattedTotalDiscount} on this order
                     </div>
                   )}
 
@@ -806,19 +851,23 @@ export default function HealthBags() {
                 shuffled7.slice(0, 5).map((item) => {
                   const mrpRaw = item.MRP ?? item.mrp ?? 0;
                   const parsedMrp = Number(mrpRaw);
-                  // 🔥 FINAL MRP FIX
                   const baseMrp =
                     Number.isFinite(parsedMrp) && parsedMrp > 0
                       ? parsedMrp
                       : 275;
-
+                  // 🔥 FORMAT FUNCTION
+                  const formatPrice = (num: number) => {
+                    return Number(num.toFixed(2)).toString();
+                  };
+                  // 👉 formatted MRP
                   const mrp = Number(baseMrp.toFixed(2));
-                  // console.log("mrp", mrp);
-                  const discount = parseFloat(item.Discount) || 0;
-                  const discountedPrice = (
-                    mrp -
-                    (mrp * discount) / 100
-                  ).toFixed(2);
+                  const formattedMrp = formatPrice(mrp);
+                  // 👉 discount
+                  const discount = parseFloat(item.Discount || "0") || 0;
+                  // 👉 discounted price
+                  const discountedPriceRaw = mrp - (mrp * discount) / 100;
+                  const formattedDiscountedPrice =
+                    formatPrice(discountedPriceRaw);
 
                   const imageUrl = item.DefaultImageURL
                     ? item.DefaultImageURL.startsWith("http")
@@ -848,6 +897,7 @@ export default function HealthBags() {
                             alt={item.ProductName}
                             className="img-fluid mx-auto d-block"
                             style={{
+                              cursor: "pointer",
                               height: "220px",
                               objectFit: "contain",
                               opacity:
@@ -855,6 +905,7 @@ export default function HealthBags() {
                                   ? 0.3
                                   : 1, // ✅ only default image faded
                             }}
+                            onClick={() => handleClick(item.product_id)}
                           />
                         </div>
 
@@ -873,16 +924,16 @@ export default function HealthBags() {
                           <div className="d-flex align-items-center justify-content-between">
                             <div>
                               <div className="fw-semibold">
-                                ₹{discountedPrice}
+                                ₹{formattedDiscountedPrice}
                               </div>
-                              {discountedPrice ? (
+                              {formattedDiscountedPrice ? (
                                 <div className="text-success small">
                                   {discount}% off
                                 </div>
                               ) : null}
-                              {discountedPrice ? (
+                              {formattedDiscountedPrice ? (
                                 <small className="text-muted text-decoration-line-through">
-                                  MRP ₹{mrp}
+                                  MRP ₹{formattedMrp}
                                 </small>
                               ) : null}
                             </div>
@@ -939,19 +990,23 @@ export default function HealthBags() {
                 shuffled5.slice(0, 5).map((item) => {
                   const mrpRaw = item.MRP ?? item.mrp ?? 0;
                   const parsedMrp = Number(mrpRaw);
-                  // 🔥 FINAL MRP FIX
                   const baseMrp =
                     Number.isFinite(parsedMrp) && parsedMrp > 0
                       ? parsedMrp
                       : 275;
-
+                  // 🔥 FORMAT FUNCTION
+                  const formatPrice = (num: number) => {
+                    return Number(num.toFixed(2)).toString();
+                  };
+                  // 👉 formatted MRP
                   const mrp = Number(baseMrp.toFixed(2));
-
-                  const discount = parseFloat(item.Discount) || 0;
-                  const discountedPrice = (
-                    mrp -
-                    (mrp * discount) / 100
-                  ).toFixed(2);
+                  const formattedMrp = formatPrice(mrp);
+                  // 👉 discount
+                  const discount = parseFloat(item.Discount || "0") || 0;
+                  // 👉 discounted price
+                  const discountedPriceRaw = mrp - (mrp * discount) / 100;
+                  const formattedDiscountedPrice =
+                    formatPrice(discountedPriceRaw);
 
                   const imageUrl = item.DefaultImageURL
                     ? item.DefaultImageURL.startsWith("http")
@@ -980,6 +1035,7 @@ export default function HealthBags() {
                             alt={item.ProductName}
                             className="img-fluid mx-auto d-block"
                             style={{
+                              cursor: "pointer",
                               height: "220px",
                               objectFit: "contain",
                               opacity:
@@ -987,6 +1043,7 @@ export default function HealthBags() {
                                   ? 0.3
                                   : 1, // ✅ only default image faded
                             }}
+                            onClick={() => handleClick(item.product_id)}
                           />
                         </div>
 
@@ -1005,16 +1062,16 @@ export default function HealthBags() {
                           <div className="d-flex align-items-center justify-content-between">
                             <div>
                               <div className="fw-semibold">
-                                ₹{discountedPrice}
+                                ₹{formattedDiscountedPrice}
                               </div>
-                              {discountedPrice ? (
+                              {formattedDiscountedPrice ? (
                                 <div className="text-success small">
                                   {discount}% off
                                 </div>
                               ) : null}
-                              {discountedPrice ? (
+                              {formattedDiscountedPrice ? (
                                 <small className="text-muted text-decoration-line-through">
-                                  MRP ₹{mrp}
+                                  MRP ₹{formattedMrp}
                                 </small>
                               ) : null}
                             </div>
@@ -1071,19 +1128,23 @@ export default function HealthBags() {
                 shuffled9.slice(0, 5).map((item) => {
                   const mrpRaw = item.MRP ?? item.mrp ?? 0;
                   const parsedMrp = Number(mrpRaw);
-                  // 🔥 FINAL MRP FIX
                   const baseMrp =
                     Number.isFinite(parsedMrp) && parsedMrp > 0
                       ? parsedMrp
                       : 275;
-
+                  // 🔥 FORMAT FUNCTION
+                  const formatPrice = (num: number) => {
+                    return Number(num.toFixed(2)).toString();
+                  };
+                  // 👉 formatted MRP
                   const mrp = Number(baseMrp.toFixed(2));
-
-                  const discount = parseFloat(item.Discount) || 0;
-                  const discountedPrice = (
-                    mrp -
-                    (mrp * discount) / 100
-                  ).toFixed(2);
+                  const formattedMrp = formatPrice(mrp);
+                  // 👉 discount
+                  const discount = parseFloat(item.Discount || "0") || 0;
+                  // 👉 discounted price
+                  const discountedPriceRaw = mrp - (mrp * discount) / 100;
+                  const formattedDiscountedPrice =
+                    formatPrice(discountedPriceRaw);
 
                   const imageUrl = item.DefaultImageURL
                     ? item.DefaultImageURL.startsWith("http")
@@ -1113,6 +1174,7 @@ export default function HealthBags() {
                             alt={item.ProductName}
                             className="img-fluid mx-auto d-block"
                             style={{
+                              cursor: "pointer",
                               height: "220px",
                               objectFit: "contain",
                               opacity:
@@ -1120,6 +1182,7 @@ export default function HealthBags() {
                                   ? 0.3
                                   : 1, // ✅ only default image faded
                             }}
+                            onClick={() => handleClick(item.product_id)}
                           />
                         </div>
 
@@ -1138,16 +1201,16 @@ export default function HealthBags() {
                           <div className="d-flex align-items-center justify-content-between">
                             <div>
                               <div className="fw-semibold">
-                                ₹{discountedPrice}
+                                ₹{formattedDiscountedPrice}
                               </div>
-                              {discountedPrice ? (
+                              {formattedDiscountedPrice ? (
                                 <div className="text-success small">
                                   {discount}% off
                                 </div>
                               ) : null}
-                              {discountedPrice ? (
+                              {formattedDiscountedPrice ? (
                                 <small className="text-muted text-decoration-line-through">
-                                  MRP ₹{mrp}
+                                  MRP ₹{formattedMrp}
                                 </small>
                               ) : null}
                             </div>

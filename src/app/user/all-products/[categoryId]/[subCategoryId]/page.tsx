@@ -8,7 +8,10 @@ import { encodeId, decodeId } from "@/lib/utils/encodeDecode";
 import SiteHeader from "@/app/user/components/header/header";
 import { useParams } from "next/navigation";
 import { useAppDispatch, useAppSelector } from "@/lib/hooks";
-import { getCategoryIdBySubcategory } from "@/lib/features/medicineSlice/medicineSlice";
+import {
+  getCategoryIdBySubcategory,
+  resetMedicinesList,
+} from "@/lib/features/medicineSlice/medicineSlice";
 import { Image } from "react-bootstrap";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { useHealthBag } from "@/lib/hooks/useHealthBag";
@@ -18,6 +21,7 @@ import { useShuffledProduct } from "@/lib/hooks/useShuffledProduct";
 import { HealthBag } from "@/types/healthBag";
 import TncLoader from "@/app/components/TncLoader/TncLoader";
 import { loadLocalHealthBag } from "@/lib/features/healthBagSlice/healthBagSlice";
+import Pagination from "@/app/components/Pagination/Pagination";
 
 const mediaBase = process.env.NEXT_PUBLIC_MEDIA_BASE_URL;
 
@@ -25,14 +29,15 @@ export default function AllProducts() {
   const router = useRouter();
   const dispatch = useAppDispatch();
   const params = useParams();
-
-  const loadMoreRef = useRef<HTMLDivElement | null>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const filteredRef = useRef<any[]>([]);
+  const [guestItems, setGuestItems] = useState<any[]>([]);
+  // for pagination
+  const [page, setPage] = useState(1);
+  const [currentUrl, setCurrentUrl] = useState<string | null>(null);
+  const [prevStack, setPrevStack] = useState<string[]>([]);
+  const [pageLoading, setPageLoading] = useState(false);
 
-  // -------------------------------
   // 🔹 PARAMS DECODE
-  // -------------------------------
   const categoryIdRaw = params.categoryId;
   const subCategoryIdRaw = params.subCategoryId;
 
@@ -97,11 +102,12 @@ export default function AllProducts() {
       getCategoryIdBySubcategory({
         categoryId: categoryIdNum,
         subCategoryId: subCategoryIdNum,
+        url: currentUrl || undefined,
       })
     );
 
     dispatch(getCategories());
-  }, [categoryIdNum, subCategoryIdNum, dispatch]);
+  }, [dispatch, categoryIdNum, subCategoryIdNum, currentUrl]);
 
   // -------------------------------
   // 🔹 CART STATES
@@ -127,25 +133,28 @@ export default function AllProducts() {
     if (buyer?.id) mergeGuestCart();
   }, [buyer?.id, mergeGuestCart]);
 
+  useEffect(() => {
+    if (!loading && pageLoading) {
+      setTimeout(() => {
+        window.scrollTo({ top: 0, behavior: "auto" });
+        setPageLoading(false);
+      }, 100);
+    }
+  }, [loading, pageLoading]);
+
   // -------------------------------
   // 🔹 FILTER MEDICINES
   // -------------------------------
   const filteredMedicines = useMemo(() => {
-    if (!searchTerm) return finalShuffledList;
+    if (!searchTerm) return medicines;
 
     const lower = searchTerm.toLowerCase();
-    return finalShuffledList.filter((med) =>
+
+    return medicines.filter((med) =>
       (med.ProductName || "").toLowerCase().includes(lower)
     );
-  }, [searchTerm, finalShuffledList]);
+  }, [medicines, searchTerm]);
 
-  // Store for observer
-  useEffect(() => {
-    filteredRef.current = filteredMedicines;
-  }, [filteredMedicines]);
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [guestItems, setGuestItems] = useState<any[]>([]);
   useEffect(() => {
     if (!buyer?.id) {
       const lsData = localStorage.getItem("healthbag");
@@ -232,42 +241,8 @@ export default function AllProducts() {
   const handleClick = (product_id: number) => {
     router.push(`/product-details/${encodeId(product_id)}`);
   };
-  const safeCategoryId = categoryIdNum;
-  const safeSubCategoryId = subCategoryIdNum;
-  // -------------------------------
-  // 🔹 INTERSECTION OBSERVER
-  // -------------------------------
-  useEffect(() => {
-    if (!loadMoreRef.current) return;
-    if (!safeCategoryId || !safeSubCategoryId) return;
-    const observer = new IntersectionObserver((entries) => {
-      const entry = entries[0];
 
-      if (!entry.isIntersecting) return;
-      if (!nextUrl) return; // 🔥 important
-
-      dispatch(
-        getCategoryIdBySubcategory({
-          categoryId: categoryIdNum,
-          subCategoryId: subCategoryIdNum,
-          url: nextUrl,
-        })
-      );
-    });
-
-    observer.observe(loadMoreRef.current);
-
-    return () => observer.disconnect();
-  }, [
-    dispatch,
-    categoryIdNum,
-    subCategoryIdNum,
-    nextUrl,
-    safeCategoryId,
-    safeSubCategoryId,
-  ]);
-
-  const isInitialLoading = loading && medicines.length === 0;
+  const isInitialLoading = loading || pageLoading;
   // -------------------------------
   // 🔹 UI RETURN
   // -------------------------------
@@ -320,7 +295,7 @@ export default function AllProducts() {
                 {isInitialLoading ? (
                   <div
                     className="d-flex justify-content-center align-items-center"
-                    style={{ marginLeft: "100vh" }}
+                    style={{ height: "300px", marginLeft: "100vh" }}
                   >
                     <TncLoader />
                   </div>
@@ -329,22 +304,24 @@ export default function AllProducts() {
                 ) : (
                   filteredMedicines.map((item, index) => {
                     const mrpRaw = item.MRP ?? item.mrp ?? 0;
-
                     const parsedMrp = Number(mrpRaw);
-
-                    // 🔥 FINAL MRP FIX
                     const baseMrp =
                       Number.isFinite(parsedMrp) && parsedMrp > 0
                         ? parsedMrp
                         : 275;
-
+                    // 🔥 FORMAT FUNCTION
+                    const formatPrice = (num: number) => {
+                      return Number(num.toFixed(2)).toString();
+                    };
+                    // 👉 formatted MRP
                     const mrp = Number(baseMrp.toFixed(2));
-
-                    const discount = parseFloat(item.Discount) || 0;
-                    const discountedPrice = (
-                      mrp -
-                      (mrp * discount) / 100
-                    ).toFixed(2);
+                    const formattedMrp = formatPrice(mrp);
+                    // 👉 discount
+                    const discount = parseFloat(item.Discount || "0") || 0;
+                    // 👉 discounted price
+                    const discountedPriceRaw = mrp - (mrp * discount) / 100;
+                    const formattedDiscountedPrice =
+                      formatPrice(discountedPriceRaw);
 
                     const imageUrl = item.DefaultImageURL
                       ? item.DefaultImageURL.startsWith("http")
@@ -404,11 +381,11 @@ export default function AllProducts() {
 
                             <div className="pd_price">
                               <span className="new_price">
-                                ₹{discountedPrice}
+                                ₹{formattedDiscountedPrice}
                               </span>
                               {mrp > 0 && (
                                 <span className="old_price">
-                                  <del>MRP ₹{mrp}</del> {discount}% off
+                                  <del>MRP ₹{formattedMrp}</del> {discount}% off
                                 </span>
                               )}
                             </div>
@@ -437,16 +414,33 @@ export default function AllProducts() {
                     );
                   })
                 )}
-
-                {/* {isLoadingMore && (
-                  <div className="text-center my-3">
-                    <div className="spinner-border text-primary"></div>
-                  </div>
-                )} */}
-
-                <div style={{ height: "300px" }} />
-                <div ref={loadMoreRef} style={{ height: "20px" }}></div>
               </div>
+              {filteredMedicines.length > 0 && !loading && (
+                <div className="d-flex justify-content-center mt-3">
+                  <Pagination
+                    currentPage={page}
+                    hasNext={!!nextUrl}
+                    hasPrev={page > 1}
+                    onPageChange={(newPage) => {
+                      setPageLoading(true);
+                      dispatch(resetMedicinesList());
+                      if (newPage > page && nextUrl) {
+                        setPrevStack((prev) => [...prev, currentUrl || ""]);
+                        setCurrentUrl(nextUrl);
+                        setPage(newPage);
+                      }
+
+                      if (newPage < page && prevStack.length > 0) {
+                        const lastUrl = prevStack[prevStack.length - 1];
+
+                        setPrevStack((prev) => prev.slice(0, -1));
+                        setCurrentUrl(lastUrl || null);
+                        setPage(newPage);
+                      }
+                    }}
+                  />
+                </div>
+              )}
             </div>
           </div>
         </div>

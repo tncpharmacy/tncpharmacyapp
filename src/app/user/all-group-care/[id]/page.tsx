@@ -53,9 +53,7 @@ export default function AllGroupCare() {
   const { loading } = useAppSelector((state) => state.medicine);
   const { list: categories } = useAppSelector((state) => state.category);
 
-  // -----------------------------
   // SHUFFLE SAFE
-  // -----------------------------
   const shuffledFromHook = useShuffledProduct(
     medicines,
     `groupcare-page-${categoryIdNum}`
@@ -63,9 +61,7 @@ export default function AllGroupCare() {
 
   const finalShuffledList = medicines;
 
-  // -----------------------------
   // CATEGORY NAME
-  // -----------------------------
   const categoryName =
     categories.find((cat) => cat.id === categoryIdNum)?.category_name ||
     "Unknown Category";
@@ -84,9 +80,8 @@ export default function AllGroupCare() {
     dispatch(getCategories());
   }, [categoryIdNum, currentUrl, dispatch]);
 
-  // -----------------------------
   // CART
-  // -----------------------------
+
   const { items, addItem, removeItem, mergeGuestCart } = useHealthBag({
     userId: buyer?.id || null,
   });
@@ -113,17 +108,25 @@ export default function AllGroupCare() {
     }
   }, [loading, pageLoading]);
 
-  // -----------------------------
   // FILTERING
-  // -----------------------------
+
+  // const filteredMedicines = useMemo(() => {
+  //   if (!searchTerm) return finalShuffledList;
+
+  //   const lower = searchTerm.toLowerCase();
+  //   return finalShuffledList.filter((med) =>
+  //     (med.medicine_name || "").toLowerCase().includes(lower)
+  //   );
+  // }, [searchTerm, finalShuffledList]);
   const filteredMedicines = useMemo(() => {
-    if (!searchTerm) return finalShuffledList;
+    if (!searchTerm) return medicines;
 
     const lower = searchTerm.toLowerCase();
-    return finalShuffledList.filter((med) =>
-      (med.medicine_name || "").toLowerCase().includes(lower)
+
+    return medicines.filter((med) =>
+      (med.ProductName || "").toLowerCase().includes(lower)
     );
-  }, [searchTerm, finalShuffledList]);
+  }, [medicines, searchTerm]);
 
   useEffect(() => {
     if (!buyer?.id) {
@@ -214,9 +217,7 @@ export default function AllGroupCare() {
     router.push(`/product-details/${encodeId(medicine_id)}`);
   };
   const isInitialLoading = loading || pageLoading;
-  // -----------------------------
-  // UI
-  // -----------------------------
+
   return (
     <>
       <div className="page-wrapper">
@@ -275,22 +276,24 @@ export default function AllGroupCare() {
                 ) : (
                   filteredMedicines.map((item, index) => {
                     const mrpRaw = item.MRP ?? item.mrp ?? 0;
-
                     const parsedMrp = Number(mrpRaw);
-
-                    // 🔥 FINAL MRP FIX
                     const baseMrp =
                       Number.isFinite(parsedMrp) && parsedMrp > 0
                         ? parsedMrp
                         : 275;
-
+                    // 🔥 FORMAT FUNCTION
+                    const formatPrice = (num: number) => {
+                      return Number(num.toFixed(2)).toString();
+                    };
+                    // 👉 formatted MRP
                     const mrp = Number(baseMrp.toFixed(2));
-
+                    const formattedMrp = formatPrice(mrp);
+                    // 👉 discount
                     const discount = parseFloat(item.discount || "0") || 0;
-                    const discountedPrice = (
-                      mrp -
-                      (mrp * discount) / 100
-                    ).toFixed(2);
+                    // 👉 discounted price
+                    const discountedPriceRaw = mrp - (mrp * discount) / 100;
+                    const formattedDiscountedPrice =
+                      formatPrice(discountedPriceRaw);
 
                     const imageUrl = item.default_image
                       ? item.default_image.startsWith("http")
@@ -350,10 +353,10 @@ export default function AllGroupCare() {
 
                             <div className="pd_price">
                               <span className="new_price">
-                                ₹{discountedPrice}
+                                ₹{formattedDiscountedPrice}
                               </span>
                               <span className="old_price">
-                                <del>MRP ₹{mrp}</del> {discount}% off
+                                <del>MRP ₹{formattedMrp}</del> {discount}% off
                               </span>
                             </div>
                           </div>

@@ -22,6 +22,7 @@ import { Medicine } from "@/types/medicine";
 import { encodeId } from "@/lib/utils/encodeDecode";
 import TncLoader from "@/app/components/TncLoader/TncLoader";
 import { loadLocalHealthBag } from "@/lib/features/healthBagSlice/healthBagSlice";
+import Pagination from "@/app/components/Pagination/Pagination";
 
 const mediaBase = process.env.NEXT_PUBLIC_MEDIA_BASE_URL;
 const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL;
@@ -32,22 +33,18 @@ export default function SearchTextClient() {
   const param = useSearchParams();
   const searchText = param.get("text") || "";
 
-  // -----------------------------
   // STATES
-  // -----------------------------
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [results, setResults] = useState<any[]>([]);
   const [nextUrl, setNextUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false); // first load
   const [loadingMore, setLoadingMore] = useState(false); // scroll load
-
-  const [searchTerm, setSearchTerm] = useState(""); // page input filter
-  const [limit, setLimit] = useState(20); // infinite-scroll limit
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [visibleList, setVisibleList] = useState<any[]>([]);
-  const loadMoreRef = useRef<HTMLDivElement | null>(null);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const filteredRef = useRef<any[]>([]);
+  // for pagination
+  const [searchTerm, setSearchTerm] = useState("");
+  const [page, setPage] = useState(1);
+  const [currentUrl, setCurrentUrl] = useState<string | null>(null);
+  const [prevStack, setPrevStack] = useState<string[]>([]);
+  const [pageLoading, setPageLoading] = useState(false);
 
   const buyer = useAppSelector((state) => state.buyer.buyer);
   const { items, addItem, removeItem, mergeGuestCart } = useHealthBag({
@@ -56,26 +53,26 @@ export default function SearchTextClient() {
 
   const [localBag, setLocalBag] = useState<number[]>([]);
   const [processingIds, setProcessingIds] = useState<number[]>([]);
-
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [guestItems, setGuestItems] = useState<any[]>([]);
-  const observerRef = useRef<IntersectionObserver | null>(null);
-  // -----------------------------
+
   // API SEARCH CALL (MAIN)
-  // -----------------------------
   useEffect(() => {
     if (!searchText) return;
 
     const load = async () => {
       setLoading(true);
+
       try {
-        const res = await fetch(
-          `${apiBase}/website/product/search/?text=${searchText}`
-        );
+        const url = currentUrl
+          ? currentUrl
+          : `${apiBase}/website/product/search/?text=${searchText}`;
+
+        const res = await fetch(url);
         const data = await res.json();
 
         setResults(data.data || []);
-        setNextUrl(data.next); // 🔥 important
+        setNextUrl(data.next || null);
       } catch {
         setResults([]);
       } finally {
@@ -84,11 +81,14 @@ export default function SearchTextClient() {
     };
 
     load();
+  }, [searchText, currentUrl]);
+
+  useEffect(() => {
+    setCurrentUrl(null);
+    setPage(1);
   }, [searchText]);
 
-  // -----------------------------
   // SYNC HEALTH BAG
-  // -----------------------------
   useEffect(() => {
     if (items?.length) {
       setLocalBag(items.map((i) => i.productid));
@@ -101,72 +101,12 @@ export default function SearchTextClient() {
     if (buyer?.id) mergeGuestCart();
   }, [buyer?.id, mergeGuestCart]);
 
-  const loadMore = useCallback(async () => {
-    if (!nextUrl || loadingMore) return;
-
-    setLoadingMore(true);
-
-    try {
-      const res = await fetch(nextUrl);
-      const data = await res.json();
-
-      setResults((prev) => {
-        const existingIds = new Set(prev.map((i) => i.id));
-
-        const filtered = (data.data || []).filter(
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          (item: any) => item && !existingIds.has(item.id)
-        );
-
-        return [...prev, ...filtered];
-      });
-
-      setNextUrl(data.next);
-    } finally {
-      setLoadingMore(false);
-    }
-  }, [nextUrl, loadingMore]);
-  // -----------------------------
-  // INFINITE SCROLL
-  // -----------------------------
   useEffect(() => {
-    if (!loadMoreRef.current) return;
-
-    const el = loadMoreRef.current;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting) {
-          loadMore();
-        }
-      },
-      {
-        threshold: 0,
-        rootMargin: "300px",
-      }
-    );
-
-    observer.observe(el);
-
-    return () => {
-      observer.disconnect();
-    };
-  }, [loadMore]); // ✅ ONLY loadMore
-  // useEffect(() => {
-  //   const handleScroll = () => {
-  //     if (
-  //       window.innerHeight + window.scrollY >=
-  //         document.body.offsetHeight - 300 &&
-  //       nextUrl &&
-  //       !loadingMore
-  //     ) {
-  //       loadMore();
-  //     }
-  //   };
-
-  //   window.addEventListener("scroll", handleScroll);
-  //   return () => window.removeEventListener("scroll", handleScroll);
-  // }, [nextUrl, loadMore, loadingMore]);
+    if (!loading && pageLoading) {
+      window.scrollTo({ top: 0, behavior: "auto" });
+      setPageLoading(false);
+    }
+  }, [loading, pageLoading]);
 
   useEffect(() => {
     if (!buyer?.id) {
@@ -299,7 +239,7 @@ export default function SearchTextClient() {
                 </div> */}
               </div>
               <div className="pd_list">
-                {loading ? (
+                {(loading || pageLoading) ? (
                   <div
                     className="d-flex justify-content-center align-items-center"
                     style={{ marginLeft: "100vh" }}
@@ -400,20 +340,33 @@ export default function SearchTextClient() {
                     );
                   })
                 )}
-
-                {/* SPACER + OBSERVER */}
-                <div style={{ height: 200 }} />
-                <div ref={loadMoreRef} style={{ height: 20 }}>
-                  {loadingMore && (
-                    <div
-                      className="d-flex justify-content-center align-items-center"
-                      style={{ marginLeft: "60vh" }}
-                    >
-                      <TncLoader />
-                    </div>
-                  )}
-                </div>
               </div>
+              {results.length > 0 && !loading && (
+                <div className="d-flex justify-content-center mt-3">
+                  <Pagination
+                    currentPage={page}
+                    hasNext={!!nextUrl}
+                    hasPrev={page > 1}
+                    onPageChange={(newPage) => {
+                      setPageLoading(true);
+                      setResults([]);
+                      if (newPage > page && nextUrl) {
+                        setPrevStack((prev) => [...prev, currentUrl || ""]);
+                        setCurrentUrl(nextUrl);
+                        setPage(newPage);
+                      }
+
+                      if (newPage < page && prevStack.length > 0) {
+                        const lastUrl = prevStack[prevStack.length - 1];
+
+                        setPrevStack((prev) => prev.slice(0, -1));
+                        setCurrentUrl(lastUrl || null);
+                        setPage(newPage);
+                      }
+                    }}
+                  />
+                </div>
+              )}
             </div>
           </div>
         </div>

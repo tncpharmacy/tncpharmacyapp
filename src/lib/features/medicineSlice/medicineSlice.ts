@@ -49,6 +49,7 @@ interface MedicineState {
   manufacturerAlternativesMedicines: Medicine[];
   count: number;
   loading: boolean;
+  searchLoading: boolean;
   error: string | null;
   byCategory: Record<number, Medicine[]>;
   byCategorySubcategory: {
@@ -74,6 +75,7 @@ const initialState: MedicineState = {
   manufacturerAlternativesMedicines: [],
   count: 0,
   loading: false,
+  searchLoading: false,
   error: null,
   byCategory: {},
   byCategorySubcategory: {},
@@ -514,70 +516,55 @@ const medicineSlice = createSlice({
       // fetch medicine id by generic
       .addCase(getMedicineByGenericId.pending, (state) => {
         state.loading = true;
-        // state.genericAlternativesMedicines = [];
+        state.error = null;
       })
+
       .addCase(getMedicineByGenericId.fulfilled, (state, action) => {
         state.loading = false;
-
-        const safeCurrent = Array.isArray(state.genericAlternativesMedicines)
-          ? state.genericAlternativesMedicines
-          : [];
 
         const safeIncoming = Array.isArray(action.payload.data)
           ? action.payload.data
           : [];
 
-        const isLoadMore =
-          action.meta.arg.url !== undefined && action.meta.arg.url !== null;
+        // 🔥 ALWAYS REPLACE (pagination)
+        state.genericAlternativesMedicines = safeIncoming;
 
-        const combined = isLoadMore
-          ? [...safeCurrent, ...safeIncoming] // 🔥 append
-          : safeIncoming; // first load
+        state.next = action.payload.next || null;
+        state.count = action.payload.count || 0;
 
-        state.genericAlternativesMedicines = combined;
-
-        state.next = action.payload.next;
-        state.count = action.payload.count;
         state.error = null;
       })
+
       .addCase(getMedicineByGenericId.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload || "Something went wrong";
+        state.error = action.payload || "Failed to fetch generic medicines";
       })
       // fetch medicine id by manufacturer
       .addCase(getMedicineByManufacturerId.pending, (state) => {
         state.loading = true;
-        // state.manufacturerAlternativesMedicines = [];
+        state.error = null;
       })
+
       .addCase(getMedicineByManufacturerId.fulfilled, (state, action) => {
         state.loading = false;
-
-        const safeCurrent = Array.isArray(
-          state.manufacturerAlternativesMedicines
-        )
-          ? state.manufacturerAlternativesMedicines
-          : [];
 
         const safeIncoming = Array.isArray(action.payload.data)
           ? action.payload.data
           : [];
 
-        const isLoadMore =
-          action.meta.arg.url !== undefined && action.meta.arg.url !== null;
+        // 🔥 ALWAYS REPLACE
+        state.manufacturerAlternativesMedicines = safeIncoming;
 
-        const combined = isLoadMore
-          ? [...safeCurrent, ...safeIncoming] // 🔥 append
-          : safeIncoming; // first load
+        state.next = action.payload.next || null;
+        state.count = action.payload.count || 0;
 
-        state.manufacturerAlternativesMedicines = combined;
-
-        state.next = action.payload.next;
-        state.count = action.payload.count;
         state.error = null;
       })
+
       .addCase(getMedicineByManufacturerId.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload || "Something went wrong";
+        state.error =
+          action.payload || "Failed to fetch manufacturer medicines";
       })
       // fetch menu medicine by other id
       .addCase(getMedicinesMenuByOtherId.pending, (state) => {
@@ -598,17 +585,25 @@ const medicineSlice = createSlice({
         state.loading = true;
         state.error = null;
       })
+
       .addCase(getMedicinesByCategoryId.fulfilled, (state, action) => {
-        const { categoryId, url } = action.meta.arg;
+        state.loading = false;
 
-        const existing = state.byCategory[categoryId] || [];
+        const { categoryId } = action.meta.arg;
 
-        state.byCategory[categoryId] = url
-          ? [...existing, ...action.payload.data] // 🔥 append
-          : action.payload.data; // first load
+        const safeIncoming = Array.isArray(action.payload.data)
+          ? action.payload.data
+          : [];
 
-        state.next = action.payload.next;
+        // 🔥 ALWAYS REPLACE (pagination)
+        state.byCategory[categoryId] = safeIncoming;
+
+        state.next = action.payload.next || null;
+        state.count = action.payload.count || 0;
+
+        state.error = null;
       })
+
       .addCase(getMedicinesByCategoryId.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload || "Failed to fetch medicines by category";
@@ -653,21 +648,26 @@ const medicineSlice = createSlice({
         state.loading = true;
         state.error = null;
       })
+
       .addCase(getCategoryIdBySubcategory.fulfilled, (state, action) => {
         state.loading = false;
 
-        const { categoryId, subCategoryId, url } = action.meta.arg;
+        const { categoryId, subCategoryId } = action.meta.arg;
         const key = `${categoryId}-${subCategoryId}`;
 
-        const existing = state.byCategorySubcategory[key] || [];
+        const safeIncoming = Array.isArray(action.payload.data)
+          ? action.payload.data
+          : [];
 
-        state.byCategorySubcategory[key] = url
-          ? [...existing, ...action.payload.data] // 🔥 append
-          : action.payload.data; // first load
+        // 🔥 ALWAYS REPLACE
+        state.byCategorySubcategory[key] = safeIncoming;
 
-        state.next = action.payload.next; // 🔥 VERY IMPORTANT
+        state.next = action.payload.next || null;
+        state.count = action.payload.count || 0;
+
         state.error = null;
       })
+
       .addCase(getCategoryIdBySubcategory.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload || "Something went wrong";
@@ -694,18 +694,14 @@ const medicineSlice = createSlice({
 
       .addCase(getGroupCareById.fulfilled, (state, action) => {
         state.loading = false;
-
         const safeIncoming = Array.isArray(action.payload.data)
           ? action.payload.data
           : [];
-
         state.groupCareList = safeIncoming;
         state.groupName = action.payload.group_name || "";
-
         // 🔥 pagination support (future ready)
         state.next = action.payload.next || null;
         state.count = action.payload.count || 0;
-
         state.error = null;
       })
 
@@ -761,15 +757,15 @@ const medicineSlice = createSlice({
 
       // Search Suggestion
       .addCase(getSearchSuggestions.pending, (state) => {
-        state.loading = true;
+        state.searchLoading = true;
       })
       .addCase(getSearchSuggestions.fulfilled, (state, action) => {
-        state.loading = false;
+        state.searchLoading = false;
         state.suggestions = action.payload.data;
         state.error = null;
       })
       .addCase(getSearchSuggestions.rejected, (state, action) => {
-        state.loading = false;
+        state.searchLoading = false;
         state.error = action.payload || "Suggestion fetch failed";
       })
 

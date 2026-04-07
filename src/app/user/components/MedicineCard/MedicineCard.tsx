@@ -12,6 +12,7 @@ import {
   loadLocalHealthBag,
   removeLocalHealthBag,
 } from "@/lib/features/healthBagSlice/healthBagSlice";
+import { formatPrice } from "@/lib/utils/formatPrice";
 
 const mediaBase = process.env.NEXT_PUBLIC_MEDIA_BASE_URL;
 
@@ -46,19 +47,27 @@ export default function MedicineCard({
   // const discountPercent = parseFloat(discount || "0");
   // const discountedPrice = originalMrp - (originalMrp * discountPercent) / 100;
   // const originalMrp = mrp || 0;
+  // 👉 original MRP
   const originalMrp =
     mrp !== null && mrp !== undefined && Number(mrp) > 0 ? Number(mrp) : 275;
+
   const hasValidMrp =
     originalMrp !== null &&
     originalMrp !== undefined &&
     originalMrp !== 0 &&
     Number(originalMrp) > 0;
 
+  // 👉 discount %
   const discountPercent = hasValidMrp ? Number(discount || 0) : 0;
 
-  const discountedPrice = hasValidMrp
+  // 👉 discounted price raw
+  const discountedPriceRaw = hasValidMrp
     ? originalMrp - (originalMrp * discountPercent) / 100
     : 0;
+
+  // 👉 formatted values
+  const formattedMrp = formatPrice(originalMrp);
+  const formattedDiscountedPrice = formatPrice(discountedPriceRaw);
 
   // start for increse header count code
   const buyer = useAppSelector((state) => state.buyer.buyer);
@@ -337,7 +346,7 @@ export default function MedicineCard({
               <div className="d-flex flex-column align-items-start">
                 {/* Discounted Price */}
                 <p className="text-success fw-bold mb-1">
-                  ₹{discountedPrice.toFixed(2)}
+                  ₹{formattedDiscountedPrice}
                 </p>
 
                 {/* Original MRP + Discount */}
@@ -349,7 +358,7 @@ export default function MedicineCard({
                       fontSize: "13px",
                     }}
                   >
-                    MRP ₹{originalMrp.toFixed(2)}
+                    MRP ₹{formattedMrp}
                   </span>{" "}
                   <span
                     className="text-danger fw-bold"

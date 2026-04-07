@@ -11,6 +11,7 @@ import { useAppDispatch, useAppSelector } from "@/lib/hooks";
 import {
   getMedicineByManufacturerId,
   getMedicinesByCategoryId,
+  resetMedicinesList,
 } from "@/lib/features/medicineSlice/medicineSlice";
 import { Button, Image } from "react-bootstrap";
 import "bootstrap/dist/css/bootstrap.min.css";
@@ -21,19 +22,24 @@ import { useShuffledProduct } from "@/lib/hooks/useShuffledProduct";
 import { HealthBag } from "@/types/healthBag";
 import TncLoader from "@/app/components/TncLoader/TncLoader";
 import { loadLocalHealthBag } from "@/lib/features/healthBagSlice/healthBagSlice";
+import Pagination from "@/app/components/Pagination/Pagination";
 
 const mediaBase = process.env.NEXT_PUBLIC_MEDIA_BASE_URL;
 
 export default function AllManufacturer() {
   const router = useRouter();
-  const loadMoreRef = useRef<HTMLDivElement | null>(null);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const filteredRef = useRef<any[]>([]); // will hold latest filteredMedicines for observer
-
   const params = useParams();
   const decodedId = decodeId(params.id as string);
   const dispatch = useAppDispatch();
   const categoryIdNum = Number(decodedId);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [guestItems, setGuestItems] = useState<any[]>([]);
+  // for pagination
+  const [page, setPage] = useState(1);
+  const [currentUrl, setCurrentUrl] = useState<string | null>(null);
+  const [prevStack, setPrevStack] = useState<string[]>([]);
+  const [pageLoading, setPageLoading] = useState(false);
+
   const buyer = useAppSelector((state) => state.buyer.buyer);
   const { items, addItem, removeItem, mergeGuestCart } = useHealthBag({
     userId: buyer?.id || null,
@@ -80,12 +86,17 @@ export default function AllManufacturer() {
     if (!categoryIdNum) return;
 
     const fetchData = async () => {
-      await dispatch(getMedicineByManufacturerId({ id: categoryIdNum }));
+      await dispatch(
+        getMedicineByManufacturerId({
+          id: categoryIdNum,
+          url: currentUrl || undefined,
+        })
+      );
     };
 
     fetchData();
     dispatch(getCategories());
-  }, [categoryIdNum, dispatch]);
+  }, [dispatch, categoryIdNum, currentUrl]);
 
   // --- Merge guest cart ---
   useEffect(() => {
@@ -94,21 +105,33 @@ export default function AllManufacturer() {
     }
   }, [buyer?.id, mergeGuestCart]);
 
+  useEffect(() => {
+    if (!loading && pageLoading) {
+      setTimeout(() => {
+        window.scrollTo({ top: 0, behavior: "auto" });
+        setPageLoading(false);
+      }, 100);
+    }
+  }, [loading, pageLoading]);
+
   // --- Filter products (derived from stable finalShuffledList) ---
+  // const filteredMedicines = useMemo(() => {
+  //   if (!searchTerm) return finalShuffledList;
+  //   const lower = searchTerm.toLowerCase();
+  //   return finalShuffledList.filter((med) =>
+  //     (med.medicine_name || "").toLowerCase().includes(lower)
+  //   );
+  // }, [finalShuffledList, searchTerm]);
   const filteredMedicines = useMemo(() => {
-    if (!searchTerm) return finalShuffledList;
+    if (!searchTerm) return medicines;
+
     const lower = searchTerm.toLowerCase();
-    return finalShuffledList.filter((med) =>
+
+    return medicines.filter((med) =>
       (med.medicine_name || "").toLowerCase().includes(lower)
     );
-  }, [finalShuffledList, searchTerm]);
+  }, [medicines, searchTerm]);
 
-  useEffect(() => {
-    filteredRef.current = filteredMedicines;
-  }, [filteredMedicines]);
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [guestItems, setGuestItems] = useState<any[]>([]);
   useEffect(() => {
     if (!buyer?.id) {
       const lsData = localStorage.getItem("healthbag");
@@ -201,39 +224,7 @@ export default function AllManufacturer() {
     }
   };
 
-  // --- IntersectionObserver: create ONCE, read filteredRef.current inside callback ---
-
-  const isFetchingRef = useRef(false);
-
-  useEffect(() => {
-    if (!loadMoreRef.current) return;
-
-    const observer = new IntersectionObserver((entries) => {
-      const entry = entries[0];
-
-      if (!entry.isIntersecting) return;
-      if (!nextUrl) return;
-      if (isFetchingRef.current) return; // 🔥 important
-
-      isFetchingRef.current = true;
-
-      dispatch(
-        getMedicineByManufacturerId({
-          id: categoryIdNum,
-          url: nextUrl,
-        })
-      ).finally(() => {
-        isFetchingRef.current = false;
-      });
-    });
-
-    observer.observe(loadMoreRef.current);
-
-    return () => observer.disconnect();
-  }, [dispatch, nextUrl, categoryIdNum]);
-
-  const isInitialLoading = loading && medicines.length === 0;
-  // const isLoadingMore = loading && medicines.length > 0;
+  const isInitialLoading = loading || pageLoading;
 
   return (
     <>
@@ -292,22 +283,24 @@ export default function AllManufacturer() {
                 ) : (
                   filteredMedicines.map((item, index) => {
                     const mrpRaw = item.MRP ?? item.mrp ?? 0;
-
                     const parsedMrp = Number(mrpRaw);
-
-                    // 🔥 FINAL MRP FIX
                     const baseMrp =
                       Number.isFinite(parsedMrp) && parsedMrp > 0
                         ? parsedMrp
                         : 275;
-
+                    // 🔥 FORMAT FUNCTION
+                    const formatPrice = (num: number) => {
+                      return Number(num.toFixed(2)).toString();
+                    };
+                    // 👉 formatted MRP
                     const mrp = Number(baseMrp.toFixed(2));
-
+                    const formattedMrp = formatPrice(mrp);
+                    // 👉 discount
                     const discount = parseFloat(item.discount || "0") || 0;
-                    const discountedPrice = (
-                      mrp -
-                      (mrp * discount) / 100
-                    ).toFixed(2);
+                    // 👉 discounted price
+                    const discountedPriceRaw = mrp - (mrp * discount) / 100;
+                    const formattedDiscountedPrice =
+                      formatPrice(discountedPriceRaw);
 
                     const imageUrl = item.primary_image?.document
                       ? item.primary_image.document.startsWith("http")
@@ -366,10 +359,10 @@ export default function AllManufacturer() {
 
                             <div className="pd_price">
                               <span className="new_price">
-                                ₹{discountedPrice}
+                                ₹{formattedDiscountedPrice}
                               </span>
                               <span className="old_price">
-                                <del>MRP ₹{mrp}</del> {discount}% off
+                                <del>MRP ₹{formattedMrp}</del> {discount}% off
                               </span>
                             </div>
                           </div>
@@ -397,16 +390,36 @@ export default function AllManufacturer() {
                     );
                   })
                 )}
-                {/* 
-                {isLoadingMore && (
-                  <div className="text-center my-3">
-                    <div className="spinner-border text-primary"></div>
-                  </div>
-                )} */}
-
-                <div style={{ height: "300px" }} />
-                <div ref={loadMoreRef} style={{ height: "20px" }}></div>
               </div>
+              {filteredMedicines.length > 0 && !loading && (
+                <div className="d-flex justify-content-center mt-3">
+                  <Pagination
+                    currentPage={page}
+                    hasNext={!!nextUrl}
+                    hasPrev={page > 1}
+                    onPageChange={(newPage) => {
+                      setPageLoading(true);
+
+                      // 🔥 CLEAR OLD DATA
+                      dispatch(resetMedicinesList());
+
+                      if (newPage > page && nextUrl) {
+                        setPrevStack((prev) => [...prev, currentUrl || ""]);
+                        setCurrentUrl(nextUrl);
+                        setPage(newPage);
+                      }
+
+                      if (newPage < page && prevStack.length > 0) {
+                        const lastUrl = prevStack[prevStack.length - 1];
+
+                        setPrevStack((prev) => prev.slice(0, -1));
+                        setCurrentUrl(lastUrl || null);
+                        setPage(newPage);
+                      }
+                    }}
+                  />
+                </div>
+              )}
             </div>
           </div>
         </div>
