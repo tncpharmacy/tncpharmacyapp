@@ -142,11 +142,11 @@ export const fetchGroupCare = async (): Promise<CareGroupResponse> => {
 // GET GROUP CARE BY ID
 // =========================
 export const fetchGroupCareById = async (
-  groupId: number
+  groupId: number,
+  url?: string
 ): Promise<MedicineResponse> => {
-  const res = await axiosInstance.get<MedicineResponse>(
-    ENDPOINTS.MEDICINES.GET_GROUP_CARE_BY_ID(groupId)
-  );
+  const finalUrl = url || ENDPOINTS.MEDICINES.GET_GROUP_CARE_BY_ID(groupId);
+  const res = await axiosInstance.get<MedicineResponse>(finalUrl);
   return res.data;
 };
 

@@ -292,19 +292,22 @@ export const getGroupCare = createAsyncThunk<
 // ✅ Get all medicine id by generic
 export const getGroupCareById = createAsyncThunk<
   MedicineResponse,
-  number,
+  { groupId: number; url?: string },
   { rejectValue: string }
->("medicine/getGroupCareById", async (groupId, { rejectWithValue }) => {
-  try {
-    const res: MedicineResponse = await fetchGroupCareById(groupId);
-    return res;
-  } catch (err: unknown) {
-    if (err instanceof Error) {
-      return rejectWithValue(err.message);
+>(
+  "medicine/getGroupCareById",
+  async ({ groupId, url }, { rejectWithValue }) => {
+    try {
+      const res: MedicineResponse = await fetchGroupCareById(groupId, url);
+      return res;
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        return rejectWithValue(err.message);
+      }
+      return rejectWithValue("Failed to fetch medicines");
     }
-    return rejectWithValue("Failed to fetch medicines");
   }
-});
+);
 
 // ✅ Get medicine list by ID
 export const getMedicineListById = createAsyncThunk<
@@ -481,11 +484,6 @@ const medicineSlice = createSlice({
       })
       .addCase(getMenuMedicinesList.fulfilled, (state, action) => {
         state.loading = false;
-
-        const safeCurrent = Array.isArray(state.medicinesList)
-          ? state.medicinesList
-          : [];
-
         const safeIncoming = Array.isArray(action.payload.data)
           ? action.payload.data
           : [];
@@ -691,17 +689,30 @@ const medicineSlice = createSlice({
       // ✅ Get group care by ID
       .addCase(getGroupCareById.pending, (state) => {
         state.loading = true;
-      })
-      .addCase(getGroupCareById.fulfilled, (state, action) => {
-        state.loading = false;
-        state.groupCareList = action.payload.data;
-        state.groupName = action.payload.group_name;
         state.error = null;
       })
+
+      .addCase(getGroupCareById.fulfilled, (state, action) => {
+        state.loading = false;
+
+        const safeIncoming = Array.isArray(action.payload.data)
+          ? action.payload.data
+          : [];
+
+        state.groupCareList = safeIncoming;
+        state.groupName = action.payload.group_name || "";
+
+        // 🔥 pagination support (future ready)
+        state.next = action.payload.next || null;
+        state.count = action.payload.count || 0;
+
+        state.error = null;
+      })
+
       .addCase(getGroupCareById.rejected, (state, action) => {
         state.loading = false;
         state.error =
-          action.payload || "Something went wrong while fetching by ID";
+          action.payload || "Something went wrong while fetching group care";
       })
       // ✅ Get medicine list by ID
       .addCase(getMedicineListById.pending, (state) => {

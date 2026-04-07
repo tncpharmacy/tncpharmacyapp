@@ -28,7 +28,7 @@ export default function AllGeneric() {
   const router = useRouter();
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const filteredRef = useRef<any[]>([]); // will hold latest filteredMedicines for observer
+  const filteredRef = useRef<any[]>([]);
 
   const params = useParams();
   const decodedId = decodeId(params.id as string);

@@ -7,7 +7,10 @@ import { useRouter, useParams } from "next/navigation";
 import { encodeId, decodeId } from "@/lib/utils/encodeDecode";
 import SiteHeader from "@/app/user/components/header/header";
 import { useAppDispatch, useAppSelector } from "@/lib/hooks";
-import { getGroupCareById } from "@/lib/features/medicineSlice/medicineSlice";
+import {
+  getGroupCareById,
+  resetMedicinesList,
+} from "@/lib/features/medicineSlice/medicineSlice";
 import { Image } from "react-bootstrap";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { useHealthBag } from "@/lib/hooks/useHealthBag";
@@ -17,27 +20,26 @@ import { useShuffledProduct } from "@/lib/hooks/useShuffledProduct";
 import { HealthBag } from "@/types/healthBag";
 import TncLoader from "@/app/components/TncLoader/TncLoader";
 import { loadLocalHealthBag } from "@/lib/features/healthBagSlice/healthBagSlice";
+import Pagination from "@/app/components/Pagination/Pagination";
 
 const mediaBase = process.env.NEXT_PUBLIC_MEDIA_BASE_URL;
 
 export default function AllGroupCare() {
   const router = useRouter();
-  const { id: params } = useParams();
   const dispatch = useAppDispatch();
 
-  const categoryIdNum = Number(decodeId(params));
-  // -----------------------------
-  // INFINITE SCROLL STATES
-  // -----------------------------
-  const [limit, setLimit] = useState(20);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  // const [visibleList, setVisibleList] = useState<any[]>([]);
+  // const filteredRef = useRef<any[]>([]);
 
-  const [hasFetched, setHasFetched] = useState(false);
-  const [isLoadingMore, setIsLoadingMore] = useState(false);
-  const loadMoreRef = useRef<HTMLDivElement | null>(null);
+  const { id: params } = useParams();
+  const categoryIdNum = Number(decodeId(params));
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const filteredRef = useRef<any[]>([]);
+  const [guestItems, setGuestItems] = useState<any[]>([]);
+  // for pagination
+  const [page, setPage] = useState(1);
+  const [currentUrl, setCurrentUrl] = useState<string | null>(null);
+  const [prevStack, setPrevStack] = useState<string[]>([]);
+  const [pageLoading, setPageLoading] = useState(false);
 
   // -----------------------------
   // REDUX STATES
@@ -46,6 +48,7 @@ export default function AllGroupCare() {
   const medicines = useAppSelector(
     (state) => state.medicine.groupCareList || []
   );
+  const nextUrl = useAppSelector((state) => state.medicine.next);
   const { groupName } = useAppSelector((state) => state.medicine);
   const { loading } = useAppSelector((state) => state.medicine);
   const { list: categories } = useAppSelector((state) => state.category);
@@ -57,30 +60,8 @@ export default function AllGroupCare() {
     medicines,
     `groupcare-page-${categoryIdNum}`
   );
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const stableShuffledRef = useRef<any[]>([]);
-  useEffect(() => {
-    if (medicines.length > 0 && stableShuffledRef.current.length === 0) {
-      stableShuffledRef.current = shuffledFromHook;
-    }
-    if (medicines.length === 0) {
-      stableShuffledRef.current = [];
-    }
-  }, [medicines, shuffledFromHook]);
 
-  const finalShuffledList = useMemo(() => {
-    const list =
-      stableShuffledRef.current.length > 0
-        ? stableShuffledRef.current
-        : shuffledFromHook;
-
-    // remove duplicates
-    const unique = Array.from(
-      new Map(list.map((item) => [item.id, item])).values()
-    );
-
-    return unique;
-  }, [shuffledFromHook]);
+  const finalShuffledList = medicines;
 
   // -----------------------------
   // CATEGORY NAME
@@ -93,14 +74,15 @@ export default function AllGroupCare() {
   useEffect(() => {
     if (!categoryIdNum) return;
 
-    const fetchData = async () => {
-      await dispatch(getGroupCareById(categoryIdNum));
-      setHasFetched(true);
-    };
+    dispatch(
+      getGroupCareById({
+        groupId: categoryIdNum,
+        url: currentUrl || undefined,
+      })
+    );
 
-    fetchData();
     dispatch(getCategories());
-  }, [categoryIdNum, dispatch]);
+  }, [categoryIdNum, currentUrl, dispatch]);
 
   // -----------------------------
   // CART
@@ -120,7 +102,16 @@ export default function AllGroupCare() {
 
   useEffect(() => {
     if (buyer?.id) mergeGuestCart();
-  }, [buyer?.id]);
+  }, [buyer?.id, mergeGuestCart]);
+
+  useEffect(() => {
+    if (!loading && pageLoading) {
+      setTimeout(() => {
+        window.scrollTo({ top: 0, behavior: "auto" });
+        setPageLoading(false);
+      }, 100);
+    }
+  }, [loading, pageLoading]);
 
   // -----------------------------
   // FILTERING
@@ -134,52 +125,6 @@ export default function AllGroupCare() {
     );
   }, [searchTerm, finalShuffledList]);
 
-  // store filtered list in ref for observer
-  useEffect(() => {
-    filteredRef.current = filteredMedicines;
-  }, [filteredMedicines]);
-
-  // -------------------------------
-  // 🔹 UPDATE VISIBLE LIST
-  // -------------------------------
-  const visibleList = useMemo(() => {
-    return filteredMedicines.slice(0, limit);
-  }, [filteredMedicines, limit]);
-
-  // -----------------------------
-  // OBSERVER
-  // -----------------------------
-  useEffect(() => {
-    if (!loadMoreRef.current) return;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const entry = entries[0];
-
-        if (!entry.isIntersecting) return;
-        if (isLoadingMore) return;
-
-        const total = filteredRef.current.length;
-        if (limit >= total) return;
-
-        setIsLoadingMore(true);
-        setLimit((prev) => Math.min(prev + 20, total));
-
-        setTimeout(() => setIsLoadingMore(false), 300);
-      },
-      {
-        root: null,
-        threshold: 0.9,
-        rootMargin: "0px 0px -200px 0px",
-      }
-    );
-
-    observer.observe(loadMoreRef.current);
-    return () => observer.disconnect();
-  }, [limit, isLoadingMore]);
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [guestItems, setGuestItems] = useState<any[]>([]);
   useEffect(() => {
     if (!buyer?.id) {
       const lsData = localStorage.getItem("healthbag");
@@ -251,7 +196,9 @@ export default function AllGroupCare() {
       // 🔵 GUEST USER
       else {
         const updated = guestItems.filter(
-          (item) => (item.productid ?? item.product_id ?? item.id) !== productId
+          (item) =>
+            (item.productid ?? item.product_id ?? item.medicine_id) !==
+            productId
         );
 
         localStorage.setItem("healthbag", JSON.stringify(updated));
@@ -266,7 +213,7 @@ export default function AllGroupCare() {
   const handleClick = (medicine_id: number) => {
     router.push(`/product-details/${encodeId(medicine_id)}`);
   };
-
+  const isInitialLoading = loading || pageLoading;
   // -----------------------------
   // UI
   // -----------------------------
@@ -283,14 +230,14 @@ export default function AllGroupCare() {
               <div className="row align-items-center mb-3">
                 {/* LEFT SIDE : PRODUCT NAME */}
                 <div className="col-md-9">
-                  <div className="pageTitle m-0">
+                  <div className="pageTitle mt-3 mb-3">
                     <Image src={"/images/favicon.png"} alt="" /> Product:{" "}
                     {groupName || "Loading..."}
                   </div>
                 </div>
 
                 {/* RIGHT SIDE : SEARCH BOX */}
-                <div className="col-md-3">
+                {/* <div className="col-md-3">
                   <div className="search_query">
                     <a className="query_search_btn" href="javascript:void(0)">
                       <i className="bi bi-search"></i>
@@ -306,7 +253,7 @@ export default function AllGroupCare() {
                       }}
                     />
                   </div>
-                </div>
+                </div> */}
               </div>
               {/* First time loader */}
               {/* {loading && (
@@ -316,19 +263,18 @@ export default function AllGroupCare() {
               )} */}
               {/* PRODUCT LIST */}
               <div className="pd_list">
-                {!hasFetched ? (
+                {isInitialLoading ? (
                   <div
                     className="d-flex justify-content-center align-items-center"
-                    style={{ marginLeft: "100vh" }}
+                    style={{ height: "300px", marginLeft: "100vh" }}
                   >
                     <TncLoader />
                   </div>
-                ) : visibleList.length === 0 ? (
+                ) : filteredMedicines.length === 0 ? (
                   <p>No products found.</p>
                 ) : (
-                  visibleList.map((item, index) => {
-                    const mrpRaw =
-                      item.MRP ?? item.mrp ?? item.Mrp ?? item.price ?? 0;
+                  filteredMedicines.map((item, index) => {
+                    const mrpRaw = item.MRP ?? item.mrp ?? 0;
 
                     const parsedMrp = Number(mrpRaw);
 
@@ -340,7 +286,7 @@ export default function AllGroupCare() {
 
                     const mrp = Number(baseMrp.toFixed(2));
 
-                    const discount = parseFloat(item.discount || "0");
+                    const discount = parseFloat(item.discount || "0") || 0;
                     const discountedPrice = (
                       mrp -
                       (mrp * discount) / 100
@@ -421,7 +367,7 @@ export default function AllGroupCare() {
                               )}
                               onClick={() =>
                                 isInBag
-                                  ? handleRemove(item.id)
+                                  ? handleRemove(item.medicine_id)
                                   : handleAdd(item)
                               }
                             >
@@ -437,16 +383,36 @@ export default function AllGroupCare() {
                     );
                   })
                 )}
-
-                {/* {isLoadingMore && (
-                  <div className="text-center my-3">
-                    <div className="spinner-border text-primary"></div>
-                  </div>
-                )} */}
-
-                <div style={{ height: "300px" }} />
-                <div ref={loadMoreRef} style={{ height: "20px" }}></div>
               </div>
+              {filteredMedicines.length > 0 && !loading && (
+                <div className="d-flex justify-content-center mt-3">
+                  <Pagination
+                    currentPage={page}
+                    hasNext={!!nextUrl}
+                    hasPrev={page > 1}
+                    onPageChange={(newPage) => {
+                      setPageLoading(true);
+
+                      // 🔥 CLEAR OLD DATA
+                      dispatch(resetMedicinesList());
+
+                      if (newPage > page && nextUrl) {
+                        setPrevStack((prev) => [...prev, currentUrl || ""]);
+                        setCurrentUrl(nextUrl);
+                        setPage(newPage);
+                      }
+
+                      if (newPage < page && prevStack.length > 0) {
+                        const lastUrl = prevStack[prevStack.length - 1];
+
+                        setPrevStack((prev) => prev.slice(0, -1));
+                        setCurrentUrl(lastUrl || null);
+                        setPage(newPage);
+                      }
+                    }}
+                  />
+                </div>
+              )}
             </div>
           </div>
         </div>
