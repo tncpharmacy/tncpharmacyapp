@@ -27,6 +27,7 @@ import Footer from "@/app/user/components/footer/footer";
 import { useHealthBag } from "@/lib/hooks/useHealthBag";
 import { HealthBag } from "@/types/healthBag";
 import { formatAmount } from "@/lib/utils/formatAmount";
+import { formatPrice } from "@/lib/utils/formatPrice";
 
 // Types
 interface PackOption {
@@ -627,6 +628,7 @@ export default function ProductPage() {
                               src="/images/tnc-default.png"
                               alt="No Image Available"
                               className="product-image"
+                              style={{ opacity: "0.3" }}
                             />
                           </div>
                         )}
@@ -724,8 +726,7 @@ export default function ProductPage() {
                   {/* MRP and Discount */}
                   <div className="pd_price">
                     <span className="old_price">
-                      <del>MRP ₹{formatAmount(mrp ?? 0).toLocaleString()}</del>{" "}
-                      {discount}% off
+                      <del>MRP ₹{formatPrice(mrp ?? 0)}</del> {discount}% off
                     </span>
                   </div>
 
@@ -733,7 +734,7 @@ export default function ProductPage() {
                   <div className="pd_price">
                     <span className="new_price">
                       {" "}
-                      ₹{formatAmount(totalPrice ?? 0).toLocaleString()}
+                      ₹{formatPrice(totalPrice ?? 0)}
                     </span>
                   </div>
                   <small>Inclusive of all taxes</small>
@@ -846,7 +847,7 @@ export default function ProductPage() {
           <div className="mobile-sticky-cart d-md-none">
             <div className="msc-inner">
               <div className="msc-price">
-                ₹{formatAmount(totalPrice ?? 0).toLocaleString()}
+                ₹{formatPrice(totalPrice ?? 0)}
                 <span>Inclusive of all taxes</span>
               </div>
 
