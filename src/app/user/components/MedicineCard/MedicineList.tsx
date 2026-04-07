@@ -13,9 +13,14 @@ import {
 interface MedicineListProps {
   medicines: Medicine[] | undefined | null;
   loading: boolean;
+  pageLoading: boolean;
 }
 
-const MedicineList: React.FC<MedicineListProps> = ({ medicines, loading }) => {
+const MedicineList: React.FC<MedicineListProps> = ({
+  medicines,
+  loading,
+  pageLoading,
+}) => {
   const [searchTerm, setSearchTerm] = useState("");
 
   const dispatch = useAppDispatch();
@@ -93,23 +98,18 @@ const MedicineList: React.FC<MedicineListProps> = ({ medicines, loading }) => {
         </div>
       )}
       {/* First loader */}
-      {loading && safeMedicines.length === 0 && (
+      {(loading || pageLoading) && (
         <div className="text-center my-4">
           <TncLoader />
         </div>
       )}
 
       {/* Medicine Grid */}
-      <div className="medicine-grid">
-        {displayData.map((med, i) => (
-          <MedicineCard key={med.id} {...med} />
-        ))}
-      </div>
-
-      {/* Bottom loader (while fetching next page) */}
-      {loading && safeMedicines.length > 0 && (
-        <div className="text-center my-3">
-          <TncLoader />
+      {!(loading || pageLoading) && (
+        <div className="medicine-grid">
+          {displayData.map((med, i) => (
+            <MedicineCard key={med.id} {...med} />
+          ))}
         </div>
       )}
     </>
