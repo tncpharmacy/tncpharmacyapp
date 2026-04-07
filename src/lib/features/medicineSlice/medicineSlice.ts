@@ -490,10 +490,7 @@ const medicineSlice = createSlice({
           ? action.payload.data
           : [];
 
-        state.medicinesList = !action.meta.arg
-          ? safeIncoming
-          : [...safeCurrent, ...safeIncoming];
-
+        state.medicinesList = safeIncoming;
         state.next = action.payload.next;
         state.count = action.payload.count;
         state.error = null;

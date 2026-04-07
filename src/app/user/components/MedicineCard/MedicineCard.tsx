@@ -47,13 +47,15 @@ export default function MedicineCard({
   // const discountedPrice = originalMrp - (originalMrp * discountPercent) / 100;
   // const originalMrp = mrp || 0;
   const originalMrp =
-    mrp !== null && mrp !== undefined && Number(mrp) > 0 ? mrp : 275;
+    mrp !== null && mrp !== undefined && Number(mrp) > 0 ? Number(mrp) : 275;
   const hasValidMrp =
     originalMrp !== null &&
     originalMrp !== undefined &&
     originalMrp !== 0 &&
     Number(originalMrp) > 0;
-  const discountPercent = hasValidMrp ? parseFloat(discount || "0") : 0;
+
+  const discountPercent = hasValidMrp ? Number(discount || 0) : 0;
+
   const discountedPrice = hasValidMrp
     ? originalMrp - (originalMrp * discountPercent) / 100
     : 0;

@@ -19,9 +19,7 @@ const MedicineList: React.FC<MedicineListProps> = ({ medicines, loading }) => {
   const [searchTerm, setSearchTerm] = useState("");
 
   const dispatch = useAppDispatch();
-  const { next } = useAppSelector((state) => state.medicine);
   const { suggestions } = useAppSelector((state) => state.medicine);
-  const loadMoreRef = useRef<HTMLDivElement | null>(null);
 
   // ✅ Safe medicines
   const safeMedicines = useMemo(
@@ -52,24 +50,6 @@ const MedicineList: React.FC<MedicineListProps> = ({ medicines, loading }) => {
     (item) => item.search_type_name === "medicine"
   );
   const displayData = searchTerm ? onlyMedicines : safeMedicines;
-  // ------------------------------
-  // 🔥 API BASED INFINITE SCROLL
-  // ------------------------------
-  useEffect(() => {
-    if (!loadMoreRef.current || !next) return;
-
-    // 🔥 search active → scroll closed
-    if (searchTerm) return;
-
-    const observer = new IntersectionObserver((entries) => {
-      if (!entries[0].isIntersecting) return;
-
-      dispatch(getMenuMedicinesList(next));
-    });
-
-    observer.observe(loadMoreRef.current);
-    return () => observer.disconnect();
-  }, [next, searchTerm, dispatch]);
 
   return (
     <>
@@ -132,12 +112,6 @@ const MedicineList: React.FC<MedicineListProps> = ({ medicines, loading }) => {
           <TncLoader />
         </div>
       )}
-
-      {/* 👇 Infinite scroll trigger */}
-      <div
-        ref={loadMoreRef}
-        style={{ height: "40px", marginTop: "20px" }}
-      ></div>
     </>
   );
 };
