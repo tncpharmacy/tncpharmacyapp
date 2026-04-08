@@ -23,6 +23,7 @@ import { HealthBag } from "@/types/healthBag";
 import TncLoader from "@/app/components/TncLoader/TncLoader";
 import { loadLocalHealthBag } from "@/lib/features/healthBagSlice/healthBagSlice";
 import Pagination from "@/app/components/Pagination/Pagination";
+import ProductCardUI from "../../components/MedicineCard/ProductCardUI";
 
 const mediaBase = process.env.NEXT_PUBLIC_MEDIA_BASE_URL;
 
@@ -72,6 +73,18 @@ export default function AllGeneric() {
   const [processingIds, setProcessingIds] = useState<number[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
 
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkScreen = () => {
+      setIsMobile(window.innerWidth < 768); // mobile breakpoint
+    };
+
+    checkScreen();
+    window.addEventListener("resize", checkScreen);
+
+    return () => window.removeEventListener("resize", checkScreen);
+  }, []);
   // --- Sync localBag with Redux items ---
   useEffect(() => {
     if (items?.length) {
@@ -329,7 +342,25 @@ export default function AllGeneric() {
                       (i: any) => getProductId(i) === item.id
                     );
 
-                    return (
+                    return isMobile ? (
+                      // 💻 DESKTOP/TABLET → CARD DESIGN (Reusable Component 🔥)
+                      <ProductCardUI
+                        key={`${item.id}-${index}`}
+                        image={imageUrl}
+                        name={item.medicine_name}
+                        manufacturer={item.manufacturer_name}
+                        packSize={item.pack_size} // generic nahi h → skip
+                        price={formattedDiscountedPrice}
+                        mrp={formattedMrp}
+                        discount={discount}
+                        showRx={false}
+                        isInCart={isInBag}
+                        loading={processingIds.includes(item.id)}
+                        onAdd={() => handleAdd(item)}
+                        onRemove={() => handleRemove(item.id)}
+                        onClick={() => handleClick(item)}
+                      />
+                    ) : (
                       <div
                         className="pd_box shadow"
                         key={`${item.id}-${index}`}
@@ -338,7 +369,7 @@ export default function AllGeneric() {
                         <div className="pd_img">
                           <Image
                             src={imageUrl}
-                            alt={item.medicine_name}
+                            alt=""
                             style={{
                               height: "220px",
                               objectFit: "contain",

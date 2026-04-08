@@ -612,7 +612,7 @@ export default function HealthBags() {
                         >
                           <Image
                             src={imageUrl}
-                            alt={item.name}
+                            alt={""}
                             className="me-3 rounded"
                             style={{
                               width: 90,
@@ -627,7 +627,7 @@ export default function HealthBags() {
                         <div className="flex-grow-1">
                           <h6 className="fw-semibold mb-1">
                             <span
-                              className="hover-link"
+                              className="hover-link pd-title"
                               onClick={() => handleItemSelect(item)}
                               style={{ cursor: "pointer" }}
                             >
@@ -666,7 +666,7 @@ export default function HealthBags() {
                             {item.pack_size}
                           </p>
                           <p
-                            className="mb-1 fw-semibold text-success small"
+                            className="mb-1 fw-semibold text-success small pd-title"
                             style={{
                               fontSize: "13px",
                             }}
@@ -894,7 +894,7 @@ export default function HealthBags() {
                         <div className="product-image-wrapper mb-2">
                           <Image
                             src={imageUrl}
-                            alt={item.ProductName}
+                            alt={""}
                             className="img-fluid mx-auto d-block"
                             style={{
                               cursor: "pointer",
@@ -1032,7 +1032,7 @@ export default function HealthBags() {
                         <div className="product-image-wrapper mb-2">
                           <Image
                             src={imageUrl}
-                            alt={item.ProductName}
+                            alt={""}
                             className="img-fluid mx-auto d-block"
                             style={{
                               cursor: "pointer",
@@ -1171,7 +1171,7 @@ export default function HealthBags() {
                         <div className="product-image-wrapper mb-2">
                           <Image
                             src={imageUrl}
-                            alt={item.ProductName}
+                            alt={""}
                             className="img-fluid mx-auto d-block"
                             style={{
                               cursor: "pointer",

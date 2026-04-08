@@ -497,7 +497,7 @@ export default function HomePage() {
                         <div className="pd_img">
                           <Image
                             src={imageUrl}
-                            alt={item.ProductName}
+                            alt=""
                             style={{
                               height: "220px",
                               objectFit: "contain",
@@ -763,7 +763,7 @@ export default function HomePage() {
                         <div className="pd_img">
                           <Image
                             src={imageUrl}
-                            alt={item.ProductName}
+                            alt=""
                             style={{
                               height: "220px",
                               objectFit: "contain",
@@ -949,7 +949,7 @@ export default function HomePage() {
                         <div className="pd_img">
                           <Image
                             src={imageUrl}
-                            alt={item.ProductName}
+                            alt=""
                             style={{
                               height: "220px",
                               objectFit: "contain",

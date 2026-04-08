@@ -23,6 +23,7 @@ import { encodeId } from "@/lib/utils/encodeDecode";
 import TncLoader from "@/app/components/TncLoader/TncLoader";
 import { loadLocalHealthBag } from "@/lib/features/healthBagSlice/healthBagSlice";
 import Pagination from "@/app/components/Pagination/Pagination";
+import ProductCardUI from "../components/MedicineCard/ProductCardUI";
 
 const mediaBase = process.env.NEXT_PUBLIC_MEDIA_BASE_URL;
 const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL;
@@ -55,6 +56,19 @@ export default function SearchTextClient() {
   const [processingIds, setProcessingIds] = useState<number[]>([]);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [guestItems, setGuestItems] = useState<any[]>([]);
+
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkScreen = () => {
+      setIsMobile(window.innerWidth < 768); // mobile breakpoint
+    };
+
+    checkScreen();
+    window.addEventListener("resize", checkScreen);
+
+    return () => window.removeEventListener("resize", checkScreen);
+  }, []);
 
   // API SEARCH CALL (MAIN)
   useEffect(() => {
@@ -256,18 +270,23 @@ export default function SearchTextClient() {
                       item.MRP ?? item.mrp ?? item.Mrp ?? item.price ?? 0;
 
                     const parsedMrp = Number(mrpRaw);
-
-                    // 🔥 FINAL MRP FIX
                     const baseMrp =
                       Number.isFinite(parsedMrp) && parsedMrp > 0
                         ? parsedMrp
                         : 275;
-
+                    // 🔥 FORMAT FUNCTION
+                    const formatPrice = (num: number) => {
+                      return Number(num.toFixed(2)).toString();
+                    };
+                    // 👉 formatted MRP
                     const mrp = Number(baseMrp.toFixed(2));
-                    const discount = parseFloat(item.discount) || 0;
-                    const discounted = (mrp - (mrp * discount) / 100).toFixed(
-                      2
-                    );
+                    const formattedMrp = formatPrice(mrp);
+                    // 👉 discount
+                    const discount = parseFloat(item.discount || "0") || 0;
+                    // 👉 discounted price
+                    const discountedPriceRaw = mrp - (mrp * discount) / 100;
+                    const formattedDiscountedPrice =
+                      formatPrice(discountedPriceRaw);
 
                     const img = item.primary_image?.document
                       ? item.primary_image.document.startsWith("http")
@@ -286,7 +305,25 @@ export default function SearchTextClient() {
                       (i: any) => getProductId(i) === item.id
                     );
 
-                    return (
+                    return isMobile ? (
+                      // 💻 DESKTOP/TABLET → CARD DESIGN (Reusable Component 🔥)
+                      <ProductCardUI
+                        key={`${item.id}-${index}`}
+                        image={img}
+                        name={item.medicine_name}
+                        manufacturer={item.manufacturer_name}
+                        packSize={item.pack_size} // generic nahi h → skip
+                        price={formattedDiscountedPrice}
+                        mrp={formattedMrp}
+                        discount={discount}
+                        showRx={false}
+                        isInCart={isInBag}
+                        loading={processingIds.includes(item.id)}
+                        onAdd={() => handleAdd(item)}
+                        onRemove={() => handleRemove(item.id)}
+                        onClick={() => handleCombinedSelect(item)}
+                      />
+                    ) : (
                       <div
                         className="pd_box shadow"
                         key={`${item.id}-${index}`}
@@ -294,7 +331,7 @@ export default function SearchTextClient() {
                         <div className="pd_img">
                           <Image
                             src={img}
-                            alt={item.medicine_name}
+                            alt=""
                             style={{
                               height: "220px",
                               objectFit: "contain",
@@ -316,10 +353,12 @@ export default function SearchTextClient() {
                           </h6>
 
                           <div className="pd_price">
-                            <span className="new_price">₹{discounted}</span>
+                            <span className="new_price">
+                              ₹{formattedDiscountedPrice}
+                            </span>
                             {mrp > 0 && (
                               <span className="old_price">
-                                <del>MRP ₹{mrp}</del> {discount}% off
+                                <del>MRP ₹{formattedMrp}</del> {discount}% off
                               </span>
                             )}
                           </div>

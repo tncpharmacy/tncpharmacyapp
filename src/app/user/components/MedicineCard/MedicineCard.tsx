@@ -269,7 +269,7 @@ export default function MedicineCard({
             >
               <Image
                 src={imageSrc}
-                alt="No Image Available"
+                alt=""
                 width={70}
                 height={60}
                 style={{
@@ -305,7 +305,7 @@ export default function MedicineCard({
           <div className="medicine-details">
             <div className="medicine-header">
               <h3
-                className="medicine-name hover-link"
+                className="medicine-name hover-link pd-title"
                 style={
                   {
                     // textDecoration: "none",
@@ -332,9 +332,11 @@ export default function MedicineCard({
             </div>
             {pack_size && <p className="medicine-text">{pack_size}</p>}
             {manufacturer_name && (
-              <p className="medicine-text">{manufacturer_name}</p>
+              <p className="medicine-text pd-title">{manufacturer_name}</p>
             )}
-            {generic_name && <p className="medicine-salt">{generic_name}</p>}
+            {generic_name && (
+              <p className="medicine-salt pd-title">{generic_name}</p>
+            )}
           </div>
         </div>
 
@@ -391,7 +393,11 @@ export default function MedicineCard({
                 : "ADD"}
             </button> */}
             <button
-              className={`btn-1 btn-HO ${isInBag ? "remove" : "add"}`}
+              className="btn-1 btn-HO"
+              style={{
+                backgroundColor: isInBag ? "#0b5ed7" : "#ff7b00",
+                color: "#fff",
+              }}
               disabled={processingIds.includes(id)}
               onClick={() => (isInBag ? handleRemove(id) : handleAdd(id))}
             >

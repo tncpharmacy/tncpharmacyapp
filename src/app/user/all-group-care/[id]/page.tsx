@@ -21,6 +21,7 @@ import { HealthBag } from "@/types/healthBag";
 import TncLoader from "@/app/components/TncLoader/TncLoader";
 import { loadLocalHealthBag } from "@/lib/features/healthBagSlice/healthBagSlice";
 import Pagination from "@/app/components/Pagination/Pagination";
+import ProductCardUI from "../../components/MedicineCard/ProductCardUI";
 
 const mediaBase = process.env.NEXT_PUBLIC_MEDIA_BASE_URL;
 
@@ -52,7 +53,18 @@ export default function AllGroupCare() {
   const { groupName } = useAppSelector((state) => state.medicine);
   const { loading } = useAppSelector((state) => state.medicine);
   const { list: categories } = useAppSelector((state) => state.category);
+  const [isMobile, setIsMobile] = useState(false);
 
+  useEffect(() => {
+    const checkScreen = () => {
+      setIsMobile(window.innerWidth < 768); // mobile breakpoint
+    };
+
+    checkScreen();
+    window.addEventListener("resize", checkScreen);
+
+    return () => window.removeEventListener("resize", checkScreen);
+  }, []);
   // SHUFFLE SAFE
   const shuffledFromHook = useShuffledProduct(
     medicines,
@@ -312,7 +324,25 @@ export default function AllGroupCare() {
                       // eslint-disable-next-line @typescript-eslint/no-explicit-any
                       (i: any) => getProductId(i) === item.medicine_id
                     );
-                    return (
+                    return isMobile ? (
+                      // 💻 DESKTOP/TABLET → CARD DESIGN (Reusable Component 🔥)
+                      <ProductCardUI
+                        key={`${item.medicine_id}-${index}`}
+                        image={imageUrl}
+                        name={item.medicine_name}
+                        manufacturer={item.manufacturer_name}
+                        packSize={item.pack_size} // generic nahi h → skip
+                        price={formattedDiscountedPrice}
+                        mrp={formattedMrp}
+                        discount={discount}
+                        showRx={false}
+                        isInCart={isInBag}
+                        loading={processingIds.includes(item.medicine_id)}
+                        onAdd={() => handleAdd(item)}
+                        onRemove={() => handleRemove(item.medicine_id)}
+                        onClick={() => handleClick(item.medicine_id)}
+                      />
+                    ) : (
                       <div
                         className="pd_box shadow"
                         key={`${item.medicine_id}-${index}`}
@@ -321,7 +351,7 @@ export default function AllGroupCare() {
                         <div className="pd_img">
                           <Image
                             src={imageUrl}
-                            alt={item.medicine_name}
+                            alt=""
                             style={{
                               height: "220px",
                               objectFit: "contain",

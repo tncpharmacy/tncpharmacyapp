@@ -22,6 +22,7 @@ import { HealthBag } from "@/types/healthBag";
 import TncLoader from "@/app/components/TncLoader/TncLoader";
 import { loadLocalHealthBag } from "@/lib/features/healthBagSlice/healthBagSlice";
 import Pagination from "@/app/components/Pagination/Pagination";
+import ProductCardUI from "../../components/MedicineCard/ProductCardUI";
 
 const mediaBase = process.env.NEXT_PUBLIC_MEDIA_BASE_URL;
 
@@ -53,6 +54,19 @@ export default function AllProduct() {
   const { loading } = useAppSelector((state) => state.medicine);
 
   const { list: categories } = useAppSelector((state) => state.category);
+
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkScreen = () => {
+      setIsMobile(window.innerWidth < 768); // mobile breakpoint
+    };
+
+    checkScreen();
+    window.addEventListener("resize", checkScreen);
+
+    return () => window.removeEventListener("resize", checkScreen);
+  }, []);
 
   // --- CALL SHUFFLE HOOK AT TOP-LEVEL (ESLINT SAFE) ---
   const shuffledFromHook = useShuffledProduct(
@@ -302,7 +316,25 @@ export default function AllProduct() {
                       (i: any) => getProductId(i) === item.product_id
                     );
 
-                    return (
+                    return isMobile ? (
+                      // 💻 DESKTOP/TABLET → CARD DESIGN (Reusable Component 🔥)
+                      <ProductCardUI
+                        key={`${item.product_id}-${index}`}
+                        image={imageUrl}
+                        name={item.ProductName}
+                        manufacturer={item.Manufacturer}
+                        packSize={item.pack_size} // generic nahi h → skip
+                        price={formattedDiscountedPrice}
+                        mrp={formattedMrp}
+                        discount={discount}
+                        showRx={false}
+                        isInCart={isInBag}
+                        loading={processingIds.includes(item.product_id)}
+                        onAdd={() => handleAdd(item)}
+                        onRemove={() => handleRemove(item.product_id)}
+                        onClick={() => handleClick(item.product_id)}
+                      />
+                    ) : (
                       <div
                         className="pd_box shadow"
                         key={`${item.product_id}-${index}`}
@@ -311,7 +343,7 @@ export default function AllProduct() {
                         <div className="pd_img">
                           <Image
                             src={imageUrl}
-                            alt={item.ProductName}
+                            alt=""
                             style={{
                               height: "220px",
                               objectFit: "contain",
