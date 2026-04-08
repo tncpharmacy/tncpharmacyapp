@@ -60,8 +60,20 @@ export const useHealthBag = ({ userId }: { userId: number | null }) => {
   const addItem = useCallback(
     async (item: HealthBag) => {
       if (!mounted) return;
-      const already = items.find((i) => i.product_id === item.product_id);
-      if (already) return;
+      const already = items.find(
+        (i) =>
+          i.product_id === item.product_id || i.productid === item.product_id
+      );
+
+      if (already) {
+        // 🔥 instead of return → increase qty
+        await increaseQty(
+          already.id,
+          item.product_id,
+          already.qty + item.quantity
+        );
+        return;
+      }
 
       if (userId) {
         try {

@@ -391,7 +391,7 @@ export default function AllManufacturer() {
                   })
                 )}
               </div>
-              {filteredMedicines.length > 0 && !loading && (
+              {filteredMedicines.length > 0 && !loading && nextUrl && (
                 <div className="d-flex justify-content-center mt-3">
                   <Pagination
                     currentPage={page}

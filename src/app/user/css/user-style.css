@@ -222,6 +222,28 @@ body {
     border-color: #9bd3ff;
 }
 
+.disabled-minus {
+  opacity: 0.4;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.disabled-btn {
+  opacity: 0.4;
+  cursor: not-allowed;
+  pointer-events: none;
+  background-color: #f8f9fa !important;
+  border-color: #dee2e6 !important;
+  color: #adb5bd !important;
+}
+
+/* hover bhi band */
+.disabled-btn:hover {
+  background-color: #f8f9fa !important;
+  border-color: #dee2e6 !important;
+  color: #adb5bd !important;
+}
+
 .btn_menu {
     color: #0a5cc0;
     display: inline;

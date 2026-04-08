@@ -374,7 +374,7 @@ export default function AllProduct() {
                   })
                 )}
               </div>
-              {medicines.length > 0 && !loading && (
+              {medicines.length > 0 && !loading && nextUrl && (
                 <div className="d-flex justify-content-center mt-3">
                   <Pagination
                     currentPage={page}

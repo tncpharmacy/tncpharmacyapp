@@ -29,6 +29,7 @@ import { useHealthBag } from "@/lib/hooks/useHealthBag";
 import { HealthBag } from "@/types/healthBag";
 import { formatAmount } from "@/lib/utils/formatAmount";
 import { formatPrice } from "@/lib/utils/formatPrice";
+import { loadLocalHealthBag } from "@/lib/features/healthBagSlice/healthBagSlice";
 
 // Types
 interface PackOption {
@@ -211,6 +212,9 @@ export default function ProductPage() {
     removeItem,
     mergeGuestCart,
     fetchCart,
+    increaseQty,
+    decreaseQty,
+    updateGuestQuantity,
   } = useHealthBag({
     userId: buyer?.id || null,
   });
@@ -342,6 +346,38 @@ export default function ProductPage() {
   const [selectedImage, setSelectedImage] = useState(
     "/images/product-main.jpg"
   );
+
+  useEffect(() => {
+    if (!id || !bagItem) return;
+
+    const existingItem = bagItem.find(
+      (i) => i.productid === id || i.product_id === id
+    );
+
+    if (existingItem) {
+      setQuantity(Number(existingItem.qty || existingItem.quantity) || 1);
+    } else {
+      setQuantity(1);
+    }
+  }, [id, bagItem]);
+
+  useEffect(() => {
+    if (buyer?.id) return;
+
+    const ls = localStorage.getItem("healthbag");
+    if (!ls) return;
+
+    try {
+      const items = JSON.parse(ls);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const existingItem = items.find((i: any) => i.productid === id);
+
+      if (existingItem) {
+        setQuantity(existingItem.qty || 1);
+      }
+    } catch {}
+  }, [id, buyer?.id]);
+
   // --- Sync localBag with Redux items ---
   useEffect(() => {
     const newLocalBag = bagItem?.length ? bagItem.map((i) => i.productid) : [];
@@ -362,20 +398,72 @@ export default function ProductPage() {
     }
   }, [buyer?.id, mergeGuestCart]);
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [guestItems, setGuestItems] = useState<any[]>([]);
+  useEffect(() => {
+    if (!buyer?.id) {
+      const lsData = localStorage.getItem("healthbag");
+
+      if (!lsData) {
+        setGuestItems([]); // 🔥 ensure empty
+        return;
+      }
+
+      try {
+        setGuestItems(JSON.parse(lsData));
+      } catch {
+        setGuestItems([]);
+      }
+    }
+  }, [buyer?.id]);
   // --- Handlers ---
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleAdd = async (item: any) => {
-    setLocalBag((prev) => [...prev, item.product_id]);
-    setProcessingIds((prev) => [...prev, item.product_id]);
-    try {
+    if (buyer?.id) {
       await addItem({
         id: 0,
-        buyer_id: buyer?.id || 0,
+        buyer_id: buyer?.id,
         product_id: item.product_id,
-        quantity: quantity,
+        quantity: quantity, // ✅ FIXED (dynamic qty)
       } as HealthBag);
-    } finally {
-      setProcessingIds((prev) => prev.filter((id) => id !== item.product_id));
+    } else {
+      const newItem = {
+        id: 0,
+        productid: item.product_id,
+
+        // ✅ FIXED qty
+        qty: quantity,
+
+        // ✅ FIXED DATA
+        name: item.medicine_name,
+        manufacturer: item.manufacturer_name,
+        pack_size: item.pack_size,
+
+        // ✅ FIXED pricing
+        mrp: Number(item.mrp ?? 0),
+        discount: Number(item.discount ?? 0),
+
+        // ✅ image fix
+        image: item.image || images?.[0]?.document || null,
+      };
+
+      const exists = guestItems.find((i) => i.productid === item.product_id);
+
+      let updated;
+
+      if (exists) {
+        updated = guestItems.map((i) =>
+          i.productid === item.product_id
+            ? { ...i, qty: quantity } // 🔥 replace instead of +1
+            : i
+        );
+      } else {
+        updated = [...guestItems, newItem];
+      }
+
+      localStorage.setItem("healthbag", JSON.stringify(updated));
+      setGuestItems(updated);
+      dispatch(loadLocalHealthBag());
     }
   };
 
@@ -480,9 +568,44 @@ export default function ProductPage() {
     }
   }, [mrps, discounts]);
 
+  const existingItem = bagItem.find(
+    (i) => i.productid === id || i.product_id === id
+  );
   // ✅ Quantity change handlers
-  const increase = () => setQuantity((q) => q + 1);
-  const decrease = () => setQuantity((q) => (q > 1 ? q - 1 : 1));
+  const increase = async () => {
+    const newQty = quantity + 1;
+    setQuantity(newQty);
+
+    if (!existingItem) return;
+
+    // ✅ LOGIN USER
+    if (buyer?.id) {
+      await increaseQty(existingItem.id, id, newQty);
+    }
+    // ✅ GUEST USER
+    else {
+      updateGuestQuantity(id, newQty);
+      dispatch(loadLocalHealthBag());
+    }
+  };
+  const decrease = async () => {
+    if (quantity <= 1) return;
+
+    const newQty = quantity - 1;
+    setQuantity(newQty);
+
+    if (!existingItem) return;
+
+    // ✅ LOGIN USER
+    if (buyer?.id) {
+      await decreaseQty(existingItem.id, id, newQty);
+    }
+    // ✅ GUEST USER
+    else {
+      updateGuestQuantity(id, newQty);
+      dispatch(loadLocalHealthBag());
+    }
+  };
 
   // ✅ Final total price (depends on qty)
   // const totalPrice = (discountedPrice * quantity).toFixed(2);
@@ -1130,7 +1253,10 @@ export default function ProductPage() {
                   <div className="d-flex align-items-center my-3">
                     <button
                       onClick={decrease}
-                      className="btn btn-outline-secondary px-3"
+                      disabled={quantity <= 1}
+                      className={`btn btn-outline-secondary px-3 ${
+                        quantity <= 1 ? "disabled-btn" : ""
+                      }`}
                       aria-label="Decrease quantity"
                     >
                       −
@@ -1156,6 +1282,12 @@ export default function ProductPage() {
                       } else {
                         handleAdd({
                           product_id: id,
+                          medicine_name,
+                          manufacturer_name,
+                          pack_size,
+                          mrp,
+                          discount,
+                          image: images?.[0]?.document || null,
                         });
                       }
                     }}
@@ -1239,7 +1371,13 @@ export default function ProductPage() {
               </div>
 
               <div className="msc-qty">
-                <button onClick={decrease}>−</button>
+                <button
+                  onClick={decrease}
+                  disabled={quantity <= 1}
+                  className={quantity <= 1 ? "disabled-minus" : ""}
+                >
+                  −
+                </button>
                 <span>{quantity}</span>
                 <button onClick={increase}>+</button>
               </div>
@@ -1248,7 +1386,16 @@ export default function ProductPage() {
                 className="msc-btn"
                 onClick={() => {
                   if (isInBag) router.push("/health-bag");
-                  else handleAdd({ product_id: id });
+                  else
+                    handleAdd({
+                      product_id: id,
+                      medicine_name,
+                      manufacturer_name,
+                      pack_size,
+                      mrp,
+                      discount,
+                      image: images?.[0]?.document || null,
+                    });
                 }}
                 disabled={processingIds.includes(id)}
               >

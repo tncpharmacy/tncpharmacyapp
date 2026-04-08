@@ -64,32 +64,35 @@ export default function AllMedicine() {
               />
               {/* </Link> */}
               {/* 🔥 PAGINATION  */}
-              {medicinesList && medicinesList.length > 0 && !loading && (
-                <div className="d-flex justify-content-center mt-3">
-                  <Pagination
-                    currentPage={page}
-                    hasNext={!!next}
-                    hasPrev={page > 1} // 👈 add this
-                    onPageChange={(newPage) => {
-                      setPageLoading(true);
-                      if (newPage > page && next) {
-                        setPrevStack((prev) => [...prev, currentUrl || ""]);
-                        setCurrentUrl(next);
-                        setPage(newPage);
-                      }
+              {medicinesList &&
+                medicinesList.length > 0 &&
+                !loading &&
+                next && (
+                  <div className="d-flex justify-content-center mt-3">
+                    <Pagination
+                      currentPage={page}
+                      hasNext={!!next}
+                      hasPrev={page > 1} // 👈 add this
+                      onPageChange={(newPage) => {
+                        setPageLoading(true);
+                        if (newPage > page && next) {
+                          setPrevStack((prev) => [...prev, currentUrl || ""]);
+                          setCurrentUrl(next);
+                          setPage(newPage);
+                        }
 
-                      if (newPage < page && prevStack.length > 0) {
-                        const lastUrl = prevStack[prevStack.length - 1];
+                        if (newPage < page && prevStack.length > 0) {
+                          const lastUrl = prevStack[prevStack.length - 1];
 
-                        setPrevStack((prev) => prev.slice(0, -1));
-                        setCurrentUrl(lastUrl || null);
-                        setPage(newPage);
-                      }
-                      window.scrollTo({ top: 0, behavior: "auto" });
-                    }}
-                  />
-                </div>
-              )}
+                          setPrevStack((prev) => prev.slice(0, -1));
+                          setCurrentUrl(lastUrl || null);
+                          setPage(newPage);
+                        }
+                        window.scrollTo({ top: 0, behavior: "auto" });
+                      }}
+                    />
+                  </div>
+                )}
             </div>
           </div>
         </div>

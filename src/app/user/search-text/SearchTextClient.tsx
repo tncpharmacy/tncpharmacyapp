@@ -239,7 +239,7 @@ export default function SearchTextClient() {
                 </div> */}
               </div>
               <div className="pd_list">
-                {(loading || pageLoading) ? (
+                {loading || pageLoading ? (
                   <div
                     className="d-flex justify-content-center align-items-center"
                     style={{ marginLeft: "100vh" }}
@@ -341,7 +341,7 @@ export default function SearchTextClient() {
                   })
                 )}
               </div>
-              {results.length > 0 && !loading && (
+              {results.length > 0 && !loading && nextUrl && (
                 <div className="d-flex justify-content-center mt-3">
                   <Pagination
                     currentPage={page}
