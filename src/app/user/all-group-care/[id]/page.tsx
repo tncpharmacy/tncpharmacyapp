@@ -164,13 +164,13 @@ export default function AllGroupCare() {
       await addItem({
         id: 0,
         buyer_id: buyer?.id,
-        product_id: item.medicine_id,
+        product_id: item.id,
         quantity: 1,
       } as HealthBag);
     } else {
       const newItem = {
         id: 0,
-        productid: item.medicine_id,
+        productid: item.id,
         qty: 1,
 
         // 🔥 STORE FULL DATA
@@ -182,13 +182,13 @@ export default function AllGroupCare() {
         image: item.DefaultImageURL || item.medicine_image || null, // 🔥 important
       };
 
-      const exists = guestItems.find((i) => i.productid === item.medicine_id);
+      const exists = guestItems.find((i) => i.productid === item.id);
 
       let updated;
 
       if (exists) {
         updated = guestItems.map((i) =>
-          i.productid === item.medicine_id ? { ...i, qty: i.qty + 1 } : i
+          i.productid === item.id ? { ...i, qty: i.qty + 1 } : i
         );
       } else {
         updated = [...guestItems, newItem];
@@ -211,9 +211,7 @@ export default function AllGroupCare() {
       // 🔵 GUEST USER
       else {
         const updated = guestItems.filter(
-          (item) =>
-            (item.productid ?? item.product_id ?? item.medicine_id) !==
-            productId
+          (item) => (item.productid ?? item.product_id ?? item.id) !== productId
         );
 
         localStorage.setItem("healthbag", JSON.stringify(updated));
@@ -319,20 +317,18 @@ export default function AllGroupCare() {
                       : "/images/tnc-default.png";
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     const getProductId = (item: any) => {
-                      return (
-                        item.productid ?? item.product_id ?? item.medicine_id
-                      );
+                      return item.productid ?? item.product_id ?? item.id;
                     };
                     const source = buyer?.id ? items : guestItems;
 
                     const isInBag = source.some(
                       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                      (i: any) => getProductId(i) === item.medicine_id
+                      (i: any) => getProductId(i) === item.id
                     );
                     return isMobile ? (
                       // 💻 DESKTOP/TABLET → CARD DESIGN (Reusable Component 🔥)
                       <ProductCardUI
-                        key={`${item.medicine_id}-${index}`}
+                        key={`${item.id}-${index}`}
                         image={imageUrl}
                         name={item.medicine_name}
                         manufacturer={item.manufacturer_name}
@@ -342,15 +338,15 @@ export default function AllGroupCare() {
                         discount={discount}
                         showRx={false}
                         isInCart={isInBag}
-                        loading={processingIds.includes(item.medicine_id)}
+                        loading={processingIds.includes(item.id)}
                         onAdd={() => handleAdd(item)}
-                        onRemove={() => handleRemove(item.medicine_id)}
-                        onClick={() => handleClick(item.medicine_id)}
+                        onRemove={() => handleRemove(item.id)}
+                        onClick={() => handleClick(item.id)}
                       />
                     ) : (
                       <div
                         className="pd_box shadow"
-                        key={`${item.medicine_id}-${index}`}
+                        key={`${item.id}-${index}`}
                         style={{ boxShadow: "0 2px 5px rgba(0, 0, 0, 0.05)" }}
                       >
                         <div className="pd_img">
@@ -366,14 +362,14 @@ export default function AllGroupCare() {
                                   ? 0.3
                                   : 1,
                             }}
-                            onClick={() => handleClick(item.medicine_id)}
+                            onClick={() => handleClick(item.id)}
                           />
                         </div>
 
                         <div className="pd_content">
                           <div
                             style={{ cursor: "pointer" }}
-                            onClick={() => handleClick(item.medicine_id)}
+                            onClick={() => handleClick(item.id)}
                           >
                             <h3
                               className="pd-title hover-link fw-bold"
@@ -400,16 +396,14 @@ export default function AllGroupCare() {
                               className={`btn-1 btn-HO ${
                                 isInBag ? "remove" : "add"
                               }`}
-                              disabled={processingIds.includes(
-                                item.medicine_id
-                              )}
+                              disabled={processingIds.includes(item.id)}
                               onClick={() =>
                                 isInBag
-                                  ? handleRemove(item.medicine_id)
+                                  ? handleRemove(item.id)
                                   : handleAdd(item)
                               }
                             >
-                              {processingIds.includes(item.medicine_id)
+                              {processingIds.includes(item.id)
                                 ? "Processing..."
                                 : isInBag
                                 ? "REMOVE"
