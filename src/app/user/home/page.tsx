@@ -916,7 +916,9 @@ export default function HomePage() {
                 <img src="images/banner-h3-03.jpg" alt="" />
                 <div className="caption">
                   <span className="t1">- Upto 20% Off</span>
-                  <h2 className="t2">Genuine Medicines at Best Prices</h2>
+                  <h2 className="t2">
+                    Genuine & Trusted Medicines at Best Prices
+                  </h2>
                   <div>
                     {/* <button className="btn-2">
                       Shop Now <i className="bi bi-chevron-right"></i>
