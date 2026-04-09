@@ -140,6 +140,18 @@ export default function AllGroupCare() {
     );
   }, [medicines, searchTerm]);
 
+  const uniqueMedicines = useMemo(() => {
+    const map = new Map();
+
+    medicines.forEach((item) => {
+      if (!map.has(item.medicine_id)) {
+        map.set(item.medicine_id, item);
+      }
+    });
+
+    return Array.from(map.values());
+  }, [medicines]);
+
   useEffect(() => {
     if (!buyer?.id) {
       const lsData = localStorage.getItem("healthbag");
@@ -286,10 +298,10 @@ export default function AllGroupCare() {
                   >
                     <TncLoader />
                   </div>
-                ) : filteredMedicines.length === 0 ? (
+                ) : uniqueMedicines.length === 0 ? (
                   <p>No products found.</p>
                 ) : (
-                  filteredMedicines.map((item, index) => {
+                  uniqueMedicines.map((item, index) => {
                     const mrpRaw = item.MRP ?? item.mrp ?? 0;
                     const parsedMrp = Number(mrpRaw);
                     const baseMrp =
@@ -362,14 +374,14 @@ export default function AllGroupCare() {
                                   ? 0.3
                                   : 1,
                             }}
-                            onClick={() => handleClick(item.id)}
+                            onClick={() => handleClick(item.medicine_id)}
                           />
                         </div>
 
                         <div className="pd_content">
                           <div
                             style={{ cursor: "pointer" }}
-                            onClick={() => handleClick(item.id)}
+                            onClick={() => handleClick(item.medicine_id)}
                           >
                             <h3
                               className="pd-title hover-link fw-bold"
