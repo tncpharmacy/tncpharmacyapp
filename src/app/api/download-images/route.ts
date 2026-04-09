@@ -61,7 +61,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const baseDir = path.join(process.cwd(), "public/products/5000.40");
+    const baseDir = path.join(process.cwd(), "public/products/5000.41");
 
     if (!fs.existsSync(baseDir)) {
       fs.mkdirSync(baseDir, { recursive: true });
@@ -90,18 +90,26 @@ export async function POST(req: NextRequest) {
               return;
             }
 
-            // ✅ NEW LOGIC
+            // 👉 extension
             const ext = originalName.split(".").pop();
+
+            // 👉 medicine_code se numeric part nikalo (TNC000175 → 175)
+            const numericPart = medicine_code
+              .replace(/\D/g, "")
+              .replace(/^0+/, "");
+
+            // 👉 original filename ka suffix nikalo (175.1 → .1)
             const nameWithoutExt = originalName.replace(`.${ext}`, "");
             const parts = nameWithoutExt.split(".");
 
+            // 👉 final filename
             let fileName = "";
 
             if (parts.length === 1) {
-              fileName = `${medicine_code}.${ext}`;
+              fileName = `${numericPart}.${ext}`; // 175.jpg
             } else {
-              const index = parts[1];
-              fileName = `${medicine_code}_${index}.${ext}`;
+              const suffix = parts[1];
+              fileName = `${numericPart}.${suffix}.${ext}`; // 175.1.jpg
             }
 
             const medicineDir = path.join(baseDir, medicine_code);

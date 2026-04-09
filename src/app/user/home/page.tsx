@@ -32,6 +32,7 @@ import TncLoader from "@/app/components/TncLoader/TncLoader";
 import { shallowEqual } from "react-redux";
 import { formatAmount } from "@/lib/utils/formatAmount";
 import { loadLocalHealthBag } from "@/lib/features/healthBagSlice/healthBagSlice";
+import ProductCardUI from "../components/MedicineCard/ProductCardUI";
 const mediaBase = process.env.NEXT_PUBLIC_MEDIA_BASE_URL;
 
 export default function HomePage() {
@@ -83,6 +84,8 @@ export default function HomePage() {
   // const Slider = dynamic(() => import("react-slick"), {
   //   ssr: false,
   // });
+
+  const [isMobile, setIsMobile] = useState(false);
   const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
@@ -101,6 +104,17 @@ export default function HomePage() {
       despatch(getMedicinesMenuByOtherId(otherId));
     }
   }, [despatch]);
+
+  useEffect(() => {
+    const checkScreen = () => {
+      setIsMobile(window.innerWidth < 768); // mobile breakpoint
+    };
+
+    checkScreen();
+    window.addEventListener("resize", checkScreen);
+
+    return () => window.removeEventListener("resize", checkScreen);
+  }, []);
 
   const CARE_GROUP_ICONS: Record<string, string> = {
     "Diabetic Care": "images/icons/icon-diabetes-care.svg",
@@ -429,6 +443,7 @@ export default function HomePage() {
       <section className="pd_section">
         <div className="container">
           <div
+            className="mb-3"
             style={{
               display: "flex",
               justifyContent: "space-between",
@@ -454,7 +469,7 @@ export default function HomePage() {
                     item.DefaultImageURL !== "/images/tnc-default.png"
                 )
                 .slice(0, 5)
-                .map((item) => {
+                .map((item, index) => {
                   const mrpRaw = item.MRP ?? item.mrp ?? 0;
                   const parsedMrp = Number(mrpRaw);
                   const baseMrp =
@@ -491,7 +506,25 @@ export default function HomePage() {
                     (i: any) => getProductId(i) === item.product_id
                   );
 
-                  return (
+                  return isMobile ? (
+                    // 💻 DESKTOP/TABLET → CARD DESIGN (Reusable Component 🔥)
+                    <ProductCardUI
+                      key={`${item.product_id}-${index}`}
+                      image={imageUrl}
+                      name={item.ProductName}
+                      manufacturer={item.Manufacturer}
+                      packSize={item.pack_size} // generic nahi h → skip
+                      price={formattedDiscountedPrice}
+                      mrp={formattedMrp}
+                      discount={discount}
+                      showRx={false}
+                      isInCart={isInBag}
+                      loading={processingIds.includes(item.product_id)}
+                      onAdd={() => handleAdd(item)}
+                      onRemove={() => handleRemove(item.product_id)}
+                      onClick={() => handleClick(item.product_id)}
+                    />
+                  ) : (
                     <div className="col" key={item.product_id}>
                       <div className="pd_box">
                         <div className="pd_img">
@@ -694,6 +727,7 @@ export default function HomePage() {
       <section className="pd_section">
         <div className="container">
           <div
+            className="mb-3"
             style={{
               display: "flex",
               justifyContent: "space-between",
@@ -719,7 +753,7 @@ export default function HomePage() {
                     item.DefaultImageURL !== "/images/tnc-default.png"
                 )
                 .slice(0, 5)
-                .map((item) => {
+                .map((item, index) => {
                   const mrpRaw = item.MRP ?? item.mrp ?? 0;
                   const parsedMrp = Number(mrpRaw);
                   const baseMrp =
@@ -757,7 +791,25 @@ export default function HomePage() {
                     (i: any) => getProductId(i) === item.product_id
                   );
 
-                  return (
+                  return isMobile ? (
+                    // 💻 DESKTOP/TABLET → CARD DESIGN (Reusable Component 🔥)
+                    <ProductCardUI
+                      key={`${item.product_id}-${index}`}
+                      image={imageUrl}
+                      name={item.ProductName}
+                      manufacturer={item.Manufacturer}
+                      packSize={item.pack_size} // generic nahi h → skip
+                      price={formattedDiscountedPrice}
+                      mrp={formattedMrp}
+                      discount={discount}
+                      showRx={false}
+                      isInCart={isInBag}
+                      loading={processingIds.includes(item.product_id)}
+                      onAdd={() => handleAdd(item)}
+                      onRemove={() => handleRemove(item.product_id)}
+                      onClick={() => handleClick(item.product_id)}
+                    />
+                  ) : (
                     <div className="col" key={item.product_id}>
                       <div className="pd_box">
                         <div className="pd_img">
@@ -835,8 +887,8 @@ export default function HomePage() {
               <div className="pd_offer">
                 <img src="images/banner-h3-01.jpg" alt="" />
                 <div className="caption">
-                  <span className="t1">- Upto 25% Off</span>
-                  <h2 className="t2">100% Pure Hand Sanitizer</h2>
+                  <span className="t1">- Upto 20% Off</span>
+                  <h2 className="t2">Complete Women’s Health & Hygiene Care</h2>
                   <div>
                     {/* <button className="btn-2">
                       Shop Now <i className="bi bi-chevron-right"></i>
@@ -849,8 +901,8 @@ export default function HomePage() {
               <div className="pd_offer">
                 <img src="images/banner-h3-02.jpg" alt="" />
                 <div className="caption">
-                  <span className="t1">- Upto 25% Off</span>
-                  <h2 className="t2">100% Pure Hand Sanitizer</h2>
+                  <span className="t1">- Upto 20% Off</span>
+                  <h2 className="t2">100% Natural & Ayurvedic Wellness</h2>
                   <div>
                     {/* <button className="btn-2">
                       Shop Now <i className="bi bi-chevron-right"></i>
@@ -863,8 +915,8 @@ export default function HomePage() {
               <div className="pd_offer">
                 <img src="images/banner-h3-03.jpg" alt="" />
                 <div className="caption">
-                  <span className="t1">- Upto 25% Off</span>
-                  <h2 className="t2">100% Pure Hand Sanitizer</h2>
+                  <span className="t1">- Upto 20% Off</span>
+                  <h2 className="t2">Genuine Medicines at Best Prices</h2>
                   <div>
                     {/* <button className="btn-2">
                       Shop Now <i className="bi bi-chevron-right"></i>
@@ -880,6 +932,7 @@ export default function HomePage() {
       <section className="pd_section">
         <div className="container">
           <div
+            className="mb-3"
             style={{
               display: "flex",
               justifyContent: "space-between",
@@ -905,7 +958,7 @@ export default function HomePage() {
                     item.DefaultImageURL !== "/images/tnc-default.png"
                 )
                 .slice(0, 5)
-                .map((item) => {
+                .map((item, index) => {
                   const mrpRaw = item.MRP ?? item.mrp ?? 0;
                   const parsedMrp = Number(mrpRaw);
                   const baseMrp =
@@ -943,7 +996,25 @@ export default function HomePage() {
                     (i: any) => getProductId(i) === item.product_id
                   );
 
-                  return (
+                  return isMobile ? (
+                    // 💻 DESKTOP/TABLET → CARD DESIGN (Reusable Component 🔥)
+                    <ProductCardUI
+                      key={`${item.product_id}-${index}`}
+                      image={imageUrl}
+                      name={item.ProductName}
+                      manufacturer={item.Manufacturer}
+                      packSize={item.pack_size} // generic nahi h → skip
+                      price={formattedDiscountedPrice}
+                      mrp={formattedMrp}
+                      discount={discount}
+                      showRx={false}
+                      isInCart={isInBag}
+                      loading={processingIds.includes(item.product_id)}
+                      onAdd={() => handleAdd(item)}
+                      onRemove={() => handleRemove(item.product_id)}
+                      onClick={() => handleClick(item.product_id)}
+                    />
+                  ) : (
                     <div className="col" key={item.product_id}>
                       <div className="pd_box">
                         <div className="pd_img">

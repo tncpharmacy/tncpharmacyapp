@@ -751,7 +751,7 @@ const SiteHeader = () => {
               </button>
             </div>
 
-            <ul className="mobile-menu-list">
+            <ul className="mobile-menu-list" style={{ scrollbarWidth: "none" }}>
               {/* {!buyer && (
                 <li onClick={() => setShowBuyerLogin(true)}>Login / Sign Up</li>
               )} */}
@@ -772,8 +772,29 @@ const SiteHeader = () => {
                       className="category-title"
                       onClick={() => toggleCategory(cat.id)}
                     >
-                      <span>{cat.category_name}</span>
-                      <span>{openCategoryId === cat.id ? "▲" : "▼"}</span>
+                      <span
+                        onClick={() => {
+                          setShowMobileMenu(false);
+                          router.push(`/all-product/${encodeId(cat.id)}`);
+                        }}
+                        style={{ flex: 1, cursor: "pointer" }}
+                      >
+                        {cat.category_name}
+                      </span>
+                      {/* 👉 ARROW CLICK = SUBMENU TOGGLE */}
+                      <span
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          e.preventDefault();
+
+                          (e.currentTarget as HTMLElement).blur(); // 👈 scroll jump fix
+
+                          toggleCategory(cat.id);
+                        }}
+                        style={{ cursor: "pointer" }}
+                      >
+                        {openCategoryId === cat.id ? "▲" : "▼"}
+                      </span>
                     </div>
 
                     {openCategoryId === cat.id && (

@@ -30,6 +30,7 @@ import TncLoader from "@/app/components/TncLoader/TncLoader";
 import BuyerLoginModal from "@/app/buyer-login/page";
 import { loadLocalHealthBag } from "@/lib/features/healthBagSlice/healthBagSlice";
 import { formatPrice } from "@/lib/utils/formatPrice";
+import ProductCardUI from "../components/MedicineCard/ProductCardUI";
 const mediaBase = process.env.NEXT_PUBLIC_MEDIA_BASE_URL;
 
 export interface Medicine {
@@ -112,6 +113,7 @@ export default function HealthBags() {
   // --- Local states for instant UI ---
   const [localBag, setLocalBag] = useState<number[]>([]);
   const [processingIds, setProcessingIds] = useState<number[]>([]);
+  const [isMobile, setIsMobile] = useState(false);
   // for precription upload state
   const [showPrescriptionModal, setShowPrescriptionModal] = useState(false);
   const [prescriptionFile, setPrescriptionFile] = useState<File | null>(null);
@@ -214,6 +216,17 @@ export default function HealthBags() {
       setLocalBag(newLocalBag);
     }
   }, [bagItem, localBag]);
+
+  useEffect(() => {
+    const checkScreen = () => {
+      setIsMobile(window.innerWidth < 768); // mobile breakpoint
+    };
+
+    checkScreen();
+    window.addEventListener("resize", checkScreen);
+
+    return () => window.removeEventListener("resize", checkScreen);
+  }, []);
 
   // Merge guest cart into logged-in cart once
   useEffect(() => {
@@ -848,7 +861,7 @@ export default function HealthBags() {
 
             <div className="row g-3">
               {shuffled7 && shuffled7.length > 0 ? (
-                shuffled7.slice(0, 5).map((item) => {
+                shuffled7.slice(0, 5).map((item, index) => {
                   const mrpRaw = item.MRP ?? item.mrp ?? 0;
                   const parsedMrp = Number(mrpRaw);
                   const baseMrp =
@@ -885,7 +898,25 @@ export default function HealthBags() {
                     (i: any) => getProductId(i) === item.product_id
                   );
 
-                  return (
+                  return isMobile ? (
+                    // 💻 DESKTOP/TABLET → CARD DESIGN (Reusable Component 🔥)
+                    <ProductCardUI
+                      key={`${item.product_id}-${index}`}
+                      image={imageUrl}
+                      name={item.ProductName}
+                      manufacturer={item.Manufacturer}
+                      packSize={item.pack_size} // generic nahi h → skip
+                      price={formattedDiscountedPrice}
+                      mrp={formattedMrp}
+                      discount={discount}
+                      showRx={false}
+                      isInCart={isInBag}
+                      loading={processingIds.includes(item.product_id)}
+                      onAdd={() => handleAdd(item)}
+                      onRemove={() => handleRemove(item.product_id)}
+                      onClick={() => handleClick(item.product_id)}
+                    />
+                  ) : (
                     <div
                       key={item.product_id}
                       className="col-6 col-md-4 col-lg-5th"
@@ -987,7 +1018,7 @@ export default function HealthBags() {
 
             <div className="row g-3">
               {shuffled5 && shuffled5.length > 0 ? (
-                shuffled5.slice(0, 5).map((item) => {
+                shuffled5.slice(0, 5).map((item, index) => {
                   const mrpRaw = item.MRP ?? item.mrp ?? 0;
                   const parsedMrp = Number(mrpRaw);
                   const baseMrp =
@@ -1023,7 +1054,25 @@ export default function HealthBags() {
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     (i: any) => getProductId(i) === item.product_id
                   );
-                  return (
+                  return isMobile ? (
+                    // 💻 DESKTOP/TABLET → CARD DESIGN (Reusable Component 🔥)
+                    <ProductCardUI
+                      key={`${item.product_id}-${index}`}
+                      image={imageUrl}
+                      name={item.ProductName}
+                      manufacturer={item.Manufacturer}
+                      packSize={item.pack_size} // generic nahi h → skip
+                      price={formattedDiscountedPrice}
+                      mrp={formattedMrp}
+                      discount={discount}
+                      showRx={false}
+                      isInCart={isInBag}
+                      loading={processingIds.includes(item.product_id)}
+                      onAdd={() => handleAdd(item)}
+                      onRemove={() => handleRemove(item.product_id)}
+                      onClick={() => handleClick(item.product_id)}
+                    />
+                  ) : (
                     <div
                       key={item.product_id}
                       className="col-6 col-md-4 col-lg-5th"
@@ -1125,7 +1174,7 @@ export default function HealthBags() {
 
             <div className="row g-3">
               {shuffled9 && shuffled9.length > 0 ? (
-                shuffled9.slice(0, 5).map((item) => {
+                shuffled9.slice(0, 5).map((item, index) => {
                   const mrpRaw = item.MRP ?? item.mrp ?? 0;
                   const parsedMrp = Number(mrpRaw);
                   const baseMrp =
@@ -1162,7 +1211,25 @@ export default function HealthBags() {
                     (i: any) => getProductId(i) === item.product_id
                   );
 
-                  return (
+                  return isMobile ? (
+                    // 💻 DESKTOP/TABLET → CARD DESIGN (Reusable Component 🔥)
+                    <ProductCardUI
+                      key={`${item.product_id}-${index}`}
+                      image={imageUrl}
+                      name={item.ProductName}
+                      manufacturer={item.Manufacturer}
+                      packSize={item.pack_size} // generic nahi h → skip
+                      price={formattedDiscountedPrice}
+                      mrp={formattedMrp}
+                      discount={discount}
+                      showRx={false}
+                      isInCart={isInBag}
+                      loading={processingIds.includes(item.product_id)}
+                      onAdd={() => handleAdd(item)}
+                      onRemove={() => handleRemove(item.product_id)}
+                      onClick={() => handleClick(item.product_id)}
+                    />
+                  ) : (
                     <div
                       key={item.product_id}
                       className="col-6 col-md-4 col-lg-5th"
