@@ -497,7 +497,7 @@ export default function ProductPage() {
 
   // ✅ Final total price (depends on qty)
   // const totalPrice = (discountedPrice * quantity).toFixed(2);
-  const totalPrice = Number((discountedPrice * quantity).toFixed(2));
+  const totalPrice = Number(discountedPrice.toFixed(2));
 
   useEffect(() => {
     const handleScroll = () => {
@@ -763,7 +763,7 @@ export default function ProductPage() {
                           <div className="product-image-box">
                             <img
                               src="/images/tnc-default.png"
-                              alt="No Image Available"
+                              alt=""
                               className="product-image"
                               style={{ opacity: "0.3" }}
                             />

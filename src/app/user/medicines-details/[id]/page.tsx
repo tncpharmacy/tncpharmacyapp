@@ -689,7 +689,7 @@ export default function ProductPage() {
         )
       : 0;
 
-  const totalPrice = Number((discountedPrice * quantity).toFixed(2));
+  const totalPrice = Number(discountedPrice.toFixed(2));
 
   useEffect(() => {
     const handleScroll = () => {

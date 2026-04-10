@@ -461,6 +461,8 @@ const medicineSlice = createSlice({
     },
     resetMedicinesList: (state) => {
       state.medicinesList = [];
+      state.groupCareList = [];
+      state.groupName = "";
       state.next = null;
     },
   },
@@ -690,6 +692,8 @@ const medicineSlice = createSlice({
       .addCase(getGroupCareById.pending, (state) => {
         state.loading = true;
         state.error = null;
+        state.groupCareList = [];
+        state.groupName = "";
       })
 
       .addCase(getGroupCareById.fulfilled, (state, action) => {

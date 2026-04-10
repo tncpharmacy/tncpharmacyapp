@@ -186,6 +186,7 @@ export default function AllManufacturer() {
         pack_size: item.PackSize || item.pack_size,
         mrp: Number(item.MRP ?? item.mrp ?? 0),
         discount: Number(item.Discount ?? item.discount ?? 0),
+        category_id: Number(item.category_id ?? 0),
         image: item.DefaultImageURL || item.medicine_image || null, // 🔥 important
       };
 
@@ -255,7 +256,7 @@ export default function AllManufacturer() {
                 {/* LEFT SIDE : PRODUCT NAME */}
                 <div className="col-md-9">
                   <div className="pageTitle mt-3 mb-3">
-                    <Image src={"/images/favicon.png"} alt="" /> Manufacturer:{" "}
+                    <Image src={"/images/favicon.png"} alt="" />{" "}
                     {manufacturerName || "Loading..."}
                   </div>
                 </div>

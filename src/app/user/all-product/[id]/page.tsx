@@ -173,6 +173,7 @@ export default function AllProduct() {
         pack_size: item.PackSize || item.pack_size,
         mrp: Number(item.MRP ?? item.mrp ?? 0),
         discount: Number(item.Discount ?? item.discount ?? 0),
+        category_id: categoryIdNum,
         image: item.DefaultImageURL || item.medicine_image || null, // 🔥 important
       };
 
@@ -237,7 +238,7 @@ export default function AllProduct() {
                 {/* LEFT SIDE : PRODUCT NAME */}
                 <div className="col-md-9">
                   <div className="pageTitle mt-3 mb-3">
-                    <Image src={"/images/favicon.png"} alt="" /> Product:{" "}
+                    <Image src={"/images/favicon.png"} alt="" />{" "}
                     {categoryName || "Loading..."}
                   </div>
                 </div>
@@ -304,10 +305,12 @@ export default function AllProduct() {
                     const formattedDiscountedPrice =
                       formatPrice(discountedPriceRaw);
 
-                    const imageUrl = item.DefaultImageURL
-                      ? item.DefaultImageURL.startsWith("http")
-                        ? item.DefaultImageURL
-                        : `${mediaBase}${item.DefaultImageURL}`
+                    const images = item.DefaultImageURL;
+                    const defaultImg = Array.isArray(images)
+                      ? images.find((img) => img.default_image === 1)
+                      : null;
+                    const imageUrl = defaultImg?.document
+                      ? `${mediaBase}${defaultImg.document}`
                       : "/images/tnc-default.png";
 
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any

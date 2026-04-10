@@ -616,7 +616,7 @@ export default function HealthBags() {
                     const imageUrl = getImageUrl(item.image);
                     return (
                       <div
-                        key={item.productid}
+                        key={`${item.productid}-${index}`}
                         className="d-flex align-items-start border-bottom pb-3 mb-3"
                       >
                         <span
@@ -882,11 +882,14 @@ export default function HealthBags() {
                   const formattedDiscountedPrice =
                     formatPrice(discountedPriceRaw);
 
-                  const imageUrl = item.DefaultImageURL
-                    ? item.DefaultImageURL.startsWith("http")
-                      ? item.DefaultImageURL
-                      : `${mediaBase}${item.DefaultImageURL}`
+                  const images = item.DefaultImageURL;
+                  const defaultImg = Array.isArray(images)
+                    ? images.find((img) => img.default_image === 1)
+                    : null;
+                  const imageUrl = defaultImg?.document
+                    ? `${mediaBase}${defaultImg.document}`
                     : "/images/tnc-default.png";
+
                   // eslint-disable-next-line @typescript-eslint/no-explicit-any
                   const getProductId = (item: any) => {
                     return item.productid ?? item.product_id ?? item.id;
@@ -1039,11 +1042,14 @@ export default function HealthBags() {
                   const formattedDiscountedPrice =
                     formatPrice(discountedPriceRaw);
 
-                  const imageUrl = item.DefaultImageURL
-                    ? item.DefaultImageURL.startsWith("http")
-                      ? item.DefaultImageURL
-                      : `${mediaBase}${item.DefaultImageURL}`
+                  const images = item.DefaultImageURL;
+                  const defaultImg = Array.isArray(images)
+                    ? images.find((img) => img.default_image === 1)
+                    : null;
+                  const imageUrl = defaultImg?.document
+                    ? `${mediaBase}${defaultImg.document}`
                     : "/images/tnc-default.png";
+
                   // eslint-disable-next-line @typescript-eslint/no-explicit-any
                   const getProductId = (item: any) => {
                     return item.productid ?? item.product_id ?? item.id;
@@ -1195,11 +1201,14 @@ export default function HealthBags() {
                   const formattedDiscountedPrice =
                     formatPrice(discountedPriceRaw);
 
-                  const imageUrl = item.DefaultImageURL
-                    ? item.DefaultImageURL.startsWith("http")
-                      ? item.DefaultImageURL
-                      : `${mediaBase}${item.DefaultImageURL}`
+                  const images = item.DefaultImageURL;
+                  const defaultImg = Array.isArray(images)
+                    ? images.find((img) => img.default_image === 1)
+                    : null;
+                  const imageUrl = defaultImg?.document
+                    ? `${mediaBase}${defaultImg.document}`
                     : "/images/tnc-default.png";
+
                   // eslint-disable-next-line @typescript-eslint/no-explicit-any
                   const getProductId = (item: any) => {
                     return item.productid ?? item.product_id ?? item.id;

@@ -82,15 +82,42 @@ export default function AllGroupCare() {
   useEffect(() => {
     if (!categoryIdNum) return;
 
+    dispatch(resetMedicinesList());
+
+    setPage(1);
+    setCurrentUrl(null);
+    setPrevStack([]);
+
     dispatch(
       getGroupCareById({
         groupId: categoryIdNum,
-        url: currentUrl || undefined,
       })
     );
 
     dispatch(getCategories());
-  }, [categoryIdNum, currentUrl, dispatch]);
+  }, [dispatch, categoryIdNum]);
+
+  useEffect(() => {
+    if (!categoryIdNum) return;
+
+    // 🔥 FIRST PAGE (no URL)
+    if (currentUrl === null) {
+      dispatch(
+        getGroupCareById({
+          groupId: categoryIdNum,
+        })
+      );
+      return;
+    }
+
+    // 🔥 NEXT / PREV
+    dispatch(
+      getGroupCareById({
+        groupId: categoryIdNum,
+        url: currentUrl,
+      })
+    );
+  }, [dispatch, categoryIdNum, currentUrl]);
 
   // CART
 
@@ -176,13 +203,13 @@ export default function AllGroupCare() {
       await addItem({
         id: 0,
         buyer_id: buyer?.id,
-        product_id: item.id,
+        product_id: item.medicine_id,
         quantity: 1,
       } as HealthBag);
     } else {
       const newItem = {
         id: 0,
-        productid: item.id,
+        productid: item.medicine_id,
         qty: 1,
 
         // 🔥 STORE FULL DATA
@@ -191,10 +218,11 @@ export default function AllGroupCare() {
         pack_size: item.PackSize || item.pack_size,
         mrp: Number(item.MRP ?? item.mrp ?? 0),
         discount: Number(item.Discount ?? item.discount ?? 0),
+        category_id: Number(item.category_id ?? 0),
         image: item.DefaultImageURL || item.medicine_image || null, // 🔥 important
       };
 
-      const exists = guestItems.find((i) => i.productid === item.id);
+      const exists = guestItems.find((i) => i.productid === item.medicine_id);
 
       let updated;
 
@@ -223,7 +251,9 @@ export default function AllGroupCare() {
       // 🔵 GUEST USER
       else {
         const updated = guestItems.filter(
-          (item) => (item.productid ?? item.product_id ?? item.id) !== productId
+          (item) =>
+            (item.productid ?? item.product_id ?? item.medicine_id) !==
+            productId
         );
 
         localStorage.setItem("healthbag", JSON.stringify(updated));
@@ -238,6 +268,7 @@ export default function AllGroupCare() {
   const handleClick = (medicine_id: number) => {
     router.push(`/product-details/${encodeId(medicine_id)}`);
   };
+
   const isInitialLoading = loading || pageLoading;
 
   return (
@@ -254,7 +285,7 @@ export default function AllGroupCare() {
                 {/* LEFT SIDE : PRODUCT NAME */}
                 <div className="col-md-9">
                   <div className="pageTitle mt-3 mb-3">
-                    <Image src={"/images/favicon.png"} alt="" /> Product:{" "}
+                    <Image src={"/images/favicon.png"} alt="" />{" "}
                     {groupName || "Loading..."}
                   </div>
                 </div>
@@ -322,20 +353,23 @@ export default function AllGroupCare() {
                     const formattedDiscountedPrice =
                       formatPrice(discountedPriceRaw);
 
-                    const imageUrl = item.default_image
-                      ? item.default_image.startsWith("http")
-                        ? item.default_image
-                        : `${mediaBase}${item.default_image}`
+                    const imageUrl = item.default_image?.document
+                      ? item.default_image.document.startsWith("http")
+                        ? item.default_image.document
+                        : `${mediaBase}${item.default_image.document}`
                       : "/images/tnc-default.png";
+
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     const getProductId = (item: any) => {
-                      return item.productid ?? item.product_id ?? item.id;
+                      return (
+                        item.productid ?? item.product_id ?? item.medicine_id
+                      );
                     };
                     const source = buyer?.id ? items : guestItems;
 
                     const isInBag = source.some(
                       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                      (i: any) => getProductId(i) === item.id
+                      (i: any) => getProductId(i) === item.medicine_id
                     );
                     return isMobile ? (
                       // 💻 DESKTOP/TABLET → CARD DESIGN (Reusable Component 🔥)
@@ -350,10 +384,10 @@ export default function AllGroupCare() {
                         discount={discount}
                         showRx={false}
                         isInCart={isInBag}
-                        loading={processingIds.includes(item.id)}
+                        loading={processingIds.includes(item.medicine_id)}
                         onAdd={() => handleAdd(item)}
-                        onRemove={() => handleRemove(item.id)}
-                        onClick={() => handleClick(item.id)}
+                        onRemove={() => handleRemove(item.medicine_id)}
+                        onClick={() => handleClick(item.medicine_id)}
                       />
                     ) : (
                       <div
@@ -408,14 +442,16 @@ export default function AllGroupCare() {
                               className={`btn-1 btn-HO ${
                                 isInBag ? "remove" : "add"
                               }`}
-                              disabled={processingIds.includes(item.id)}
+                              disabled={processingIds.includes(
+                                item.medicine_id
+                              )}
                               onClick={() =>
                                 isInBag
-                                  ? handleRemove(item.id)
+                                  ? handleRemove(item.medicine_id)
                                   : handleAdd(item)
                               }
                             >
-                              {processingIds.includes(item.id)
+                              {processingIds.includes(item.medicine_id)
                                 ? "Processing..."
                                 : isInBag
                                 ? "REMOVE"
@@ -428,7 +464,7 @@ export default function AllGroupCare() {
                   })
                 )}
               </div>
-              {filteredMedicines.length > 0 && !loading && nextUrl && (
+              {uniqueMedicines.length > 0 && !loading && nextUrl && (
                 <div className="d-flex justify-content-center mt-3">
                   <Pagination
                     currentPage={page}
@@ -437,20 +473,23 @@ export default function AllGroupCare() {
                     onPageChange={(newPage) => {
                       setPageLoading(true);
 
-                      // 🔥 CLEAR OLD DATA
-                      dispatch(resetMedicinesList());
-
                       if (newPage > page && nextUrl) {
-                        setPrevStack((prev) => [...prev, currentUrl || ""]);
+                        if (currentUrl) {
+                          setPrevStack((prev) => [...prev, currentUrl]);
+                        }
                         setCurrentUrl(nextUrl);
                         setPage(newPage);
                       }
 
-                      if (newPage < page && prevStack.length > 0) {
-                        const lastUrl = prevStack[prevStack.length - 1];
-
-                        setPrevStack((prev) => prev.slice(0, -1));
-                        setCurrentUrl(lastUrl || null);
+                      if (newPage < page) {
+                        if (prevStack.length > 0) {
+                          const lastUrl = prevStack[prevStack.length - 1];
+                          setPrevStack((prev) => prev.slice(0, -1));
+                          setCurrentUrl(lastUrl);
+                        } else {
+                          // 🔥 back to first page
+                          setCurrentUrl(null);
+                        }
                         setPage(newPage);
                       }
                     }}

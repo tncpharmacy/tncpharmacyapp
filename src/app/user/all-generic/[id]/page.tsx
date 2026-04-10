@@ -184,6 +184,7 @@ export default function AllGeneric() {
         pack_size: item.PackSize || item.pack_size,
         mrp: Number(item.MRP ?? item.mrp ?? 0),
         discount: Number(item.Discount ?? item.discount ?? 0),
+        category_id: Number(item.category_id ?? 0),
         image: item.DefaultImageURL || item.medicine_image || null, // 🔥 important
       };
 
@@ -238,15 +239,20 @@ export default function AllGeneric() {
   };
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const getMedicineImage = (medicine: any) => {
-    if (medicine.primary_image) return medicine.primary_image;
+    const images = medicine.DefaultImageURL || medicine.images;
 
-    if (medicine.images?.length) {
+    if (Array.isArray(images) && images.length > 0) {
       const primary =
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        medicine.images.find((i: any) => i.default_image === 1) ||
-        medicine.images[0];
+        images.find((img: any) => img.default_image === 1) || images[0];
 
-      return `${mediaBase}${primary.document}`;
+      return primary?.document
+        ? `${mediaBase}${primary.document}`
+        : "/images/tnc-default.png";
+    }
+
+    if (typeof medicine.primary_image === "string") {
+      return medicine.primary_image;
     }
 
     return "/images/tnc-default.png";
@@ -267,8 +273,8 @@ export default function AllGeneric() {
                 {/* LEFT SIDE : PRODUCT NAME */}
                 <div className="col-md-9">
                   <div className="pageTitle mt-3 mb-3">
-                    <Image src={"/images/favicon.png"} alt="" /> Generic:{" "}
-                    {genericName}
+                    <Image src={"/images/favicon.png"} alt="" />{" "}
+                    {genericName || "Loading..."}
                   </div>
                 </div>
 

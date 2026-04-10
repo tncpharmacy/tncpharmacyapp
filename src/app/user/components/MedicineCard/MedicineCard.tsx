@@ -154,6 +154,7 @@ export default function MedicineCard({
         pack_size: item?.PackSize || pack_size,
         mrp: Number(item?.MRP ?? mrp ?? 0),
         discount: Number(item?.Discount ?? discount ?? 0),
+        category_id: Number(item?.category_id ?? 0),
         image: item?.DefaultImageURL || primary_image || null,
       };
 
@@ -231,11 +232,13 @@ export default function MedicineCard({
   let imageSrc = "/images/tnc-default.png";
 
   if (primary_image?.document) {
-    // remove domain from URL
     const cleaned = primary_image.document.replace(/^https?:\/\/[^/]+/i, "");
-    // ensure no double slash
-    const finalPath = cleaned.startsWith("/") ? cleaned : "/" + cleaned;
-    imageSrc = mediaBase + finalPath;
+
+    const base = mediaBase?.endsWith("/") ? mediaBase.slice(0, -1) : mediaBase;
+
+    const path = cleaned.startsWith("/") ? cleaned.slice(1) : cleaned;
+
+    imageSrc = `${base}/${path}`;
   }
 
   const handleMouseEnter = (e: React.MouseEvent<HTMLDivElement>) => {

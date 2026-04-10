@@ -461,13 +461,14 @@ export default function HomePage() {
           <div className="row">
             {shuffled7 && shuffled7.length > 0 ? (
               shuffled7
-                // ✅ ONLY products having real image
-                .filter(
-                  (item) =>
-                    item.DefaultImageURL &&
-                    item.DefaultImageURL.trim() !== "" &&
-                    item.DefaultImageURL !== "/images/tnc-default.png"
-                )
+                .filter((item) => {
+                  const imgs = item.DefaultImageURL;
+                  if (!Array.isArray(imgs)) return false;
+
+                  return imgs.some(
+                    (img) => img.default_image === 1 && img.document
+                  );
+                })
                 .slice(0, 5)
                 .map((item, index) => {
                   const mrpRaw = item.MRP ?? item.mrp ?? 0;
@@ -490,10 +491,14 @@ export default function HomePage() {
                   const formattedDiscountedPrice =
                     formatPrice(discountedPriceRaw);
 
-                  const imageUrl = item.DefaultImageURL
-                    ? item.DefaultImageURL.startsWith("http")
-                      ? item.DefaultImageURL
-                      : `${mediaBase}${item.DefaultImageURL}`
+                  const images = item.DefaultImageURL;
+
+                  const defaultImg = Array.isArray(images)
+                    ? images.find((img) => img.default_image === 1)
+                    : null;
+
+                  const imageUrl = defaultImg?.document
+                    ? `${mediaBase}${defaultImg.document}`
                     : "/images/tnc-default.png";
                   // eslint-disable-next-line @typescript-eslint/no-explicit-any
                   const getProductId = (item: any) => {
@@ -745,13 +750,14 @@ export default function HomePage() {
           <div className="row">
             {shuffled5 && shuffled5.length > 0 ? (
               shuffled5
-                // ✅ ONLY products having real image
-                .filter(
-                  (item) =>
-                    item.DefaultImageURL &&
-                    item.DefaultImageURL.trim() !== "" &&
-                    item.DefaultImageURL !== "/images/tnc-default.png"
-                )
+                .filter((item) => {
+                  const imgs = item.DefaultImageURL;
+                  if (!Array.isArray(imgs)) return false;
+
+                  return imgs.some(
+                    (img) => img.default_image === 1 && img.document
+                  );
+                })
                 .slice(0, 5)
                 .map((item, index) => {
                   const mrpRaw = item.MRP ?? item.mrp ?? 0;
@@ -774,10 +780,14 @@ export default function HomePage() {
                   const formattedDiscountedPrice =
                     formatPrice(discountedPriceRaw);
 
-                  const imageUrl = item.DefaultImageURL
-                    ? item.DefaultImageURL.startsWith("http")
-                      ? item.DefaultImageURL
-                      : `${mediaBase}${item.DefaultImageURL}`
+                  const images = item.DefaultImageURL;
+
+                  const defaultImg = Array.isArray(images)
+                    ? images.find((img) => img.default_image === 1)
+                    : null;
+
+                  const imageUrl = defaultImg?.document
+                    ? `${mediaBase}${defaultImg.document}`
                     : "/images/tnc-default.png";
 
                   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -952,13 +962,14 @@ export default function HomePage() {
           <div className="row">
             {shuffled9 && shuffled9.length > 0 ? (
               shuffled9
-                // ✅ ONLY products having real image
-                .filter(
-                  (item) =>
-                    item.DefaultImageURL &&
-                    item.DefaultImageURL.trim() !== "" &&
-                    item.DefaultImageURL !== "/images/tnc-default.png"
-                )
+                .filter((item) => {
+                  const imgs = item.DefaultImageURL;
+                  if (!Array.isArray(imgs)) return false;
+
+                  return imgs.some(
+                    (img) => img.default_image === 1 && img.document
+                  );
+                })
                 .slice(0, 5)
                 .map((item, index) => {
                   const mrpRaw = item.MRP ?? item.mrp ?? 0;
@@ -981,10 +992,14 @@ export default function HomePage() {
                   const formattedDiscountedPrice =
                     formatPrice(discountedPriceRaw);
 
-                  const imageUrl = item.DefaultImageURL
-                    ? item.DefaultImageURL.startsWith("http")
-                      ? item.DefaultImageURL
-                      : `${mediaBase}${item.DefaultImageURL}`
+                  const images = item.DefaultImageURL;
+
+                  const defaultImg = Array.isArray(images)
+                    ? images.find((img) => img.default_image === 1)
+                    : null;
+
+                  const imageUrl = defaultImg?.document
+                    ? `${mediaBase}${defaultImg.document}`
                     : "/images/tnc-default.png";
 
                   // eslint-disable-next-line @typescript-eslint/no-explicit-any

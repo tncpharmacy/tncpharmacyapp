@@ -23,6 +23,7 @@ import TncLoader from "@/app/components/TncLoader/TncLoader";
 import { loadLocalHealthBag } from "@/lib/features/healthBagSlice/healthBagSlice";
 import Pagination from "@/app/components/Pagination/Pagination";
 import ProductCardUI from "@/app/user/components/MedicineCard/ProductCardUI";
+import { getSubcategories } from "@/lib/features/subCategorySlice/subCategorySlice";
 
 const mediaBase = process.env.NEXT_PUBLIC_MEDIA_BASE_URL;
 
@@ -66,6 +67,7 @@ export default function AllProducts() {
   const { next: nextUrl } = useAppSelector((state) => state.medicine);
   const { loading } = useAppSelector((state) => state.medicine);
   const { list: categories } = useAppSelector((state) => state.category);
+  const { list: subCategories } = useAppSelector((state) => state.subcategory);
 
   const [isMobile, setIsMobile] = useState(false);
 
@@ -108,9 +110,61 @@ export default function AllProducts() {
     categories.find((cat) => cat.id === categoryIdNum)?.category_name ||
     "Unknown Category";
 
+  const subCategoryName = useMemo(() => {
+    if (!subCategories?.length) return "Loading...";
+    return (
+      subCategories.find((cat) => cat.id === subCategoryIdNum)
+        ?.sub_category_name || "Unknown Category"
+    );
+  }, [subCategories, subCategoryIdNum]);
+  useEffect(() => {
+    dispatch(getCategories());
+    dispatch(getSubcategories());
+  }, []);
+
+  useEffect(() => {
+    if (categoryIdNum == null || subCategoryIdNum == null) return;
+
+    // 🔥 sabse pehle clear
+    dispatch(resetMedicinesList());
+
+    // 🔥 pagination reset
+    setPage(1);
+    setCurrentUrl(null);
+    setPrevStack([]);
+  }, [categoryIdNum, subCategoryIdNum]);
+
   // Fetch categories & medicines
   useEffect(() => {
-    if (!categoryIdNum || !subCategoryIdNum) return; // 🔥 guard
+    if (!categoryIdNum || !subCategoryIdNum) return;
+
+    // 🔥 RESET ONLY WHEN CATEGORY CHANGES
+    dispatch(resetMedicinesList());
+
+    setPage(1);
+    setCurrentUrl(null);
+    setPrevStack([]);
+
+    dispatch(
+      getCategoryIdBySubcategory({
+        categoryId: categoryIdNum,
+        subCategoryId: subCategoryIdNum,
+      })
+    );
+  }, [categoryIdNum, subCategoryIdNum]);
+
+  useEffect(() => {
+    if (!categoryIdNum || !subCategoryIdNum) return;
+
+    dispatch(
+      getCategoryIdBySubcategory({
+        categoryId: categoryIdNum, // ✅ now safe
+        subCategoryId: subCategoryIdNum, // ✅ now safe
+      })
+    );
+  }, [dispatch, currentUrl, categoryIdNum, subCategoryIdNum]);
+  useEffect(() => {
+    if (categoryIdNum == null || subCategoryIdNum == null) return;
 
     dispatch(
       getCategoryIdBySubcategory({
@@ -119,11 +173,8 @@ export default function AllProducts() {
         url: currentUrl || undefined,
       })
     );
+  }, [categoryIdNum, subCategoryIdNum, currentUrl]);
 
-    dispatch(getCategories());
-  }, [dispatch, categoryIdNum, subCategoryIdNum, currentUrl]);
-
-  // -------------------------------
   // 🔹 CART STATES
   // -------------------------------
   const buyer = useAppSelector((state) => state.buyer.buyer);
@@ -208,6 +259,7 @@ export default function AllProducts() {
         pack_size: item.PackSize || item.pack_size,
         mrp: Number(item.MRP ?? item.mrp ?? 0),
         discount: Number(item.Discount ?? item.discount ?? 0),
+        category_id: categoryIdNum,
         image: item.DefaultImageURL || item.medicine_image || null, // 🔥 important
       };
 
@@ -274,8 +326,10 @@ export default function AllProducts() {
                 {/* LEFT SIDE : PRODUCT NAME */}
                 <div className="col-md-9">
                   <div className="pageTitle mt-3 mb-3">
-                    <Image src={"/images/favicon.png"} alt="" /> Product:{" "}
-                    {categoryName || "Loading..."}
+                    <Image src={"/images/favicon.png"} alt="" />{" "}
+                    {categoryName || "Loading..."}{" "}
+                    <span className="text-primary">/</span>{" "}
+                    {subCategoryName || "Loading..."}
                   </div>
                 </div>
 
@@ -342,10 +396,12 @@ export default function AllProducts() {
                     const formattedDiscountedPrice =
                       formatPrice(discountedPriceRaw);
 
-                    const imageUrl = item.DefaultImageURL
-                      ? item.DefaultImageURL.startsWith("http")
-                        ? item.DefaultImageURL
-                        : `${mediaBase}${item.DefaultImageURL}`
+                    const images = item.DefaultImageURL;
+                    const defaultImg = Array.isArray(images)
+                      ? images.find((img) => img.default_image === 1)
+                      : null;
+                    const imageUrl = defaultImg?.document
+                      ? `${mediaBase}${defaultImg.document}`
                       : "/images/tnc-default.png";
 
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any

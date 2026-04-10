@@ -253,7 +253,39 @@ html {
 }
 
 .pd_offer img {
-    width: 100%;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.pd_offer .caption {
+  position: absolute;
+  top: 50%;
+  left: 20px;
+  transform: translateY(-50%);
+  color: #fff;
+  z-index: 2;
+}
+.caption .t1 {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.caption .t2 {
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1.3;
+}
+@media (max-width: 768px) {
+  .pd_offer .caption {
+    left: 10px;
+    top: 40%;
+  }
+
+  .caption .t2 {
+    font-size: 16px;
+  }
 }
 
 .caption {
