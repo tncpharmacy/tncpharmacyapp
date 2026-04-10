@@ -4,6 +4,7 @@ import React from "react";
 import { Modal, Button, Image } from "react-bootstrap";
 import type { OrderDetail } from "@/types/buyer";
 import TncLoader from "../TncLoader/TncLoader";
+import { formatPrice } from "@/lib/utils/formatPrice";
 
 const mediaBase = process.env.NEXT_PUBLIC_MEDIA_BASE_URL;
 
@@ -140,8 +141,8 @@ export default function OrderDetailsModal({
                   )}
 
                   <p className="mb-2 text-danger">
-                    <strong>Amount:</strong> ₹
-                    {formatAmount(Number(order.amount))}
+                    <strong>Final Amount:</strong> ₹
+                    {formatPrice(Number(order.amount))}
                   </p>
                 </div>
 
@@ -175,80 +176,83 @@ export default function OrderDetailsModal({
             <h5 className="fw-semibold mb-3 text-primary">Products</h5>
 
             {order?.products?.length > 0 ? (
-              order.products.map((p, index) => (
-                <div
-                  key={index}
-                  className="d-flex border rounded p-3 mb-3 bg-white shadow-sm"
-                >
-                  <Image
-                    src={
-                      p.image
-                        ? (() => {
-                            // remove any domain
-                            const cleaned = p.image.replace(
-                              /^https?:\/\/[^/]+/i,
-                              ""
-                            );
-                            // prevent double slash
-                            const finalPath = cleaned.startsWith("/")
-                              ? cleaned
-                              : "/" + cleaned;
-                            return mediaBase + finalPath;
-                          })()
-                        : "/images/tnc-default.png"
-                    }
-                    rounded
-                    width={100}
-                    height={100}
-                    style={{ objectFit: "cover" }}
-                    className="me-3 border"
-                    alt={p.medicine_name}
-                  />
+              order.products.map((p, index) => {
+                const imageUrl = p.image
+                  ? (() => {
+                      let cleaned = p.image.replace(/^https?:\/\/[^/]+/i, "");
+                      cleaned = cleaned.replace(/^\/+/, "");
 
-                  <div style={{ flex: 1 }}>
-                    <h6 className="fw-bold mb-1">
-                      {p.medicine_name} || {p.pack_size}
-                    </h6>
-                    <p className="text-success small fw-semibold mb-1">
-                      {p.manufacturer}
-                    </p>
+                      const base = (mediaBase || "").replace(/\/+$/, "");
 
-                    <p className="mb-1">
-                      <strong>Qty:</strong> {p.quantity}
-                    </p>
-                    <p className="mb-1">
-                      <strong className="text-danger">
-                        MRP: ₹{formatAmount(Number(p.mrp))}{" "}
-                      </strong>
-                      |{" "}
-                      <strong className="text-success">
-                        Discount: {p.discount}%
-                      </strong>
-                    </p>
-                    <p className="mb-1 text-primary">
-                      <strong>
-                        Final Amount: ₹{formatAmount(Number(p.rate))}
-                      </strong>
-                    </p>
-                    {p.doses && (
-                      <p className="mb-1">
-                        <strong>Doses:</strong> {p.doses}
+                      return `${base}/${cleaned}`;
+                    })()
+                  : "/images/tnc-default.png";
+
+                const isDefaultImage = !p.image;
+
+                return (
+                  <div
+                    key={index}
+                    className="d-flex border rounded p-3 mb-3 bg-white shadow-sm"
+                  >
+                    <Image
+                      src={imageUrl}
+                      rounded
+                      width={100}
+                      height={100}
+                      style={{
+                        objectFit: "cover",
+                        opacity: isDefaultImage ? 0.3 : 1, // ✅ working
+                      }}
+                      className="me-3 border"
+                      alt={p.medicine_name}
+                    />
+
+                    <div style={{ flex: 1 }}>
+                      <h6 className="fw-bold mb-1">
+                        {p.medicine_name} || {p.pack_size}
+                      </h6>
+                      <p className="text-success small fw-semibold mb-1">
+                        {p.manufacturer}
                       </p>
-                    )}
-                    {p.remark && (
+
                       <p className="mb-1">
-                        <strong>Instruction:</strong>
-                        {p.remark && <span className="ms-2">{p.remark}</span>}
+                        <strong>Qty:</strong> {p.quantity}
                       </p>
-                    )}
-                    {p.duration && (
                       <p className="mb-1">
-                        <strong>Duration:</strong> {p.duration}
+                        <strong className="text-danger">
+                          MRP: ₹{formatPrice(Number(p.mrp))}{" "}
+                        </strong>
+                        |{" "}
+                        <strong className="text-success">
+                          Discount: {p.discount}%
+                        </strong>
                       </p>
-                    )}
+                      <p className="mb-1 text-primary">
+                        <strong>
+                          Total Price: ₹{formatPrice(Number(p.rate))}
+                        </strong>
+                      </p>
+                      {p.doses && (
+                        <p className="mb-1">
+                          <strong>Doses:</strong> {p.doses}
+                        </p>
+                      )}
+                      {p.remark && (
+                        <p className="mb-1">
+                          <strong>Instruction:</strong>
+                          {p.remark && <span className="ms-2">{p.remark}</span>}
+                        </p>
+                      )}
+                      {p.duration && (
+                        <p className="mb-1">
+                          <strong>Duration:</strong> {p.duration}
+                        </p>
+                      )}
+                    </div>
                   </div>
-                </div>
-              ))
+                );
+              })
             ) : (
               <p>No products found.</p>
             )}

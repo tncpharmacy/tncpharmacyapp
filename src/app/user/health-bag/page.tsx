@@ -86,6 +86,12 @@ export interface Medicine {
   message?: string;
 }
 
+type ImageType = {
+  id: number;
+  document: string;
+  default_image: number;
+};
+
 type CartItem = {
   id: number;
   productid: number;
@@ -279,7 +285,10 @@ export default function HealthBags() {
         pack_size: item.PackSize || item.pack_size,
         mrp: Number(item.MRP ?? item.mrp ?? 0),
         discount: Number(item.Discount ?? item.discount ?? 0),
-        image: item.DefaultImageURL || item.medicine_image || null, // 🔥 important
+        image:
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          item.DefaultImageURL?.find((img: any) => img.default_image === 1)
+            ?.document || null, // 🔥 important
       };
 
       const exists = guestItems.find((i) => i.productid === item.product_id);
@@ -334,6 +343,35 @@ export default function HealthBags() {
     : guestItems;
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  function getFinalImage(item: any, isLoggedIn: boolean) {
+    // 🟢 LOGIN USER → API
+    if (isLoggedIn) {
+      if (item.medicine_image?.document) {
+        return `${mediaBase}${item.medicine_image.document}`;
+      }
+    }
+
+    // 🔵 GUEST USER → LS (ARRAY handle karo)
+    if (!isLoggedIn) {
+      if (Array.isArray(item.image)) {
+        const defaultImg = (item.image as ImageType[]).find(
+          (img) => img.default_image === 1
+        );
+        if (defaultImg?.document) {
+          return `${mediaBase}${defaultImg.document}`;
+        }
+      }
+
+      // agar string already ho
+      if (typeof item.image === "string") {
+        return item.image;
+      }
+    }
+
+    return "/images/tnc-default.png";
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const mergedItems = sourceItems.map((item: any) => {
     const rawMrp = Number(item.mrp) || 0;
 
@@ -367,7 +405,7 @@ export default function HealthBags() {
       formattedMrp: formatPrice(mrp),
       formattedDiscountMrp: formatPrice(discountMrpRaw),
 
-      image: item.image || item.medicine_image || "/images/tnc-default.png",
+      image: getFinalImage(item, !!buyer?.id),
     };
   });
 
@@ -581,6 +619,7 @@ export default function HealthBags() {
 
     return "/images/tnc-default.png";
   };
+
   return (
     <>
       <SiteHeader />
