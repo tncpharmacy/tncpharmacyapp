@@ -30,6 +30,7 @@ import { HealthBag } from "@/types/healthBag";
 import { formatAmount } from "@/lib/utils/formatAmount";
 import { formatPrice } from "@/lib/utils/formatPrice";
 import { loadLocalHealthBag } from "@/lib/features/healthBagSlice/healthBagSlice";
+import GenericModalMobileCard from "../../components/MedicineCard/GenericModalMobileCard";
 
 // Types
 interface PackOption {
@@ -682,6 +683,7 @@ export default function ProductPage() {
     currentMedicine,
     ...topCheaperGenerics,
   ];
+  const isScrollable = finalCompareList.length > 3;
   const savingPercent =
     sortedGenerics.length > 0
       ? Math.round(
@@ -800,16 +802,30 @@ export default function ProductPage() {
         {finalCompareList.map((g, index) => {
           const imageUrl = getMedicineImage(g);
 
-          const tabletCount =
-            parseInt(String(g.pack_size).replace(/\D/g, "")) || 1;
+          const packSize = g.pack_size?.toLowerCase() || "";
 
-          const perTablet = (g.finalPrice / tabletCount).toFixed(2);
-          const unitCode = g.pack_size?.match(/[A-Z]+/)?.[0] || "";
-          const unitMap: Record<string, string> = {
-            TAB: "tablet",
-            CAP: "capsule",
-          };
-          const unit = unitMap[unitCode] || null;
+          // ✅ ONLY allow tablet/capsule
+          const isUnitBased =
+            packSize.includes("tab") ||
+            packSize.includes("tablet") ||
+            packSize.includes("cap") ||
+            packSize.includes("capsule");
+
+          // ✅ extract quantity
+          const packQty =
+            parseInt(String(g.pack_size).match(/\d+/)?.[0] || "0") || 0;
+
+          // ✅ calculate ONLY if valid
+          const perUnit =
+            isUnitBased && packQty > 0
+              ? (g.finalPrice / packQty).toFixed(2)
+              : null;
+
+          // ✅ unit name
+          let unit: string | null = null;
+
+          if (packSize.includes("tab")) unit = "tablet";
+          else if (packSize.includes("cap")) unit = "capsule";
 
           return (
             <div
@@ -847,12 +863,12 @@ export default function ProductPage() {
                 <div className="generic-company">{g.manufacturer_name}</div>
 
                 <div className="generic-price">
-                  ₹{formatAmount(g.finalPrice)}
+                  ₹{formatPrice(g.finalPrice)}
                 </div>
 
-                {unit && (
-                  <div className="generic-per">
-                    ₹{perTablet} / {unit}
+                {perUnit && unit && (
+                  <div className="per-tablet">
+                    ₹{perUnit} per {"unit"}
                   </div>
                 )}
               </div>
@@ -1028,7 +1044,7 @@ export default function ProductPage() {
                         size="lg"
                         centered
                       >
-                        <Modal.Body>
+                        <Modal.Body className="product-modal-body">
                           <Slider {...modalSliderSettings}>
                             {imageList.map((src, index) => (
                               <div key={index}>
@@ -1363,6 +1379,9 @@ export default function ProductPage() {
 
         {/* ===== MOBILE STICKY HEALTH BAG ===== */}
         {isMobile && (
+          <div className="view_box mx-2 mb-3">{renderGenericCompare()}</div>
+        )}
+        {isMobile && (
           <div className="mobile-sticky-cart d-md-none">
             <div className="msc-inner">
               <div className="msc-price">
@@ -1402,8 +1421,8 @@ export default function ProductPage() {
                 {processingIds.includes(id)
                   ? "Processing..."
                   : isInBag
-                  ? "Go To Health Bag"
-                  : "Add to Health Bag"}
+                  ? "Go To Bag"
+                  : "Add to Bag"}
               </button>
             </div>
           </div>
@@ -1416,6 +1435,7 @@ export default function ProductPage() {
         onHide={() => setShowGenericModal(false)}
         centered
         size={getModalSize()}
+        // scrollable={finalCompareList.length > 3}
       >
         <Modal.Header className="generic-modal-header">
           <div className="generic-header-content">
@@ -1434,7 +1454,17 @@ export default function ProductPage() {
           </button>
         </Modal.Header>
 
-        <Modal.Body>
+        <Modal.Body
+          style={
+            isMobile
+              ? {
+                  maxHeight: "150vh",
+                  overflowY: "auto",
+                  paddingBottom: "80px",
+                }
+              : {}
+          }
+        >
           <div className="generic-1mg-wrapper">
             {/* Top Strip */}
             <div className="generic-1mg-strip">✓ Contains same composition</div>
@@ -1443,14 +1473,6 @@ export default function ProductPage() {
             <div className="generic-1mg-compare">
               {finalCompareList.map((g, index) => {
                 const imageUrl = getMedicineImage(g);
-                const tabletCount =
-                  parseInt(String(g.pack_size).replace(/\D/g, "")) || 0;
-
-                const perTablet =
-                  tabletCount > 0
-                    ? (g.finalPrice / tabletCount).toFixed(2)
-                    : "";
-
                 const compareSaving =
                   currentPrice > 0
                     ? Math.round(
@@ -1458,105 +1480,177 @@ export default function ProductPage() {
                       )
                     : 0;
 
-                const unitCode = g.pack_size?.match(/[A-Z]+/)?.[0] || "";
+                const packSize = g.pack_size?.toLowerCase() || "";
 
-                const unitMap: Record<string, string> = {
-                  TAB: "tablet",
-                  CAP: "capsule",
-                };
+                // ✅ ONLY allow tablet/capsule
+                const isUnitBased =
+                  packSize.includes("tab") ||
+                  packSize.includes("tablet") ||
+                  packSize.includes("cap") ||
+                  packSize.includes("capsule");
 
-                const unit = unitMap[unitCode] || null;
+                // ✅ extract quantity
+                const packQty =
+                  parseInt(String(g.pack_size).match(/\d+/)?.[0] || "0") || 0;
+
+                // ✅ calculate ONLY if valid
+                const perUnit =
+                  isUnitBased && packQty > 0
+                    ? (g.finalPrice / packQty).toFixed(2)
+                    : null;
+
+                // ✅ unit name
+                let unit: string | null = null;
+
+                if (packSize.includes("tab")) unit = "tablet";
+                else if (packSize.includes("cap")) unit = "capsule";
 
                 return (
-                  <div
-                    key={g.id}
-                    className={`generic-1mg-card ${
-                      g.isCurrent ? "current" : "alt"
-                    }`}
-                    onClick={() => {
-                      if (!g.isCurrent) {
-                        setShowGenericModal(false);
-                        router.push(`/medicines-details/${encodeId(g.id)}`);
-                      }
-                    }}
-                  >
-                    {/* RADIO INDICATOR */}
-                    <div
-                      className={`radio-indicator ${
-                        index === 0
-                          ? "radio-blue"
-                          : index === 1
-                          ? "radio-green"
-                          : index === 2
-                          ? "radio-orange"
-                          : "radio-yellow"
-                      }`}
-                    ></div>
-                    <div className="img-wrap">
-                      <img
-                        src={imageUrl}
-                        alt={g.medicine_name}
-                        style={{
-                          opacity: imageUrl.includes("tnc-default") ? 0.35 : 1,
-                        }}
-                        onError={(e) => {
-                          e.currentTarget.src = "/images/tnc-default.png";
-                          e.currentTarget.style.opacity = "0.35";
+                  <div key={g.id}>
+                    {/* ✅ MOBILE VIEW */}
+                    <div className="d-md-none">
+                      <GenericModalMobileCard
+                        image={imageUrl}
+                        name={g.medicine_name}
+                        manufacturer={g.manufacturer_name ?? null}
+                        price={g.finalPrice}
+                        mrp={g.mrp ?? 0}
+                        discount={Number(g.discount ?? 0)}
+                        perUnit={perUnit}
+                        unit={unit}
+                        saving={compareSaving}
+                        isCurrent={g.isCurrent}
+                        onClick={() => {
+                          if (!g.isCurrent) {
+                            setShowGenericModal(false);
+                            router.push(`/medicines-details/${encodeId(g.id)}`);
+                          }
                         }}
                       />
                     </div>
+                    {/* ✅ DESKTOP VIEW */}
+                    <div className="d-none d-md-block">
+                      <div
+                        key={g.id}
+                        className={`generic-1mg-card ${
+                          g.isCurrent ? "current" : "alt"
+                        }`}
+                        onClick={() => {
+                          if (!g.isCurrent) {
+                            setShowGenericModal(false);
+                            router.push(`/medicines-details/${encodeId(g.id)}`);
+                          }
+                        }}
+                      >
+                        {/* RADIO INDICATOR */}
+                        <div
+                          className={`radio-indicator ${
+                            index === 0
+                              ? "radio-blue"
+                              : index === 1
+                              ? "radio-green"
+                              : index === 2
+                              ? "radio-orange"
+                              : "radio-yellow"
+                          }`}
+                        ></div>
+                        <div className="img-wrap">
+                          <img
+                            src={imageUrl}
+                            alt={g.medicine_name}
+                            style={{
+                              opacity: imageUrl.includes("tnc-default")
+                                ? 0.35
+                                : 1,
+                            }}
+                            onError={(e) => {
+                              e.currentTarget.src = "/images/tnc-default.png";
+                              e.currentTarget.style.opacity = "0.35";
+                            }}
+                          />
+                        </div>
 
-                    <div className="title">{g.medicine_name}</div>
+                        <div className="title pd-title">{g.medicine_name}</div>
 
-                    {g.isCurrent && (
-                      <div className="badge-viewing">Currently viewing</div>
-                    )}
+                        {g.isCurrent && (
+                          <div className="badge-viewing">Currently viewing</div>
+                        )}
 
-                    <div className="company">{g.manufacturer_name}</div>
+                        <div className="company pd-title">
+                          {g.manufacturer_name}
+                        </div>
 
-                    <div className="price-section">
-                      {/* Final Price */}
-                      <div className="final-price">
-                        ₹{formatAmount(g.finalPrice)}
+                        <div className="price-section">
+                          {/* Final Price */}
+                          <div className="final-price">
+                            ₹{formatPrice(g.finalPrice)}
+                          </div>
+
+                          {/* MRP + Discount */}
+                          {!g.isCurrent && (
+                            <div className="mrp-row">
+                              <span className="mrp">
+                                MRP ₹{formatPrice(g.mrp ?? 0)}
+                              </span>
+
+                              <span className="discount-badge">
+                                <span className="discount-badge">
+                                  {Number(g.discount ?? 0)}% OFF
+                                </span>
+                              </span>
+                            </div>
+                          )}
+
+                          {/* Per Tablet */}
+                          {perUnit && unit && (
+                            <div className="per-tablet">
+                              ₹{perUnit} per {"unit"}
+                            </div>
+                          )}
+                        </div>
+
+                        {!g.isCurrent && compareSaving > 0 && (
+                          <div className="save-badge">
+                            {compareSaving}% lower than current
+                          </div>
+                        )}
                       </div>
-
-                      {/* MRP + Discount */}
-                      {!g.isCurrent && (
-                        <div className="mrp-row">
-                          <span className="mrp">
-                            MRP ₹{formatAmount(g.mrp ?? 0)}
-                          </span>
-
-                          <span className="discount-badge">
-                            <span className="discount-badge">
-                              {Number(g.discount ?? 0)}% OFF
-                            </span>
-                          </span>
-                        </div>
-                      )}
-
-                      {/* Per Tablet */}
-                      {unit && (
-                        <div className="per-tablet">
-                          ₹{perTablet} per {unit}
-                        </div>
-                      )}
                     </div>
-
-                    {!g.isCurrent && compareSaving > 0 && (
-                      <div className="save-badge">
-                        {compareSaving}% lower than current
-                      </div>
-                    )}
                   </div>
                 );
               })}
             </div>
 
             {/* CTA */}
-            <div className="generic-1mg-footer">
+            <div
+              style={
+                isMobile
+                  ? {
+                      position: "sticky",
+                      bottom: 0,
+                      background: "#fff",
+                      padding: "10px",
+                      borderTop: "1px solid #eee",
+                      zIndex: 20,
+                    }
+                  : {}
+              }
+            >
               <button
-                className="btn-switch"
+                style={
+                  isMobile
+                    ? {
+                        width: "100%",
+                        background: "#ff6f61",
+                        color: "#fff",
+                        border: "none",
+                        padding: "12px",
+                        borderRadius: "8px",
+                        fontWeight: 600,
+                      }
+                    : {}
+                }
+                className="switch-btn mt-2"
                 onClick={() =>
                   router.push(
                     `/medicines-details/${encodeId(topCheaperGenerics[0].id)}`

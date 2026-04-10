@@ -1456,13 +1456,46 @@ width: 33%;
 .generic-1mg-compare {
   display: flex;
   justify-content: center;
-  gap: 24px;
-  align-items: stretch;
+  gap: 20px;
+  flex-wrap: nowrap; 
+  overflow-x: auto;  
+}
+
+/* 🔥 ONLY BODY SCROLL */
+.custom-modal-body {
+  max-height: 65vh;
+  overflow-y: auto;
+}
+
+/* 🔥 FOOTER FIX */
+.custom-footer {
+  border-top: 1px solid #eee;
+  background: #fff;
+}
+
+/* BUTTON */
+.switch-btn {
+  width: 250px;
+  background: #ff6f61;
+  color: #fff;
+  border: none;
+  padding: 10px;
+  border-radius: 8px;
+  margin: auto;
+}
+
+/* ❌ REMOVE THESE IF ADDED */
+.modal-body {
+  overflow: unset !important;
+}
+
+.modal-footer-sticky {
+  position: unset !important;
 }
 
 /* card base */
 .generic-1mg-card {
-  width: 230px;
+  width: 220px;
   border-radius: 12px;
   padding: 18px;
   transition: all .25s ease;
@@ -1738,4 +1771,117 @@ width: 33%;
 /* Important: make card relative */
 .generic-1mg-card {
   position: relative;
+}
+
+.cart-img {
+  width: 80px;
+  height: 80px;
+  object-fit: contain;
+}
+
+.qty-box {
+  display: flex;
+  align-items: center;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  padding: 2px 6px;
+  gap: 6px;
+}
+
+.qty-box button {
+  border: none;
+  background: transparent;
+  font-weight: bold;
+}
+
+.price-block {
+  font-weight: 600;
+}
+
+.cart-content {
+  position: relative;
+  width: 100%;
+}
+
+.rx-badge {
+  position: absolute;
+  top: 0;
+  right: 0;
+  transform: translate(50%, -50%); /* 🔥 corner pe chipka dega */
+  width: 20px;
+  height: 20px;
+}
+
+.rx-product-list {
+  display: -webkit-box;
+  -webkit-line-clamp: 2; /* 👈 max 2 lines */
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* 🔥 MOBILE FIX */
+@media (max-width: 768px) {
+  .cart-item {
+    padding: 10px;
+  }
+
+  .cart-img {
+    width: 60px;
+    height: 60px;
+  }
+
+  .price-block {
+    font-size: 14px;
+  }
+}
+.slick-dots {
+  bottom: -20px !important;
+}
+@media (max-width: 768px) {
+  .fixed-mobile-btn {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 999;
+    border-radius: 0;
+  }
+
+  .sticky-summary {
+    padding-bottom: 70px; /* button space */
+  }
+}
+
+/* DESKTOP FIX — DON'T TOUCH */
+/* MOBILE ONLY */
+@media (max-width: 768px) {
+
+  .generic-1mg-compare {
+    display: flex;
+    flex-direction: column;  /* ek ke niche ek */
+    gap: 12px;
+  }
+
+  .generic-1mg-card {
+    width: 100%;
+    display: flex;
+    flex-direction: row;   /* image left */
+    align-items: center;
+    gap: 10px;
+    padding: 10px;
+  }
+
+  .img-wrap {
+    width: 60px;
+    height: 60px;
+  }
+
+  .card-content {
+    flex: 1;
+    text-align: left;
+  }
+
+  .price-section {
+    text-align: left;
+  }
 }

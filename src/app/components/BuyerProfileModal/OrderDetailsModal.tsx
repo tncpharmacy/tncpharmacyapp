@@ -1,10 +1,11 @@
-import { formatAmount } from "@/lib/utils/formatAmount";
 import { formatDateOnly } from "@/utils/dateFormatter";
 import React from "react";
 import { Modal, Button, Image } from "react-bootstrap";
 import type { OrderDetail } from "@/types/buyer";
 import TncLoader from "../TncLoader/TncLoader";
 import { formatPrice } from "@/lib/utils/formatPrice";
+import { useRouter } from "next/navigation";
+import { encodeId } from "@/lib/utils/encodeDecode";
 
 const mediaBase = process.env.NEXT_PUBLIC_MEDIA_BASE_URL;
 
@@ -17,6 +18,19 @@ export default function OrderDetailsModal({
   onClose: () => void;
   order: OrderDetail | null;
 }) {
+  const router = useRouter();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const handleClick = (p: any) => {
+    const actualId = p.product_id;
+
+    const path =
+      p.category_id === 1
+        ? `/medicines-details/${encodeId(actualId)}`
+        : `/product-details/${encodeId(actualId)}`;
+
+    router.push(path);
+  };
+
   return (
     <Modal show={show} onHide={onClose} size="lg" centered>
       {/* 🔥 LOADER */}
@@ -48,20 +62,26 @@ export default function OrderDetailsModal({
 
               <div className="row">
                 {/* Left Column */}
-                <div className="col-6">
-                  <p className="mb-2">
-                    <strong>Name:</strong> {order.buyerName}
-                  </p>
-                  <p className="mb-2">
-                    <strong>Mobile:</strong> {order.buyerNumber}
-                  </p>
+                <div className="col-12 col-md-6">
+                  {order.buyerNumber && (
+                    <p className="mb-2">
+                      <strong>Name:</strong> {order.buyerName}
+                    </p>
+                  )}
+                  {order.buyerNumber && (
+                    <p className="mb-2">
+                      <strong>Mobile:</strong> {order.buyerNumber}
+                    </p>
+                  )}
                 </div>
 
                 {/* Right Column */}
-                <div className="col-6">
-                  <p className="mb-2">
-                    <strong>Email:</strong> {order.buyerEmail}
-                  </p>
+                <div className="col-12 col-md-6">
+                  {order.buyerEmail && (
+                    <p className="mb-2">
+                      <strong>Email:</strong> {order.buyerEmail}
+                    </p>
+                  )}
 
                   {order.buyer_uhid && (
                     <p className="mb-2">
@@ -81,7 +101,7 @@ export default function OrderDetailsModal({
 
                 <div className="row">
                   {/* Left Column */}
-                  <div className="col-6">
+                  <div className="col-12 col-md-6">
                     {order.recipient_name && (
                       <p className="mb-2">
                         <strong>Recipient Name:</strong> {order.recipient_name}
@@ -96,7 +116,7 @@ export default function OrderDetailsModal({
                   </div>
 
                   {/* Right Column */}
-                  <div className="col-6">
+                  <div className="col-12 col-md-6">
                     {order.address && (
                       <p className="mb-2">
                         <strong>Address:</strong> {order.address}
@@ -123,7 +143,7 @@ export default function OrderDetailsModal({
 
               <div className="row">
                 {/* Left */}
-                <div className="col-6">
+                <div className="col-12 col-md-6">
                   <p className="mb-2">
                     <strong>Order Number:</strong> #{order.orderId}
                   </p>
@@ -141,8 +161,7 @@ export default function OrderDetailsModal({
                   )}
 
                   <p className="mb-2 text-danger">
-                    <strong>Final Amount:</strong> ₹
-                    {formatPrice(Number(order.amount))}
+                    <strong>Final Amount:</strong> ₹{formatPrice(order.amount)}
                   </p>
                 </div>
 
@@ -194,6 +213,8 @@ export default function OrderDetailsModal({
                   <div
                     key={index}
                     className="d-flex border rounded p-3 mb-3 bg-white shadow-sm"
+                    onClick={() => handleClick(p)}
+                    style={{ cursor: "pointer" }}
                   >
                     <Image
                       src={imageUrl}
@@ -229,9 +250,7 @@ export default function OrderDetailsModal({
                         </strong>
                       </p>
                       <p className="mb-1 text-primary">
-                        <strong>
-                          Total Price: ₹{formatPrice(Number(p.rate))}
-                        </strong>
+                        <strong>Price: ₹{formatPrice(Number(p.rate))}</strong>
                       </p>
                       {p.doses && (
                         <p className="mb-1">

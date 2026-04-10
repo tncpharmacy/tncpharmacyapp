@@ -2,6 +2,7 @@ import { getMedicineByGenericId } from "@/lib/features/medicineSlice/medicineSli
 import { useAppDispatch, useAppSelector } from "@/lib/hooks";
 import { encodeId } from "@/lib/utils/encodeDecode";
 import { formatAmount } from "@/lib/utils/formatAmount";
+import { formatPrice } from "@/lib/utils/formatPrice";
 import { Medicine } from "@/types/medicine";
 import Link from "next/link";
 import React, { useState, useRef, useEffect } from "react";
@@ -91,13 +92,11 @@ const HorizontalAccordionTabs: React.FC<IDProps> = ({ id }) => {
         {/* Accordion Body - Now controlled by React max-height transition */}
         <div
           id="collapseOne"
-          // Bootstrap collapse classes हटा दें (Smoothness के लिए)
           className="accordion-collapse"
           aria-labelledby="headingOne"
           data-bs-parent="#singleAccordionExample"
-          style={bodyStyle} // Dynamic max-height style apply किया गया
+          style={bodyStyle}
         >
-          {/* Content Wrapper को ref दें */}
           <div className="accordion-body" ref={contentRef}>
             <div className="view_box">
               <div id="all-alternative">
@@ -112,17 +111,49 @@ const HorizontalAccordionTabs: React.FC<IDProps> = ({ id }) => {
                       const mrp = Number(item.mrp ?? 0);
                       const discount = Number(item.discount ?? 0);
                       const discountedPrice = mrp - (mrp * discount) / 100;
-                      const perCapsule = (
-                        discountedPrice / item.pack_qty
-                      ).toFixed(2);
-                      const unitCode =
-                        item.pack_size?.match(/[A-Z]+/)?.[0] || "";
-                      const unitMap: Record<string, string> = {
-                        CAP: "capsule",
-                        TAB: "tablet",
-                      };
 
-                      const unit = unitMap[unitCode] || unitCode.toLowerCase();
+                      // 👇 pack_qty null hai to pack_size se nikaal
+                      // const packQty =
+                      //   Number(item.pack_qty) ||
+                      //   Number(item.pack_size?.match(/\d+/)?.[0]) ||
+                      //   0;
+
+                      // const perCapsule =
+                      //   packQty > 0
+                      //     ? (discountedPrice / packQty).toFixed(2)
+                      //     : null;
+                      // const unitCode =
+                      //   item.pack_size?.match(/[A-Z]+/)?.[0] || "";
+
+                      // const unitMap: Record<string, string> = {
+                      //   CAP: "capsule",
+                      //   TAB: "tablet",
+                      // };
+
+                      const packSize = item.pack_size?.toLowerCase() || "";
+
+                      // sirf tablet/capsule allow
+                      const isUnitBased =
+                        packSize.includes("tab") ||
+                        packSize.includes("tablet") ||
+                        packSize.includes("cap") ||
+                        packSize.includes("capsule");
+
+                      const packQty =
+                        Number(item.pack_qty) ||
+                        Number(item.pack_size?.match(/\d+/)?.[0]) ||
+                        0;
+                      const perUnit =
+                        isUnitBased && packQty > 0
+                          ? (discountedPrice / packQty).toFixed(2)
+                          : null;
+
+                      let unit = "";
+
+                      if (packSize.includes("tab")) unit = "tablet";
+                      else if (packSize.includes("cap")) unit = "capsule";
+
+                      // const unit = unitMap[unitCode] || unitCode.toLowerCase();
 
                       return (
                         <div
@@ -149,18 +180,17 @@ const HorizontalAccordionTabs: React.FC<IDProps> = ({ id }) => {
                             >
                               {item.manufacturer_name}
                               <br />
-                              {unit && item.pack_qty ? (
+                              {perUnit && unit && (
                                 <div
-                                  className="descr"
                                   style={{
                                     color: "#d32f2f",
                                     fontSize: "14px",
                                     fontWeight: "500",
                                   }}
                                 >
-                                  (₹{perCapsule} per {"unit"})
+                                  (₹{perUnit} per {"unit"})
                                 </div>
-                              ) : null}
+                              )}
                             </div>
                           </div>
 
@@ -176,7 +206,7 @@ const HorizontalAccordionTabs: React.FC<IDProps> = ({ id }) => {
                                     color: "#d32f2f",
                                   }}
                                 >
-                                  ₹{formatAmount(discountedPrice)}
+                                  ₹{formatPrice(discountedPrice)}
                                 </div>
                                 <div
                                   //className="descr"
@@ -186,7 +216,7 @@ const HorizontalAccordionTabs: React.FC<IDProps> = ({ id }) => {
                                     textDecoration: "line-through",
                                   }}
                                 >
-                                  ₹{formatAmount(mrp)}
+                                  ₹{formatPrice(mrp)}
                                 </div>
                                 <div
                                   style={{
@@ -208,7 +238,7 @@ const HorizontalAccordionTabs: React.FC<IDProps> = ({ id }) => {
                                     color: "#d32f2f",
                                   }}
                                 >
-                                  ₹{formatAmount(mrp)}
+                                  ₹{formatPrice(mrp)}
                                 </div>
                                 <div
                                   className="descr"

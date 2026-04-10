@@ -8,6 +8,11 @@ const nextConfig: NextConfig = {
         hostname: "api.tncpharmacy.in",
         pathname: "/media/**",
       },
+      {
+        protocol: "https",
+        hostname: "storage.googleapis.com", // 🔥 ADD THIS
+        pathname: "/**", // 🔥 IMPORTANT
+      },
     ],
   },
 

@@ -1020,8 +1020,8 @@ export default function ProductPage() {
                 {processingIds.includes(id)
                   ? "Processing..."
                   : isInBag
-                  ? "Go To Health Bag"
-                  : "Add to Health Bag"}
+                  ? "Go To Bag"
+                  : "Add to Bag"}
               </button>
             </div>
           </div>

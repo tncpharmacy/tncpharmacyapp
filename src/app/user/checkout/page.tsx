@@ -15,6 +15,7 @@ import { createBuyerOrder } from "@/lib/features/buyerSlice/buyerSlice";
 import type { OrderPayload } from "@/types/order";
 import { useHealthBag } from "@/lib/hooks/useHealthBag";
 import { formatAmount } from "@/lib/utils/formatAmount";
+import { formatPrice } from "@/lib/utils/formatPrice";
 
 export default function Checkout() {
   const dispatch = useAppDispatch();
@@ -189,7 +190,7 @@ export default function Checkout() {
                   Scan the QR to Pay
                 </p>
                 <h6 className="text-center fw-semibold text-success">
-                  Amount: ₹{formatAmount(Number(checkoutData?.amount || 0))}
+                  Amount: ₹{formatPrice(checkoutData?.amount || 0)}
                 </h6>
               </>
             )}

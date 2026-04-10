@@ -285,10 +285,11 @@ export default function HealthBags() {
         pack_size: item.PackSize || item.pack_size,
         mrp: Number(item.MRP ?? item.mrp ?? 0),
         discount: Number(item.Discount ?? item.discount ?? 0),
-        image:
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          item.DefaultImageURL?.find((img: any) => img.default_image === 1)
-            ?.document || null, // 🔥 important
+        image: Array.isArray(item.DefaultImageURL)
+          ? item.DefaultImageURL
+          : item.DefaultImageURL
+          ? [item.DefaultImageURL]
+          : [],
       };
 
       const exists = guestItems.find((i) => i.productid === item.product_id);
@@ -344,28 +345,35 @@ export default function HealthBags() {
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   function getFinalImage(item: any, isLoggedIn: boolean) {
-    // 🟢 LOGIN USER → API
+    const base = mediaBase?.replace(/\/$/, "") || "";
+
+    // 🟢 LOGIN USER
     if (isLoggedIn) {
       if (item.medicine_image?.document) {
-        return `${mediaBase}${item.medicine_image.document}`;
+        return `${base}/${item.medicine_image.document.replace(/^\//, "")}`;
       }
     }
 
-    // 🔵 GUEST USER → LS (ARRAY handle karo)
-    if (!isLoggedIn) {
-      if (Array.isArray(item.image)) {
-        const defaultImg = (item.image as ImageType[]).find(
-          (img) => img.default_image === 1
-        );
-        if (defaultImg?.document) {
-          return `${mediaBase}${defaultImg.document}`;
-        }
-      }
+    // 🔵 GUEST USER
 
-      // agar string already ho
-      if (typeof item.image === "string") {
-        return item.image;
+    const img = item.image;
+
+    // ✅ CASE 1: ARRAY
+    if (Array.isArray(img)) {
+      const defaultImg = img.find((i) => i.default_image === 1);
+      if (defaultImg?.document) {
+        return `${base}/${defaultImg.document.replace(/^\//, "")}`;
       }
+    }
+
+    // ✅ CASE 2: OBJECT (🔥 tera issue yahi hai)
+    if (img && typeof img === "object" && img.document) {
+      return `${base}/${img.document.replace(/^\//, "")}`;
+    }
+
+    // ✅ CASE 3: STRING
+    if (typeof img === "string") {
+      return img.startsWith("http") ? img : `${base}/${img.replace(/^\//, "")}`;
     }
 
     return "/images/tnc-default.png";
@@ -408,33 +416,6 @@ export default function HealthBags() {
       image: getFinalImage(item, !!buyer?.id),
     };
   });
-
-  // const mergedItems = sourceItems.map((item: any) => {
-  //   const mrp = Number(item.mrp) || 0;
-  //   const discount = Number(item.discount) || 0;
-
-  //   const discountMrp = mrp ? mrp - (mrp * discount) / 100 : 0;
-
-  //   return {
-  //     id: item.id || 0,
-  //     productid: item.productid,
-
-  //     // 🔥 FIX NAME ISSUE HERE
-  //     name: item.name || item.productname || item.medicine_name || "",
-
-  //     manufacturer: item.manufacturer || "",
-  //     pack_size: item.pack_size || "",
-  //     prescription_required: item.prescription_required || 0,
-
-  //     qty: Number(item.qty) || 1,
-
-  //     mrp,
-  //     discount,
-  //     discountMrp,
-
-  //     image: item.image || item.medicine_image || "/images/tnc-default.png",
-  //   };
-  // });
 
   const handleQuantityChange = async (
     productId: number,
@@ -489,7 +470,7 @@ export default function HealthBags() {
   const formattedTotalDiscount = formatPrice(totals.totalDiscount);
   const formattedGrandTotal = formatPrice(totals.totalPay);
 
-  const grandTotal = Math.round(totals.totalPay);
+  const grandTotal = Number(totals.totalPay.toFixed(2));
 
   // const grandTotal = totals.totalPay;
 
@@ -613,13 +594,40 @@ export default function HealthBags() {
   const getImageUrl = (img: any) => {
     if (!img) return "/images/tnc-default.png";
 
-    if (typeof img === "string") return img;
+    const base = mediaBase?.replace(/\/$/, "") || "";
 
-    if (img.document) return img.document;
+    // ARRAY
+    if (Array.isArray(img)) {
+      const defaultImg = img.find((i) => i.default_image === 1);
+      if (defaultImg?.document) {
+        return `${base}/${defaultImg.document.replace(/^\//, "")}`;
+      }
+    }
+
+    // OBJECT
+    if (img.document) {
+      return `${base}/${img.document.replace(/^\//, "")}`;
+    }
+
+    // STRING
+    if (typeof img === "string") {
+      return img.startsWith("http") ? img : `${base}/${img.replace(/^\//, "")}`;
+    }
 
     return "/images/tnc-default.png";
   };
 
+  const prescriptionItems = mergedItems.filter(
+    (item) => item.prescription_required === 1
+  );
+  const shortenName = (name: string) => {
+    if (!name) return "";
+
+    const maxLength = 18;
+    return name.length > maxLength
+      ? name.slice(0, maxLength).trim() + "..."
+      : name;
+  };
   return (
     <>
       <SiteHeader />
@@ -653,117 +661,79 @@ export default function HealthBags() {
                 {mergedItems.length > 0 ? (
                   mergedItems.map((item, index) => {
                     const imageUrl = getImageUrl(item.image);
+                    const qty = quantities[item.productid] ?? item.qty ?? 1;
                     return (
                       <div
                         key={`${item.productid}-${index}`}
-                        className="d-flex align-items-start border-bottom pb-3 mb-3"
+                        className="cart-item border-bottom pb-3 mb-3"
                       >
-                        <span
-                          onClick={() => handleItemSelect(item)}
-                          style={{ cursor: "pointer" }}
-                        >
-                          <Image
-                            src={imageUrl}
-                            alt={""}
-                            className="me-3 rounded"
-                            style={{
-                              width: 90,
-                              height: 90,
-                              objectFit: "contain",
-                              opacity: imageUrl.includes("tnc-default")
-                                ? 0.3
-                                : 1,
-                            }}
-                          />
-                        </span>
-                        <div className="flex-grow-1">
-                          <h6 className="fw-semibold mb-1">
-                            <span
-                              className="hover-link pd-title"
+                        <div className="d-flex gap-2">
+                          <span
+                            onClick={() => handleItemSelect(item)}
+                            style={{ cursor: "pointer" }}
+                          >
+                            <Image
+                              src={imageUrl}
+                              alt={""}
+                              className="rounded cart-img"
+                              style={{
+                                width: 90,
+                                height: 90,
+                                objectFit: "contain",
+                                opacity: imageUrl.includes("tnc-default")
+                                  ? 0.3
+                                  : 1,
+                              }}
+                            />
+                          </span>
+
+                          <div className="cart-content position-relative">
+                            <div
+                              className="flex-grow-1 pd-title ms-2"
                               onClick={() => handleItemSelect(item)}
                               style={{ cursor: "pointer" }}
                             >
-                              {item.name}
-                            </span>
-                          </h6>
-                          {item.prescription_required === 1 && (
-                            <div
-                              style={{
-                                display: "flex",
-                                alignItems: "center",
-                                gap: "4px",
-                              }}
-                            >
+                              <h6 className="fw-semibold mb-1">{item.name}</h6>
+
+                              <p className="mb-1 small pd-title">
+                                {item.pack_size}
+                              </p>
+                              <p className="text-success small mb-1 pd-title">
+                                {item.manufacturer}
+                              </p>
+
+                              <div className="price-block">
+                                ₹{item.formattedDiscountMrp}
+                                <small className="text-muted text-decoration-line-through ms-2">
+                                  ₹{item.formattedMrp}
+                                </small>
+                                <small className="text-danger ms-2">
+                                  {item.discount}% off
+                                </small>
+                              </div>
+                            </div>
+
+                            {/* 🔥 RX BADGE OUTSIDE */}
+                            {item.prescription_required === 1 && (
                               <Image
                                 src="/images/RX-small.png"
                                 alt="Prescription Required"
-                                style={{
-                                  width: "22px",
-                                  height: "22px",
-                                  objectFit: "contain",
-                                }}
+                                className="rx-badge"
                               />
-                              <span
-                                className="fw-semibold"
-                                style={{ fontSize: "13px", color: "#ff5722" }}
-                              >
-                                Prescription Required
-                              </span>
-                            </div>
-                          )}
-                          <p
-                            className="mb-1 fw-semibold  small"
-                            style={{ fontSize: "14px" }}
-                          >
-                            {item.pack_size}
-                          </p>
-                          <p
-                            className="mb-1 fw-semibold text-success small pd-title"
-                            style={{
-                              fontSize: "13px",
-                            }}
-                          >
-                            {item.manufacturer}
-                          </p>
-
-                          {/* <div className="row">
-                          <DoseInstructionSelect
-                            type="select"
-                            label="Doses"
-                            name="dose"
-                            value={dose}
-                            onChange={(e) => setDose(e.target.value)}
-                            colSm={4}
-                            required
-                          />
-                        </div> */}
-                          <button
-                            className="text-danger small border-0 bg-transparent p-0"
-                            onClick={() => handleRemove(item.productid)}
-                          >
-                            <i
-                              className="bi bi-trash text-danger"
-                              style={{ fontSize: "16px" }}
-                            ></i>
-                          </button>
+                            )}
+                          </div>
                         </div>
 
-                        <div className="text-end ms-3">
-                          <h6 className="mb-2 text-success">
-                            ₹{item.formattedDiscountMrp}{" "}
-                            <small className="text-muted text-decoration-line-through">
-                              MRP ₹{item.formattedMrp}
-                            </small>
-                            <br />
-                            <span className="text-danger small">
-                              {item.discount}% off
-                            </span>
-                          </h6>
-
-                          <div
-                            className="d-inline-flex align-items-center border rounded px-2 py-1"
-                            style={{ gap: "6px" }}
+                        {/* BOTTOM ROW (QTY + DELETE) */}
+                        <div className="d-flex justify-content-between align-items-center mt-2">
+                          <button
+                            className="text-danger border-0 bg-transparent"
+                            onClick={() => handleRemove(item.productid)}
                           >
+                            <i className="bi bi-trash"></i>
+                          </button>
+
+                          <div className="qty-box" style={{ gap: "10px" }}>
                             {(quantities[item.productid] ?? 1) > 1 ? (
                               // ➖ Minus button (qty > 1)
                               <Button
@@ -789,16 +759,8 @@ export default function HealthBags() {
                                 <i className="bi bi-trash"></i>
                               </Button>
                             )}
-
-                            <span
-                              className="text-center"
-                              style={{ minWidth: "20px" }}
-                            >
-                              {quantities[item.productid] ?? 1}
-                            </span>
-
+                            <span>{quantities[item.productid] ?? 1}</span>
                             <Button
-                              variant="link"
                               className="p-0 text-dark fw-bold"
                               onClick={() =>
                                 handleQuantityChange(
@@ -808,7 +770,7 @@ export default function HealthBags() {
                                 )
                               }
                             >
-                              <i className="bi bi-plus-lg"></i>
+                              +
                             </Button>
                           </div>
                         </div>
@@ -872,7 +834,7 @@ export default function HealthBags() {
                   )}
 
                   <Button
-                    className="w-100 py-2 fw-semibold continue-btn"
+                    className="w-100 py-2 fw-semibold continue-btn fixed-mobile-btn"
                     onClick={handleContinue}
                   >
                     Continue
@@ -922,9 +884,11 @@ export default function HealthBags() {
                     formatPrice(discountedPriceRaw);
 
                   const images = item.DefaultImageURL;
+
                   const defaultImg = Array.isArray(images)
                     ? images.find((img) => img.default_image === 1)
                     : null;
+
                   const imageUrl = defaultImg?.document
                     ? `${mediaBase}${defaultImg.document}`
                     : "/images/tnc-default.png";
@@ -1373,12 +1337,46 @@ export default function HealthBags() {
         centered
       >
         <Modal.Header closeButton>
-          <Modal.Title>Upload Prescription</Modal.Title>
+          <Modal.Title className="fw-semibold text-primary">
+            Upload Prescription
+          </Modal.Title>
         </Modal.Header>
 
         <Modal.Body>
+          {/* 🔥 HEADER WITH RX */}
+          <div className="d-flex align-items-center gap-2 mb-2">
+            <Image
+              src="/images/RX-small.png"
+              alt="rx"
+              style={{ width: "24px", height: "24px" }}
+            />
+            <h6 className="mb-0 fw-semibold text-danger">
+              Prescription Required
+            </h6>
+          </div>
+
+          {/* 🔥 MESSAGE */}
+          <p className="text-danger mb-3">
+            A valid prescription is required for the following medicines:
+          </p>
+
+          {/* 🔥 PRODUCT LIST */}
           <div className="mb-3">
-            <Form.Label>Upload Prescription</Form.Label>
+            <p className="fw-semibold text-success small mb-1 rx-product-list">
+              (
+              {prescriptionItems.map((item, index) => (
+                <span key={index} className="small fw-bold">
+                  {shortenName(item.name)}
+                  {index !== prescriptionItems.length - 1 && ", "}
+                </span>
+              ))}
+              )
+            </p>
+          </div>
+
+          {/* 🔥 UPLOAD SECTION */}
+          <div>
+            <Form.Label className="fw-semibold">Upload Prescription</Form.Label>
             <Form.Control
               type="file"
               accept=".jpg,.jpeg,.png,.pdf"
@@ -1387,32 +1385,34 @@ export default function HealthBags() {
             />
           </div>
 
-          {/* 👇 Preview */}
+          <small className="text-muted" style={{ fontSize: "10px" }}>
+            Accepted formats: JPG, PNG, PDF (Max size recommended: 5MB)
+          </small>
+
+          {/* PREVIEW SAME AS BEFORE */}
           {prescriptionFile && (
             <div className="mt-3">
               <p className="fw-semibold">Preview:</p>
 
-              {/* 🖼 Image Preview */}
               {prescriptionFile.type.startsWith("image/") && (
                 <Image
                   src={URL.createObjectURL(prescriptionFile)}
                   alt="preview"
                   style={{
                     width: "100%",
-                    maxHeight: "250px",
+                    maxHeight: "200px",
                     objectFit: "contain",
                     borderRadius: "8px",
                   }}
                 />
               )}
 
-              {/* 📄 PDF Preview */}
               {prescriptionFile.type === "application/pdf" && (
                 <div className="d-flex flex-column gap-2">
                   <p>{prescriptionFile.name}</p>
-
                   <Button
                     variant="outline-primary"
+                    size="sm"
                     onClick={() =>
                       window.open(
                         URL.createObjectURL(prescriptionFile),
@@ -1425,10 +1425,9 @@ export default function HealthBags() {
                 </div>
               )}
 
-              {/* ❌ Remove Button */}
               <div className="mt-2">
                 <Button variant="danger" size="sm" onClick={handleRemoveFile}>
-                  <i className="bi bi-trash me-1"></i>
+                  <i className="bi bi-trash me-1"></i> Remove
                 </Button>
               </div>
             </div>
