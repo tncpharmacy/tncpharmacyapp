@@ -499,37 +499,39 @@ export default function AllProducts() {
                   })
                 )}
               </div>
-              {filteredMedicines.length > 0 && !loading && (
-                <div className="d-flex justify-content-center mt-3">
-                  <Pagination
-                    currentPage={page}
-                    hasNext={!!nextUrl}
-                    hasPrev={page > 1}
-                    onPageChange={(newPage) => {
-                      setPageLoading(true);
+              {!loading &&
+                !pageLoading &&
+                (filteredMedicines.length === 50 || page > 1) && (
+                  <div className="d-flex justify-content-center mt-3">
+                    <Pagination
+                      currentPage={page}
+                      hasNext={!!nextUrl}
+                      hasPrev={page > 1}
+                      onPageChange={(newPage) => {
+                        setPageLoading(true);
 
-                      // ❌ REMOVE THIS
-                      // dispatch(resetMedicinesList());
+                        // ❌ REMOVE THIS
+                        // dispatch(resetMedicinesList());
 
-                      if (newPage > page && nextUrl) {
-                        setPrevStack((prev) => [...prev, currentUrl || ""]);
-                        setCurrentUrl(nextUrl);
-                        setPage(newPage);
-                      }
+                        if (newPage > page && nextUrl) {
+                          setPrevStack((prev) => [...prev, currentUrl || ""]);
+                          setCurrentUrl(nextUrl);
+                          setPage(newPage);
+                        }
 
-                      if (newPage < page) {
-                        const prevUrls = [...prevStack];
+                        if (newPage < page) {
+                          const prevUrls = [...prevStack];
 
-                        const lastUrl = prevUrls.pop();
+                          const lastUrl = prevUrls.pop();
 
-                        setPrevStack(prevUrls);
-                        setCurrentUrl(lastUrl || null);
-                        setPage(newPage);
-                      }
-                    }}
-                  />
-                </div>
-              )}
+                          setPrevStack(prevUrls);
+                          setCurrentUrl(lastUrl || null);
+                          setPage(newPage);
+                        }
+                      }}
+                    />
+                  </div>
+                )}
             </div>
           </div>
         </div>
