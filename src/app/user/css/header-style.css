@@ -748,7 +748,17 @@ span.user_p i .count {
     transform: scale(0.8);
 }
 
+}
+/* 🔥 Mobile search input fix */
+@media (max-width: 767px) {
+  .header_search_input {
+    font-size: 16px !important;
+    font-weight: 700;       /* 👈 more bold */
+    color: #000;            /* 👈 darker text */
+  }
 
-
-
+  .header_search_input::placeholder {
+    font-weight: 500;       /* 👈 placeholder thoda light */
+    color: #6c757d;
+  }
 }

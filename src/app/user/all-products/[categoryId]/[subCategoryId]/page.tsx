@@ -308,6 +308,10 @@ export default function AllProducts() {
     router.push(`/product-details/${encodeId(product_id)}`);
   };
 
+  const handleClickCategory = (categoryIdNum: number) => {
+    router.push(`/all-product/${encodeId(categoryIdNum)}`);
+  };
+
   const isInitialLoading = loading || pageLoading;
   // -------------------------------
   // 🔹 UI RETURN
@@ -325,11 +329,31 @@ export default function AllProducts() {
               <div className="row align-items-center mb-3">
                 {/* LEFT SIDE : PRODUCT NAME */}
                 <div className="col-md-9">
-                  <div className="pageTitle mt-3 mb-3">
-                    <Image src={"/images/favicon.png"} alt="" />{" "}
-                    {categoryName || "Loading..."}{" "}
-                    <span className="text-primary">/</span>{" "}
-                    {subCategoryName || "Loading..."}
+                  <div className="pageTitle mt-3 mb-3 d-flex align-items-start">
+                    {/* LEFT: ICON */}
+                    <Image
+                      src={"/images/favicon.png"}
+                      alt=""
+                      className="title-icon"
+                    />
+
+                    {/* RIGHT: TEXT */}
+                    <div className="title-text ms-2">
+                      <span
+                        className="text-primary"
+                        style={{ cursor: "pointer" }}
+                        onClick={() => {
+                          if (categoryIdNum !== null) {
+                            handleClickCategory(categoryIdNum);
+                          }
+                        }}
+                      >
+                        {categoryName || "Loading..."}
+                      </span>{" "}
+                      <span className="text-primary">/</span>{" "}
+                      <span className="mobile-break text-muted"></span>
+                      {subCategoryName || "Loading..."}
+                    </div>
                   </div>
                 </div>
 

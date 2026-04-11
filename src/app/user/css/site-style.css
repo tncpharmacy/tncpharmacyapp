@@ -1080,17 +1080,13 @@ footer .border-top {
     justify-content: center;
 }
 
+}
+.mobile-break {
+  display: none;
+}
 
-
-
-
-
-
-
-
-
-
-
-
-
+@media (max-width: 767px) {
+  .mobile-break {
+    display: block;
+  }
 }

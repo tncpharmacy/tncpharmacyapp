@@ -464,6 +464,9 @@ export default function HealthBags() {
     },
     { totalMrp: 0, totalDiscount: 0, totalPay: 0 }
   );
+  // 🚚 Delivery logic
+  const DELIVERY_THRESHOLD = 599;
+  const DELIVERY_FEE = 40;
 
   // 🔥 formatted values (NO .00 issue)
   const formattedTotalMrp = formatPrice(totals.totalMrp);
@@ -472,6 +475,9 @@ export default function HealthBags() {
 
   const grandTotal = Number(totals.totalPay.toFixed(2));
 
+  const deliveryFee = grandTotal >= DELIVERY_THRESHOLD ? 0 : DELIVERY_FEE;
+
+  const finalPayable = grandTotal + deliveryFee;
   // const grandTotal = totals.totalPay;
 
   const checkoutData = () => {
@@ -500,7 +506,7 @@ export default function HealthBags() {
     const checkoutPayload = {
       payment_mode: 1, // default UPI/manual
       payment_status: "1",
-      amount: grandTotal,
+      amount: formatPrice(finalPayable),
       order_type: 1, // pharmacy
       address_id: billingAddress,
       status: "1",
@@ -798,24 +804,42 @@ export default function HealthBags() {
             {!isCartEmpty && (
               <div className="col-lg-4">
                 <div className="border rounded p-3 bg-white sticky-summary">
-                  <h6 className="fw-semibold mb-3">Bill summary</h6>
+                  <h6 className="fw-bold mb-3 text-primary">Bill summary</h6>
 
                   {/* Total MRP */}
-                  <div className="d-flex justify-content-between mb-2 small">
+                  <div className="d-flex justify-content-between mb-2 small fw-semibold">
                     <span>Total MRP</span>
                     <span>₹{formattedTotalMrp}</span>
                   </div>
 
                   {/* You Saved */}
-                  <div className="d-flex justify-content-between mb-2 small text-success">
-                    <span>You saved</span>
+                  <div className="d-flex justify-content-between mb-2 small text-success fw-semibold">
+                    <span>Discount</span>
                     <span>- ₹{formattedTotalDiscount}</span>
                   </div>
 
-                  {/* Shipping */}
-                  <div className="d-flex justify-content-between mb-2 small">
-                    <span>Shipping fee</span>
-                    <span className="text-muted">As per delivery address</span>
+                  {/* 🚚 Delivery Fee */}
+                  <div className="d-flex justify-content-between mb-2 small fw-semibold">
+                    <span>Delivery Fee</span>
+
+                    {deliveryFee === 0 ? (
+                      <span className="text-success fw-semibold">
+                        FREE{" "}
+                        <span className="text-muted text-decoration-line-through ms-1">
+                          ₹40
+                        </span>
+                      </span>
+                    ) : (
+                      <span>₹40</span>
+                    )}
+                  </div>
+
+                  {/* 🚚 Free delivery banner */}
+                  <div className="delivery-banner mb-2">
+                    <i className="bi bi-truck me-2"></i>
+                    <span className="delivery-text">
+                      Enjoy FREE delivery on orders above ₹599
+                    </span>
                   </div>
 
                   <hr />
@@ -823,12 +847,12 @@ export default function HealthBags() {
                   {/* Final Pay */}
                   <div className="d-flex justify-content-between mb-1 fw-semibold">
                     <span>To Pay</span>
-                    <span>₹{formattedGrandTotal}</span>
+                    <span>₹{formatPrice(finalPayable)}</span>
                   </div>
 
                   {/* Extra highlight */}
                   {totals.totalDiscount > 0 && (
-                    <div className="text-success small mb-3">
+                    <div className="text-success small mb-3 fw-semibold">
                       🎉 You saved ₹{formattedTotalDiscount} on this order
                     </div>
                   )}

@@ -30,6 +30,7 @@ import { BuyerOrderDetail, OrderDetail } from "@/types/buyer";
 import OrderDetailsModal from "@/app/components/BuyerProfileModal/OrderDetailsModal";
 import { Address } from "@/types/address";
 import TncLoader from "@/app/components/TncLoader/TncLoader";
+import { formatPrice } from "@/lib/utils/formatPrice";
 
 // Mapped interface to fix type errors
 interface BuyerData {
@@ -635,8 +636,7 @@ export default function BuyerProfile() {
                                       {formatDateOnly(order.orderDate)}
                                     </p>
                                     <p className="mb-0 text-danger">
-                                      Amount: ₹
-                                      {formatAmount(Number(order.amount))} |
+                                      Amount: ₹{formatPrice(order.amount)} |
                                       Type: {order.orderType}
                                     </p>
                                     <p className="mb-0 text-muted">

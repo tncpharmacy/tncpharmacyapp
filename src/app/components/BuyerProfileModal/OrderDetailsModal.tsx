@@ -31,6 +31,21 @@ export default function OrderDetailsModal({
     router.push(path);
   };
 
+  // 🧮 total items price (without delivery)
+  const itemsTotal =
+    order?.products?.reduce(
+      (acc, p) => acc + Number(p.rate || 0) * Number(p.quantity || 1),
+      0
+    ) || 0;
+
+  // 🚚 check delivery applied or not
+  const DELIVERY_FEE = 40;
+
+  const orderAmount = Number(order?.amount || 0);
+
+  const isDeliveryApplied =
+    Math.abs(orderAmount - itemsTotal - DELIVERY_FEE) < 1;
+
   return (
     <Modal show={show} onHide={onClose} size="lg" centered>
       {/* 🔥 LOADER */}
@@ -55,7 +70,7 @@ export default function OrderDetailsModal({
             </Modal.Title>
           </Modal.Header>
 
-          <Modal.Body style={{ maxHeight: "70vh", overflowY: "auto" }}>
+          <Modal.Body style={{ maxHeight: "200vh", overflowY: "auto" }}>
             {/* Patient Details */}
             <div className="mb-3 p-3 border rounded bg-light">
               <h5 className="fw-semibold mb-3 text-primary">Patient Details</h5>
@@ -159,7 +174,19 @@ export default function OrderDetailsModal({
                       {order.additional_discount}%
                     </p>
                   )}
-
+                  <p className="mb-2 fw-semibold text-success">
+                    <strong>Delivery Fee:</strong>{" "}
+                    {isDeliveryApplied ? (
+                      <span className="text-success">₹40</span>
+                    ) : (
+                      <>
+                        <span className="text-success fw-bold">🎉 FREE</span>{" "}
+                        <span className="text-muted text-decoration-line-through ms-1">
+                          ₹40
+                        </span>
+                      </>
+                    )}
+                  </p>
                   <p className="mb-2 text-danger">
                     <strong>Final Amount:</strong> ₹{formatPrice(order.amount)}
                   </p>
@@ -192,7 +219,7 @@ export default function OrderDetailsModal({
             </div>
 
             {/* Product List */}
-            <h5 className="fw-semibold mb-3 text-primary">Products</h5>
+            <h5 className="fw-semibold mb-3 text-primary">Items</h5>
 
             {order?.products?.length > 0 ? (
               order.products.map((p, index) => {

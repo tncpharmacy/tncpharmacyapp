@@ -4,6 +4,7 @@ import React from "react";
 import { OrderDetails } from "@/types/order";
 import { formatDateOnly } from "@/utils/dateFormatter";
 import { formatAmount } from "@/lib/utils/formatAmount";
+import { formatPrice } from "@/lib/utils/formatPrice";
 
 interface Props {
   orders: OrderDetails[];
@@ -36,8 +37,7 @@ export default function OrderList({ orders, onView }: Props) {
                 Order Date: {formatDateOnly(order.orderDate)}
               </p>
               <p className="mb-0 text-danger">
-                Amount: ₹{formatAmount(Number(order.amount))} | Type:{" "}
-                {order.orderType}
+                Amount: ₹{formatPrice(order.amount)} | Type: {order.orderType}
               </p>
               <p className="mb-0 text-muted">{order.address}</p>
             </div>

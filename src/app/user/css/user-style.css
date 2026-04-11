@@ -1885,3 +1885,23 @@ width: 33%;
     text-align: left;
   }
 }
+
+.delivery-banner {
+  display: flex;
+  align-items: center;
+  background: #f1f5f9;
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+
+.delivery-banner i {
+  font-size: 20px;     /* 👈 icon bada */
+  color: #16a34a;
+  font-weight: bold;
+}
+
+.delivery-text {
+  font-size: 12px;
+  font-weight: 600;    /* 👈 bold text */
+  color: #111;
+}
