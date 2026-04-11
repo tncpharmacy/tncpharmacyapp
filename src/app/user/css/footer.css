@@ -131,3 +131,29 @@
   transform: scale(1.1);
   opacity: 0.9;
 }
+
+/* ===== Mobile View Only ===== */
+@media (max-width: 576px) {
+  footer .ftr_title {
+    text-align: left;
+  }
+
+  footer .ftr_link {
+    text-align: left;
+    padding-left: 0; /* extra indent hata dega */
+  }
+
+  footer .ftr_link li {
+    text-align: left;
+  }
+
+  footer .ftr_sociallink {
+    justify-content: flex-start;
+  }
+
+  footer .text-center,
+  footer .text-sm-end,
+  footer .text-end {
+    text-align: left !important;
+  }
+}

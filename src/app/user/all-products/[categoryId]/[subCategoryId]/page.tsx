@@ -29,6 +29,7 @@ const mediaBase = process.env.NEXT_PUBLIC_MEDIA_BASE_URL;
 
 export default function AllProducts() {
   const router = useRouter();
+  const prevKeyRef = useRef("");
   const dispatch = useAppDispatch();
   const params = useParams();
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -38,6 +39,7 @@ export default function AllProducts() {
   const [currentUrl, setCurrentUrl] = useState<string | null>(null);
   const [prevStack, setPrevStack] = useState<string[]>([]);
   const [pageLoading, setPageLoading] = useState(false);
+  const [activeKey, setActiveKey] = useState("");
 
   // 🔹 PARAMS DECODE
   const categoryIdRaw = params.categoryId;
@@ -55,17 +57,18 @@ export default function AllProducts() {
     ? decodeId(subCategoryIdRaw)
     : null;
 
-  // -------------------------------
-  // 🔹 REDUX DATA
-  // -------------------------------
-  const medicines = useAppSelector(
-    (state) =>
-      state.medicine.byCategorySubcategory?.[
-        `${categoryIdNum}-${subCategoryIdNum}`
-      ] || []
-  );
+  const key = `${categoryIdNum}-${subCategoryIdNum}`;
+
   const { next: nextUrl } = useAppSelector((state) => state.medicine);
-  const { loading } = useAppSelector((state) => state.medicine);
+  const { currentKey, loading } = useAppSelector((state) => state.medicine);
+
+  const medicinesFromStore = useAppSelector((state) =>
+    state.medicine.currentKey === key
+      ? state.medicine.byCategorySubcategory[key] || []
+      : []
+  );
+  const medicines = loading ? [] : medicinesFromStore;
+
   const { list: categories } = useAppSelector((state) => state.category);
   const { list: subCategories } = useAppSelector((state) => state.subcategory);
 
@@ -91,90 +94,16 @@ export default function AllProducts() {
     return Array.from(map.values());
   }, [medicines]);
 
-  // -------------------------------
-  // 🔹 SHUFFLE (HOOK SAFE)
-  // -------------------------------
-  const shuffledFromHook = useShuffledProduct(
-    uniqueMedicines,
-    `product-page-category-${categoryIdNum}-subcategory-${subCategoryIdNum}`
-  );
-
-  const finalShuffledList = useMemo(() => {
-    return [...uniqueMedicines].sort(() => Math.random() - 0.5);
-  }, [uniqueMedicines]);
-
-  // -------------------------------
   // 🔹 CATEGORY NAME
-  // -------------------------------
   const categoryName =
-    categories.find((cat) => cat.id === categoryIdNum)?.category_name ||
-    "Unknown Category";
+    categories.find((c) => c.id === categoryIdNum)?.category_name || "";
 
-  const subCategoryName = useMemo(() => {
-    if (!subCategories?.length) return "Loading...";
-    return (
-      subCategories.find((cat) => cat.id === subCategoryIdNum)
-        ?.sub_category_name || "Unknown Category"
-    );
-  }, [subCategories, subCategoryIdNum]);
-  useEffect(() => {
-    dispatch(getCategories());
-    dispatch(getSubcategories());
-  }, []);
+  const subCategoryName =
+    subCategories.find((s) => s.id === subCategoryIdNum)?.sub_category_name ||
+    "";
 
-  useEffect(() => {
-    if (categoryIdNum == null || subCategoryIdNum == null) return;
-
-    // 🔥 sabse pehle clear
-    dispatch(resetMedicinesList());
-
-    // 🔥 pagination reset
-    setPage(1);
-    setCurrentUrl(null);
-    setPrevStack([]);
-  }, [categoryIdNum, subCategoryIdNum]);
-
-  // Fetch categories & medicines
-  useEffect(() => {
-    if (!categoryIdNum || !subCategoryIdNum) return;
-
-    // 🔥 RESET ONLY WHEN CATEGORY CHANGES
-    dispatch(resetMedicinesList());
-
-    setPage(1);
-    setCurrentUrl(null);
-    setPrevStack([]);
-
-    dispatch(
-      getCategoryIdBySubcategory({
-        categoryId: categoryIdNum,
-        subCategoryId: subCategoryIdNum,
-      })
-    );
-  }, [categoryIdNum, subCategoryIdNum]);
-
-  useEffect(() => {
-    if (!categoryIdNum || !subCategoryIdNum) return;
-
-    dispatch(
-      getCategoryIdBySubcategory({
-        categoryId: categoryIdNum, // ✅ now safe
-        subCategoryId: subCategoryIdNum, // ✅ now safe
-      })
-    );
-  }, [dispatch, currentUrl, categoryIdNum, subCategoryIdNum]);
-  useEffect(() => {
-    if (categoryIdNum == null || subCategoryIdNum == null) return;
-
-    dispatch(
-      getCategoryIdBySubcategory({
-        categoryId: categoryIdNum,
-        subCategoryId: subCategoryIdNum,
-        url: currentUrl || undefined,
-      })
-    );
-  }, [categoryIdNum, subCategoryIdNum, currentUrl]);
-
+  console.log("categoryName", categoryName);
+  console.log("subCategoryName", subCategoryName);
   // 🔹 CART STATES
   // -------------------------------
   const buyer = useAppSelector((state) => state.buyer.buyer);
@@ -185,6 +114,44 @@ export default function AllProducts() {
   const [localBag, setLocalBag] = useState<number[]>([]);
   const [processingIds, setProcessingIds] = useState<number[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
+
+  useEffect(() => {
+    if (!categoryIdNum || !subCategoryIdNum) return;
+
+    const newKey = `${categoryIdNum}-${subCategoryIdNum}`;
+
+    dispatch(resetMedicinesList());
+
+    setPage(1);
+    setCurrentUrl(null);
+    setPrevStack([]);
+
+    dispatch(
+      getCategoryIdBySubcategory({
+        categoryId: categoryIdNum,
+        subCategoryId: subCategoryIdNum,
+      })
+    );
+
+    dispatch(getCategories());
+    dispatch(getSubcategories());
+  }, [dispatch, categoryIdNum, subCategoryIdNum]);
+
+  useEffect(() => {
+    dispatch(resetMedicinesList());
+  }, [dispatch, categoryIdNum, subCategoryIdNum]);
+
+  useEffect(() => {
+    setPageLoading(true);
+
+    dispatch(
+      getCategoryIdBySubcategory({
+        categoryId: categoryIdNum!,
+        subCategoryId: subCategoryIdNum!,
+        url: currentUrl || undefined,
+      })
+    );
+  }, [dispatch, currentUrl, categoryIdNum, subCategoryIdNum]);
 
   useEffect(() => {
     if (items?.length) {
@@ -311,11 +278,11 @@ export default function AllProducts() {
   const handleClickCategory = (categoryIdNum: number) => {
     router.push(`/all-product/${encodeId(categoryIdNum)}`);
   };
+  const isInvalidParams = !categoryIdNum || !subCategoryIdNum;
 
-  const isInitialLoading = loading || pageLoading;
-  // -------------------------------
-  // 🔹 UI RETURN
-  // -------------------------------
+  const isInitialLoading =
+    isInvalidParams || loading || pageLoading || medicines.length === 0;
+
   return (
     <>
       <div className="page-wrapper">
@@ -532,7 +499,7 @@ export default function AllProducts() {
                   })
                 )}
               </div>
-              {filteredMedicines.length > 0 && !loading && nextUrl && (
+              {filteredMedicines.length > 0 && !loading && (
                 <div className="d-flex justify-content-center mt-3">
                   <Pagination
                     currentPage={page}
@@ -540,17 +507,22 @@ export default function AllProducts() {
                     hasPrev={page > 1}
                     onPageChange={(newPage) => {
                       setPageLoading(true);
-                      dispatch(resetMedicinesList());
+
+                      // ❌ REMOVE THIS
+                      // dispatch(resetMedicinesList());
+
                       if (newPage > page && nextUrl) {
                         setPrevStack((prev) => [...prev, currentUrl || ""]);
                         setCurrentUrl(nextUrl);
                         setPage(newPage);
                       }
 
-                      if (newPage < page && prevStack.length > 0) {
-                        const lastUrl = prevStack[prevStack.length - 1];
+                      if (newPage < page) {
+                        const prevUrls = [...prevStack];
 
-                        setPrevStack((prev) => prev.slice(0, -1));
+                        const lastUrl = prevUrls.pop();
+
+                        setPrevStack(prevUrls);
                         setCurrentUrl(lastUrl || null);
                         setPage(newPage);
                       }

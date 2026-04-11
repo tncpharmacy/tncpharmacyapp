@@ -174,6 +174,9 @@ export default function OrderDetailsModal({
                       {order.additional_discount}%
                     </p>
                   )}
+                  <p className="mb-2 text-danger">
+                    <strong>Total Price:</strong> ₹{formatPrice(itemsTotal)}
+                  </p>
                   <p className="mb-2 fw-semibold text-success">
                     <strong>Delivery Fee:</strong>{" "}
                     {isDeliveryApplied ? (

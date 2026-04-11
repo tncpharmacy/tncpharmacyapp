@@ -59,6 +59,7 @@ interface MedicineState {
   searchResults: Medicine[];
   suggestions: Medicine[];
   next: string | null;
+  currentKey: string;
 }
 
 const initialState: MedicineState = {
@@ -83,6 +84,7 @@ const initialState: MedicineState = {
   searchResults: [],
   suggestions: [],
   next: null,
+  currentKey: "",
 };
 
 // ✅ Get all medicines menu List
@@ -646,9 +648,15 @@ const medicineSlice = createSlice({
         state.error = action.payload || "Something went wrong";
       })
       // fetch category Id By sub category
-      .addCase(getCategoryIdBySubcategory.pending, (state) => {
+      // fetch category Id By sub category
+      .addCase(getCategoryIdBySubcategory.pending, (state, action) => {
         state.loading = true;
         state.error = null;
+
+        const { categoryId, subCategoryId } = action.meta.arg;
+        const key = `${categoryId}-${subCategoryId}`;
+
+        state.currentKey = key; // 🔥 MOST IMPORTANT LINE
       })
 
       .addCase(getCategoryIdBySubcategory.fulfilled, (state, action) => {
@@ -661,11 +669,12 @@ const medicineSlice = createSlice({
           ? action.payload.data
           : [];
 
-        // 🔥 ALWAYS REPLACE
-        state.byCategorySubcategory[key] = safeIncoming;
-
-        state.next = action.payload.next || null;
-        state.count = action.payload.count || 0;
+        // 🔥 ONLY UPDATE IF SAME REQUEST
+        if (state.currentKey === key) {
+          state.byCategorySubcategory[key] = safeIncoming;
+          state.next = action.payload.next || null;
+          state.count = action.payload.count || 0;
+        }
 
         state.error = null;
       })
