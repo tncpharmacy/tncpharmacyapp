@@ -76,11 +76,11 @@ export default function BuyerSignupModal({
     }
 
     // ✅ Email validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      setFormError("Please enter a valid email address.");
-      return;
-    }
+    // const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    // if (!emailRegex.test(email)) {
+    //   setFormError("Please enter a valid email address.");
+    //   return;
+    // }
 
     // ✅ Mobile validation
     const mobileRegex = /^\d{10}$/;
