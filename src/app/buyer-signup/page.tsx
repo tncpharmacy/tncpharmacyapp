@@ -295,7 +295,7 @@ export default function BuyerSignupModal({
                 <>
                   <span className="login_title">Verify OTP</span>
                   <p className="text-muted">
-                    OTP sent to <b>{email || mobile}</b>{" "}
+                    OTP sent to Whatsapp Number <b>{mobile}</b>{" "}
                     <button
                       className="btn btn-link p-0 ms-1"
                       onClick={() => setStep("signup")}
