@@ -137,7 +137,15 @@ export default function Login({ show, handleClose }: LoginFormProps) {
             <div className="login_form">
               <span className="login_title">Login here</span>
               <div className="row_login">
-                <span className="lbllogin">Login ID</span>
+                <span className="lbllogin">
+                  Login ID{" "}
+                  <span
+                    className="text-danger fw-bold"
+                    style={{ fontWeight: "800 important" }}
+                  >
+                    *
+                  </span>
+                </span>
                 <input
                   ref={loginInputRef}
                   type="text"
@@ -168,7 +176,15 @@ export default function Login({ show, handleClose }: LoginFormProps) {
                 />
               </div>
               <div className="row_login">
-                <span className="lbllogin">Password</span>
+                <span className="lbllogin">
+                  Password{" "}
+                  <span
+                    className="text-danger fw-bold"
+                    style={{ fontWeight: "800 important" }}
+                  >
+                    *
+                  </span>
+                </span>
                 <input
                   ref={passwordInputRef}
                   type="password"

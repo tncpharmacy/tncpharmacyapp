@@ -64,7 +64,7 @@ export default function BuyerSignupModal({
   // ---------- signup handler ----------
   const handleSignup = async () => {
     // ✅ Basic empty check
-    if (!name.trim() || !email.trim() || !mobile.trim()) {
+    if (!name.trim() || !mobile.trim()) {
       setFormError("Please fill in all fields.");
       return;
     }
@@ -239,7 +239,15 @@ export default function BuyerSignupModal({
                 <>
                   <span className="login_title">Buyer Sign Up</span>
                   <div className="row_login">
-                    <span className="lbllogin">Full Name</span>
+                    <span className="lbllogin">
+                      Full Name{" "}
+                      <span
+                        className="text-danger fw-bold"
+                        style={{ fontWeight: "800 important" }}
+                      >
+                        *
+                      </span>
+                    </span>
                     <input
                       ref={nameRef}
                       type="text"
@@ -265,7 +273,15 @@ export default function BuyerSignupModal({
                   </div>
 
                   <div className="row_login">
-                    <span className="lbllogin">Mobile No</span>
+                    <span className="lbllogin">
+                      Mobile No{" "}
+                      <span
+                        className="text-danger fw-bold"
+                        style={{ fontWeight: "800 important" }}
+                      >
+                        *
+                      </span>
+                    </span>
                     <input
                       ref={mobileRef}
                       type="text"

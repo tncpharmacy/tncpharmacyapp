@@ -192,7 +192,15 @@ export default function BuyerLoginModal({
                 {step === 1 && (
                   <>
                     <div className="row_login">
-                      <span className="lbllogin">Mobile No</span>
+                      <span className="lbllogin">
+                        Mobile No{" "}
+                        <span
+                          className="text-danger fw-bold"
+                          style={{ fontWeight: "800 important" }}
+                        >
+                          *
+                        </span>
+                      </span>
                       <input
                         ref={loginInputRef}
                         type="text"
