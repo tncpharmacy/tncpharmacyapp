@@ -914,7 +914,7 @@ export default function ProductPage() {
           <nav aria-label="breadcrumb" style={{ fontSize: "13px" }}>
             <ol className="breadcrumb">
               <li className="breadcrumb-item">
-                <a href="#">Home</a>
+                <Link href="/">Home</Link>
               </li>
               {/* <li className="breadcrumb-item">
                 <a href="#">All Medicine</a>

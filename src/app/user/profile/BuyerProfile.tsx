@@ -9,7 +9,7 @@ import Footer from "@/app/user/components/footer/footer";
 
 import { Image } from "react-bootstrap";
 import { useAppDispatch, useAppSelector } from "@/lib/hooks";
-import { useRouter, useSearchParams } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
   getAddress,
   makeDefaultAddress,
@@ -43,6 +43,7 @@ interface BuyerData {
 export default function BuyerProfile() {
   const dispatch = useAppDispatch();
   const router = useRouter();
+  const pathname = usePathname();
   const searchParams = useSearchParams();
   const [activeTab, setActiveTab] = useState("profile");
   const [showModal, setShowModal] = useState(false);
@@ -237,15 +238,24 @@ export default function BuyerProfile() {
   //   if (isClient && !buyer) router.replace("/");
   // }, [isClient, buyer, router]);
 
-  useEffect(() => {
-    if (isClient && !buyer && activeTab === "order") {
-      const fullPath = window.location.pathname + window.location.search;
-      console.log("path", fullPath);
-      localStorage.setItem("redirectAfterLogin", fullPath);
+  // useEffect(() => {
+  //   if (
+  //     isClient &&
+  //     !buyer &&
+  //     activeTab === "order" &&
+  //     window.location.pathname === "/profile"
+  //   ) {
+  //     const fullPath = window.location.pathname + window.location.search;
 
-      window.dispatchEvent(new Event("openLoginModal"));
-    }
-  }, [isClient, buyer, activeTab]);
+  //     localStorage.setItem("redirectAfterLogin", fullPath);
+
+  //     router.replace("/");
+
+  //     setTimeout(() => {
+  //       window.dispatchEvent(new Event("openLoginModal"));
+  //     }, 300);
+  //   }
+  // }, [isClient, buyer, activeTab]);
 
   // Tab from URL
   useEffect(() => {
@@ -306,7 +316,37 @@ export default function BuyerProfile() {
     }
   };
 
-  if (!isClient || !buyer) return null;
+  const tab = searchParams.get("tab");
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const isLogout =
+      localStorage.getItem("justLoggedOut") === "true" ||
+      sessionStorage.getItem("justLoggedOut") === "true";
+
+    if (isLogout) {
+      localStorage.removeItem("justLoggedOut");
+      sessionStorage.removeItem("justLoggedOut");
+      return;
+    }
+
+    if (!buyer && pathname === "/profile" && tab === "order") {
+      const fullPath = `${pathname}?tab=order`;
+
+      localStorage.setItem("redirectAfterLogin", fullPath);
+      localStorage.setItem("shouldOpenLogin", "true");
+
+      router.replace("/");
+    }
+  }, [buyer, pathname, tab]); // ✅ FIXED
+
+  // UI BLOCK (sahi hai)
+  if (!buyer && pathname === "/profile" && tab === "order") {
+    return null;
+  }
+
+  if (!isClient) return null;
 
   return (
     <>
@@ -341,7 +381,7 @@ export default function BuyerProfile() {
                       backgroundPosition: "center",
                     }}
                   ></div>
-                  <h4 className="fw-bold mb-1">Welcome, {buyer.name} 👋</h4>
+                  <h4 className="fw-bold mb-1"> {buyer?.name || "Guest"} 👋</h4>
                   <p className="mb-0 opacity-75">Your personal dashboard</p>
                 </div>
 
@@ -394,7 +434,7 @@ export default function BuyerProfile() {
                           <label className="text-muted d-block">
                             Patient Name
                           </label>
-                          <strong>{buyer.name}</strong>
+                          <strong>{buyer?.name || "Guest"}</strong>
                         </div>
                       </div>
                       <div className="mb-3 d-flex align-items-center">
@@ -409,7 +449,7 @@ export default function BuyerProfile() {
                           <label className="text-muted d-block">
                             Mobile Number
                           </label>
-                          <strong>{buyer.number}</strong>
+                          <strong>{buyer?.number || "-"}</strong>
                         </div>
                       </div>
                       <div className="mb-3 d-flex align-items-center">
@@ -424,7 +464,7 @@ export default function BuyerProfile() {
                           <label className="text-muted d-block">
                             Primary Email address
                           </label>
-                          <strong>{buyer.email}</strong>
+                          <strong>{buyer?.email || "--est"}</strong>
                         </div>
                       </div>
                     </div>

@@ -128,9 +128,14 @@ export default function BuyerLoginModal({
       resetForm();
 
       // Redirect after login
-      const redirectPath = localStorage.getItem("redirectAfterLogin") || "/";
-      localStorage.removeItem("redirectAfterLogin");
-      router.push(redirectPath);
+      const redirectPath = localStorage.getItem("redirectAfterLogin");
+
+      if (redirectPath) {
+        localStorage.removeItem("redirectAfterLogin");
+        router.push(redirectPath);
+      } else {
+        // redirect user current page
+      }
     } catch (err: unknown) {
       if (typeof err === "string") setError(err);
       else if (err instanceof Error) setError(err.message);
@@ -150,11 +155,11 @@ export default function BuyerLoginModal({
     dispatch(resetBuyerState());
   };
 
-  useEffect(() => {
-    if (show && !localStorage.getItem("redirectAfterLogin")) {
-      localStorage.setItem("redirectAfterLogin", pathname);
-    }
-  }, [show, pathname]);
+  // useEffect(() => {
+  //   if (show && !localStorage.getItem("redirectAfterLogin")) {
+  //     localStorage.setItem("redirectAfterLogin", pathname);
+  //   }
+  // }, [show, pathname]);
 
   // useEffect(() => {
   //   if (show) localStorage.setItem("redirectAfterLogin", pathname);

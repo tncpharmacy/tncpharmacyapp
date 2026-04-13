@@ -189,13 +189,14 @@ const SiteHeader = () => {
   }, [highlightIndex]);
 
   useEffect(() => {
-    const openLogin = () => setShowBuyerLogin(true);
+    const shouldOpen = localStorage.getItem("shouldOpenLogin");
 
-    window.addEventListener("openLoginModal", openLogin);
-
-    return () => {
-      window.removeEventListener("openLoginModal", openLogin);
-    };
+    if (shouldOpen === "true") {
+      setTimeout(() => {
+        setShowBuyerLogin(true);
+        localStorage.removeItem("shouldOpenLogin");
+      }, 300);
+    }
   }, []);
 
   useEffect(() => {
@@ -241,14 +242,30 @@ const SiteHeader = () => {
   // ---------- LOGOUT ----------
   // const handleLogout = () => dispatch(buyerLogout());
 
+  // const handleLogout = () => {
+  //   dispatch(buyerLogout());
+  //   dispatch(clearLocalHealthBag());
+
+  //   // 🔥 FORCE RESET HOOK STATE
+  //   setTimeout(() => {
+  //     window.dispatchEvent(new Event("storage"));
+  //   }, 0);
+  // };
+
   const handleLogout = () => {
     dispatch(buyerLogout());
     dispatch(clearLocalHealthBag());
 
-    // 🔥 FORCE RESET HOOK STATE
-    setTimeout(() => {
-      window.dispatchEvent(new Event("storage"));
-    }, 0);
+    // 🔥 BLOCK PROFILE LOGIC COMPLETELY
+    localStorage.setItem("justLoggedOut", "true");
+    sessionStorage.setItem("justLoggedOut", "true");
+
+    // 🔥 CLEAN EVERYTHING
+    localStorage.removeItem("redirectAfterLogin");
+    localStorage.removeItem("shouldOpenLogin");
+    localStorage.removeItem("loginModalOpened");
+
+    router.replace("/");
   };
   const handleProductSelect = (item: Medicine) => {
     setShowList(false);
@@ -611,7 +628,9 @@ const SiteHeader = () => {
                           />
                           <button
                             className="btn1"
-                            onClick={() => setShowBuyerLogin(true)}
+                            onClick={() => {
+                              setShowBuyerLogin(true);
+                            }}
                           >
                             Patient Login
                           </button>
