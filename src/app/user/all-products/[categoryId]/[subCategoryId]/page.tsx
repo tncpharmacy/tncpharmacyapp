@@ -509,10 +509,6 @@ export default function AllProducts() {
                       hasPrev={page > 1}
                       onPageChange={(newPage) => {
                         setPageLoading(true);
-
-                        // ❌ REMOVE THIS
-                        // dispatch(resetMedicinesList());
-
                         if (newPage > page && nextUrl) {
                           setPrevStack((prev) => [...prev, currentUrl || ""]);
                           setCurrentUrl(nextUrl);

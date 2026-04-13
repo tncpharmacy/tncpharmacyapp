@@ -569,13 +569,12 @@ export default function HealthBags() {
   };
 
   const handleFinalContinue = () => {
-    checkoutData();
-
-    // optionally save prescription
-    if (prescriptionFile) {
-      console.log("Uploaded file:", prescriptionFile);
+    if (!prescriptionFile) {
+      toast.error("Please upload prescription to continue!");
+      return;
     }
-
+    checkoutData();
+    console.log("Uploaded file:", prescriptionFile);
     setShowPrescriptionModal(false);
     router.push("/checkout");
   };
@@ -699,7 +698,9 @@ export default function HealthBags() {
                               onClick={() => handleItemSelect(item)}
                               style={{ cursor: "pointer" }}
                             >
-                              <h6 className="fw-semibold mb-1">{item.name}</h6>
+                              <h6 className="fw-semibold pd-title mb-1">
+                                {item.name}
+                              </h6>
 
                               <p className="mb-1 small pd-title">
                                 {item.pack_size}
@@ -816,6 +817,12 @@ export default function HealthBags() {
                   <div className="d-flex justify-content-between mb-2 small text-success fw-semibold">
                     <span>Discount</span>
                     <span>- ₹{formattedTotalDiscount}</span>
+                  </div>
+
+                  {/* Total Price */}
+                  <div className="d-flex justify-content-between mb-2 small text-success fw-semibold">
+                    <span>Total Price</span>
+                    <span>₹{formatPrice(grandTotal)}</span>
                   </div>
 
                   {/* 🚚 Delivery Fee */}

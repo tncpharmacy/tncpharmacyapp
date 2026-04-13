@@ -151,8 +151,14 @@ export default function BuyerLoginModal({
   };
 
   useEffect(() => {
-    if (show) localStorage.setItem("redirectAfterLogin", pathname);
+    if (show && !localStorage.getItem("redirectAfterLogin")) {
+      localStorage.setItem("redirectAfterLogin", pathname);
+    }
   }, [show, pathname]);
+
+  // useEffect(() => {
+  //   if (show) localStorage.setItem("redirectAfterLogin", pathname);
+  // }, [show, pathname]);
 
   return (
     <>

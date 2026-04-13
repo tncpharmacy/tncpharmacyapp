@@ -79,7 +79,15 @@ const AddressBar: React.FC<AddressBarProps> = ({ address }) => {
       </div>
 
       <Link href="/address" className="btn btn-outline-primary btn-sm">
-        Change
+        {address ? (
+          <>
+            <i className="bi bi-pencil me-1"></i> Change Address
+          </>
+        ) : (
+          <>
+            <i className="bi bi-plus-lg me-1"></i> Add Address
+          </>
+        )}
       </Link>
     </div>
   );

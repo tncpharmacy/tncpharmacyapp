@@ -188,9 +188,15 @@ const SiteHeader = () => {
     }
   }, [highlightIndex]);
 
-  // useEffect(() => {
-  //   console.log("🧮 Updated count from items:", items.length);
-  // }, [items]);
+  useEffect(() => {
+    const openLogin = () => setShowBuyerLogin(true);
+
+    window.addEventListener("openLoginModal", openLogin);
+
+    return () => {
+      window.removeEventListener("openLoginModal", openLogin);
+    };
+  }, []);
 
   useEffect(() => {
     if (!mounted) return;

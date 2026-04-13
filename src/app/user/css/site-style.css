@@ -1090,3 +1090,9 @@ footer .border-top {
     display: block;
   }
 }
+
+@media (max-width: 767px) {
+  .pd-title {
+    max-width: 186px;
+  }
+}

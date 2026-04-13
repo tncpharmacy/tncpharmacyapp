@@ -233,9 +233,19 @@ export default function BuyerProfile() {
   useEffect(() => setIsClient(true), []);
 
   // Redirect if not logged in
+  // useEffect(() => {
+  //   if (isClient && !buyer) router.replace("/");
+  // }, [isClient, buyer, router]);
+
   useEffect(() => {
-    if (isClient && !buyer) router.replace("/");
-  }, [isClient, buyer, router]);
+    if (isClient && !buyer && activeTab === "order") {
+      const fullPath = window.location.pathname + window.location.search;
+      console.log("path", fullPath);
+      localStorage.setItem("redirectAfterLogin", fullPath);
+
+      window.dispatchEvent(new Event("openLoginModal"));
+    }
+  }, [isClient, buyer, activeTab]);
 
   // Tab from URL
   useEffect(() => {
