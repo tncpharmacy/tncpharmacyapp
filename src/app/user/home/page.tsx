@@ -116,6 +116,15 @@ export default function HomePage() {
     return () => window.removeEventListener("resize", checkScreen);
   }, []);
 
+  // for whatsapp qr mobile view
+  const WHATSAPP_NUMBER = "918062521280";
+  const [isTouchDevice, setIsTouchDevice] = useState(false);
+
+  useEffect(() => {
+    const checkTouch = "ontouchstart" in window || navigator.maxTouchPoints > 0;
+    setIsTouchDevice(checkTouch);
+  }, []);
+
   const CARE_GROUP_ICONS: Record<string, string> = {
     "Diabetic Care": "images/icons/icon-diabetes-care.svg",
     "Stomach Care": "images/icons/icon-stomach-care.svg",
@@ -1188,12 +1197,30 @@ export default function HomePage() {
                   aria-label="Close"
                 />
                 <img src="images/logo.png" className="clogo" alt="logo" />
-                <img
-                  src="images/qr-code-whatsapp.svg"
-                  className="w-100"
-                  alt="QR code to upload via WhatsApp"
-                />
-                <span className="hint">Scan to Upload</span>
+                {isTouchDevice ? (
+                  <a
+                    href="https://api.whatsapp.com/send?phone=918062521280"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{ display: "block" }}
+                  >
+                    <img
+                      src="images/qr-code-whatsapp.svg"
+                      className="w-100"
+                      alt="QR code to upload via WhatsApp"
+                      style={{ cursor: "pointer" }}
+                    />
+                  </a>
+                ) : (
+                  <img
+                    src="images/qr-code-whatsapp.svg"
+                    className="w-100"
+                    alt="QR code to upload via WhatsApp"
+                  />
+                )}
+                <span className="hint">
+                  {isTouchDevice ? "Tap to Upload" : "Scan to Upload"}
+                </span>
               </div>
             </div>
           </Collapse>
