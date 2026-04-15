@@ -27,7 +27,7 @@ import {
 } from "@/lib/features/healthBagBuyerByPharmacistSlice/healthBagBuyerByPharmacistSlice";
 import { BuyerData } from "@/types/buyer";
 import DoseInstructionSelect from "@/app/components/Input/DoseInstructionSelect";
-import { formatAmount } from "@/lib/utils/formatAmount";
+import { formatPrice } from "@/lib/utils/formatPrice";
 import {
   createProductDuration,
   getProductDurations,
@@ -36,7 +36,7 @@ import {
   createProductInstruction,
   getProductInstructions,
 } from "@/lib/features/productInstructionSlice/productInstructionSlice";
-import SmartCreateInput from "@/app/components/RetailCounterModal/SmartCreateInput";
+import SmartCreateInputWithoutLabel from "@/app/components/RetailCounterModal/SmartCreateInputWithoutLabel";
 const mediaBase = process.env.NEXT_PUBLIC_MEDIA_BASE_URL;
 type Buyer = {
   id: number;
@@ -493,8 +493,32 @@ export default function OrderList() {
                   {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                   {modalItems?.map((item: any, index: number) => (
                     <tr key={item.id}>
-                      <td className="text-start">{item.productname ?? ""}</td>
+                      <td className="text-start">
+                        <div
+                          style={{ display: "flex", flexDirection: "column" }}
+                        >
+                          <span
+                            style={{ fontWeight: 600 }}
+                            className="pd-title"
+                          >
+                            {item.productname}
+                          </span>
 
+                          <span
+                            style={{ fontSize: "12px", color: "#666" }}
+                            className="pd-title"
+                          >
+                            {item.pack_size || "N/A"}
+                          </span>
+
+                          <span
+                            style={{ fontSize: "12px", color: "#28a745" }}
+                            className="pd-title"
+                          >
+                            {item.manufacturer || "N/A"}
+                          </span>
+                        </div>
+                      </td>
                       {/* =================== QTY Editable =================== */}
                       <td className="text-start" style={{ width: "110px" }}>
                         <input
@@ -502,7 +526,7 @@ export default function OrderList() {
                             if (!el) return;
                             qtyRefs.current[index] = el;
                           }}
-                          type="text"
+                          type="number"
                           className="form-control"
                           style={{ padding: "4px 6px", height: "38px" }}
                           value={
@@ -553,73 +577,51 @@ export default function OrderList() {
                           }}
                         />
                       </td> */}
-                      <td
-                        style={{ maxWidth: "150px", verticalAlign: "middle" }}
-                      >
-                        <div
-                          style={{
-                            height: "38px",
-                            display: "flex",
-                            alignItems: "center",
-                            marginTop: "0px",
-                          }}
-                        >
-                          <SmartCreateInput
-                            label="" // table me label nahi chahiye
-                            placeholder=""
-                            value={item.instruction || ""}
-                            list={instructionList} // redux se aane wali list
-                            createAction={createProductInstruction}
-                            refreshAction={getProductInstructions}
-                            onChange={(val) => {
-                              // ✅ UI update
-                              setModalItems((prev) =>
-                                prev.map((x) =>
-                                  x.id === item.id
-                                    ? { ...x, instruction: val }
-                                    : x
-                                )
-                              );
+                      <td>
+                        <SmartCreateInputWithoutLabel
+                          label="" // table me label nahi chahiye
+                          placeholder=""
+                          value={item.instruction || ""}
+                          list={instructionList} // redux se aane wali list
+                          createAction={createProductInstruction}
+                          refreshAction={getProductInstructions}
+                          onChange={(val) => {
+                            // ✅ UI update
+                            setModalItems((prev) =>
+                              prev.map((x) =>
+                                x.id === item.id
+                                  ? { ...x, instruction: val }
+                                  : x
+                              )
+                            );
 
-                              // ✅ API update (same as before)
-                              saveField(item.id, "instruction", val);
-                            }}
-                          />
-                        </div>
+                            // ✅ API update (same as before)
+                            saveField(item.id, "instruction", val);
+                          }}
+                        />
                       </td>
 
                       {/* =================== DURATION Editable =================== */}
-                      <td
-                        style={{ maxWidth: "100px", verticalAlign: "middle" }}
-                      >
-                        <div
-                          style={{
-                            height: "38px",
-                            display: "flex",
-                            alignItems: "center",
-                            marginTop: "0px",
-                          }}
-                        >
-                          <SmartCreateInput
-                            label=""
-                            placeholder=""
-                            value={item.duration || ""}
-                            list={durationList}
-                            createAction={createProductDuration}
-                            refreshAction={getProductDurations}
-                            onChange={(val) => {
-                              // ✅ UI update
-                              setModalItems((prev) =>
-                                prev.map((x) =>
-                                  x.id === item.id ? { ...x, duration: val } : x
-                                )
-                              );
+                      <td>
+                        <SmartCreateInputWithoutLabel
+                          label=""
+                          placeholder=""
+                          value={item.duration || ""}
+                          list={durationList}
+                          createAction={createProductDuration}
+                          refreshAction={getProductDurations}
+                          onChange={(val) => {
+                            // ✅ UI update
+                            setModalItems((prev) =>
+                              prev.map((x) =>
+                                x.id === item.id ? { ...x, duration: val } : x
+                              )
+                            );
 
-                              // ✅ API update (same as before)
-                              saveField(item.id, "duration", val);
-                            }}
-                          />
-                        </div>
+                            // ✅ API update (same as before)
+                            saveField(item.id, "duration", val);
+                          }}
+                        />
                       </td>
 
                       {/* =================== MRP / UNIT =================== */}
@@ -627,7 +629,7 @@ export default function OrderList() {
                         <input
                           type="number"
                           className="form-control"
-                          value={formatAmount(Number(item.mrp || 0))}
+                          value={formatPrice(Number(item.mrp || 0))}
                           tabIndex={-1}
                           readOnly
                           style={{ width: "100px", backgroundColor: "#f5f5f5" }}
@@ -649,7 +651,7 @@ export default function OrderList() {
                         <input
                           type="number"
                           className="form-control"
-                          value={formatAmount(
+                          value={formatPrice(
                             Number(item.qty) * Number(item.mrp) -
                               (Number(item.qty) *
                                 Number(item.mrp) *

@@ -1,4 +1,4 @@
-import { formatAmount } from "@/lib/utils/formatAmount";
+import { formatPrice } from "@/lib/utils/formatPrice";
 import { Modal, Table, Button } from "react-bootstrap";
 import { FaTrash } from "react-icons/fa";
 import React, { useState } from "react";
@@ -14,16 +14,20 @@ import {
 } from "@/lib/features/productInstructionSlice/productInstructionSlice";
 import SmartCreateInput from "./SmartCreateInput";
 import TncLoader from "../TncLoader/TncLoader";
+import SmartCreateInputWithoutLabel from "./SmartCreateInputWithoutLabel";
 
 // -------------------- Types --------------------
 interface CartItem {
   medicine_name: string;
+  pack_size?: string;
+  manufacturer_name?: string;
   qty: number;
-  pack_size?: string | number;
   dose_form?: string;
   remarks?: string;
   duration?: string;
   price: number;
+  rate: number;
+  unitPrice: number;
   Disc?: number;
 }
 
@@ -101,9 +105,9 @@ const CartPreviewModal = ({
 
   const calculateSubtotal = (item: CartItem) => {
     const qty = Number(item.qty);
-    const price = Number(formatAmount(item.price));
+    const price = Number(formatPrice(item.price));
     const disc = Number(item.Disc ?? 0);
-
+    const rate = price - (price * disc) / 100;
     const total = qty * price;
     const discountAmt = (total * disc) / 100;
 
@@ -151,25 +155,55 @@ const CartPreviewModal = ({
             <Table bordered hover>
               <thead className="table-light">
                 <tr>
-                  <th>Medicine</th>
-                  <th>Qty</th>
-                  <th>Doses</th>
-                  <th>Instruction</th>
-                  <th>Duration</th>
-                  <th>MRP</th>
-                  <th>Discount (%)</th>
-                  <th>Subtotal</th>
-                  <th>Remove</th>
+                  <th style={{ width: "350px" }}>Medicine</th>
+                  <th style={{ width: "80px", textAlign: "center" }}>Qty</th>
+                  <th style={{ width: "110px", textAlign: "center" }}>Doses</th>
+                  <th style={{ width: "180px" }}>Instruction</th>
+                  <th style={{ width: "120px" }}>Duration</th>
+                  <th style={{ width: "90px" }}>MRP (₹)</th>
+                  <th style={{ width: "90px" }}>Disc (%)</th>
+                  <th style={{ width: "90px" }}>Rate</th>
+                  <th style={{ width: "110px" }}>Subtotal (₹)</th>
+                  <th style={{ width: "60px" }}></th>
                 </tr>
               </thead>
 
               <tbody>
                 {cart.map((item, idx) => {
-                  const subtotal = calculateSubtotal(item);
+                  // const subtotal = calculateSubtotal(item);
+                  const mrp = Number(item.unitPrice);
+                  const disc = Number(item.Disc ?? 0);
 
+                  const rate = mrp - (mrp * disc) / 100;
+                  const subtotal = rate * item.qty;
                   return (
                     <tr key={idx}>
-                      <td>{item.medicine_name}</td>
+                      <td>
+                        <div
+                          style={{ display: "flex", flexDirection: "column" }}
+                        >
+                          <span
+                            style={{ fontWeight: 600 }}
+                            className="pd-title"
+                          >
+                            {item.medicine_name}
+                          </span>
+
+                          <span
+                            style={{ fontSize: "12px", color: "#666" }}
+                            className="pd-title"
+                          >
+                            {item.pack_size || "N/A"}
+                          </span>
+
+                          <span
+                            style={{ fontSize: "12px", color: "#28a745" }}
+                            className="pd-title"
+                          >
+                            {item.manufacturer_name || "N/A"}
+                          </span>
+                        </div>
+                      </td>
 
                       {/* Editable Qty */}
                       <td
@@ -207,66 +241,44 @@ const CartPreviewModal = ({
                       </td>
 
                       {/* Editable Instruction */}
-                      <td
-                        style={{ maxWidth: "160px", verticalAlign: "middle" }}
-                      >
-                        <div
-                          style={{
-                            height: "38px",
-                            display: "flex",
-                            alignItems: "center",
-                            marginTop: "-11px",
+                      <td>
+                        <SmartCreateInputWithoutLabel
+                          label=""
+                          value={item.remarks ?? ""}
+                          list={instructionList}
+                          createAction={createProductInstruction}
+                          refreshAction={getProductInstructions}
+                          placeholder=""
+                          onChange={(val) => {
+                            if (val.length <= 50) {
+                              handleEditChange(idx, "remarks", val);
+                            }
                           }}
-                        >
-                          <SmartCreateInput
-                            label=""
-                            value={item.remarks ?? ""}
-                            list={instructionList}
-                            createAction={createProductInstruction}
-                            refreshAction={getProductInstructions}
-                            placeholder=""
-                            onChange={(val) => {
-                              if (val.length <= 50) {
-                                handleEditChange(idx, "remarks", val);
-                              }
-                            }}
-                          />
-                        </div>
+                        />
                       </td>
 
                       {/* Editable Duration */}
-                      <td
-                        style={{ maxWidth: "120px", verticalAlign: "middle" }}
-                      >
-                        <div
-                          style={{
-                            height: "38px",
-                            display: "flex",
-                            alignItems: "center",
-                            marginTop: "-11px",
+                      <td>
+                        <SmartCreateInputWithoutLabel
+                          label=""
+                          value={item.duration ?? ""}
+                          list={durationList}
+                          createAction={createProductDuration}
+                          refreshAction={getProductDurations}
+                          placeholder=""
+                          onChange={(val) => {
+                            if (val.length <= 10) {
+                              handleEditChange(idx, "duration", val);
+                            }
                           }}
-                        >
-                          <SmartCreateInput
-                            label=""
-                            value={item.duration ?? ""}
-                            list={durationList}
-                            createAction={createProductDuration}
-                            refreshAction={getProductDurations}
-                            placeholder=""
-                            onChange={(val) => {
-                              if (val.length <= 10) {
-                                handleEditChange(idx, "duration", val);
-                              }
-                            }}
-                          />
-                        </div>
+                        />
                       </td>
 
                       <td>
                         <input
                           type="text"
                           className="form-control"
-                          value={`₹${formatAmount(item.price)}`}
+                          value={`₹${formatPrice(item.price)}`}
                           tabIndex={-1}
                           readOnly
                           style={{ width: "90px", backgroundColor: "#f5f5f5" }}
@@ -300,7 +312,18 @@ const CartPreviewModal = ({
                         <input
                           type="text"
                           className="form-control"
-                          value={`₹${formatAmount(subtotal)}`}
+                          value={`₹${formatPrice(rate)}`}
+                          tabIndex={-1}
+                          readOnly
+                          style={{ width: "100px", backgroundColor: "#f5f5f5" }}
+                        />
+                      </td>
+
+                      <td>
+                        <input
+                          type="text"
+                          className="form-control"
+                          value={`₹${formatPrice(subtotal)}`}
                           tabIndex={-1}
                           readOnly
                           style={{ width: "100px", backgroundColor: "#f5f5f5" }}
@@ -334,7 +357,7 @@ const CartPreviewModal = ({
                 }}
               >
                 <h6 className="fw-bold mb-2" style={{ color: "red" }}>
-                  Total: ₹{formatAmount(total)}
+                  Total: ₹{formatPrice(total)}
                 </h6>
 
                 <div
@@ -363,7 +386,7 @@ const CartPreviewModal = ({
                 </div>
 
                 <h5 className="fw-bold text-primary mb-1">
-                  Grand Total: ₹{formatAmount(finalAmount)}
+                  Grand Total: ₹{formatPrice(finalAmount)}
                 </h5>
               </div>
             </div>

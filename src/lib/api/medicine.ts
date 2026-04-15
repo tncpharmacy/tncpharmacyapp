@@ -208,6 +208,18 @@ export const fetchMedicineSuggestion = async (
 };
 
 // =========================
+// SEARCH PRODUCT BASED
+// =========================
+export const fetchMedicineProductBased = async (
+  query: string
+): Promise<MedicineResponse> => {
+  const res = await axiosInstance.get<MedicineResponse>(
+    ENDPOINTS.MEDICINES.SEARCH_PRODUCT_BASED(query)
+  );
+  return res.data;
+};
+
+// =========================
 //  GET MEDICINE VIEW BY ID
 // =========================
 export const fetchMedicinesViewById = async (

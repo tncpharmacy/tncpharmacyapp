@@ -811,3 +811,16 @@ body {
   background-color: #e6f0ff;
   color: #0d6efd;
 }
+
+.pd-title {
+    font-size: 14px;
+    font-weight: 500;
+    /* color: #333; */
+    margin-bottom: 0px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: block;
+    width: 100%;
+    max-width: 200px;
+}

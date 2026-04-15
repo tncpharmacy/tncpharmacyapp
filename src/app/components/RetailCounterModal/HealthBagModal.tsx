@@ -3,7 +3,7 @@ import React from "react";
 import { Modal, Button, Table } from "react-bootstrap";
 import { FaTrash } from "react-icons/fa";
 import DoseInstructionSelect from "../Input/DoseInstructionSelect";
-import { formatAmount } from "@/lib/utils/formatAmount";
+import { formatPrice } from "@/lib/utils/formatPrice";
 import { useAppDispatch, useAppSelector } from "@/lib/hooks";
 import {
   createProductDuration,
@@ -15,6 +15,7 @@ import {
 } from "@/lib/features/productInstructionSlice/productInstructionSlice";
 import SmartCreateInput from "./SmartCreateInput";
 import TncLoader from "../TncLoader/TncLoader";
+import SmartCreateInputWithoutLabel from "./SmartCreateInputWithoutLabel";
 
 interface HealthBagModalProps {
   isOpen: boolean;
@@ -125,37 +126,95 @@ const HealthBagModal: React.FC<HealthBagModalProps> = ({
           <Table bordered hover responsive>
             <thead>
               <tr>
-                <th>Medicine Name</th>
-                <th>Qty</th>
-                <th>Doses</th>
-                <th>Instruction</th>
-                <th>Duration</th>
-                <th>MRP/Unit</th>
-                <th>Total Price</th>
-                <th></th>
+                <th style={{ width: "260px" }}>Medicine</th>
+                <th style={{ width: "80px", textAlign: "center" }}>Qty</th>
+                <th style={{ width: "110px", textAlign: "center" }}>Doses</th>
+                <th style={{ width: "180px" }}>Instruction</th>
+                <th style={{ width: "120px" }}>Duration</th>
+                <th style={{ width: "90px" }}>MRP (₹)</th>
+                <th style={{ width: "90px" }}>Disc (%)</th>
+                <th style={{ width: "90px" }}>Rate</th>
+                <th style={{ width: "110px" }}>Subtotal (₹)</th>
+                <th style={{ width: "60px" }}></th>
               </tr>
             </thead>
 
             <tbody>
               {localCart.map((item, index) => {
                 const { unitPrice = 0, price = 0 } = item;
+                const mrp = Number(item.unitPrice) || 0;
+                const disc = Number(item.Disc) || 0;
+                const qty = Number(item.qty) || 0;
 
+                const rate = mrp - (mrp * disc) / 100;
+                const subtotal = rate * qty;
+                const inputStyle = {
+                  height: "38px",
+                  fontSize: "14px",
+                };
                 return (
                   <tr key={index}>
-                    <td>{item.medicine_name}</td>
+                    <td style={{ width: "250px" }}>
+                      {/* Medicine */}
+                      <div
+                        style={{
+                          display: "flex",
+                          flexDirection: "column",
+                          overflow: "hidden",
+                        }}
+                      >
+                        <span
+                          style={{
+                            fontWeight: 600,
+                            fontSize: "14px",
+                            lineHeight: "18px",
+                            display: "-webkit-box",
+                            WebkitLineClamp: 2, // 👈 max 2 line
+                            WebkitBoxOrient: "vertical",
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                          }}
+                          className="pd-title"
+                        >
+                          {item.medicine_name}
+                        </span>
+
+                        <span
+                          style={{
+                            fontSize: "12px",
+                            color: "#666",
+                            marginTop: "2px",
+                            whiteSpace: "nowrap",
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                          }}
+                          className="pd-title"
+                        >
+                          {item.pack_size || "N/A"}
+                        </span>
+
+                        <span
+                          style={{
+                            fontSize: "12px",
+                            color: "#28a745",
+                            marginTop: "2px",
+                          }}
+                          className="pd-title"
+                        >
+                          {item.manufacturer_name || item.manufacturer || "N/A"}
+                        </span>
+                      </div>
+                    </td>
 
                     {/* Qty - DIRECT INPUT */}
                     <td>
                       <input
-                        type="text"
+                        type="number"
                         className="form-control"
                         value={String(item.qty)}
                         maxLength={2}
                         onChange={(e) => {
                           const v = e.target.value;
-
-                          // ❌ Allow empty field (so user can remove 0)
-                          // ❌ Allow only digits
                           if (/^\d*$/.test(v)) {
                             handleUpdate(index, "qty", v === "" ? "" : v);
                           }
@@ -187,13 +246,8 @@ const HealthBagModal: React.FC<HealthBagModalProps> = ({
                     </td>
 
                     {/* Instruction - DIRECT INPUT */}
-                    <td
-                      style={{
-                        maxWidth: "160px",
-                        position: "relative", // 🔥 IMPORTANT for dropdown
-                      }}
-                    >
-                      <SmartCreateInput
+                    <td>
+                      <SmartCreateInputWithoutLabel
                         label=""
                         value={item.remarks || ""}
                         placeholder=""
@@ -207,13 +261,8 @@ const HealthBagModal: React.FC<HealthBagModalProps> = ({
                     </td>
 
                     {/* Duration - DIRECT INPUT */}
-                    <td
-                      style={{
-                        maxWidth: "120px",
-                        position: "relative", // 🔥 IMPORTANT
-                      }}
-                    >
-                      <SmartCreateInput
+                    <td>
+                      <SmartCreateInputWithoutLabel
                         label=""
                         value={item.duration || ""}
                         placeholder=""
@@ -225,9 +274,91 @@ const HealthBagModal: React.FC<HealthBagModalProps> = ({
                         }}
                       />
                     </td>
+                    {/* Price Mrp */}
+                    <td
+                      style={{
+                        textAlign: "center",
+                        width: "80px",
+                        // backgroundColor: "#f5f5f5",
+                      }}
+                    >
+                      <input
+                        type="text"
+                        className="form-control"
+                        value={formatPrice(item.unitPrice)}
+                        readOnly
+                        tabIndex={-1}
+                        style={{
+                          ...inputStyle,
+                          width: "80px",
+                          backgroundColor: "#f5f5f5",
+                        }}
+                      />
+                    </td>
+                    {/* Editable Discount */}
+                    <td style={{ textAlign: "center", width: "70px" }}>
+                      <input
+                        type="number"
+                        className="form-control"
+                        value={item.Disc ?? 0}
+                        max={99}
+                        min={0}
+                        // onChange={(e) =>
+                        //   handleEditChange(idx, "Disc", e.target.value)
+                        // }
+                        style={{ ...inputStyle, width: "80px" }}
+                        onChange={(e) => {
+                          const val = e.target.value;
 
-                    <td>₹{formatAmount(unitPrice)}</td>
-                    <td>₹{formatAmount(price)}</td>
+                          // ❗ Allow only digits and maxLength = 2
+                          if (val.length <= 2) {
+                            handleUpdate(index, "Disc", val);
+                          }
+                        }}
+                      />
+                    </td>
+
+                    {/* Rate */}
+                    <td
+                      style={{
+                        textAlign: "center",
+                        width: "90px",
+                      }}
+                    >
+                      <input
+                        type="text"
+                        className="form-control"
+                        value={formatPrice(rate)}
+                        readOnly
+                        tabIndex={-1}
+                        style={{
+                          ...inputStyle,
+                          width: "80px",
+                          backgroundColor: "#f5f5f5",
+                        }}
+                      />
+                    </td>
+
+                    {/* SubTotal */}
+                    <td
+                      style={{
+                        textAlign: "center",
+                        width: "90px",
+                      }}
+                    >
+                      <input
+                        type="text"
+                        className="form-control"
+                        value={formatPrice(subtotal)}
+                        readOnly
+                        tabIndex={-1}
+                        style={{
+                          ...inputStyle,
+                          width: "80px",
+                          backgroundColor: "#f5f5f5",
+                        }}
+                      />
+                    </td>
 
                     <td>
                       <Button

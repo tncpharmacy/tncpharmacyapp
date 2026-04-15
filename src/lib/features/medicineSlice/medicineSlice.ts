@@ -22,6 +22,7 @@ import {
   updateMedicine,
   fetchMedicinesEditById,
   fetchMedicineByManufacturerId,
+  fetchMedicineProductBased,
 } from "@/lib/api/medicine";
 import {
   CareGroup,
@@ -50,6 +51,7 @@ interface MedicineState {
   count: number;
   loading: boolean;
   searchLoading: boolean;
+  searchProductLoading: boolean;
   error: string | null;
   byCategory: Record<number, Medicine[]>;
   byCategorySubcategory: {
@@ -58,6 +60,7 @@ interface MedicineState {
   selectedMedicine: Medicine | null;
   searchResults: Medicine[];
   suggestions: Medicine[];
+  searchProductBased: Medicine[];
   next: string | null;
   currentKey: string;
 }
@@ -77,12 +80,14 @@ const initialState: MedicineState = {
   count: 0,
   loading: false,
   searchLoading: false,
+  searchProductLoading: false,
   error: null,
   byCategory: {},
   byCategorySubcategory: {},
   selectedMedicine: null,
   searchResults: [],
   suggestions: [],
+  searchProductBased: [],
   next: null,
   currentKey: "",
 };
@@ -365,6 +370,21 @@ export const getSearchSuggestions = createAsyncThunk<
 >("medicine/suggestion", async (query, { rejectWithValue }) => {
   try {
     const res = await fetchMedicineSuggestion(query);
+    return res;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } catch (err: any) {
+    return rejectWithValue(err.message || "Suggestion fetch failed");
+  }
+});
+
+// Search product based
+export const getSearchProductBased = createAsyncThunk<
+  MedicineResponse,
+  string,
+  { rejectValue: string }
+>("medicine/searchProductBased", async (query, { rejectWithValue }) => {
+  try {
+    const res = await fetchMedicineProductBased(query);
     return res;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (err: any) {
@@ -779,6 +799,20 @@ const medicineSlice = createSlice({
       })
       .addCase(getSearchSuggestions.rejected, (state, action) => {
         state.searchLoading = false;
+        state.error = action.payload || "Suggestion fetch failed";
+      })
+
+      // Search Product Based
+      .addCase(getSearchProductBased.pending, (state) => {
+        state.searchProductLoading = true;
+      })
+      .addCase(getSearchProductBased.fulfilled, (state, action) => {
+        state.searchProductLoading = false;
+        state.searchProductBased = action.payload.data;
+        state.error = null;
+      })
+      .addCase(getSearchProductBased.rejected, (state, action) => {
+        state.searchProductLoading = false;
         state.error = action.payload || "Suggestion fetch failed";
       })
 

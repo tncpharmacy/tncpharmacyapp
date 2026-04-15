@@ -5,7 +5,7 @@ import { useAppDispatch, useAppSelector } from "@/lib/hooks";
 import { encodeId } from "@/lib/utils/encodeDecode";
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 const Footer = () => {
   const dispatch = useAppDispatch();
@@ -14,11 +14,17 @@ const Footer = () => {
     ...categories.filter((cat) => cat.category_name === "Medicines"),
     ...categories.filter((cat) => cat.category_name !== "Medicines"),
   ];
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    setIsMobile(checkMobile);
+  }, []);
 
   useEffect(() => {
     dispatch(getCategoriesList());
   }, [dispatch]);
-
+  const WHATSAPP_NUMBER = "918062521280";
   return (
     <footer>
       {/* ======= Top Section ======= */}
@@ -267,13 +273,29 @@ const Footer = () => {
                 width={80}
                 height={40}
               />
-              <Image
-                src="/Content/Images/qr-code.jpg"
-                className="w-100"
-                alt="QR Code"
-                width={120}
-                height={120}
-              />
+              {isMobile ? (
+                <a
+                  href={`https://wa.me/${WHATSAPP_NUMBER}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <Image
+                    src="/Content/Images/qr-code.jpg"
+                    className="w-100"
+                    alt="QR Code"
+                    width={120}
+                    height={120}
+                  />
+                </a>
+              ) : (
+                <Image
+                  src="/Content/Images/qr-code.jpg"
+                  className="w-100"
+                  alt="QR Code"
+                  width={120}
+                  height={120}
+                />
+              )}
               <span className="hint">Scan to Download App</span>
             </div>
           </div>

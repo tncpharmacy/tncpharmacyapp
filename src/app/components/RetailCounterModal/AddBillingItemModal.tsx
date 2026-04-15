@@ -21,7 +21,7 @@ interface AddBillingItemModalProps {
   isOpen: boolean;
   onClose: () => void;
   item: Medicine | null; // Selected item
-  onBack: () => void;
+  onBack?: () => void;
   onConfirmAdd: (
     item: Medicine,
     qty: number,
@@ -202,21 +202,24 @@ const AddBillingItemModal: React.FC<AddBillingItemModalProps> = ({
             <div className="modal-content">
               <div className="modal-header">
                 {/* ✅ Back Button Icon */}
-                <button
-                  type="button"
-                  className="btn btn-light btn-sm me-2"
-                  onClick={onBack}
-                  style={{
-                    border: "none",
-                    padding: "0",
-                    background: "transparent",
-                  }}
-                >
-                  <i
-                    className="bi bi-arrow-left-circle"
-                    style={{ fontSize: "1.5rem", color: "#007bff" }}
-                  ></i>
-                </button>
+                {onBack && (
+                  <button
+                    type="button"
+                    className="btn btn-light btn-sm me-2"
+                    onClick={onBack}
+                    disabled={!onBack}
+                    style={{
+                      border: "none",
+                      padding: "0",
+                      background: "transparent",
+                    }}
+                  >
+                    <i
+                      className="bi bi-arrow-left-circle"
+                      style={{ fontSize: "1.5rem", color: "#007bff" }}
+                    ></i>
+                  </button>
+                )}
                 <h6 className="modal-title">
                   Product Item:- {item.medicine_name}
                 </h6>

@@ -31,6 +31,7 @@ import BuyerLoginModal from "@/app/buyer-login/page";
 import { loadLocalHealthBag } from "@/lib/features/healthBagSlice/healthBagSlice";
 import { formatPrice } from "@/lib/utils/formatPrice";
 import ProductCardUI from "../components/MedicineCard/ProductCardUI";
+import { uploadPrescriptionFromBuyerCartThunk } from "@/lib/features/prescriptionSlice/prescriptionSlice";
 const mediaBase = process.env.NEXT_PUBLIC_MEDIA_BASE_URL;
 
 export interface Medicine {
@@ -568,16 +569,37 @@ export default function HealthBags() {
     setPrescriptionFile(file);
   };
 
-  const handleFinalContinue = () => {
+  const handleFinalContinue = async () => {
     if (!prescriptionFile) {
       toast.error("Please upload prescription to continue!");
       return;
     }
-    checkoutData();
-    console.log("Uploaded file:", prescriptionFile);
-    setShowPrescriptionModal(false);
-    router.push("/checkout");
+    const token = buyer?.tokens?.access;
+    if (!token) {
+      toast.error("!Login Required");
+      return;
+    }
+    try {
+      const formData = new FormData();
+      formData.append("prescription_pic", prescriptionFile);
+      const res = await dispatch(
+        uploadPrescriptionFromBuyerCartThunk({
+          formData,
+          token,
+        })
+      ).unwrap();
+      console.log("res", res);
+      toast.success("Prescription uploaded successfully!");
+      checkoutData();
+      setShowPrescriptionModal(false);
+      router.push("/checkout");
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (error: any) {
+      console.error(error);
+      toast.error(error || "Upload failed!");
+    }
   };
+
   const handleSelect = (product: Medicine) => {
     const actualId = product.product_id || product.productid || product.id; // ✅ safe ID fallback
 

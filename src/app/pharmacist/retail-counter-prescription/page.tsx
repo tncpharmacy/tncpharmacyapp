@@ -38,6 +38,7 @@ import {
 } from "@/lib/features/pharmacistBuyerListSlice/pharmacistBuyerListSlice";
 import TncLoader from "@/app/components/TncLoader/TncLoader";
 import GlobalSearchBox from "@/app/components/GlobalSearchBox/GlobalSearchBox";
+import GlobalProductSearchBox from "@/app/components/GlobalProductSearchBox/GlobalProductSearchBox";
 const PreviewBox = dynamic(() => import("./PreviewBox"), {
   ssr: false,
 });
@@ -51,6 +52,10 @@ interface MedicineWithCartFields extends Omit<Medicine, "Disc"> {
   duration: string;
   unitPrice: number;
   price: number;
+  rate: number;
+  mrp: number;
+  MRP: number;
+  subtotal: number;
   cartItemId: number;
   pack_size?: string;
   generic_name?: string;
@@ -119,6 +124,8 @@ export default function RetailCounter() {
   // ref for focus
   const healthBagRef = useRef<HTMLButtonElement | null>(null);
   const [isUploadFocused, setIsUploadFocused] = useState(false);
+
+  const [isFromGenericFlow, setIsFromGenericFlow] = useState(false);
 
   const {
     medicines: productList,
@@ -214,159 +221,159 @@ export default function RetailCounter() {
     dispatch(getProductList(null));
   }, [dispatch]);
 
-  // const handleSubmit = async (e?: React.FormEvent) => {
-  //   if (e) e.preventDefault();
-
-  //   if (submitLoading) return;
-
-  //   try {
-  //     if (!mobile || !customerName || !prescriptionFile) {
-  //       toast.error("Please fill all fields");
-  //       return;
-  //     }
-
-  //     setSubmitLoading(true);
-
-  //     let buyer_id: number | null = null;
-
-  //     const loginRes = await dispatch(
-  //       buyerLogin({ login_id: mobile })
-  //     ).unwrap();
-
-  //     if (loginRes?.data?.id) {
-  //       buyer_id = loginRes.data.id;
-  //       setBuyerId(buyer_id);
-  //       // ⭐ If buyer exists but UHID missing → update UHID
-  //       if (
-  //         (!loginRes.data.uhid || loginRes.data.uhid === "") &&
-  //         uhId.trim() !== ""
-  //       ) {
-  //         await dispatch(
-  //           updateBuyerForPharmacistThunk({
-  //             buyerId: buyer_id,
-  //             payload: { uhid: uhId },
-  //           })
-  //         ).unwrap();
-  //       }
-  //     }
-  //     if (!buyer_id) {
-  //       const registerPayload = {
-  //         name: customerName,
-  //         email: "",
-  //         number: mobile,
-  //         uhid: uhId,
-  //       };
-  //       const regRes = await dispatch(buyerRegister(registerPayload)).unwrap();
-  //       buyer_id = regRes?.data?.id;
-  //       setBuyerId(buyer_id);
-  //     }
-
-  //     if (!buyer_id) {
-  //       toast.error("Buyer ID missing");
-  //       return;
-  //     }
-
-  //     // The REAL CORRECT form-data
-  //     const formData = new FormData();
-  //     formData.append("buyer_id", String(buyer_id));
-  //     formData.append(
-  //       "prescription_pic",
-  //       prescriptionFile,
-  //       prescriptionFile.name
-  //     );
-
-  //     const uploadRes = await dispatch(
-  //       uploadPrescriptionPharmacistThunk({
-  //         pharmacistId: pharmacist_id,
-  //         payload: formData,
-  //       })
-  //     ).unwrap();
-
-  //     toast.success("Prescription uploaded!");
-
-  //     // 🔹 STEP 5: Build full image/PDF URL
-  //     const picPath =
-  //       uploadRes?.data?.prescription_pic || uploadRes?.prescription_pic || "";
-  //     const fullUrl = picPath.startsWith("http")
-  //       ? picPath
-  //       : mediaBase + picPath;
-  //     setUploadedUrl(fullUrl);
-  //     setShowForm(false);
-  //     // 🟢 Use backend OCR (medicines)
-  //     if (uploadRes?.product_list?.medicines) {
-  //       const meds: MatchedMedicine[] = uploadRes.product_list.medicines.map(
-  //         (m: OCRMedicine): MatchedMedicine => ({
-  //           id: m.product_id,
-  //           name: m.medicine_name,
-  //           category_id: m.category_id,
-  //         })
-  //       );
-
-  //       setMatchedMedicines(meds);
-  //     }
-
-  //     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  //   } catch (err: any) {
-  //     console.error("Upload Rejection Details:", err); // Log the full error object
-  //     console.error("FULL ERROR:", err);
-  //     console.error("PAYLOAD:", err?.payload);
-  //     console.error("PAYLOAD.MESSAGE:", err?.payload?.message);
-  //     // 💡 Thunk rejection payload is often nested in err.payload
-  //     const rejectMessage =
-  //       err?.payload?.message ||
-  //       err?.payload ||
-  //       err?.message ||
-  //       "Failed to upload prescription";
-  //     toast.error("Error: " + rejectMessage);
-  //   } finally {
-  //     setSubmitLoading(false);
-  //   }
-  // };
-
   const handleSubmit = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
 
     if (submitLoading) return;
 
     try {
-      // ✅ basic validation (file hata diya)
-      if (!mobile || !customerName) {
+      if (!mobile || !customerName || !prescriptionFile) {
         toast.error("Please fill all fields");
         return;
       }
 
       setSubmitLoading(true);
 
-      // 🟢 MOCK BUYER ID (optional)
-      const buyer_id = 1;
-      setBuyerId(buyer_id);
+      let buyer_id: number | null = null;
 
-      // 🟢 MOCK uploaded URL (preview ke liye)
-      setUploadedUrl(
-        "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf"
+      const loginRes = await dispatch(
+        buyerLogin({ login_id: mobile })
+      ).unwrap();
+
+      if (loginRes?.data?.id) {
+        buyer_id = loginRes.data.id;
+        setBuyerId(buyer_id);
+        // ⭐ If buyer exists but UHID missing → update UHID
+        if (
+          (!loginRes.data.uhid || loginRes.data.uhid === "") &&
+          uhId.trim() !== ""
+        ) {
+          await dispatch(
+            updateBuyerForPharmacistThunk({
+              buyerId: buyer_id,
+              payload: { uhid: uhId },
+            })
+          ).unwrap();
+        }
+      }
+      if (!buyer_id) {
+        const registerPayload = {
+          name: customerName,
+          email: "",
+          number: mobile,
+          uhid: uhId,
+        };
+        const regRes = await dispatch(buyerRegister(registerPayload)).unwrap();
+        buyer_id = regRes?.data?.id;
+        setBuyerId(buyer_id);
+      }
+
+      if (!buyer_id) {
+        toast.error("Buyer ID missing");
+        return;
+      }
+
+      // The REAL CORRECT form-data
+      const formData = new FormData();
+      formData.append("buyer_id", String(buyer_id));
+      formData.append(
+        "prescription_pic",
+        prescriptionFile,
+        prescriptionFile.name
       );
 
-      // 🟢 MOCK OCR medicines (important 🔥)
-      const dummyMeds = [
-        { id: 101, name: "Paracetamol 500mg", category_id: 2 },
-        { id: 102, name: "Azithromycin 250mg", category_id: 1 },
-        { id: 103, name: "Dolo 650", category_id: 2 },
-        { id: 104, name: "Amoxicillin 500mg", category_id: 1 },
-      ];
+      const uploadRes = await dispatch(
+        uploadPrescriptionPharmacistThunk({
+          pharmacistId: pharmacist_id,
+          payload: formData,
+        })
+      ).unwrap();
 
-      setMatchedMedicines(dummyMeds);
+      toast.success("Prescription uploaded!");
 
-      // 🟢 UI switch (MOST IMPORTANT)
+      // 🔹 STEP 5: Build full image/PDF URL
+      const picPath =
+        uploadRes?.data?.prescription_pic || uploadRes?.prescription_pic || "";
+      const fullUrl = picPath.startsWith("http")
+        ? picPath
+        : mediaBase + picPath;
+      setUploadedUrl(fullUrl);
       setShowForm(false);
+      // 🟢 Use backend OCR (medicines)
+      if (uploadRes?.product_list?.medicines) {
+        const meds: MatchedMedicine[] = uploadRes.product_list.medicines.map(
+          (m: OCRMedicine): MatchedMedicine => ({
+            id: m.product_id,
+            name: m.medicine_name,
+            category_id: m.category_id,
+          })
+        );
 
-      toast.success("Mock Prescription processed!");
-    } catch (err) {
-      console.error("Mock Error:", err);
-      toast.error("Something went wrong (mock)");
+        setMatchedMedicines(meds);
+      }
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (err: any) {
+      console.error("Upload Rejection Details:", err); // Log the full error object
+      console.error("FULL ERROR:", err);
+      console.error("PAYLOAD:", err?.payload);
+      console.error("PAYLOAD.MESSAGE:", err?.payload?.message);
+      // 💡 Thunk rejection payload is often nested in err.payload
+      const rejectMessage =
+        err?.payload?.message ||
+        err?.payload ||
+        err?.message ||
+        "Failed to upload prescription";
+      toast.error("Error: " + rejectMessage);
     } finally {
       setSubmitLoading(false);
     }
   };
+
+  // const handleSubmit = async (e?: React.FormEvent) => {
+  //   if (e) e.preventDefault();
+
+  //   if (submitLoading) return;
+
+  //   try {
+  //     // ✅ basic validation (file hata diya)
+  //     if (!mobile || !customerName) {
+  //       toast.error("Please fill all fields");
+  //       return;
+  //     }
+
+  //     setSubmitLoading(true);
+
+  //     // 🟢 MOCK BUYER ID (optional)
+  //     const buyer_id = 1;
+  //     setBuyerId(buyer_id);
+
+  //     // 🟢 MOCK uploaded URL (preview ke liye)
+  //     setUploadedUrl(
+  //       "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf"
+  //     );
+
+  //     // 🟢 MOCK OCR medicines (important 🔥)
+  //     const dummyMeds = [
+  //       { id: 101, name: "Paracetamol 500mg", category_id: 2 },
+  //       { id: 102, name: "Azithromycin 250mg", category_id: 1 },
+  //       { id: 103, name: "Dolo 650", category_id: 2 },
+  //       { id: 104, name: "Amoxicillin 500mg", category_id: 1 },
+  //     ];
+
+  //     setMatchedMedicines(dummyMeds);
+
+  //     // 🟢 UI switch (MOST IMPORTANT)
+  //     setShowForm(false);
+
+  //     toast.success("Mock Prescription processed!");
+  //   } catch (err) {
+  //     console.error("Mock Error:", err);
+  //     toast.error("Something went wrong (mock)");
+  //   } finally {
+  //     setSubmitLoading(false);
+  //   }
+  // };
 
   useEffect(() => {
     if (buyerId) {
@@ -492,9 +499,16 @@ export default function RetailCounter() {
     remarks: string,
     duration: string
   ) => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const mrp = (item as any).MRP || 0;
-    console.log("ITEM FROM API:", item);
+    const {
+      mrp: _mrp,
+      MRP: _MRP,
+      rate: _rate,
+      subtotal: _subtotal,
+      ...cleanItem
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } = item as any;
+    const mrp = Number(item.MRP || item.mrp || 0);
+    // console.log("ITEM FROM API:", item);
     const parsedDiscount =
       item.Disc !== undefined
         ? Number(item.Disc)
@@ -503,7 +517,7 @@ export default function RetailCounter() {
         : item.Discount !== undefined
         ? Number(item.Discount)
         : 0;
-
+    const rate = mrp - (mrp * parsedDiscount) / 100;
     const itemToAdd: MedicineWithCartFields = {
       ...item,
       dose_form: doseForm,
@@ -512,10 +526,15 @@ export default function RetailCounter() {
       duration,
       unitPrice: mrp,
       price: mrp * qty,
+      rate: Number(rate.toFixed(2)),
+      subtotal: Number((rate * qty).toFixed(2)),
+      mrp: Number(mrp.toFixed(2)),
+      MRP: Number(mrp.toFixed(2)),
       generic_name: item.generic_name || item.GenericName || "N/A",
       pack_size: item.pack_size || "N/A",
+      manufacturer_name: item.manufacturer_name || item.Manufacturer || "N/A",
       cartItemId: Date.now() + Math.random(),
-      Disc: parsedDiscount, // ALWAYS CORRECT NUMBER
+      Disc: parsedDiscount,
     };
 
     console.log("🧾 handleFinalAddToCart itemToAdd:", itemToAdd);
@@ -577,17 +596,18 @@ export default function RetailCounter() {
       }
 
       const products = cart.map((item) => {
-        const discountAmt = (item.price * (item.Disc ?? 0)) / 100;
-        const finalRate = (item.price - discountAmt) * item.qty;
-
         return {
           product_id: item.id,
           quantity: String(item.qty),
-          mrp: String(item.price),
+
+          mrp: String(item.mrp), // ✅ FIX
           discount: String(item.Disc ?? 0),
-          rate: String(finalRate),
+
+          rate: String(item.rate), // ✅ FIX (NO recalculation)
+          subtotal: String(item.subtotal), // ✅ ADD THIS
+
           doses: item.dose_form,
-          instruction: item.remarks,
+          remark: item.remarks,
           duration: item.duration,
           status: "1",
         };
@@ -612,7 +632,7 @@ export default function RetailCounter() {
         status: "1",
         products,
       };
-
+      console.log("orderPayload", orderPayload);
       await dispatch(
         createPharmacistOrder({
           buyerId,
@@ -632,7 +652,7 @@ export default function RetailCounter() {
     if (success) {
       setShowBagModal(false); // close bag modal
       setBillPreviewData({
-        cart: cart, // always latest cart
+        cart: [...cart],
         customerName,
         mobile,
         uhId,
@@ -658,8 +678,22 @@ export default function RetailCounter() {
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleUpdateCartFromModal = (updatedCart: any) => {
-    console.log("🟢 Updated CART RECEIVED:", updatedCart);
-    setCart(updatedCart);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const fixedCart = updatedCart.map((item: any) => {
+      const rate = Number(item.rate || 0);
+      const qty = Number(item.qty || 0);
+
+      return {
+        ...item,
+        rate,
+        qty,
+        subtotal: Number((rate * qty).toFixed(2)), // ✅ FORCE FIX
+      };
+    });
+
+    console.log("✅ FIXED CART:", fixedCart);
+
+    setCart(fixedCart);
     setShouldSubmit(true); // <-- API call trigger
   };
 
@@ -728,19 +762,19 @@ export default function RetailCounter() {
                           }
                           onChange={handleSelectMedicine}
                         /> */}
-                        <GlobalSearchBox
+                        <GlobalProductSearchBox
                           placeholder="Search product..."
                           onSelect={(item) => {
                             const med = item.data;
-
                             setSelectedMedicine(med);
-                            setSelectedProduct(med); // 👈 optional but recommended
-
+                            setSelectedProduct(med);
                             if (med.category_id === 1) {
+                              setIsFromGenericFlow(true);
                               dispatch(getProductByGenericId(med.id));
                               setSelectedGenericId(med.id);
                               setIsModalOpen(true); // 🔥 FIX
                             } else {
+                              setIsFromGenericFlow(false);
                               handleSkipGenericModal(med);
                             }
                           }}

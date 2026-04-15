@@ -124,6 +124,7 @@ export const ENDPOINTS = {
   // Prescription Upload
   PRESCRIPTION_UPLOAD: {
     LOGIN_UPDATE: "/ocr/prescription/update-buyer/",
+    CREATE_PRESCRIPTION_FROM_BUYER_CART: "/cart/buyer/upload-prescription/",
     PUBLIC_CREATE: "/ocr/prescription/upload/",
     GET_PRESCRIPTION_LIST_PHARMACIST: "/ocr/prescriptions/active/",
     PRESCRIPTION_RECEIVED_BY_PHARMACIST: (prescriptionId: number) =>
@@ -165,6 +166,8 @@ export const ENDPOINTS = {
     SEARCH: (text: string) => `website/product/search/?text=${text}`,
     SEARCH_SUGGESTION: (query: string) =>
       `website/product/search-suggestion/?search=${query}`,
+    SEARCH_PRODUCT_BASED: (query: string) =>
+      `website/product-based-search/?search=${query}`,
     GET_MEDICINE_LIST_BY_MANUFACTURER: (manufacturerId: number) =>
       `website/manufacturer/search/?manufacturer_id=${manufacturerId}`,
     GET_MEDICINE_LIST_BY_GENERIC: (medicineId: number) =>

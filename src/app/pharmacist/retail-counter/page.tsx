@@ -26,7 +26,7 @@ import {
 } from "@/lib/features/buyerSlice/buyerSlice";
 import { createPharmacistOrder } from "@/lib/features/pharmacistOrderSlice/pharmacistOrderSlice";
 import { updateBuyerForPharmacistThunk } from "@/lib/features/pharmacistBuyerListSlice/pharmacistBuyerListSlice";
-import { formatAmount } from "@/lib/utils/formatAmount";
+import { formatPrice } from "@/lib/utils/formatPrice";
 import DoseInstructionSelect from "@/app/components/Input/DoseInstructionSelect";
 import { useClickOutside } from "@/lib/utils/useClickOutside";
 import {
@@ -39,6 +39,8 @@ import {
 } from "@/lib/features/productInstructionSlice/productInstructionSlice";
 import SmartCreateInput from "@/app/components/RetailCounterModal/SmartCreateInput";
 import GlobalSearchBox from "@/app/components/GlobalSearchBox/GlobalSearchBox";
+import GlobalProductSearchBox from "@/app/components/GlobalProductSearchBox/GlobalProductSearchBox";
+import SmartCreateInputWithoutLabel from "@/app/components/RetailCounterModal/SmartCreateInputWithoutLabel";
 type EditingCell = {
   rowIndex: number | null;
   field: "qty" | "dose_form" | "remarks" | "duration" | "Disc" | null;
@@ -110,6 +112,7 @@ export default function RetailCounter() {
   const [isUploadEnabled, setIsUploadEnabled] = useState(false);
   const [isMobileChecking, setIsMobileChecking] = useState(false);
   const [additionalDiscount, setAdditionalDiscount] = useState<string>("0");
+  const [isFromGenericFlow, setIsFromGenericFlow] = useState(false);
 
   // editable state
   const [editingCell, setEditingCell] = useState<EditingCell>({
@@ -174,6 +177,8 @@ export default function RetailCounter() {
     const itemWithGeneric = {
       ...item,
       generic_name: item.generic_name || item.GenericName || "N/A",
+      MRP: item.mrp,
+      Disc: Number(item.discount || 0),
     };
     console.log("📦 handleSkipGenericModal itemWithGeneric:", itemWithGeneric);
     setItemToConfirm(itemWithGeneric);
@@ -252,20 +257,25 @@ export default function RetailCounter() {
   ) => {
     setCart((prev) => {
       const updated = [...prev];
+
       updated[index] = {
         ...updated[index],
         [field]: value,
       };
 
-      // ⭐ Only recalc subtotal when qty or discount updated
-      const qty = Number(updated[index].qty);
-      const price = Number(updated[index].price);
+      const qty = Number(updated[index].qty || 0);
+      const mrp = Number(updated[index].unitPrice || 0); // ✅ original MRP
       const disc = Number(updated[index].Disc || 0);
 
-      const total = qty * price;
-      const discountAmount = (total * disc) / 100;
+      // ✅ rate = per unit after discount
+      const rate = mrp - (mrp * disc) / 100;
 
-      updated[index].subtotal = total - discountAmount;
+      // ✅ subtotal = rate * qty
+      const subtotal = rate * qty;
+
+      // ✅ store values
+      updated[index].rate = rate;
+      updated[index].subtotal = subtotal;
 
       return updated;
     });
@@ -279,21 +289,29 @@ export default function RetailCounter() {
     remarks: string,
     duration: string
   ) => {
+    const mrp = Number(item.MRP || 0); // original price
+    const disc = Number(item.discount ?? item.Disc ?? 0); // discount %
+
+    const rate = mrp - (mrp * disc) / 100; // per unit after discount
+    const subtotal = rate * qty; // final subtotal
+
     const itemToAdd = {
       ...item,
+      manufacturer_name: item.manufacturer_name || item.Manufacturer,
       dose_form: doseForm,
       qty: qty,
       remarks: remarks,
-      duration,
-      // keep original MRP in item.mrp, but store unitPrice separately to avoid confusion:
-      unitPrice: item.MRP || 0, // per unit price
-      price: (item.MRP || 0) * qty, // total price for this line
-      generic_name: item.generic_name || item.GenericName || "N/A",
-      pack_size: item.pack_size || "N/A",
+      duration: duration,
+
+      unitPrice: mrp,
+      Disc: disc,
+
+      rate: rate,
+      subtotal: subtotal,
     };
-    setCart((prevCart) => {
-      return [...prevCart, itemToAdd];
-    });
+
+    setCart((prev) => [...prev, itemToAdd]);
+
     handleCloseQtyModal();
     setSelectedMedicine(null);
   };
@@ -368,7 +386,7 @@ export default function RetailCounter() {
           discount: discountPercent,
           rate: finalRate,
           doses: item.dose_form,
-          instruction: item.remarks,
+          remark: item.remarks,
           duration: item.duration,
           status: 1,
         };
@@ -458,10 +476,9 @@ export default function RetailCounter() {
 
   // Total calculation
   const totalAmount = cart.reduce((acc, item) => {
-    const total = item.qty * item.price;
-    const discountAmount = (total * item.Disc) / 100;
-    const subTotal = total - discountAmount;
-    return acc + subTotal;
+    const rate = item.unitPrice - (item.unitPrice * item.Disc) / 100;
+    const subtotal = rate * item.qty;
+    return acc + subtotal;
   }, 0);
 
   // Final after Additional Discount
@@ -498,15 +515,17 @@ export default function RetailCounter() {
                         }
                         onChange={handleSelectMedicine}
                       /> */}
-                      <GlobalSearchBox
+                      <GlobalProductSearchBox
                         placeholder="Search product..."
                         onSelect={(item) => {
                           const med = item.data;
                           setSelectedMedicine(med);
                           if (med.category_id === 1) {
+                            setIsFromGenericFlow(true);
                             dispatch(getProductByGenericId(med.id));
                             setSelectedGenericId(med.id);
                           } else {
+                            setIsFromGenericFlow(false);
                             handleSkipGenericModal(med);
                           }
                         }}
@@ -674,7 +693,8 @@ export default function RetailCounter() {
                           <th style={{ width: "180px" }}>Instruction</th>
                           <th style={{ width: "120px" }}>Duration</th>
                           <th style={{ width: "90px" }}>MRP (₹)</th>
-                          <th style={{ width: "90px" }}>Discount (%)</th>
+                          <th style={{ width: "90px" }}>Disc (%)</th>
+                          <th style={{ width: "90px" }}>Rate</th>
                           <th style={{ width: "110px" }}>Subtotal (₹)</th>
                           <th style={{ width: "60px" }}></th>
                         </tr>
@@ -688,11 +708,14 @@ export default function RetailCounter() {
                           </tr>
                         ) : (
                           cart.map((item, index) => {
-                            const total = item.qty * item.price;
-                            const discountAmount = item.Disc
-                              ? (total * item.Disc) / 100
-                              : 0;
+                            const mrp = item.unitPrice;
+                            const total = item.qty * mrp;
+                            const discountAmount = (total * item.Disc) / 100;
                             const subtotal = total - discountAmount;
+                            const rate =
+                              item.unitPrice -
+                              (item.unitPrice * item.Disc) / 100;
+
                             const inputStyle = {
                               height: "38px",
                               fontSize: "14px",
@@ -719,6 +742,7 @@ export default function RetailCounter() {
                                         overflow: "hidden",
                                         textOverflow: "ellipsis",
                                       }}
+                                      className="pd-title"
                                     >
                                       {item.medicine_name}
                                     </span>
@@ -732,8 +756,22 @@ export default function RetailCounter() {
                                         overflow: "hidden",
                                         textOverflow: "ellipsis",
                                       }}
+                                      className="pd-title"
                                     >
                                       {item.pack_size || "N/A"}
+                                    </span>
+
+                                    <span
+                                      style={{
+                                        fontSize: "12px",
+                                        color: "#28a745",
+                                        marginTop: "2px",
+                                      }}
+                                      className="pd-title"
+                                    >
+                                      {item.manufacturer_name ||
+                                        item.manufacturer ||
+                                        "N/A"}
                                     </span>
                                   </div>
                                 </td>
@@ -792,73 +830,43 @@ export default function RetailCounter() {
                                   </div>
                                 </td>
                                 {/* Editable Instruction */}
-                                <td
-                                  style={{
-                                    maxWidth: "160px",
-                                    verticalAlign: "middle",
-                                  }}
-                                >
-                                  <div
-                                    style={{
-                                      height: "38px",
-                                      display: "flex",
-                                      alignItems: "center",
+                                <td>
+                                  <SmartCreateInputWithoutLabel
+                                    label=""
+                                    value={item.remarks ?? ""}
+                                    onChange={(val) => {
+                                      if (val.length <= 50) {
+                                        handleEditChange(index, "remarks", val);
+                                      }
                                     }}
-                                  >
-                                    <SmartCreateInput
-                                      label=""
-                                      value={item.remarks ?? ""}
-                                      onChange={(val) => {
-                                        if (val.length <= 50) {
-                                          handleEditChange(
-                                            index,
-                                            "remarks",
-                                            val
-                                          );
-                                        }
-                                      }}
-                                      list={instructionList}
-                                      createAction={createProductInstruction}
-                                      refreshAction={getProductInstructions}
-                                      placeholder=""
-                                    />
-                                  </div>
+                                    list={instructionList}
+                                    createAction={createProductInstruction}
+                                    refreshAction={getProductInstructions}
+                                    placeholder=""
+                                  />
                                 </td>
                                 {/* Editable Duration */}
-                                <td
-                                  style={{
-                                    maxWidth: "120px",
-                                    verticalAlign: "middle",
-                                  }}
-                                >
-                                  <div
-                                    style={{
-                                      height: "38px",
-                                      display: "flex",
-                                      alignItems: "center",
+                                <td>
+                                  <SmartCreateInputWithoutLabel
+                                    label=""
+                                    value={item.duration ?? ""}
+                                    onChange={(val) => {
+                                      if (val.length <= 10) {
+                                        handleEditChange(
+                                          index,
+                                          "duration",
+                                          val
+                                        );
+                                      }
                                     }}
-                                  >
-                                    <SmartCreateInput
-                                      label=""
-                                      value={item.duration ?? ""}
-                                      onChange={(val) => {
-                                        if (val.length <= 10) {
-                                          handleEditChange(
-                                            index,
-                                            "duration",
-                                            val
-                                          );
-                                        }
-                                      }}
-                                      list={durationList}
-                                      createAction={createProductDuration}
-                                      refreshAction={getProductDurations}
-                                      placeholder=""
-                                    />
-                                  </div>
+                                    list={durationList}
+                                    createAction={createProductDuration}
+                                    refreshAction={getProductDurations}
+                                    placeholder=""
+                                  />
                                 </td>
                                 {/* Price Mrp */}
-                                {/* <td>{formatAmount(item.price)}</td> */}
+                                {/* <td>{formatPrice(item.price)}</td> */}
                                 <td
                                   style={{
                                     textAlign: "center",
@@ -869,7 +877,7 @@ export default function RetailCounter() {
                                   <input
                                     type="text"
                                     className="form-control"
-                                    value={formatAmount(item.price)}
+                                    value={formatPrice(item.unitPrice)}
                                     readOnly
                                     tabIndex={-1}
                                     style={{
@@ -903,12 +911,8 @@ export default function RetailCounter() {
                                     }}
                                   />
                                 </td>
-                                {/* SubTotal */}
-                                {/* <td>
-                                  {formatAmount(
-                                    item.subtotal ?? item.qty * item.price
-                                  )}
-                                </td> */}
+
+                                {/* Rate */}
                                 <td
                                   style={{
                                     textAlign: "center",
@@ -918,9 +922,28 @@ export default function RetailCounter() {
                                   <input
                                     type="text"
                                     className="form-control"
-                                    value={formatAmount(
-                                      item.subtotal ?? item.qty * item.price
-                                    )}
+                                    value={formatPrice(rate)}
+                                    readOnly
+                                    tabIndex={-1}
+                                    style={{
+                                      ...inputStyle,
+                                      width: "80px",
+                                      backgroundColor: "#f5f5f5",
+                                    }}
+                                  />
+                                </td>
+
+                                {/* SubTotal */}
+                                <td
+                                  style={{
+                                    textAlign: "center",
+                                    width: "90px",
+                                  }}
+                                >
+                                  <input
+                                    type="text"
+                                    className="form-control"
+                                    value={formatPrice(subtotal)}
                                     readOnly
                                     tabIndex={-1}
                                     style={{
@@ -961,7 +984,7 @@ export default function RetailCounter() {
                         className="fw-bold mb-2"
                         style={{ color: "red", whiteSpace: "nowrap" }}
                       >
-                        Total: ₹{formatAmount(totalAmount)}
+                        Total: ₹{formatPrice(totalAmount)}
                       </h6>
 
                       <div className="mb-2">
@@ -994,7 +1017,7 @@ export default function RetailCounter() {
                       </div>
 
                       <h5 className="fw-bold text-primary mb-3">
-                        Grand Total: ₹{formatAmount(finalAmount)}
+                        Grand Total: ₹{formatPrice(finalAmount)}
                       </h5>
 
                       <button
@@ -1028,7 +1051,7 @@ export default function RetailCounter() {
         onClose={handleCloseQtyModal}
         item={itemToConfirm}
         onConfirmAdd={handleFinalAddToCart}
-        onBack={handleBackToGeneric}
+        onBack={isFromGenericFlow ? handleBackToGeneric : undefined}
       />
       <BillPreviewModal
         show={isBillModalOpen}

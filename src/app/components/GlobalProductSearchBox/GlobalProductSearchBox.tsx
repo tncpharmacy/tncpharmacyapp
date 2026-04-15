@@ -1,15 +1,19 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { useAppDispatch } from "@/lib/hooks";
-import { getSearchSuggestions } from "@/lib/features/medicineSlice/medicineSlice";
+import { useAppDispatch, useAppSelector } from "@/lib/hooks";
+import {
+  getSearchProductBased,
+  getSearchSuggestions,
+} from "@/lib/features/medicineSlice/medicineSlice";
 import { Medicine } from "@/types/medicine";
 import { useRouter } from "next/navigation";
 import { encodeId } from "@/lib/utils/encodeDecode";
 import { formatPrice } from "@/lib/utils/formatPrice";
+import TncLoader from "../TncLoader/TncLoader";
 
 type SearchMatch = {
-  _matchType: "medicine" | "generic" | "manufacturer";
+  // _matchType: "medicine" | "generic" | "manufacturer";
   data: Medicine;
 };
 
@@ -21,7 +25,7 @@ type Props = {
   onKeyDown?: (e: React.KeyboardEvent<HTMLInputElement>) => void; //
 };
 
-export default function GlobalSearchBox({
+export default function GlobalProductSearchBox({
   placeholder = "Search medicines...",
   onSelect,
   redirectOnSelect = false,
@@ -30,12 +34,12 @@ export default function GlobalSearchBox({
 }: Props) {
   const dispatch = useAppDispatch();
   const router = useRouter();
-
+  const [hasSearched, setHasSearched] = useState(false);
   const [search, setSearch] = useState("");
   const [results, setResults] = useState<SearchMatch[]>([]);
   const [showList, setShowList] = useState(false);
   const [highlightIndex, setHighlightIndex] = useState(-1);
-
+  const { searchProductLoading } = useAppSelector((state) => state.medicine);
   const wrapperRef = useRef<HTMLDivElement>(null);
 
   // 🔥 API CALL
@@ -43,42 +47,36 @@ export default function GlobalSearchBox({
     if (!search.trim()) {
       setResults([]);
       setShowList(false);
+      setHasSearched(false);
       return;
     }
 
+    let isActive = true;
+
     const timer = setTimeout(async () => {
       try {
-        const res = await dispatch(getSearchSuggestions(search)).unwrap();
+        setHasSearched(true);
+        const res = await dispatch(getSearchProductBased(search)).unwrap();
+
+        if (!isActive) return;
+
         const list: Medicine[] = Array.isArray(res?.data) ? res.data : [];
 
-        const final: SearchMatch[] = [];
-
-        const manufacturerSet = new Set();
-
-        list.forEach((item) => {
-          final.push({ _matchType: "medicine", data: item });
-
-          if (item.generic_name) {
-            final.push({ _matchType: "generic", data: item });
-          }
-
-          const man = item.manufacturer_name?.toLowerCase();
-          if (man && !manufacturerSet.has(man)) {
-            manufacturerSet.add(man);
-            final.push({ _matchType: "manufacturer", data: item });
-          }
-        });
+        const final = list.map((item) => ({ data: item }));
 
         setResults(final);
-        setShowList(final.length > 0);
+        setShowList(true);
       } catch (err) {
-        console.error(err);
+        if (!isActive) return;
         setResults([]);
-        setShowList(false);
+        setShowList(true);
       }
     }, 300);
 
-    return () => clearTimeout(timer);
+    return () => {
+      isActive = false;
+      clearTimeout(timer);
+    };
   }, [search, dispatch]);
 
   // 🔥 OUTSIDE CLICK
@@ -104,25 +102,6 @@ export default function GlobalSearchBox({
       onSelect(item);
       return;
     }
-
-    // if (redirectOnSelect) {
-    //   if (item._matchType === "medicine") {
-    //     const path =
-    //       item.data.category_id === 1
-    //         ? `/medicines-details/${encodeId(item.data.id)}`
-    //         : `/product-details/${encodeId(item.data.id)}`;
-
-    //     router.push(path);
-    //   }
-
-    //   if (item._matchType === "generic") {
-    //     router.push(`/all-generic/${encodeId(item.data.generic_id)}`);
-    //   }
-
-    //   if (item._matchType === "manufacturer") {
-    //     router.push(`/all-manufacturer/${encodeId(item.data.manufacturer_id)}`);
-    //   }
-    // }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -179,6 +158,23 @@ export default function GlobalSearchBox({
       }
     }
   }, [highlightIndex]);
+
+  const emptyStyle = {
+    position: "absolute",
+    top: "69%",
+    left: 0,
+    width: "100%",
+    background: "#fff",
+    borderRadius: "10px",
+    boxShadow: "0 8px 20px rgba(0,0,0,0.08)",
+    marginTop: "6px",
+    padding: "12px",
+    zIndex: 999,
+    border: "1px solid #eee",
+    textAlign: "center" as const,
+    fontSize: "13px",
+    color: "#777",
+  };
 
   return (
     <div ref={wrapperRef} className="search_query header_search_query">
@@ -261,107 +257,113 @@ export default function GlobalSearchBox({
                       marginBottom: "4px", // 👈 ADD THIS
                     }}
                   >
-                    {item._matchType === "medicine"
-                      ? item.data.medicine_name || item.data.pack_size
-                      : item._matchType === "generic"
-                      ? item.data.generic_name
-                      : item.data.manufacturer_name}
+                    {item.data.medicine_name}
                   </span>
 
                   {/* RIGHT SIDE */}
-                  {item._matchType === "medicine" ? (
-                    <span style={{ whiteSpace: "nowrap" }}>
-                      <span
-                        style={{
-                          color: "green",
-                          fontWeight: 600,
-                          fontSize: "14px",
-                        }}
-                      >
-                        ₹
-                        {formatPrice(
-                          (item.data.mrp ?? 0) -
-                            ((item.data.mrp ?? 0) *
-                              Number(item.data.discount ?? 0)) /
-                              100
-                        )}
-                      </span>
-
-                      <span
-                        style={{
-                          marginLeft: 6,
-                          textDecoration: "line-through",
-                          color: "#777",
-                          fontSize: "12px",
-                        }}
-                      >
-                        MRP ₹{formatPrice(item.data.mrp || 0)}
-                      </span>
-                    </span>
-                  ) : (
+                  <span style={{ whiteSpace: "nowrap" }}>
                     <span
                       style={{
-                        color: "red",
+                        color: "green",
                         fontWeight: 600,
-                        fontSize: "12px",
-                        whiteSpace: "nowrap",
+                        fontSize: "14px",
                       }}
                     >
-                      {item._matchType === "generic"
-                        ? "in Salt Composition"
-                        : "in Manufacturer"}
+                      ₹
+                      {formatPrice(
+                        (item.data.mrp ?? 0) -
+                          ((item.data.mrp ?? 0) *
+                            Number(item.data.discount ?? 0)) /
+                            100
+                      )}
                     </span>
-                  )}
+
+                    <span
+                      style={{
+                        marginLeft: 6,
+                        textDecoration: "line-through",
+                        color: "#777",
+                        fontSize: "12px",
+                      }}
+                    >
+                      MRP ₹{formatPrice(item.data.mrp || 0)}
+                    </span>
+                  </span>
                 </div>
 
                 {/* --- ROW 2 (ONLY FOR MEDICINE) --- */}
-                {item._matchType === "medicine" && (
-                  <div
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    fontSize: "12px",
+                    fontWeight: 600,
+                    color: "#555",
+                    marginBottom: "8px",
+                    marginTop: "2px",
+                  }}
+                >
+                  <span style={{ marginTop: "2px" }}>
+                    {item.data.pack_size}
+                  </span>
+
+                  <span
                     style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      fontSize: "12px",
+                      color: "red",
+                      marginTop: "4px",
                       fontWeight: 600,
-                      color: "#555",
-                      marginBottom: "8px",
-                      marginTop: "2px",
                     }}
                   >
-                    <span style={{ marginTop: "2px" }}>
-                      {item.data.generic_name}
-                    </span>
+                    {item.data.discount}% OFF
+                  </span>
+                </div>
 
-                    <span
-                      style={{
-                        color: "red",
-                        marginTop: "4px",
-                        fontWeight: 600,
-                      }}
-                    >
-                      {item.data.discount}% OFF
-                    </span>
-                  </div>
-                )}
-
-                {/* --- ROW 3 (ONLY FOR MEDICINE) --- */}
-                {item._matchType === "medicine" && (
-                  <div
-                    style={{
-                      fontSize: "12px",
-                      fontWeight: 600,
-                      color: "green",
-                      lineHeight: "1.3",
-                      marginTop: "2px", // 👈 ADD THIS
-                    }}
-                  >
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    fontSize: "12px",
+                    fontWeight: 600,
+                    color: "green",
+                    marginBottom: "8px",
+                    marginTop: "2px",
+                  }}
+                >
+                  <span style={{ marginTop: "2px" }}>
                     {item.data.manufacturer_name}
-                  </div>
-                )}
+                  </span>
+                </div>
               </div>
             </li>
           ))}
         </ul>
       )}
+
+      {showList &&
+        hasSearched &&
+        !searchProductLoading &&
+        results.length === 0 && (
+          <div
+            style={{
+              position: "absolute",
+              top: "69%",
+              left: 0,
+              width: "100%",
+              background: "#fff",
+              borderRadius: "10px",
+              boxShadow: "0 8px 20px rgba(0,0,0,0.08)",
+              marginTop: "6px",
+              padding: "12px",
+              zIndex: 999,
+              border: "1px solid #eee",
+              textAlign: "center",
+              fontSize: "13px",
+              color: "#777",
+            }}
+          >
+            No products found
+          </div>
+        )}
     </div>
   );
 }

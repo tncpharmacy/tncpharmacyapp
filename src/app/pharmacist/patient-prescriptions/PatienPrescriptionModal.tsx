@@ -16,7 +16,7 @@ import TableLoader from "@/app/components/TableLoader/TableLoader";
 import toast from "react-hot-toast";
 import { formatDate } from "@/lib/utils/dateFormatter";
 
-const mediaBase = process.env.NEXT_PUBLIC_MEDIA_BASE_URL;
+const prescriptionMediaBase = process.env.NEXT_PUBLIC_PRESCRIPTION_BASE_URL;
 
 export default function PatientPrescriptionModal({
   onClose,
@@ -115,7 +115,7 @@ export default function PatientPrescriptionModal({
       if (onClose) onClose();
 
       const pic = res.data.prescription_pic;
-      const full = pic.startsWith("/") ? `${mediaBase}${pic}` : pic;
+      const full = pic.startsWith("/") ? `${prescriptionMediaBase}${pic}` : pic;
 
       router.push(
         `/pharmacist/ocr-extraction?id=${p.id}&buyerId=${
@@ -234,7 +234,9 @@ export default function PatientPrescriptionModal({
                 </tr>
               ) : (
                 currentItems.map((p) => {
-                  const fileUrl = `${mediaBase}${p.prescription_pic}`;
+                  const fileUrl = p.prescription_pic.startsWith("http")
+                    ? p.prescription_pic
+                    : `${prescriptionMediaBase}${p.prescription_pic}`;
                   const ext = fileUrl.split(".").pop()?.toLowerCase();
                   const isHandledByMe = p.handle_by === Number(pharmacistId);
                   const isReceived = p.handle_by !== null && p.handle_by !== 0;
@@ -332,7 +334,9 @@ export default function PatientPrescriptionModal({
             list
               .filter((p) => p.id === selectedPrescription)
               .map((p) => {
-                const fileUrl = `${mediaBase}${p.prescription_pic}`;
+                const fileUrl = p.prescription_pic.startsWith("http")
+                  ? p.prescription_pic
+                  : `${prescriptionMediaBase}${p.prescription_pic}`;
                 const ext = fileUrl.split(".").pop()?.toLowerCase();
 
                 return ext === "pdf" ? (

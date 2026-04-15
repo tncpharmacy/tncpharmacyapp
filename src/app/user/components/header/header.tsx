@@ -845,7 +845,7 @@ const SiteHeader = () => {
                 ))}
             </ul>
             {/* ---- Upload Prescription (Mobile) ---- */}
-            <div className="mobile-upload-wrap">
+            {/* <div className="mobile-upload-wrap">
               <button
                 className="mobile-upload-btn"
                 onClick={() => {
@@ -861,7 +861,7 @@ const SiteHeader = () => {
                   alt="Upload"
                 />
               </button>
-            </div>
+            </div> */}
           </div>
         </>
       )}

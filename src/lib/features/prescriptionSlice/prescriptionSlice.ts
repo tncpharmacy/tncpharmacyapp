@@ -2,6 +2,7 @@ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import {
   uploadPrescription,
   linkPrescriptionToBuyer,
+  uploadPrescriptionFromBuyerCart,
 } from "@/lib/api/prescription";
 import { PrescriptionItem } from "@/types/prescription";
 
@@ -10,6 +11,7 @@ interface PrescriptionState {
   data: PrescriptionItem[];
   error: string | null;
   sessionId: string | null;
+  success: boolean;
 }
 
 const initialState: PrescriptionState = {
@@ -17,7 +19,24 @@ const initialState: PrescriptionState = {
   data: [],
   error: null,
   sessionId: null,
+  success: false,
 };
+
+export const uploadPrescriptionFromBuyerCartThunk = createAsyncThunk(
+  "prescription/uploadFromBuyerCart",
+  async (
+    { formData, token }: { formData: FormData; token: string },
+    { rejectWithValue }
+  ) => {
+    try {
+      const res = await uploadPrescriptionFromBuyerCart({ formData, token });
+      return res;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (err: any) {
+      return rejectWithValue(err.response?.data || "Upload failed");
+    }
+  }
+);
 
 // 🔓 Guest upload
 export const uploadPrescriptionThunk = createAsyncThunk(
@@ -67,6 +86,26 @@ const prescriptionSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
+      // upload prescription from buyer cart
+      .addCase(uploadPrescriptionFromBuyerCartThunk.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(
+        uploadPrescriptionFromBuyerCartThunk.fulfilled,
+        (state, action) => {
+          state.loading = false;
+          state.success = true;
+          state.data = action.payload?.data;
+        }
+      )
+      .addCase(
+        uploadPrescriptionFromBuyerCartThunk.rejected,
+        (state, action) => {
+          state.loading = false;
+          state.error = action.payload as string;
+        }
+      )
+      // upload prescription as guest
       .addCase(uploadPrescriptionThunk.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -84,7 +123,7 @@ const prescriptionSlice = createSlice({
         state.loading = false;
         state.error = action.payload as string;
       })
-
+      // update prescription after login
       .addCase(linkBuyerThunk.pending, (state) => {
         state.loading = true;
         state.error = null;

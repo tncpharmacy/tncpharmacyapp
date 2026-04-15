@@ -1,7 +1,7 @@
 "use client";
 import { getUser } from "@/lib/auth/auth";
 import { useAppDispatch } from "@/lib/hooks";
-import { formatAmount } from "@/lib/utils/formatAmount";
+import { formatPrice } from "@/lib/utils/formatPrice";
 import { useEffect, useRef, useState } from "react";
 import { Image, Modal } from "react-bootstrap";
 import TncLoader from "../TncLoader/TncLoader";
@@ -20,6 +20,10 @@ interface CartItem {
   pack_size?: string;
   qty: number;
   price: number;
+  rate: number;
+  mrp: number;
+  MRP: number;
+  subtotal: number;
   dose_form: string;
   Disc: number;
   remarks: string;
@@ -66,7 +70,7 @@ const BillPreviewModal: React.FC<BillPreviewModalProps> = ({
     userPharmacy?.pharmacy_district || userPharmacy?.district || "";
   const pharmacy_pincode =
     userPharmacy?.pharmacy_pincode || userPharmacy?.pincode || "";
-
+  console.log("cart", cart);
   // --- Translation State and Logic ---
   const [language, setLanguage] = useState("en");
   const [translatedCart, setTranslatedCart] = useState<CartItem[]>(cart || []);
@@ -92,9 +96,20 @@ const BillPreviewModal: React.FC<BillPreviewModalProps> = ({
   useEffect(() => {
     if (!show) return;
     setInitialLoading(true);
-    const updatedCart = (cart || []).map((i) => ({
-      ...i,
-    }));
+    const updatedCart = (cart || []).map((i) => {
+      const rate = Number(i.rate || 0);
+      const qty = Number(i.qty || 0);
+
+      return {
+        ...i,
+        rate,
+        mrp: Number(i.mrp || i.MRP || 0),
+        subtotal:
+          i.subtotal !== undefined && i.subtotal !== null
+            ? Number(i.subtotal)
+            : Number((rate * qty).toFixed(2)), // ✅ fallback fix
+      };
+    });
 
     setTranslatedCart(updatedCart);
     setLanguage("en");
@@ -424,12 +439,12 @@ const BillPreviewModal: React.FC<BillPreviewModalProps> = ({
     }, 250);
   };
 
-  const grandTotal = (cart || []).reduce((acc, item) => {
-    const total = item.qty * item.price;
-    const discountAmount = item.Disc ? (total * item.Disc) / 100 : 0;
-    return acc + (total - discountAmount);
+  const grandTotal = (translatedCart || []).reduce((acc, item) => {
+    return acc + Number(item.subtotal || 0);
   }, 0);
 
+  console.log("CART:", cart);
+  console.log("TRANSLATED:", translatedCart);
   if (!show) return null;
 
   return (
@@ -544,16 +559,18 @@ const BillPreviewModal: React.FC<BillPreviewModalProps> = ({
                       <th>Qty</th>
                       <th>MRP (₹)</th>
                       <th>Discount (%)</th>
+                      <th>Rate (₹)</th>
                       <th>Subtotal (₹)</th>
                     </tr>
                   </thead>
                   <tbody>
                     {translatedCart.map((item, idx) => {
-                      const total = item.qty * item.price;
-                      const discountAmount = item.Disc
-                        ? (total * item.Disc) / 100
-                        : 0;
-                      const subtotal = total - discountAmount;
+                      // const total = item.qty * item.price;
+                      const mrp = Number(item.MRP || item.mrp || 0);
+                      // const discountAmount = item.Disc
+                      //   ? (total * item.Disc) / 100
+                      //   : 0;
+                      // const subtotal = total - discountAmount;
 
                       return (
                         <tr key={idx}>
@@ -563,9 +580,10 @@ const BillPreviewModal: React.FC<BillPreviewModalProps> = ({
                               ? `${item.pack_size} × ${item.qty}`
                               : item.qty}
                           </td>
-                          <td>{item.price}</td>
+                          <td>{formatPrice(mrp)}</td>
                           <td>{item.Disc}</td>
-                          <td>{formatAmount(subtotal)}</td>
+                          <td>{formatPrice(item.rate)}</td>
+                          <td>{formatPrice(item.subtotal || 0)}</td>
                         </tr>
                       );
                     })}
@@ -573,20 +591,20 @@ const BillPreviewModal: React.FC<BillPreviewModalProps> = ({
                   <tfoot>
                     <tr style={{ backgroundColor: "#f8f9fa" }}>
                       <th
-                        colSpan={4}
+                        colSpan={5}
                         className="text-end "
                         style={{ color: "red" }}
                       >
                         Total Amount
                       </th>
                       <th style={{ color: "red" }}>
-                        {formatAmount(grandTotal)}
+                        {formatPrice(grandTotal)}
                       </th>
                     </tr>
                     {Number(additionalDiscount) > 0 && (
                       <tr style={{ backgroundColor: "#f8f9fa" }}>
                         <th
-                          colSpan={4}
+                          colSpan={5}
                           className="text-end"
                           style={{ color: "green" }}
                         >
@@ -599,14 +617,14 @@ const BillPreviewModal: React.FC<BillPreviewModalProps> = ({
                     )}
                     <tr style={{ backgroundColor: "#f8f9fa" }}>
                       <th
-                        colSpan={4}
+                        colSpan={5}
                         className="text-end"
                         style={{ color: "#007bff" }}
                       >
                         Grand Total
                       </th>
                       <th style={{ color: "#007bff" }}>
-                        {formatAmount(
+                        {formatPrice(
                           grandTotal -
                             (grandTotal * Number(additionalDiscount)) / 100
                         )}

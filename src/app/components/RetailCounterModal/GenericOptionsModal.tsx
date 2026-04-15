@@ -1,7 +1,7 @@
 import { Medicine } from "@/types/medicine";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import "../../pharmacist/css/pharmacy-style.css";
-import { formatAmount } from "@/lib/utils/formatAmount";
+import { formatPrice } from "@/lib/utils/formatPrice";
 import TncLoader from "../TncLoader/TncLoader";
 
 declare module "react" {
@@ -280,7 +280,7 @@ const GenericOptionsModal: React.FC<GenericOptionsModalProps> = ({
                               {/* <td>{item.AvailableQty || "N/A"}</td> */}
                               <td>{item.pack_size || "N/A"}</td>
                               <td>
-                                ₹ {formatAmount(Number(item.MRP)) || "N/A"}
+                                ₹ {formatPrice(Number(item.MRP)) || "N/A"}
                               </td>
                               <td>
                                 <button

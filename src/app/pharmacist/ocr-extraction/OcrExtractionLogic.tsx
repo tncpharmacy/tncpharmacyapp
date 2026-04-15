@@ -1,5 +1,6 @@
 "use client";
 
+import GlobalProductSearchBox from "@/app/components/GlobalProductSearchBox/GlobalProductSearchBox";
 import GlobalSearchBox from "@/app/components/GlobalSearchBox/GlobalSearchBox";
 import SingleSelectDropdown from "@/app/components/Input/SingleSelectDropdown";
 import AddBillingItemModal from "@/app/components/RetailCounterModal/AddBillingItemModal";
@@ -113,6 +114,7 @@ export default function OcrExtractionLogic({
   const [cart, setCart] = useState<any[]>([]);
   const [shouldSubmit, setShouldSubmit] = useState(false);
 
+  const [isFromGenericFlow, setIsFromGenericFlow] = useState(false);
   const [isWhatsappWaitModalOpen, setIsWhatsappWaitModalOpen] = useState(false);
 
   const openWhatsappWait = () => setIsWhatsappWaitModalOpen(true);
@@ -176,8 +178,15 @@ export default function OcrExtractionLogic({
     remarks: string,
     duration: string
   ) => {
-    const mrp = item.MRP || 0;
-
+    const mrp = item.MRP || item.mrp || 0;
+    const parsedDiscount =
+      item.Disc !== undefined
+        ? Number(item.Disc)
+        : item.discount !== undefined
+        ? Number(item.discount)
+        : item.Discount !== undefined
+        ? Number(item.Discount)
+        : 0;
     const cartItem = {
       ...item,
       qty,
@@ -188,7 +197,9 @@ export default function OcrExtractionLogic({
       price: mrp * qty,
       generic_name: item.generic_name || item.GenericName || "N/A",
       pack_size: item.pack_size || "N/A",
+      manufacturer_name: item.manufacturer_name || item.Manufacturer || "N/A",
       cartItemId: Date.now() + Math.random(),
+      Disc: parsedDiscount,
     };
 
     setCart((prev) => [...prev, cartItem]);
@@ -296,15 +307,17 @@ export default function OcrExtractionLogic({
             }
           }}
         /> */}
-        <GlobalSearchBox
+        <GlobalProductSearchBox
           placeholder="Search product..."
           onSelect={(item) => {
             const med = item.data;
             setSelectedProduct(med);
             if (med.category_id === 1) {
+              setIsFromGenericFlow(true);
               dispatch(getProductByGenericId(Number(med.id)));
               setIsModalOpen(true); // 🔥 IMPORTANT
             } else {
+              setIsFromGenericFlow(false);
               handleSkipGenericModal(med);
             }
           }}

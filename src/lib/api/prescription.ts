@@ -7,6 +7,27 @@ const publicAxios = axios.create({
   baseURL: mediaBase,
 });
 
+export const uploadPrescriptionFromBuyerCart = async ({
+  formData,
+  token,
+}: {
+  formData: FormData;
+  token: string;
+}) => {
+  const headers = {
+    Authorization: `Bearer ${token}`,
+    "Content-Type": "multipart/form-data",
+  };
+
+  const res = await axiosInstance.post(
+    ENDPOINTS.PRESCRIPTION_UPLOAD.CREATE_PRESCRIPTION_FROM_BUYER_CART,
+    formData,
+    { headers }
+  );
+
+  return res.data;
+};
+
 export const uploadPrescription = async ({
   formData,
 }: {
