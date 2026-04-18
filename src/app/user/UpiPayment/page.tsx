@@ -12,7 +12,7 @@ export default function UpiPayment() {
   return (
     <>
       <div className="page-wrapper">
-        <SiteHeader />
+        {/* <SiteHeader /> */}
 
         <section className="container my-5">
           <div className="row justify-content-center">

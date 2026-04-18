@@ -12,7 +12,7 @@ export default function EditorialPolicy() {
   return (
     <>
       <div className="page-wrapper">
-        <SiteHeader />
+        {/* <SiteHeader /> */}
 
         <div className="container-fluid my-2">
           <div className="row justify-content-center">

@@ -47,7 +47,7 @@ export default function AllMedicine() {
   return (
     <>
       <div className="page-wrapper">
-        <SiteHeader />
+        {/* <SiteHeader /> */}
 
         <div className="body_wrap">
           {/* <FilterSidebar /> */}

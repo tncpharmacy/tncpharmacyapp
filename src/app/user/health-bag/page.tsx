@@ -657,7 +657,7 @@ export default function HealthBags() {
   };
   return (
     <>
-      <SiteHeader />
+      {/* <SiteHeader /> */}
 
       <section className="py-4 bg-light">
         <div className="container">

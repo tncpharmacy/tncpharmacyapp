@@ -218,7 +218,7 @@ export default function SearchTextClient() {
   return (
     <>
       <div className="page-wrapper">
-        <SiteHeader />
+        {/* <SiteHeader /> */}
 
         <div className="body_wrap">
           <div className="body_right">

@@ -227,7 +227,7 @@ export default function AllProduct() {
   return (
     <>
       <div className="page-wrapper">
-        <SiteHeader />
+        {/* <SiteHeader /> */}
 
         <div className="body_wrap">
           <div className="body_right">

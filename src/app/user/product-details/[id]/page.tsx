@@ -639,7 +639,7 @@ export default function ProductPage() {
   );
   return (
     <>
-      <SiteHeader />
+      {/* <SiteHeader /> */}
       <div className="page-wrapper pd_detail">
         <div className="container py-4">
           <nav aria-label="breadcrumb" style={{ fontSize: "13px" }}>

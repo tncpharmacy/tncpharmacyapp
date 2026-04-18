@@ -143,7 +143,7 @@ export default function Checkout() {
 
   return (
     <div className="page-wrapper bg-light min-vh-100 d-flex flex-column">
-      <SiteHeader />
+      {/* <SiteHeader /> */}
 
       <div className="container py-5">
         <h4 className="fw-bold text-center mb-4 text-primary">

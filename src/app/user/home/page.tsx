@@ -298,7 +298,7 @@ export default function HomePage() {
 
   return (
     <>
-      <SiteHeader />
+      {/* <SiteHeader /> */}
 
       <Carousel
         fade
