@@ -9,6 +9,8 @@ import { store } from "@/lib/store";
 import { logout } from "@/lib/features/authSlice/authSlice";
 import AuthInitializer from "@/components/AuthInitializer/AuthInitializer";
 import LayoutFix from "@/components/LayoutFix/LayoutFix";
+import { getMenuData } from "@/lib/server/menu";
+import SiteHeader from "@/app/user/components/header/header";
 
 // run 1 time on app start
 // setUnauthorizedHandler(() => {
@@ -21,11 +23,20 @@ export const metadata: Metadata = {
   description: "Trust and Care",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  function shuffle(arr: any) {
+    return [...arr].sort(() => 0.5 - Math.random());
+  }
+
+  const { categories, subcategories } = await getMenuData();
+
+  const shuffledCategories = shuffle(categories);
+
   return (
     <html lang="en" data-scroll-behavior="smooth">
       <head>
@@ -38,7 +49,12 @@ export default function RootLayout({
       <body>
         <LayoutFix />
         <Providers>
-          <AuthInitializer /> {children}
+          <AuthInitializer />
+          <SiteHeader
+            initialCategories={shuffledCategories}
+            initialSubcategories={subcategories}
+          />
+          {children}
         </Providers>
         <ToastProvider />
       </body>

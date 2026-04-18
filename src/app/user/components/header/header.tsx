@@ -34,7 +34,13 @@ type SearchMatch = {
 };
 const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL;
 
-const SiteHeader = () => {
+type Props = {
+  initialCategories: Category[];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  initialSubcategories: any[];
+};
+
+const SiteHeader = ({ initialCategories, initialSubcategories }: Props) => {
   const dispatch = useAppDispatch();
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
@@ -48,11 +54,13 @@ const SiteHeader = () => {
   const [showBuyerLogin, setShowBuyerLogin] = useState(false);
   const [showModal, setShowModal] = useState(false);
 
-  const { list: categories } = useAppSelector((state) => state.category);
-  const { listAll: subcategories } = useAppSelector(
-    (state) => state.subcategory
-  );
-  const [shuffledCategories, setShuffledCategories] = useState<Category[]>([]);
+  // const { list: categories, loading } = useAppSelector(
+  //   (state) => state.category
+  // );
+  // const { listAll: subcategories } = useAppSelector(
+  //   (state) => state.subcategory
+  // );
+  // const [shuffledCategories, setShuffledCategories] = useState<Category[]>([]);
   const [headerSearch, setHeaderSearch] = useState("");
   const [isArrowNavigation, setIsArrowNavigation] = useState(false);
   const isSelecting = useRef(false);
@@ -66,6 +74,16 @@ const SiteHeader = () => {
   const [loadingSearch, setLoadingSearch] = useState(false);
   const [showList, setShowList] = useState(false);
   const [highlightIndex, setHighlightIndex] = useState(-1);
+
+  const reduxCategories = useAppSelector((state) => state.category.list);
+  const reduxSubcategories = useAppSelector(
+    (state) => state.subcategory.listAll
+  );
+
+  const categories = initialCategories || [];
+  const subcategories = initialSubcategories || [];
+
+  // const shuffledCategories = categories;
 
   useEffect(() => {
     const search = headerSearch.trim().toLowerCase();
@@ -153,11 +171,14 @@ const SiteHeader = () => {
   }, [headerSearch, dispatch]);
 
   // ---------- INITIAL LOAD ----------
+  // useEffect(() => {
+  //   setMounted(true);
+  //   dispatch(getCategoriesList());
+  //   dispatch(getSubcategoriesList());
+  // }, [dispatch]);
   useEffect(() => {
     setMounted(true);
-    dispatch(getCategoriesList());
-    dispatch(getSubcategoriesList());
-  }, [dispatch]);
+  }, []);
 
   useEffect(() => {
     if (!buyer?.id) {
@@ -221,17 +242,17 @@ const SiteHeader = () => {
   }, [userId, mounted]);
 
   // ---------- CATEGORY SHUFFLE ----------
-  useEffect(() => {
-    if (!categories || categories.length === 0) return;
-    const savedShuffle = localStorage.getItem("shuffledMenu");
-    if (savedShuffle) {
-      setShuffledCategories(JSON.parse(savedShuffle));
-      return;
-    }
-    const shuffled = [...categories].sort(() => Math.random() - 0.5);
-    setShuffledCategories(shuffled);
-    localStorage.setItem("shuffledMenu", JSON.stringify(shuffled));
-  }, [categories]);
+  // useEffect(() => {
+  //   if (!categories || categories.length === 0) return;
+  //   const savedShuffle = localStorage.getItem("shuffledMenu");
+  //   if (savedShuffle) {
+  //     setShuffledCategories(JSON.parse(savedShuffle));
+  //     return;
+  //   }
+  //   const shuffled = [...categories].sort(() => Math.random() - 0.5);
+  //   setShuffledCategories(shuffled);
+  //   localStorage.setItem("shuffledMenu", JSON.stringify(shuffled));
+  // }, [categories]);
 
   useEffect(() => {
     const handleReload = () => localStorage.removeItem("shuffledMenu");
@@ -382,7 +403,7 @@ const SiteHeader = () => {
     setOpenCategoryId((prev) => (prev === categoryId ? null : categoryId));
   };
 
-  const filteredCategories = shuffledCategories.filter(
+  const filteredCategories = categories.filter(
     (cat) => cat.category_name !== "Medicines" && cat.status === "Active"
   );
 
@@ -673,86 +694,91 @@ const SiteHeader = () => {
       {/* ---------- MENU ---------- */}
       <div className="menu_header">
         <div className="container">
-          <ul className="main_menu">
-            <li>
-              <Link href="/all-medicine" className="link">
-                All Medicine <i className="bi bi-grid-fill"></i>
-              </Link>
-            </li>
+          {categories?.length > 0 && (
+            <ul className="main_menu">
+              <li>
+                <Link href="/all-medicine" className="link">
+                  All Medicine <i className="bi bi-grid-fill"></i>
+                </Link>
+              </li>
 
-            {filteredCategories.slice(0, 5).map((cat, index) => {
-              const filteredSubcategories = subcategories.filter(
-                (sub) => String(sub.category_id) === String(cat.id)
-              );
-              return (
-                <li key={`${cat.id}-${index}`}>
-                  <Link href={`/all-product/${encodeId(cat.id)}`}>
-                    {cat.category_name}
-                  </Link>
-                  <div className="megamenu-panel">
-                    {filteredSubcategories.length > 0 ? (
-                      <ul className="megamenu-list">
-                        {filteredSubcategories.map((sub) => (
-                          <li key={sub.id}>
-                            <Link
-                              href="#"
-                              onClick={() =>
-                                handleCategoryClick(cat.id, sub.id)
-                              }
-                            >
-                              {sub.sub_category_name}
-                            </Link>
-                          </li>
-                        ))}
-                      </ul>
-                    ) : (
-                      <ul className="no-subcategories">
-                        <li>No Subcategories</li>
-                      </ul>
-                    )}
+              {filteredCategories.slice(0, 5).map((cat, index) => {
+                const filteredSubcategories = subcategories.filter(
+                  (sub) => String(sub.category_id) === String(cat.id)
+                );
+                return (
+                  <li key={`${cat.id}-${index}`}>
+                    <Link href={`/all-product/${encodeId(cat.id)}`}>
+                      {cat.category_name}
+                    </Link>
+                    <div className="megamenu-panel">
+                      {filteredSubcategories.length > 0 ? (
+                        <ul className="megamenu-list">
+                          {filteredSubcategories.map((sub) => (
+                            <li key={sub.id}>
+                              <Link
+                                href="#"
+                                onClick={() =>
+                                  handleCategoryClick(cat.id, sub.id)
+                                }
+                              >
+                                {sub.sub_category_name}
+                              </Link>
+                            </li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <ul className="no-subcategories">
+                          <li>No Subcategories</li>
+                        </ul>
+                      )}
+                    </div>
+                  </li>
+                );
+              })}
+
+              {/* More Menu */}
+              {categories.length > 5 && (
+                <li className="position-relative">
+                  <a href="#">More</a>
+                  <div className="megamenu-panel2">
+                    <ul className="megamenu-list">
+                      {filteredCategories.slice(5).map((cat) => (
+                        <li key={cat.id}>
+                          <Link href={`/all-product/${encodeId(cat.id)}`}>
+                            {cat.category_name}
+                          </Link>
+                        </li>
+                      ))}
+                    </ul>
                   </div>
                 </li>
-              );
-            })}
+              )}
 
-            {/* More Menu */}
-            {shuffledCategories.length > 5 && (
-              <li className="position-relative">
-                <a href="#">More</a>
-                <div className="megamenu-panel2">
-                  <ul className="megamenu-list">
-                    {filteredCategories.slice(5).map((cat) => (
-                      <li key={cat.id}>
-                        <Link href={`/all-product/${encodeId(cat.id)}`}>
-                          {cat.category_name}
-                        </Link>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </li>
-            )}
-
-            {/* Upload Prescription */}
-            <li className="float-end">
-              <button className="btn_uoload" onClick={() => setShowModal(true)}>
-                <span>
-                  Upload
-                  <br /> Prescription
-                </span>
-                <Image
-                  src="/images/icons/icon-upload.svg"
-                  width={20}
-                  height={20}
-                  alt="Upload"
+              {/* Upload Prescription */}
+              <li className="float-end">
+                <button
+                  className="btn_uoload"
+                  onClick={() => setShowModal(true)}
+                >
+                  <span>
+                    Upload
+                    <br /> Prescription
+                  </span>
+                  <Image
+                    src="/images/icons/icon-upload.svg"
+                    width={20}
+                    height={20}
+                    alt="Upload"
+                  />
+                </button>
+                <PrescriptionUploadModal
+                  show={showModal}
+                  handleClose={() => setShowModal(false)}
                 />
-              </button>
-              <PrescriptionUploadModal
-                show={showModal}
-                handleClose={() => setShowModal(false)}
-              />
-            </li>
-          </ul>
+              </li>
+            </ul>
+          )}
         </div>
       </div>
       {/* ---------- MOBILE SIDE MENU ---------- */}
@@ -789,7 +815,7 @@ const SiteHeader = () => {
                 </div>
               </li>
 
-              {shuffledCategories
+              {categories
                 .filter((c) => c.category_name !== "Medicines")
                 .map((cat) => (
                   <li key={cat.id} className="mobile-category">
