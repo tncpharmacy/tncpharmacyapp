@@ -31,103 +31,103 @@ const nextConfig: NextConfig = {
       //User routes
       {
         source: "/profile",
-        destination: "/user/profile",
+        destination: "/profile",
       },
       {
         source: "/search-text",
-        destination: "/user/search-text",
+        destination: "/search-text",
       },
       {
         source: "/all-group-care/:id",
-        destination: "/user/all-group-care/:id",
+        destination: "/all-group-care/:id",
       },
       {
         source: "/all-product/:id",
-        destination: "/user/all-product/:id",
+        destination: "/all-product/:id",
       },
       {
         source: "/all-products/:categoryId/:subCategoryId",
-        destination: "/user/all-products/:categoryId/:subCategoryId",
+        destination: "/all-products/:categoryId/:subCategoryId",
       },
       {
         source: "/all-generic/:id",
-        destination: "/user/all-generic/:id",
+        destination: "/all-generic/:id",
       },
       {
         source: "/all-manufacturer/:id",
-        destination: "/user/all-manufacturer/:id",
+        destination: "/all-manufacturer/:id",
       },
       {
         source: "/product-details/:id",
-        destination: "/user/product-details/:id",
+        destination: "/product-details/:id",
       },
       {
         source: "/all-medicine",
-        destination: "/user/all-medicine/all-medicine",
+        destination: "/all-medicine/all-medicine",
       },
       {
         source: "/medicines-details/:id",
-        destination: "/user/medicines-details/:id",
+        destination: "/medicines-details/:id",
       },
       {
         source: "/health-bag",
-        destination: "/user/health-bag",
+        destination: "/health-bag",
       },
       {
         source: "/address",
-        destination: "/user/address",
+        destination: "/address",
       },
       {
         source: "/checkout",
-        destination: "/user/checkout",
+        destination: "/checkout",
       },
       {
         source: "/about-us",
-        destination: "/user/about-us",
+        destination: "/about-us",
       },
       {
         source: "/contact-us",
-        destination: "/user/contact-us",
+        destination: "/contact-us",
       },
       {
         source: "/return-policy",
-        destination: "/user/return-policy",
+        destination: "/return-policy",
       },
       {
         source: "/refund-policy",
-        destination: "/user/refund-policy",
+        destination: "/refund-policy",
       },
       {
         source: "/shipping-policy",
-        destination: "/user/shipping-policy",
+        destination: "/shipping-policy",
       },
       {
         source: "/terms-and-conditions",
-        destination: "/user/terms-and-conditions",
+        destination: "/terms-and-conditions",
       },
       {
         source: "/privacy-policy",
-        destination: "/user/privacy-policy",
+        destination: "/privacy-policy",
       },
       {
         source: "/editorial-policy",
-        destination: "/user/editorial-policy",
+        destination: "/editorial-policy",
       },
       {
         source: "/FAQs",
-        destination: "/user/FAQs",
+        destination: "/FAQs",
       },
       {
         source: "/our-stores",
-        destination: "/user/our-stores",
+        destination: "/our-stores",
       },
       {
         source: "/blog",
-        destination: "/user/blog",
+        destination: "/blog",
       },
       // {
       //   source: "/address",
-      //   destination: "/user/address/add",
+      //   destination: "/address/add",
       // },
 
       // Backend API rewrites

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Modal } from "react-bootstrap";
 import { toast } from "react-hot-toast";
 import { Address, AddressResponse } from "@/types/address";
-import "../../user/css/user-style.css";
+import "../../(user)/css/user-style.css";
 import {
   addAddress,
   getAddress,

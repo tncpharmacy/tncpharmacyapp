@@ -9,9 +9,7 @@ import { store } from "@/lib/store";
 import { logout } from "@/lib/features/authSlice/authSlice";
 import AuthInitializer from "@/components/AuthInitializer/AuthInitializer";
 import LayoutFix from "@/components/LayoutFix/LayoutFix";
-import { getMenuData } from "@/lib/server/menu";
-import SiteHeader from "@/app/user/components/header/header";
-export const dynamic = "force-dynamic";
+
 // run 1 time on app start
 // setUnauthorizedHandler(() => {
 //   store.dispatch(logout());
@@ -23,13 +21,11 @@ export const metadata: Metadata = {
   description: "Trust and Care",
 };
 
-export default async function RootLayout({
+export default function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const { categories, subcategories } = await getMenuData();
-
   return (
     <html lang="en" data-scroll-behavior="smooth">
       <head>
@@ -42,12 +38,7 @@ export default async function RootLayout({
       <body>
         <LayoutFix />
         <Providers>
-          <AuthInitializer />
-          <SiteHeader
-            initialCategories={categories}
-            initialSubcategories={subcategories}
-          />
-          {children}
+          <AuthInitializer /> {children}
         </Providers>
         <ToastProvider />
       </body>
