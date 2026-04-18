@@ -407,7 +407,7 @@ const SiteHeader = ({ initialCategories, initialSubcategories }: Props) => {
     (cat) => cat.category_name !== "Medicines" && cat.status === "Active"
   );
 
-  console.log("filteredCategories", filteredCategories);
+  // console.log("filteredCategories", filteredCategories);
   // ---------- RENDER ----------
   return (
     <header id="header">
