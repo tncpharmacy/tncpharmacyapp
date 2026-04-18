@@ -1,5 +1,6 @@
 import { getHomeData } from "@/lib/server/home";
 import HomeClient from "./homeClient";
+export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
   const { groupCare, category5, category7, category9, categories } =

@@ -11,7 +11,7 @@ import AuthInitializer from "@/components/AuthInitializer/AuthInitializer";
 import LayoutFix from "@/components/LayoutFix/LayoutFix";
 import { getMenuData } from "@/lib/server/menu";
 import SiteHeader from "@/app/user/components/header/header";
-
+export const dynamic = "force-dynamic";
 // run 1 time on app start
 // setUnauthorizedHandler(() => {
 //   store.dispatch(logout());
@@ -28,14 +28,7 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  function shuffle(arr: any) {
-    return [...arr].sort(() => 0.5 - Math.random());
-  }
-
   const { categories, subcategories } = await getMenuData();
-
-  const shuffledCategories = shuffle(categories);
 
   return (
     <html lang="en" data-scroll-behavior="smooth">
@@ -51,7 +44,7 @@ export default async function RootLayout({
         <Providers>
           <AuthInitializer />
           <SiteHeader
-            initialCategories={shuffledCategories}
+            initialCategories={categories}
             initialSubcategories={subcategories}
           />
           {children}
