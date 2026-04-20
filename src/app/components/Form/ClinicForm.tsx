@@ -126,7 +126,7 @@ export default function ClinicForm({ id }: Props) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("🚀 handleSubmit called, current formData:", formData);
+    // console.log("🚀 handleSubmit called, current formData:", formData);
 
     const formDataToSend = new FormData();
 
@@ -179,9 +179,9 @@ export default function ClinicForm({ id }: Props) {
     }
 
     // debug: show all FormData entries
-    for (const [key, value] of formDataToSend.entries()) {
-      console.log("📦 FormData entry:", key, value);
-    }
+    // for (const [key, value] of formDataToSend.entries()) {
+    //   console.log("📦 FormData entry:", key, value);
+    // }
 
     try {
       if (id) {

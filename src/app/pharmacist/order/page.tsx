@@ -7,7 +7,7 @@ import "../css/pharmacy-style.css";
 import SideNav from "@/app/pharmacist/components/SideNav/page";
 import Header from "@/app/pharmacist/components/Header/page";
 import { useRouter } from "next/navigation";
-import Input from "@/app/components/Input/Input";
+import Input from "@/app/components/Input/InputColSm";
 import { useAppDispatch, useAppSelector } from "@/lib/hooks";
 import {
   getPharmacistOrderByBuyerId,
@@ -25,8 +25,13 @@ import ExcelJS from "exceljs";
 import { saveAs } from "file-saver";
 import TncLoader from "@/app/components/TncLoader/TncLoader";
 import { formatDate } from "@/lib/utils/dateFormatter";
-//import * as XLSX from "xlsx";
-// import XLSX from "xlsx-style";
+import {
+  getReportOrderWiseApi,
+  getReportProductWiseApi,
+} from "@/lib/api/pharmacistOrder";
+import { formatPrice } from "@/lib/utils/formatPrice";
+
+const mediaPrescriptionBase = process.env.NEXT_PUBLIC_PRESCRIPTION_BASE_URL;
 
 type Buyer = {
   id: number;
@@ -55,6 +60,8 @@ export default function OrderList() {
   const [showReport, setShowReport] = useState(false);
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
+  const [orderTypes, setOrderTypes] = useState("");
+  const [paymentMode, setPaymentMode] = useState("");
 
   // Infinite scroll state
   const [visibleCount, setVisibleCount] = useState(10);
@@ -81,6 +88,9 @@ export default function OrderList() {
     referredByHospital: "",
   });
   const [additionalDiscount, setAdditionalDiscount] = useState<string>("0");
+  // prescription view state
+  const [previewUrl, setPreviewUrl] = useState("");
+  const [showPreview, setShowPreview] = useState(false);
 
   const {
     buyerOrderList,
@@ -158,7 +168,6 @@ export default function OrderList() {
 
   const handleBuyerChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const value = e.target.value;
-
     if (value === "") {
       setSelectedBuyer("");
       dispatch(getPharmacistOrders()); // Reset full list
@@ -173,109 +182,95 @@ export default function OrderList() {
 
   // 🗓️ Aaj ki date (YYYY-MM-DD)
   const today = new Date().toISOString().split("T")[0];
-  //  EXPORT / REPORT LOGIC
-  const handleExport = async () => {
+  //  get report order wise
+  const handleOrderWiseExport = async () => {
     if (!startDate || !endDate) {
       alert("Please select both start and end dates.");
       return;
     }
 
-    const start = new Date(`${startDate}T00:00:00`);
-    const end = new Date(`${endDate}T23:59:59.999`);
-
     try {
       setExportLoading(true);
 
-      const allOrders = Array.isArray(orders) ? orders : [];
-
-      const filteredOrders = allOrders.filter((o) => {
-        if (!o?.orderDate) return false;
-        const od = new Date(o.orderDate.replace(" ", "T"));
-        return od >= start && od <= end;
+      let grandTotal = 0;
+      const res = await getReportOrderWiseApi({
+        startDate,
+        endDate,
+        orderType:
+          orderTypes && orderTypes !== "0" ? Number(orderTypes) : undefined,
+        paymentMode:
+          paymentMode && paymentMode !== "0" ? Number(paymentMode) : undefined,
       });
 
-      if (!filteredOrders.length) {
-        alert("No orders found for selected date range.");
+      // ✅ FIX: correct data extraction
+      const apiData = res?.data?.data;
+
+      if (!Array.isArray(apiData) || apiData.length === 0) {
+        alert("No data found for selected filters.");
         setShowReport(false);
         return;
       }
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const rows: any[] = [];
-      let serial = 1; // 🔥 START SERIAL NUMBER
+      let serial = 1;
 
-      for (const ord of filteredOrders) {
-        const res = await dispatch(
-          getPharmacistOrderById({ orderId: ord.orderId })
-        ).unwrap();
-
-        const orderDetails =
-          Array.isArray(res?.data) && res.data.length ? res.data[0] : null;
-
-        if (!orderDetails) continue;
-
-        const base = {
-          "Sr. No.": "",
-          "Order Id": orderDetails.orderId ?? "",
-          "Patient Name": orderDetails.buyerName ?? "",
-          Mobile: orderDetails.buyerNumber ?? "",
-          Email: orderDetails.buyerEmail ?? "",
-          UHID: orderDetails.buyer_uhid ?? "",
-          "Order Date": orderDetails.orderDate ?? "",
-          "Payment Status": orderDetails.paymentStatus ?? "",
-          Amount: formatAmount(orderDetails.amount ?? ""),
-          "Order Type": orderDetails.orderType ?? "",
-          "Payment Mode": orderDetails.paymentMode ?? "",
-          "Additional Discount": orderDetails.additional_discount ?? "",
-        };
-
+      for (const orderDetails of apiData) {
         const products = orderDetails.products ?? [];
 
-        if (products.length) {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          products.forEach((p: any) => {
-            rows.push({
-              ...base,
-              "Sr. No.": serial++,
-              "Medicine Name": p.medicine_name ?? "",
-              Manufacturer: p.manufacturer ?? "",
-              Quantity: p.quantity ?? "",
-              MRP: p.mrp ?? "",
-              Discount: p.discount ?? "",
-              Rate: p.rate ?? "",
-            });
-          });
-        } else {
+        if (!products.length) continue;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        products.forEach((p: any, index: number) => {
+          // ✅ ADD TOTAL ONLY ONCE PER ORDER
+          if (index === 0) {
+            grandTotal += Number(orderDetails.amount || 0);
+          }
           rows.push({
-            ...base,
-            "Medicine Name": "",
-            Manufacturer: "",
-            Quantity: "",
-            MRP: "",
-            Discount: "",
-            Rate: "",
+            "Sr. No.": index === 0 ? serial++ : "",
+
+            // ✅ ONLY FIRST ROW FULL DATA
+            "Order Id": index === 0 ? orderDetails.orderId ?? "" : "",
+            "Patient Name": index === 0 ? orderDetails.buyerName ?? "" : "",
+            Mobile: index === 0 ? orderDetails.buyerNumber ?? "" : "",
+            "Order Date": index === 0 ? orderDetails.orderDate ?? "" : "",
+            Amount: index === 0 ? formatPrice(orderDetails.amount ?? "") : "",
+            "Order Type": index === 0 ? orderDetails.orderType ?? "" : "",
+            "Payment Mode": index === 0 ? orderDetails.paymentMode ?? "" : "",
+            // ✅ ALWAYS PRINT PRODUCT DATA
+            "Medicine Name": p.medicine_name ?? "",
+            Quantity: p.quantity ?? "",
           });
-        }
+        });
       }
 
-      // ====== CREATE WORKBOOK ======
+      // ✅ Excel creation
       const workbook = new ExcelJS.Workbook();
       const worksheet = workbook.addWorksheet("Orders");
 
-      // Set header row
       const header = Object.keys(rows[0]);
       worksheet.addRow(header);
 
-      // Add data rows
       rows.forEach((r) => worksheet.addRow(Object.values(r)));
+      // 🔥 YAHAN ADD KARNA HAI
+      worksheet.addRow([]);
 
-      // ===== HEADER STYLING =====
+      const totalRow = worksheet.addRow([
+        "",
+        "",
+        "",
+        "",
+        "Grand Total",
+        formatAmount(grandTotal),
+      ]);
+      totalRow.font = { bold: true };
+
+      // Header styling
       const headerRow = worksheet.getRow(1);
       headerRow.eachCell((cell) => {
-        cell.font = { bold: true, color: { argb: "000000" } };
+        cell.font = { bold: true };
         cell.fill = {
           type: "pattern",
           pattern: "solid",
-          fgColor: { argb: "B4C4E0" }, // light blue
+          fgColor: { argb: "B4C4E0" },
         };
         cell.alignment = { horizontal: "center", vertical: "middle" };
         cell.border = {
@@ -286,8 +281,8 @@ export default function OrderList() {
         };
       });
 
-      // ===== BORDER FOR ALL DATA CELLS =====
-      worksheet.eachRow((row, rowNum) => {
+      // Borders for all cells
+      worksheet.eachRow((row) => {
         row.eachCell((cell) => {
           cell.border = {
             top: { style: "thin" },
@@ -298,17 +293,106 @@ export default function OrderList() {
         });
       });
 
-      // ===== DOWNLOAD FILE =====
+      // Download file
       const buffer = await workbook.xlsx.writeBuffer();
-      saveAs(
-        new Blob([buffer], { type: "application/octet-stream" }),
-        `orders_${startDate}_to_${endDate}.xlsx`
-      );
-
+      saveAs(new Blob([buffer]), `orders_${startDate}_to_${endDate}.xlsx`);
+      // ✅ RESET FORM
+      setStartDate("");
+      setEndDate("");
+      setOrderTypes("");
+      setPaymentMode("");
       setShowReport(false);
-    } catch (e) {
-      console.error(e);
-      alert("Export error");
+    } catch (error) {
+      console.error("Export Error:", error);
+      alert("Export failed. Check console.");
+    } finally {
+      setExportLoading(false);
+    }
+  };
+  // get report product wise
+  const handleProductWiseExport = async () => {
+    try {
+      setExportLoading(true);
+
+      const res = await getReportProductWiseApi(); // 👈 tera API
+
+      const apiData = res?.data?.data;
+
+      if (!Array.isArray(apiData) || apiData.length === 0) {
+        alert("No data found");
+        return;
+      }
+
+      // 🔥 PRODUCT AGGREGATION
+      const productMap: Record<string, number> = {};
+
+      for (const order of apiData) {
+        const products = order.products ?? [];
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        products.forEach((p: any) => {
+          const name = p.medicine_name || "Unknown";
+          const qty = Number(p.quantity || 0);
+
+          if (productMap[name]) {
+            productMap[name] += qty;
+          } else {
+            productMap[name] = qty;
+          }
+        });
+      }
+
+      // 🔥 CONVERT TO ROWS
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const rows: any[] = [];
+      let serial = 1;
+
+      Object.entries(productMap).forEach(([name, qty]) => {
+        rows.push({
+          "Sr. No.": serial++,
+          "Product Name": name,
+          Quantity: qty,
+        });
+      });
+
+      // 🔥 EXCEL
+      const workbook = new ExcelJS.Workbook();
+      const worksheet = workbook.addWorksheet("Product Report");
+
+      const header = Object.keys(rows[0]);
+      worksheet.addRow(header);
+
+      rows.forEach((r) => worksheet.addRow(Object.values(r)));
+
+      // Header styling
+      const headerRow = worksheet.getRow(1);
+      headerRow.eachCell((cell) => {
+        cell.font = { bold: true };
+        cell.fill = {
+          type: "pattern",
+          pattern: "solid",
+          fgColor: { argb: "B4C4E0" },
+        };
+        cell.alignment = { horizontal: "center" };
+      });
+
+      // Borders
+      worksheet.eachRow((row) => {
+        row.eachCell((cell) => {
+          cell.border = {
+            top: { style: "thin" },
+            left: { style: "thin" },
+            right: { style: "thin" },
+            bottom: { style: "thin" },
+          };
+        });
+      });
+
+      // Download
+      const buffer = await workbook.xlsx.writeBuffer();
+      saveAs(new Blob([buffer]), `product_report.xlsx`);
+    } catch (error) {
+      console.error(error);
+      alert("Export failed");
     } finally {
       setExportLoading(false);
     }
@@ -372,6 +456,14 @@ export default function OrderList() {
     handleReprint(order);
   };
 
+  const handleViewPrescription = (url?: string | null) => {
+    if (url) {
+      setPreviewUrl(`${url}`);
+    } else {
+      setPreviewUrl("");
+    }
+    setShowPreview(true);
+  };
   return (
     <>
       <Header />
@@ -385,20 +477,34 @@ export default function OrderList() {
           >
             <div style={{ overflowX: "hidden", width: "100%" }}>
               <div
-                className="row align-items-center justify-content-between"
-                style={{ marginLeft: 0, marginRight: 0, width: "100%" }}
+                className="row align-items-center"
+                style={{ marginLeft: 0, marginRight: 0 }}
               >
+                {/* LEFT TITLE */}
                 <div className="pageTitle col-md-6 col-12 text-start mt-2">
                   <i className="bi bi-receipt"></i> Order Summary
                 </div>
 
-                <div className="col-md-6 col-12 text-end mt-2 mb-2">
+                {/* RIGHT BUTTON GROUP */}
+                <div className="col-md-6 col-12 d-flex justify-content-md-end justify-content-start mt-2 mb-2 gap-2">
                   <Button
                     variant="outline-primary"
                     onClick={() => setShowReport(true)}
                     className="btn-style1"
                   >
-                    <i className="bi bi-file-earmark-text"></i> Generate Report
+                    <i className="bi bi-file-earmark-text"></i>{" "}
+                    <span className="fw-semibold">Sales Report Orderwise</span>
+                  </Button>
+
+                  <Button
+                    variant="outline-primary"
+                    onClick={handleProductWiseExport}
+                    className="btn-style1"
+                  >
+                    <i className="bi bi-file-earmark-text"></i>{" "}
+                    <span className="fw-semibold">
+                      Sales Report Productwise
+                    </span>
                   </Button>
                 </div>
               </div>
@@ -469,7 +575,6 @@ export default function OrderList() {
                         <th className="fw-bold text-start">Amount</th>
                         <th className="fw-bold text-start">Type</th>
                         <th className="fw-bold text-start">Mode</th>
-                        <th className="fw-bold text-start">Status</th>
                         <th className="fw-bold text-start">Date</th>
                         <th className="fw-bold text-center">Action</th>
                       </tr>
@@ -513,9 +618,6 @@ export default function OrderList() {
                                     {p.paymentMode ?? ""}
                                   </td>
                                   <td className="text-start">
-                                    {p.paymentStatus ?? ""}
-                                  </td>
-                                  <td className="text-start">
                                     {formatDate(p.orderDate ?? "")}
                                   </td>
                                   <td className="text-center">
@@ -525,6 +627,17 @@ export default function OrderList() {
                                       onClick={() => handleHistory(p.orderId)}
                                     >
                                       <i className="bi bi-eye-fill"></i>
+                                    </button>
+                                    <button
+                                      className="btn btn-sm btn-light"
+                                      onClick={() =>
+                                        handleViewPrescription(
+                                          p.prescription_url
+                                        )
+                                      }
+                                      title="View Prescription"
+                                    >
+                                      <i className="bi bi-file-earmark-text text-danger"></i>
                                     </button>
                                     <button
                                       className="btn btn-light btn-sm ms-2"
@@ -838,7 +951,7 @@ export default function OrderList() {
           </Button>
         </Modal.Footer>
       </Modal>
-      {/* Generate Report Modal */}
+      {/* Generate Report Modal with order wise */}
       <Modal
         show={showReport}
         onHide={() => setShowReport(false)}
@@ -862,6 +975,7 @@ export default function OrderList() {
                 onChange={(e) => setStartDate(e.target.value)}
                 required
                 max={today}
+                colSm={3}
               />
               <Input
                 label="End Date"
@@ -871,32 +985,35 @@ export default function OrderList() {
                 onChange={(e) => setEndDate(e.target.value)}
                 required
                 max={today}
+                colSm={3}
+              />
+              <Input
+                label="Order Type"
+                type="select"
+                name="orderTypes"
+                value={orderTypes}
+                onChange={(e) => setOrderTypes(e.target.value)}
+                required
+                options={[
+                  { value: "1", label: "Online" },
+                  { value: "2", label: "Offline" },
+                ]}
+                colSm={3}
               />
 
-              <div className="col-md-4 mb-3 d-flex align-items-end">
-                <Button
-                  variant="primary"
-                  className="w-100 d-flex align-items-center justify-content-center gap-2"
-                  style={{ height: "46px" }}
-                  onClick={handleExport}
-                  disabled={exportLoading}
-                >
-                  {exportLoading ? (
-                    <>
-                      <span
-                        className="spinner-border spinner-border-sm"
-                        role="status"
-                        aria-hidden="true"
-                      ></span>
-                      <span> Generating...</span>
-                    </>
-                  ) : (
-                    <>
-                      <i className="bi bi-download"></i> Export Statement
-                    </>
-                  )}
-                </Button>
-              </div>
+              <Input
+                label="Payment Mode"
+                type="select"
+                name="paymentMode"
+                value={paymentMode}
+                onChange={(e) => setPaymentMode(e.target.value)}
+                required
+                options={[
+                  { value: "1", label: "Online" },
+                  { value: "2", label: "COD" },
+                ]}
+                colSm={3}
+              />
             </div>
           </div>
         </Modal.Body>
@@ -905,7 +1022,69 @@ export default function OrderList() {
           <Button variant="secondary" onClick={() => setShowReport(false)}>
             Close
           </Button>
+          <Button
+            variant="primary"
+            onClick={handleOrderWiseExport}
+            disabled={exportLoading}
+          >
+            {exportLoading ? (
+              <>
+                <span
+                  className="spinner-border spinner-border-sm"
+                  role="status"
+                  aria-hidden="true"
+                ></span>
+                <span> Generating...</span>
+              </>
+            ) : (
+              <>
+                <i className="bi bi-download"></i> Export Statement
+              </>
+            )}
+          </Button>
         </Modal.Footer>
+      </Modal>
+      {/* Prescription view modal */}
+      <Modal
+        show={showPreview}
+        onHide={() => setShowPreview(false)}
+        size="xl"
+        centered
+      >
+        <Modal.Header closeButton>
+          <Modal.Title>Prescription</Modal.Title>
+        </Modal.Header>
+
+        <Modal.Body
+          style={{
+            height: "80vh",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          {previewUrl ? (
+            <iframe
+              src={previewUrl}
+              width="100%"
+              height="100%"
+              style={{ border: "none", borderRadius: "8px" }}
+            />
+          ) : (
+            <div style={{ textAlign: "center", color: "#6c757d" }}>
+              <i
+                className="bi bi-file-earmark-x"
+                style={{ fontSize: "60px", marginBottom: "10px" }}
+              ></i>
+
+              <h5 style={{ marginBottom: "5px" }}>No Prescription Available</h5>
+
+              <p style={{ fontSize: "14px" }}>
+                This order does not have any prescription uploaded.
+              </p>
+            </div>
+          )}
+        </Modal.Body>
       </Modal>
       <BillPreviewModal
         show={isBillPreviewOpen}

@@ -27,6 +27,8 @@ interface HealthBagModalProps {
   onRemove: (index: number) => void;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   onUpdateCart?: (updatedCart: any[]) => void;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  onGenerateOrder?: (data: { cart: any[]; additionalDiscount: string }) => void;
 }
 
 const HealthBagModal: React.FC<HealthBagModalProps> = ({
@@ -36,9 +38,13 @@ const HealthBagModal: React.FC<HealthBagModalProps> = ({
   onProceed,
   onRemove,
   onUpdateCart,
+  onGenerateOrder,
 }) => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [localCart, setLocalCart] = React.useState<any[]>(cartItems);
+  const [showSummary, setShowSummary] = React.useState(false);
+  const [additionalDiscount, setAdditionalDiscount] =
+    React.useState<string>("0");
   const dispatch = useAppDispatch();
   const { list: durationList } = useAppSelector(
     (state) => state.productDuration
@@ -97,6 +103,23 @@ const HealthBagModal: React.FC<HealthBagModalProps> = ({
     setLocalCart(updated);
   };
 
+  const totals = localCart.reduce(
+    (acc, item) => {
+      const mrp = Number(item.unitPrice) || 0;
+      const qty = Number(item.qty) || 0;
+      const disc = Number(item.Disc) || 0;
+
+      const rate = mrp - (mrp * disc) / 100;
+      const subtotal = rate * qty;
+
+      acc.total += subtotal;
+      return acc;
+    },
+    { total: 0 }
+  );
+
+  const grandTotal =
+    totals.total - (totals.total * Number(additionalDiscount)) / 100;
   return (
     <Modal show={isOpen} onHide={onClose} size="xl">
       {modalLoading && (
@@ -375,6 +398,78 @@ const HealthBagModal: React.FC<HealthBagModalProps> = ({
             </tbody>
           </Table>
         )}
+
+        <div className="d-flex align-items-center mt-3">
+          <input
+            type="checkbox"
+            id="addDisc"
+            checked={showSummary}
+            onChange={(e) => setShowSummary(e.target.checked)}
+            style={{ marginRight: "8px" }}
+          />
+          <label htmlFor="addDisc" style={{ fontWeight: 500 }}>
+            Add Additional Discount
+          </label>
+        </div>
+        {showSummary && (
+          <div
+            style={{
+              marginTop: "15px",
+              padding: "15px",
+              border: "1px solid #e0e0e0",
+              borderRadius: "8px",
+              background: "#f9fafb",
+              width: "320px",
+              marginLeft: "auto",
+            }}
+          >
+            {/* TOTAL */}
+            <div className="d-flex justify-content-between mb-2">
+              <h6
+                className="fw-bold mb-2"
+                style={{ color: "red", whiteSpace: "nowrap" }}
+              >
+                Total: ₹{formatPrice(totals.total)}
+              </h6>
+            </div>
+
+            {/* ADDITIONAL DISCOUNT */}
+            <div className="mb-2">
+              <div
+                className="d-flex align-items-center mb-2"
+                style={{ gap: "8px" }}
+              >
+                <span
+                  className="fw-semibold"
+                  style={{ color: "green", whiteSpace: "nowrap" }}
+                >
+                  Additional Discount:
+                </span>
+
+                <input
+                  type="text"
+                  className="form-control"
+                  style={{ width: "60px" }}
+                  maxLength={2}
+                  value={additionalDiscount}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    if (/^\d{0,2}$/.test(val)) setAdditionalDiscount(val);
+                  }}
+                />
+
+                <span className="fw-bold">(%)</span>
+              </div>
+            </div>
+
+            {/* GRAND TOTAL */}
+            <div className="d-flex justify-content-between mt-2">
+              <h5 className="fw-bold text-primary mb-3">
+                Grand Total: ₹{formatPrice(grandTotal)}
+              </h5>
+            </div>
+          </div>
+        )}
       </Modal.Body>
 
       <Modal.Footer>
@@ -382,14 +477,28 @@ const HealthBagModal: React.FC<HealthBagModalProps> = ({
           Close
         </Button>
 
+        {!showSummary && (
+          <Button
+            variant="primary"
+            onClick={() => {
+              onUpdateCart?.(localCart);
+              onProceed?.(localCart);
+            }}
+          >
+            Add To Patient HealthBag
+          </Button>
+        )}
         <Button
           variant="primary"
           onClick={() => {
             onUpdateCart?.(localCart);
-            onProceed?.(localCart);
+            onGenerateOrder?.({
+              cart: localCart,
+              additionalDiscount: additionalDiscount,
+            });
           }}
         >
-          Add To Patient HealthBag
+          Generate Order
         </Button>
       </Modal.Footer>
     </Modal>

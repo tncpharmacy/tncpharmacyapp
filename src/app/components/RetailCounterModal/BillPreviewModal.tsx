@@ -70,7 +70,7 @@ const BillPreviewModal: React.FC<BillPreviewModalProps> = ({
     userPharmacy?.pharmacy_district || userPharmacy?.district || "";
   const pharmacy_pincode =
     userPharmacy?.pharmacy_pincode || userPharmacy?.pincode || "";
-  console.log("cart", cart);
+  // console.log("cart", cart);
   // --- Translation State and Logic ---
   const [language, setLanguage] = useState("en");
   const [translatedCart, setTranslatedCart] = useState<CartItem[]>(cart || []);
@@ -199,11 +199,11 @@ const BillPreviewModal: React.FC<BillPreviewModalProps> = ({
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       if (error.response) {
-        console.log("Full API Error Response:", error.response.data);
-        console.log("Status:", error.response.status);
-        console.log("Headers:", error.response.headers);
+        // console.log("Full API Error Response:", error.response.data);
+        // console.log("Status:", error.response.status);
+        // console.log("Headers:", error.response.headers);
       } else {
-        console.log("Error Message:", error.message);
+        // console.log("Error Message:", error.message);
       }
     }
   };
@@ -443,8 +443,8 @@ const BillPreviewModal: React.FC<BillPreviewModalProps> = ({
     return acc + Number(item.subtotal || 0);
   }, 0);
 
-  console.log("CART:", cart);
-  console.log("TRANSLATED:", translatedCart);
+  // console.log("CART:", cart);
+  // console.log("TRANSLATED:", translatedCart);
   if (!show) return null;
 
   return (

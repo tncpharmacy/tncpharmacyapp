@@ -227,10 +227,10 @@ export default function SupplierForm({ id }: Props) {
       }
 
       // 🔎 Debug
-      console.log("====== FINAL FORMDATA ======");
-      for (const [k, v] of formDataToSend.entries()) {
-        console.log(k, v);
-      }
+      // console.log("====== FINAL FORMDATA ======");
+      // for (const [k, v] of formDataToSend.entries()) {
+      //   console.log(k, v);
+      // }
 
       // 🚀 API call
       if (id) {
@@ -247,7 +247,7 @@ export default function SupplierForm({ id }: Props) {
       router.push("/pharmacist/supplier");
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
-      console.log("🔥 FULL ERROR OBJECT:", error?.response?.data || error);
+      // console.log("🔥 FULL ERROR OBJECT:", error?.response?.data || error);
 
       const errorMsg =
         error?.response?.data?.message ||

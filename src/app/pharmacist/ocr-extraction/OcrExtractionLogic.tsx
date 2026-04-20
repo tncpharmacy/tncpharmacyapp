@@ -8,12 +8,18 @@ import GenericOptionsModal from "@/app/components/RetailCounterModal/GenericOpti
 import HealthBagModal from "@/app/components/RetailCounterModal/HealthBagModal";
 import WhatsappWaitModal from "@/app/components/RetailCounterModal/WhatsappWaitModal";
 import { getUser } from "@/lib/auth/auth";
+import {
+  buyerLogin,
+  buyerRegister,
+} from "@/lib/features/buyerSlice/buyerSlice";
 
 import { createHealthBagItem } from "@/lib/features/healthBagPharmacistSlice/healthBagPharmacistSlice";
 import {
   getProductByGenericId,
   getProductList,
 } from "@/lib/features/medicineSlice/medicineSlice";
+import { updateBuyerForPharmacistThunk } from "@/lib/features/pharmacistBuyerListSlice/pharmacistBuyerListSlice";
+import { createPharmacistOrder } from "@/lib/features/pharmacistOrderSlice/pharmacistOrderSlice";
 import { updatePrescriptionStatusPharmacistThunk } from "@/lib/features/pharmacistPrescriptionSlice/pharmacistPrescriptionSlice";
 
 import { useAppDispatch, useAppSelector } from "@/lib/hooks";
@@ -108,6 +114,12 @@ export default function OcrExtractionLogic({
     mobile: "",
     pharmacy_id: pharmacy_id || 1, // pharmacy_id defined earlier in your component
   });
+  const [customerName, setCustomerName] = useState("");
+  const [mobile, setMobile] = useState("");
+  const [uhId, setUhId] = useState("");
+  const [referredByHospital, setReferredByHospital] = useState("");
+  const [referredByDoctor, setReferredByDoctor] = useState("");
+  const [additionalDiscount, setAdditionalDiscount] = useState<string>("0");
 
   const [isHealthBagOpen, setIsHealthBagOpen] = useState(false);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -266,9 +278,94 @@ export default function OcrExtractionLogic({
   };
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleUpdateCartFromModal = (updated: any) => {
-    console.log("🟢 UPDATED CART RECEIVED:", updated);
+    // console.log("🟢 UPDATED CART RECEIVED:", updated);
     setCart(updated);
     setShouldSubmit(true); // <-- API call trigger
+  };
+
+  const handleGenerateOrderFromModal = async (data: {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    cart: any[];
+    additionalDiscount: string;
+  }) => {
+    const success = await handleCreateOrder(data.cart, data.additionalDiscount);
+
+    if (success) {
+      toast.success("Order Created Successfully!");
+      setCart([]);
+      setIsHealthBagOpen(false);
+    }
+  };
+  const handleCreateOrder = async (
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    finalCart: any[],
+    discountValue: string
+  ) => {
+    try {
+      // 🔹 1) Products mapping (same rehne de)
+      const products = finalCart.map((item) => {
+        const mrp = Number(item.unitPrice || item.MRP || 0);
+        const qty = Number(item.qty);
+        const discount = Number(item.Disc || 0);
+
+        const total = mrp * qty;
+        const discountAmt = (total * discount) / 100;
+        const finalAmount = total - discountAmt;
+
+        return {
+          product_id: item.id,
+          quantity: String(qty),
+          mrp: String(mrp),
+          discount: String(discount),
+          rate: String(finalAmount),
+          doses: item.dose_form || "",
+          remark: item.remarks || "",
+          duration: item.duration || "",
+          status: "1",
+        };
+      });
+
+      // 🔹 2) Grand total
+      const grandTotal = finalCart.reduce((acc, item) => {
+        const mrp = Number(item.unitPrice || item.MRP || 0);
+        const qty = Number(item.qty);
+        const discount = Number(item.Disc || 0);
+
+        const total = mrp * qty;
+        const discountAmt = (total * discount) / 100;
+
+        return acc + (total - discountAmt);
+      }, 0);
+      const discount = Number(discountValue || 0);
+      // 🔹 3) Final amount
+      const finalAmount = grandTotal - (grandTotal * discount) / 100;
+      // 🔹 4) Payload
+      const orderPayload = {
+        payment_mode: 1,
+        payment_status: "1",
+        amount: String(finalAmount.toFixed(2)),
+        order_type: 2,
+        pharmacy_id: pharmacy_id,
+        address_id: 29,
+
+        // ✅ 👉 yahan bhi same use kar
+        additional_discount: String(discount),
+
+        products,
+      };
+
+      await dispatch(
+        createPharmacistOrder({
+          buyerId: Number(buyerId),
+          payload: orderPayload,
+        })
+      ).unwrap();
+
+      return true;
+    } catch (err) {
+      console.error(err);
+      return false;
+    }
   };
 
   // -------------------------------------------------------------------
@@ -405,15 +502,15 @@ export default function OcrExtractionLogic({
         onClose={closeQtyModal}
         item={itemToConfirm}
         onConfirmAdd={handleFinalAddToCart}
-        onBack={handleBackToGeneric}
+        onBack={isFromGenericFlow ? handleBackToGeneric : undefined}
       />
 
       <HealthBagModal
         isOpen={isHealthBagOpen}
         onClose={() => setIsHealthBagOpen(false)}
         cartItems={cart}
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        onProceed={(finalCart: any[]) => handleProceedToHealthBag(finalCart)}
+        onProceed={(finalCart) => handleProceedToHealthBag(finalCart)} // WhatsApp flow
+        onGenerateOrder={(finalCart) => handleGenerateOrderFromModal(finalCart)} // Order flow
         onRemove={handleRemoveItem}
         onUpdateCart={handleUpdateCartFromModal}
       />

@@ -12,7 +12,7 @@ export default function SideNav() {
   const toggleMenu = (menu: string) => {
     setOpenMenu(openMenu === menu ? null : menu);
   };
-  console.log("pathname", pathname);
+  // console.log("pathname", pathname);
   return (
     <div className="side_menu">
       <span className="btnsidemenu cursor-pointer text-xl">

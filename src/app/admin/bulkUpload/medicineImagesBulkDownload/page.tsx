@@ -88,7 +88,7 @@ export default function MedicineImagesBulkDownload() {
 
       const result = await res.json();
 
-      console.log(result);
+      // console.log(result);
 
       toast.success(
         `Total: ${result.total} | Success: ${result.success} | Failed: ${result.failed}`

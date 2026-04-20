@@ -303,18 +303,18 @@ export default function PurchaseInvoiceImport() {
         ).toISOString(),
         status: "Active",
       };
-      console.log("Payload check:", {
-        supplier_id: formData.supplier,
-        invoice: formData.invoice_number,
-        rows: purchaseDetails.length,
-      });
+      // console.log("Payload check:", {
+      //   supplier_id: formData.supplier,
+      //   invoice: formData.invoice_number,
+      //   rows: purchaseDetails.length,
+      // });
       const chunkSize = 100;
 
       // 🚀 Send in batches
       for (let i = 0; i < purchaseDetails.length; i += chunkSize) {
         const chunk = purchaseDetails.slice(i, i + chunkSize);
-        console.log("purchaseDetails sample:", purchaseDetails[0]);
-        console.log("rows:", purchaseDetails.length);
+        // console.log("purchaseDetails sample:", purchaseDetails[0]);
+        // console.log("rows:", purchaseDetails.length);
         await dispatch(
           createPurchaseStock({
             ...basePayload,
@@ -349,9 +349,9 @@ export default function PurchaseInvoiceImport() {
       });
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
-      console.log("❌ FULL ERROR:", err);
-      console.log("❌ RESPONSE:", err?.response?.data);
-      console.log("❌ ERRORS:", err?.response?.data?.errors);
+      // console.log("❌ FULL ERROR:", err);
+      // console.log("❌ RESPONSE:", err?.response?.data);
+      // console.log("❌ ERRORS:", err?.response?.data?.errors);
 
       toast.error(err?.response?.data?.message || "Failed to create purchase.");
     } finally {

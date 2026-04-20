@@ -172,7 +172,7 @@ export default function Pharmacist() {
                         className="txt1 rounded"
                         value={searchTerm}
                         onChange={(e) => {
-                          console.log("Search input:", e.target.value); // check karega kya aa raha hai
+                          // console.log("Search input:", e.target.value); // check karega kya aa raha hai
                           setSearchTerm(e.target.value);
                         }}
                       />

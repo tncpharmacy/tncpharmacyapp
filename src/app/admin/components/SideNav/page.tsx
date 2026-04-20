@@ -165,8 +165,8 @@ export default function SideNav() {
           <Link href="/clinic" className="link">
             <i className="bi bi-hospital"></i> Hospital & Clinic
           </Link>
-        </li> */}
-        {/* <li>
+        </li>
+        <li>
           <Link href="/doctors" className="link">
             <i className="bi bi-person-badge"></i> Doctors
           </Link>

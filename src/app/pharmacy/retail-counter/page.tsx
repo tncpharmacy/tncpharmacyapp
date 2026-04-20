@@ -76,7 +76,7 @@ export default function RetailCounter() {
       ...item,
       generic_name: item.generic_name || item.GenericName || "N/A",
     };
-    console.log("📦 handleSkipGenericModal itemWithGeneric:", itemWithGeneric);
+    // console.log("📦 handleSkipGenericModal itemWithGeneric:", itemWithGeneric);
     setItemToConfirm(itemWithGeneric);
     setIsQtyModalOpen(true);
   };
@@ -127,7 +127,7 @@ export default function RetailCounter() {
 
   // Update handleSelectAlternative (Must call handleCloseQtyModal to close first modal)
   const handleSelectAlternative = (item: Medicine) => {
-    console.log("📦 handleSelectAlternative (from GenericOptionsModal):", item);
+    // console.log("📦 handleSelectAlternative (from GenericOptionsModal):", item);
     setIsModalOpen(false);
     setItemToConfirm(item); // item should already include generic_name after fix #1
     setIsQtyModalOpen(true);
@@ -164,7 +164,7 @@ export default function RetailCounter() {
       generic_name: item.generic_name || item.GenericName || "N/A",
       pack_size: item.pack_size || "N/A",
     };
-    console.log("🧾 handleFinalAddToCart itemToAdd:", itemToAdd);
+    // console.log("🧾 handleFinalAddToCart itemToAdd:", itemToAdd);
     setCart((prevCart) => {
       return [...prevCart, itemToAdd];
     });

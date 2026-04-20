@@ -588,7 +588,7 @@ export default function HealthBags() {
           token,
         })
       ).unwrap();
-      console.log("res", res);
+      // console.log("res", res);
       toast.success("Prescription uploaded successfully!");
       checkoutData();
       setShowPrescriptionModal(false);

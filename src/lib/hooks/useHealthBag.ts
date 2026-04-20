@@ -106,7 +106,7 @@ export const useHealthBag = ({ userId }: { userId: number | null }) => {
 
       if (userId) {
         try {
-          console.log("🗑 Removing cart item id:", itemToDelete.id);
+          // console.log("🗑 Removing cart item id:", itemToDelete.id);
           await deleteHealthBag(itemToDelete.id); // ✅ send correct cart id to API
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           dispatch(getHealthBag(userId) as any);
@@ -174,7 +174,7 @@ export const useHealthBag = ({ userId }: { userId: number | null }) => {
           product_id: item.product_id || item.productid || item.id,
           quantity: item.quantity || 1,
         };
-        console.log("📦 Payload being sent to API:", payload); // 👈 add this
+        // console.log("📦 Payload being sent to API:", payload); // 👈 add this
         await createHealthBag(payload);
       }
 
@@ -207,7 +207,7 @@ export const useHealthBag = ({ userId }: { userId: number | null }) => {
   useEffect(() => {
     if (userId) {
       mergeGuestCart().then(() => {
-        console.log("🧩 LS after merge:", localStorage.getItem(GUEST_KEY));
+        // console.log("🧩 LS after merge:", localStorage.getItem(GUEST_KEY));
       });
     }
   }, [userId, mergeGuestCart]);

@@ -12,7 +12,7 @@ export default function EditPharmacist({ params }: { params: { id: string } }) {
     decodedId = parseInt(params.id, 10); // fallback
   }
 
-  console.log("Decoded ID:", decodedId);
+  // console.log("Decoded ID:", decodedId);
 
   return <PharmacistByPharmacyForm id={decodedId} />;
 }

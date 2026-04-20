@@ -138,7 +138,6 @@ const pharmacistOrderSlice = createSlice({
         state.loading = false;
         state.orderCreated = true;
         state.order = action.payload?.data || null;
-        toast.success("Order created successfully!");
       })
       .addCase(createPharmacistOrder.rejected, (state, action) => {
         state.loading = false;

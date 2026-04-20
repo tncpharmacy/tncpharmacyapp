@@ -29,7 +29,7 @@ export default function UpdateProfile() {
   const userId = getUserId();
   const dispatch = useAppDispatch();
   const { selfPharmacy } = useAppSelector((state) => state.selfPharmacist);
-  console.log("selfPharmacyselfPharmacy", selfPharmacy);
+  // console.log("selfPharmacyselfPharmacy", selfPharmacy);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [formData, setFormData] = useState<Pharmacist>({
     id: 0,

@@ -113,7 +113,7 @@ export default function SafetyAdviceForm({ id }: Props) {
         medicine_id: id,
       };
 
-      console.log("FINAL PAYLOAD", payload);
+      // console.log("FINAL PAYLOAD", payload);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       await dispatch(saveSafetyAdviceThunk(payload as any)).unwrap();
 

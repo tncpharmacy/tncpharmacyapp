@@ -147,7 +147,7 @@ export default function AddCategory() {
         status: "Active",
       };
 
-      console.log("Sending payload:", formDataToAppend);
+      // console.log("Sending payload:", formDataToAppend);
 
       if (formData.id && formData.id > 0) {
         // ✅ Update only

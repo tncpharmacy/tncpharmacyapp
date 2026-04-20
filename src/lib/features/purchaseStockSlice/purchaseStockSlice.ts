@@ -93,7 +93,7 @@ export const getPharmacistList = createAsyncThunk<
     return res.data;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (err: any) {
-    console.log("API ERROR ====", err); // 👈 ADD THIS
+    // console.log("API ERROR ====", err); // 👈 ADD THIS
     return rejectWithValue(err.response?.data?.message || "Failed");
   }
 });
@@ -110,7 +110,7 @@ export const getStockListSuperAdmin = createAsyncThunk<
     return res.data;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (err: any) {
-    console.log("API ERROR ====", err); // 👈 ADD THIS
+    // console.log("API ERROR ====", err); // 👈 ADD THIS
     return rejectWithValue(err.response?.data?.message || "Failed");
   }
 });

@@ -100,7 +100,7 @@ export interface PharmacistOrder {
   district: string;
   state_name: string;
   pharmacy_address: string;
-
+  prescription_url: string;
   products: OrderProduct[];
 }
 

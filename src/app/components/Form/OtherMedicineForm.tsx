@@ -113,7 +113,7 @@ export default function OtherMedicineForm({ id }: Props) {
     dispatch(getMedicineEditByIdThunk(decodedId))
       .unwrap()
       .then((res) => {
-        console.log("API RES 👉", res);
+        // console.log("API RES 👉", res);
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const data = res.data as any;
 
@@ -395,9 +395,9 @@ export default function OtherMedicineForm({ id }: Props) {
     }
 
     // 🧪 Debug
-    for (const [key, value] of formDataToSend.entries()) {
-      console.log("📦", key, value);
-    }
+    // for (const [key, value] of formDataToSend.entries()) {
+    //   console.log("📦", key, value);
+    // }
 
     try {
       setLoading(true);

@@ -220,6 +220,21 @@ export const ENDPOINTS = {
       `/order/pharmacist/list/${buyerId}/`,
     GET_ORDER_BY_ORDERID: (orderId: number) => `/order/detail/${orderId}/`,
     GET_ORDER_LIST: "/order/list/",
+    GET_REPORT_ORDER_WISE: ({
+      startDate,
+      endDate,
+      orderType,
+      paymentMode,
+    }: {
+      startDate: string;
+      endDate: string;
+      orderType?: number;
+      paymentMode?: number;
+    }) =>
+      `/order/report/?start_date=${startDate}&end_date=${endDate}&order_type=${
+        orderType ?? ""
+      }&payment_mode=${paymentMode ?? ""}`,
+    GET_REPORT: "/order/report/",
     // GET_ORDER_LIST_BY_ID_SUPERADMIN: (orderId: number) => `/order/detail/${orderId}/`,
     // GET_ORDER_LIST_SUPERADMIN: "/order/list/",
   },

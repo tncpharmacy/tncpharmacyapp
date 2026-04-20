@@ -105,7 +105,7 @@ export default function PurchaseInvoice() {
       alert("Start Date cannot be after End Date!");
       return;
     }
-    console.log("Generating report from", startDate, "to", endDate);
+    // console.log("Generating report from", startDate, "to", endDate);
     // 🔽 yahan export / API call logic likho
     setShowReport(false);
   };

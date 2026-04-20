@@ -234,9 +234,9 @@ export default function PharmacyForm({ id }: Props) {
     }
 
     // debug: show all FormData entries
-    for (const [key, value] of formDataToSend.entries()) {
-      console.log("📦 FormData entry:", key, value);
-    }
+    // for (const [key, value] of formDataToSend.entries()) {
+    //   console.log("📦 FormData entry:", key, value);
+    // }
 
     try {
       if (id) {

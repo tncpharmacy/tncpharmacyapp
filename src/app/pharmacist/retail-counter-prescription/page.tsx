@@ -126,7 +126,7 @@ export default function RetailCounter() {
   const [isUploadFocused, setIsUploadFocused] = useState(false);
 
   const [isFromGenericFlow, setIsFromGenericFlow] = useState(false);
-
+  const [prescriptionId, setPrescriptionId] = useState<number | null>(null);
   const {
     medicines: productList,
     genericAlternatives: productListByGeneric,
@@ -288,7 +288,9 @@ export default function RetailCounter() {
           payload: formData,
         })
       ).unwrap();
-
+      const prescriptionId = uploadRes?.data?.id;
+      setPrescriptionId(uploadRes?.data?.id);
+      // console.log("Prescription ID:", prescriptionId);
       toast.success("Prescription uploaded!");
 
       // 🔹 STEP 5: Build full image/PDF URL
@@ -382,39 +384,7 @@ export default function RetailCounter() {
   }, [buyerId]);
 
   // Dropdown Change Handler: Dispatch API call and set the active ID
-  const handleSelectMedicine = (selectedOption: OptionType | null) => {
-    if (selectedOption) {
-      const selectedMedicineDB = productList.find(
-        (m) => m.id === selectedOption.value
-      );
-      if (
-        !selectedMedicineDB ||
-        typeof selectedMedicineDB.category_id === "undefined"
-      ) {
-        console.error("Selected medicine or category_id is missing.");
-        return;
-      }
 
-      const genericId = selectedMedicineDB.id;
-      const categoryId = selectedMedicineDB.category_id;
-      setSelectedGenericId(null);
-      // store the full DB product in selectedMedicine
-      setSelectedMedicine(selectedMedicineDB as Medicine);
-      if (categoryId === 1) {
-        dispatch(getProductByGenericId(genericId));
-        setSelectedGenericId(genericId);
-        setIsModalOpen(true);
-      } else {
-        handleSkipGenericModal(selectedMedicineDB);
-      }
-    } else {
-      setSelectedGenericId(null);
-      setSelectedMedicine(null);
-      setIsModalOpen(false);
-      setIsQtyModalOpen(false);
-      setItemToConfirm(null);
-    }
-  };
   const handleSkipGenericModal = (item: Medicine) => {
     const itemWithGeneric = {
       ...item,
@@ -537,7 +507,7 @@ export default function RetailCounter() {
       Disc: parsedDiscount,
     };
 
-    console.log("🧾 handleFinalAddToCart itemToAdd:", itemToAdd);
+    // console.log("🧾 handleFinalAddToCart itemToAdd:", itemToAdd);
     setCart((prevCart) => {
       return [...prevCart, itemToAdd];
     });
@@ -627,12 +597,13 @@ export default function RetailCounter() {
         pharmacy_id,
         referred_by_doctor: referredByDoctor || null,
         referred_by_hospital: referredByHospital || null,
+        prescription_id: prescriptionId,
         additionalDiscount,
         address_id: null,
         status: "1",
         products,
       };
-      console.log("orderPayload", orderPayload);
+      // console.log("orderPayload", orderPayload);
       await dispatch(
         createPharmacistOrder({
           buyerId,
@@ -641,7 +612,7 @@ export default function RetailCounter() {
       ).unwrap();
       return true;
     } catch (err) {
-      console.log(err);
+      // console.log(err);
       toast.error("Order Creation Failed!");
       return false;
     }
@@ -658,7 +629,7 @@ export default function RetailCounter() {
         uhId,
         pharmacy_id,
       });
-
+      setCart([]);
       setIsBillPreviewOpen(true);
     }
   };
@@ -691,7 +662,7 @@ export default function RetailCounter() {
       };
     });
 
-    console.log("✅ FIXED CART:", fixedCart);
+    // console.log("✅ FIXED CART:", fixedCart);
 
     setCart(fixedCart);
     setShouldSubmit(true); // <-- API call trigger

@@ -19,10 +19,10 @@ export const fetchPharmacistByIdApi = async (
     ENDPOINTS.PHARMACY_GET_PHARMACIST_BY_ID(id)
   );
 
-  console.log(
-    "🔹 Fetching pharmacy by ID:",
-    ENDPOINTS.PHARMACY_GET_PHARMACIST_BY_ID(id)
-  );
+  // console.log(
+  //   "🔹 Fetching pharmacy by ID:",
+  //   ENDPOINTS.PHARMACY_GET_PHARMACIST_BY_ID(id)
+  // );
   return res.data.data[0]; // 👈 ek hi object return kar
 };
 

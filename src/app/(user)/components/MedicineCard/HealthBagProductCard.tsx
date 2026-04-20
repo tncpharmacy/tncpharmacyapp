@@ -28,7 +28,6 @@ export default function HealthBagProductCard({
   onDecrease,
   onRemove,
 }: Props) {
-  console.log("111111", packSize);
   return (
     <div className="border rounded p-3 mb-3 bg-white">
       <div className="d-flex gap-3 align-items-start">

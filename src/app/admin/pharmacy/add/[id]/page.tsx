@@ -25,7 +25,7 @@ export default function EditPharmacy({ params }: IdPageProps) {
     }
   }
 
-  console.log("Decoded ID:", decodedId);
+  // console.log("Decoded ID:", decodedId);
 
   return <PharmacyForm id={decodedId} />;
 }

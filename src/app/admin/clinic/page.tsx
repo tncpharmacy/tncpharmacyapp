@@ -34,7 +34,7 @@ export default function Pharmacy() {
   const [selectedClinic, setSelectedClinic] = useState<
     Clinic | ClinicAdd | null
   >(null);
-  console.log("clincs", clinics);
+  // console.log("clincs", clinics);
 
   // filtered records by search box
   const [searchTerm, setSearchTerm] = useState("");

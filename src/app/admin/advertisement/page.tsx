@@ -51,13 +51,6 @@ export default function Advertisement() {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-
-    // Your submit logic...
-    console.log(formData);
-  };
-
   return (
     <>
       <Header />

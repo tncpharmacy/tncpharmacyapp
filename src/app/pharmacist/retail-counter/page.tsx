@@ -113,6 +113,8 @@ export default function RetailCounter() {
   const [isMobileChecking, setIsMobileChecking] = useState(false);
   const [additionalDiscount, setAdditionalDiscount] = useState<string>("0");
   const [isFromGenericFlow, setIsFromGenericFlow] = useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [billData, setBillData] = useState<any[]>([]);
 
   // editable state
   const [editingCell, setEditingCell] = useState<EditingCell>({
@@ -180,7 +182,7 @@ export default function RetailCounter() {
       MRP: item.mrp,
       Disc: Number(item.discount || 0),
     };
-    console.log("📦 handleSkipGenericModal itemWithGeneric:", itemWithGeneric);
+    // console.log("📦 handleSkipGenericModal itemWithGeneric:", itemWithGeneric);
     setItemToConfirm(itemWithGeneric);
     setIsQtyModalOpen(true);
   };
@@ -231,7 +233,7 @@ export default function RetailCounter() {
 
   // Update handleSelectAlternative (Must call handleCloseQtyModal to close first modal)
   const handleSelectAlternative = (item: Medicine) => {
-    console.log("📦 handleSelectAlternative (from GenericOptionsModal):", item);
+    // console.log("📦 handleSelectAlternative (from GenericOptionsModal):", item);
     setIsModalOpen(false);
     setItemToConfirm(item); // item should already include generic_name after fix #1
     setIsQtyModalOpen(true);
@@ -410,6 +412,7 @@ export default function RetailCounter() {
         referred_by_doctor: referredByDoctor || null,
         referred_by_hospital: referredByHospital || null,
         additional_discount: Number(additionalDiscount),
+        prescription_id: null,
         status: "1",
         products,
       };
@@ -457,7 +460,11 @@ export default function RetailCounter() {
     const orderSuccess = await handleCreateOrder();
 
     if (orderSuccess) {
+      setBillData([...cart]);
       setIsBillModalOpen(true);
+      setTimeout(() => {
+        handleReset();
+      }, 500);
     }
   };
 
@@ -1056,7 +1063,7 @@ export default function RetailCounter() {
       <BillPreviewModal
         show={isBillModalOpen}
         onClose={() => setIsBillModalOpen(false)}
-        cart={cart}
+        cart={billData}
         customerName={customerName}
         mobile={mobile}
         uhid={uhId}

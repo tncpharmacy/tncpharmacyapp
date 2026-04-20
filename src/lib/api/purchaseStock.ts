@@ -14,12 +14,12 @@ export const createPurchase = async (
     );
     return response.data;
   } catch (error: unknown) {
-    console.log("🔥 FULL ERROR:", error);
+    // console.log("🔥 FULL ERROR:", error);
 
     if (axios.isAxiosError(error)) {
-      console.log("🔥 AXIOS ERROR DATA:", error.response?.data);
-      console.log("🔥 AXIOS ERROR STATUS:", error.response?.status);
-      console.log("🔥 AXIOS ERROR HEADERS:", error.response?.headers);
+      // console.log("🔥 AXIOS ERROR DATA:", error.response?.data);
+      // console.log("🔥 AXIOS ERROR STATUS:", error.response?.status);
+      // console.log("🔥 AXIOS ERROR HEADERS:", error.response?.headers);
 
       const responseData = error.response?.data as PurchaseResponse | undefined;
 

@@ -728,10 +728,10 @@ export default function ProductPage() {
 
                             // debug log (remove after debugging)
                             // eslint-disable-next-line no-console
-                            console.log(
-                              `[PRODUCT IMAGE] index=${index} ->`,
-                              fullUrl
-                            );
+                            // console.log(
+                            //   `[PRODUCT IMAGE] index=${index} ->`,
+                            //   fullUrl
+                            // );
 
                             return (
                               <div

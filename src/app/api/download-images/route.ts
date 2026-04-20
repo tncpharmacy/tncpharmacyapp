@@ -41,7 +41,7 @@ async function downloadWithRetry(url: string, retries = 5) {
       await new Promise((r) => setTimeout(r, 1000));
     }
 
-    console.log(`🔁 Retry ${i + 1}:`, url);
+    // console.log(`🔁 Retry ${i + 1}:`, url);
   }
 
   return null;
@@ -122,7 +122,7 @@ export async function POST(req: NextRequest) {
 
             // ⚠️ skip if already exists
             if (fs.existsSync(filePath)) {
-              console.log("⚠️ Exists:", fileName);
+              // console.log("⚠️ Exists:", fileName);
               return;
             }
 
@@ -144,7 +144,7 @@ export async function POST(req: NextRequest) {
               `SUCCESS: ${medicine_code} -> ${fileName}\n`
             );
 
-            console.log(`✅ ${medicine_code} -> ${fileName}`);
+            // console.log(`✅ ${medicine_code} -> ${fileName}`);
           } catch (err) {
             failedUrls.push(url);
             fs.appendFileSync(

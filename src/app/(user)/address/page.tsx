@@ -92,7 +92,7 @@ export default function AddressList() {
       return;
 
     try {
-      console.log("Deleting address:", id);
+      // console.log("Deleting address:", id);
       const res = await dispatch(removeAddress(id)).unwrap();
       toast.success("Address removed successfully!");
       if (userId !== null) {

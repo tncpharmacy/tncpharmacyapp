@@ -33,7 +33,7 @@ export default function AuthInitializer() {
   // 🔥 GLOBAL UNAUTHORIZED HANDLER
   useEffect(() => {
     setUnauthorizedHandler(() => {
-      console.log("🚨 401 → auto logout");
+      // console.log("🚨 401 → auto logout");
 
       dispatch(logout()); // clears redux + storage
       router.push("/");

@@ -62,7 +62,7 @@ export default function StudentList() {
 
       // Use .text() if response is not JSON
       const result = await response.text();
-      console.log("Server Response:", result);
+      // console.log("Server Response:", result);
 
       // Refresh list
       fetchData();

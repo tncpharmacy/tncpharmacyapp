@@ -14,33 +14,36 @@ const WhatsappWaitModal: React.FC<WhatsappWaitModalProps> = ({
   onClose,
 }) => {
   return (
-    <Modal show={isOpen} onHide={onClose} centered>
+    <Modal show={isOpen} onHide={onClose} size="lg" centered>
       <Modal.Header closeButton>
         <Modal.Title className="text-success d-flex align-items-center">
           <FaWhatsapp size={24} className="me-2" />
-          WhatsApp Integration – Coming Soon
+          WhatsApp Notification Sent
         </Modal.Title>
       </Modal.Header>
 
       <Modal.Body className="text-center">
-        <Alert variant="info" className="p-3">
-          <h5 className="fw-semibold mb-3">Item Added to HealthBag!</h5>
+        <Alert variant="success" className="p-3">
+          <h5 className="fw-semibold mb-3">
+            HealthBag Link Shared Successfully!
+          </h5>
+
           <p className="mb-3">
-            The selected items have been successfully added to the patient’s
-            HealthBag.
+            A secure HealthBag link has been sent to the patient’s WhatsApp
+            number.
           </p>
+
           <p className="text-muted mb-0">
-            We’re currently integrating <strong>WhatsApp communication</strong>{" "}
-            to automatically share prescription and billing details directly
-            with customers. Once this integration goes live, you’ll be able to
-            continue the workflow seamlessly from here.
+            The patient can open the link directly from WhatsApp to view their
+            prescription details, added items, and complete their order from the
+            HealthBag page.
           </p>
         </Alert>
       </Modal.Body>
 
       <Modal.Footer>
         <Button variant="success" onClick={onClose}>
-          Got it, I’ll wait for integration
+          Okay, Got It
         </Button>
       </Modal.Footer>
     </Modal>
