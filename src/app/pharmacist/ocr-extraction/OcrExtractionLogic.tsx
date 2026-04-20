@@ -348,7 +348,8 @@ export default function OcrExtractionLogic({
         pharmacy_id: pharmacy_id,
         address_id: 29,
         prescription_id: prescriptionId,
-        // ✅ 👉 yahan bhi same use kar
+        referred_by_doctor: referredByDoctor || "Self",
+        referred_by_hospital: referredByHospital || "Self",
         additional_discount: String(discount),
 
         products,
