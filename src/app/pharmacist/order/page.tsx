@@ -762,58 +762,76 @@ export default function OrderList() {
                           <i className="bi bi-person-badge me-2 text-primary"></i>
                           Patient Details
                         </h5>
-
-                        <p>
-                          <strong>Name:</strong> {o.buyerName}
-                        </p>
-                        <p>
-                          <strong>Mobile:</strong> {o.buyerNumber}
-                        </p>
-                        <p>
-                          <strong>Email:</strong> {o.buyerEmail}
-                        </p>
-                        <p>
-                          <strong>UHID:</strong> {o.buyer_uhid}
-                        </p>
+                        {o.buyerName && (
+                          <p>
+                            <strong>Name:</strong> {o.buyerName}
+                          </p>
+                        )}
+                        {o.buyerNumber && (
+                          <p>
+                            <strong>Mobile:</strong> {o.buyerNumber}
+                          </p>
+                        )}
+                        {o.buyerEmail && (
+                          <p>
+                            <strong>Email:</strong> {o.buyerEmail}
+                          </p>
+                        )}
+                        {o.buyer_uhid && (
+                          <p>
+                            <strong>UHID:</strong> {o.buyer_uhid}
+                          </p>
+                        )}
                       </div>
                     </div>
 
-                    {/* BILLING CARD */}
-                    <div className="col-md-6 d-flex">
-                      <div
-                        className="p-4 bg-white flex-fill"
-                        style={{
-                          borderRadius: "14px",
-                          border: "1px solid #e4e7ec",
-                          boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
-                          fontSize: "14px",
-                        }}
-                      >
-                        <h5
-                          className="fw-bold mb-3 d-flex align-items-center"
-                          style={{ fontSize: "16px" }}
+                    {/* BILLING ADDRESS CARD */}
+                    {o.address && (
+                      <div className="col-md-6 d-flex">
+                        <div
+                          className="p-4 bg-white flex-fill"
+                          style={{
+                            borderRadius: "14px",
+                            border: "1px solid #e4e7ec",
+                            boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
+                            fontSize: "14px",
+                          }}
                         >
-                          <i className="bi bi-geo-alt me-2 text-primary"></i>
-                          Billing Address
-                        </h5>
-
-                        <p>
-                          <strong>Name:</strong> {o.recipient_name}
-                        </p>
-                        <p>
-                          <strong>Mobile:</strong> {o.recipient_mobile}
-                        </p>
-                        <p>
-                          <strong>Address:</strong> {o.address}
-                        </p>
-                        <p>
-                          <strong>Location:</strong> {o.location || "N/A"}
-                        </p>
-                        <p>
-                          <strong>Pincode:</strong> {o.pincode}
-                        </p>
+                          <h5
+                            className="fw-bold mb-3 d-flex align-items-center"
+                            style={{ fontSize: "16px" }}
+                          >
+                            <i className="bi bi-geo-alt me-2 text-primary"></i>
+                            Billing Address
+                          </h5>
+                          {o.recipient_name && (
+                            <p>
+                              <strong>Name:</strong> {o.recipient_name}
+                            </p>
+                          )}
+                          {o.recipient_mobile && (
+                            <p>
+                              <strong>Mobile:</strong> {o.recipient_mobile}
+                            </p>
+                          )}
+                          {o.address && (
+                            <p>
+                              <strong>Address:</strong> {o.address}
+                            </p>
+                          )}
+                          {o.location && (
+                            <p>
+                              <strong>Location:</strong> {o.location || "N/A"}
+                            </p>
+                          )}
+                          {o.pincode && (
+                            <p>
+                              <strong>Pincode:</strong> {o.pincode}
+                            </p>
+                          )}
+                        </div>
                       </div>
-                    </div>
+                    )}
                   </div>
 
                   {/* ORDER INFO */}
@@ -836,7 +854,7 @@ export default function OrderList() {
                       </div>
                       <div className="col-md-6 mb-2">
                         <strong>Referred By Doctor:</strong>{" "}
-                        {o.referred_by_doctor}
+                        {o.referred_by_doctor || "Self"}
                       </div>
                     </div>
 
@@ -846,7 +864,7 @@ export default function OrderList() {
                       </div>
                       <div className="col-md-6 mb-2">
                         <strong>Referred By Hospital:</strong>{" "}
-                        {o.referred_by_hospital}
+                        {o.referred_by_hospital || "Self"}
                       </div>
                     </div>
 
