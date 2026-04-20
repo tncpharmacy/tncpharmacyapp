@@ -347,7 +347,7 @@ export default function OcrExtractionLogic({
         order_type: 2,
         pharmacy_id: pharmacy_id,
         address_id: 29,
-
+        prescription_id: prescriptionId,
         // ✅ 👉 yahan bhi same use kar
         additional_discount: String(discount),
 
