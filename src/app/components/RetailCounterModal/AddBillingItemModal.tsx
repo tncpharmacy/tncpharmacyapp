@@ -166,7 +166,16 @@ const AddBillingItemModal: React.FC<AddBillingItemModalProps> = ({
       return;
     }
 
-    onConfirmAdd(item, qty, selectedDoseValue, remarks, duration);
+    onConfirmAdd(
+      {
+        ...item,
+        unitPrice: Number(item.MRP), // 👈 ALWAYS treat as per unit
+      },
+      qty,
+      selectedDoseValue,
+      remarks,
+      duration
+    );
   };
 
   return (

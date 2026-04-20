@@ -104,14 +104,14 @@ const CartPreviewModal = ({
   };
 
   const calculateSubtotal = (item: CartItem) => {
+    const mrp = Number(item.unitPrice);
     const qty = Number(item.qty);
-    const price = Number(formatPrice(item.price));
     const disc = Number(item.Disc ?? 0);
-    const rate = price - (price * disc) / 100;
-    const total = qty * price;
+
+    const total = mrp * qty;
     const discountAmt = (total * disc) / 100;
 
-    return total - discountAmt;
+    return Number((total - discountAmt).toFixed(2));
   };
 
   const total = cart.reduce((acc, item) => acc + calculateSubtotal(item), 0);
@@ -172,10 +172,12 @@ const CartPreviewModal = ({
                 {cart.map((item, idx) => {
                   // const subtotal = calculateSubtotal(item);
                   const mrp = Number(item.unitPrice);
+                  const qty = Number(item.qty);
                   const disc = Number(item.Disc ?? 0);
-
                   const rate = mrp - (mrp * disc) / 100;
-                  const subtotal = rate * item.qty;
+                  const total = mrp * qty;
+                  const discountAmt = (total * disc) / 100;
+                  const subtotal = total - discountAmt;
                   return (
                     <tr key={idx}>
                       <td>
@@ -278,7 +280,7 @@ const CartPreviewModal = ({
                         <input
                           type="text"
                           className="form-control"
-                          value={`₹${formatPrice(item.price)}`}
+                          value={`₹${formatPrice(mrp)}`}
                           tabIndex={-1}
                           readOnly
                           style={{ width: "90px", backgroundColor: "#f5f5f5" }}

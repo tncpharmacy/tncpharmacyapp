@@ -56,6 +56,7 @@ export interface Medicine {
   AvailableQTY?: number | null;
   AvailableQty?: number | null;
   MRP?: number | null;
+  unitPrice?: number | null;
   generic_name?: string;
   GenericName?: string;
   dose_form?: string;

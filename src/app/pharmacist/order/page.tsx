@@ -19,7 +19,6 @@ import { PharmacistOrder } from "@/types/pharmacistOrder";
 import InfiniteScroll from "@/app/components/InfiniteScrollS/InfiniteScrollS";
 import { getPharmacyBuyersThunk } from "@/lib/features/pharmacistBuyerListSlice/pharmacistBuyerListSlice";
 import { getUser } from "@/lib/auth/auth";
-import { formatAmount } from "@/lib/utils/formatAmount";
 import BillPreviewModal from "@/app/components/RetailCounterModal/BillPreviewModal";
 import ExcelJS from "exceljs";
 import { saveAs } from "file-saver";
@@ -259,7 +258,7 @@ export default function OrderList() {
         "",
         "",
         "Grand Total",
-        formatAmount(grandTotal),
+        formatPrice(grandTotal),
       ]);
       totalRow.font = { bold: true };
 
@@ -423,16 +422,25 @@ export default function OrderList() {
   const handleReprint = (order: any) => {
     const cartItems =
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      order.products?.map((p: any) => ({
-        medicine_name: p.medicine_name,
-        price: Number(p.mrp),
-        qty: Number(p.quantity),
-        Disc: Number(p.discount),
-        total: Number(p.rate),
-        dose_form: p.doses,
-        remarks: p.remark,
-        duration: p.duration,
-      })) || [];
+      order.products?.map((p: any) => {
+        const qty = Number(p.quantity || 0);
+        const mrp = Number(p.mrp || 0);
+        const discount = Number(p.discount || 0);
+        const rate = Number(p.rate || 0); // 🔥 IMPORTANT FIX
+        const subtotal = rate * qty;
+
+        return {
+          medicine_name: p.medicine_name,
+          qty,
+          mrp,
+          Disc: discount,
+          rate,
+          subtotal,
+          dose_form: p.doses,
+          remarks: p.remark,
+          duration: p.duration,
+        };
+      }) || [];
 
     setBillPreviewData({
       cart: cartItems,
@@ -609,7 +617,7 @@ export default function OrderList() {
                                 {p.gst_number ?? ""}
                               </td> */}
                                   <td className="text-start">
-                                    {formatAmount(Number(p.amount))}
+                                    {formatPrice(Number(p.amount))}
                                   </td>
                                   <td className="text-start">
                                     {p.orderType ?? ""}
@@ -890,7 +898,7 @@ export default function OrderList() {
                             <td>{p.quantity}</td>
                             <td>{p.mrp}</td>
                             <td>{p.discount}</td>
-                            <td>{formatAmount(p.rate)}</td>
+                            <td>{formatPrice(p.rate)}</td>
                           </tr>
                         ))}
                       </tbody>
@@ -914,12 +922,12 @@ export default function OrderList() {
 
                     <div className="d-flex justify-content-between text-danger mb-2 fw-bold">
                       <span>Total Amount:</span>
-                      <strong>₹{formatAmount(totalAmount)}</strong>
+                      <strong>₹{formatPrice(totalAmount)}</strong>
                     </div>
                     {Number(additionalDiscount) > 0 && (
                       <div className="d-flex justify-content-between text-success mb-2 fw-bold">
                         <span>Additional Discount:</span>
-                        <strong>₹{formatAmount(additionalDiscount)}</strong>
+                        <strong>₹{formatPrice(additionalDiscount)}</strong>
                       </div>
                     )}
 
@@ -928,7 +936,7 @@ export default function OrderList() {
                     <div className="d-flex justify-content-between text-primary fw-bold fs-5">
                       <span>Grand Total:</span>
 
-                      <span>₹{formatAmount(netAmount)}</span>
+                      <span>₹{formatPrice(netAmount)}</span>
                     </div>
                   </div>
                 </>

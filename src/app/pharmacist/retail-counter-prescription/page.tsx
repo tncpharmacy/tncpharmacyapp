@@ -477,7 +477,7 @@ export default function RetailCounter() {
       ...cleanItem
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } = item as any;
-    const mrp = Number(item.MRP || item.mrp || 0);
+    const mrp = Number(item.unitPrice || item.MRP || item.mrp || 0);
     // console.log("ITEM FROM API:", item);
     const parsedDiscount =
       item.Disc !== undefined
@@ -851,7 +851,6 @@ export default function RetailCounter() {
                                   value={uhId}
                                   onChange={(e) => setUhId(e.target.value)}
                                   maxLength={10}
-                                  required
                                 />
                               </div>
                             </div>

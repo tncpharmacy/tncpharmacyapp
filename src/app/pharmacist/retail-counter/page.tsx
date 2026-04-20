@@ -335,6 +335,11 @@ export default function RetailCounter() {
     try {
       let buyerId = null;
 
+      // ✅ LOCAL VARIABLES (IMPORTANT)
+      let finalCustomerName = customerName;
+      let finalMobile = mobile;
+      let finalUhid = uhId;
+
       // 1) Buyer Login
       const loginRes = await dispatch(
         buyerLogin({ login_id: mobile })
@@ -342,6 +347,11 @@ export default function RetailCounter() {
 
       if (loginRes?.data?.existing === true) {
         buyerId = loginRes.data.id;
+
+        finalCustomerName = loginRes.data.name || customerName;
+        finalMobile = loginRes.data.number || mobile;
+        finalUhid = loginRes.data.uhid || uhId;
+
         if (
           (!loginRes.data.uhid || loginRes.data.uhid === "") &&
           uhId.trim() !== ""
@@ -354,6 +364,7 @@ export default function RetailCounter() {
           ).unwrap();
         }
       } else {
+        // 🔥 REGISTER FLOW
         const regRes = await dispatch(
           buyerRegister({
             name: customerName,
@@ -364,11 +375,16 @@ export default function RetailCounter() {
         ).unwrap();
 
         buyerId = regRes.data.id;
+
+        // ✅ IMPORTANT FIX
+        finalCustomerName = regRes.data.name || customerName;
+        finalMobile = regRes.data.number || mobile;
+        finalUhid = regRes.data.uhid || uhId;
       }
 
       if (!buyerId) {
         toast.error("Unable to fetch Buyer ID");
-        return false;
+        return { success: false };
       }
 
       // 2) Product Array
@@ -394,14 +410,7 @@ export default function RetailCounter() {
         };
       });
 
-      // 3) Calculate Total
-      const grandTotal = cart.reduce((acc, item) => {
-        const total = item.qty * item.price;
-        const discountAmount = (total * item.Disc) / 100;
-        return acc + (total - discountAmount);
-      }, 0);
-
-      // 4) Final Order Payload
+      // 3) Order Payload
       const orderPayload = {
         payment_mode: 1,
         payment_status: "1",
@@ -416,23 +425,28 @@ export default function RetailCounter() {
         status: "1",
         products,
       };
-      // console.log("order payload", orderPayload);
-      // 5) POST ORDER
+
       await dispatch(
         createPharmacistOrder({
           buyerId,
           payload: orderPayload,
         })
       ).unwrap();
-      return true;
+
+      // ✅ RETURN DATA (MOST IMPORTANT)
+      return {
+        success: true,
+        customerName: finalCustomerName,
+        mobile: finalMobile,
+        uhid: finalUhid,
+      };
     } catch (err) {
       toast.error("Order Creation Failed!");
-      return false;
+      return { success: false };
     }
   };
 
   const handleGenerateBill = async () => {
-    // 1) Basic Name & Mobile Validation
     if (!customerName.trim() || !mobile.trim()) {
       toast.error("Please fill Customer Name and Mobile No.");
       return;
@@ -444,27 +458,26 @@ export default function RetailCounter() {
       return;
     }
 
-    // 2) UHID check
-    if (!uhId.trim()) {
-      toast.error("Please enter UHID.");
-      return;
-    }
-
-    // 3) Table/cart check
     if (cart.length === 0) {
       toast.error("No items in table!");
       return;
     }
 
-    // 4) Create order
-    const orderSuccess = await handleCreateOrder();
+    // ✅ IMPORTANT: capture response
+    const res = await handleCreateOrder();
 
-    if (orderSuccess) {
+    if (res?.success) {
       setBillData([...cart]);
+
+      // ✅ DIRECT DATA USE (NO ASYNC ISSUE)
+      setCustomerName(res.customerName || "");
+      setMobile(res.mobile || "");
+      setUhId(res.uhid || "");
+
       setIsBillModalOpen(true);
-      setTimeout(() => {
-        handleReset();
-      }, 500);
+
+      // ❌ REMOVE THIS (BUG CREATE KAR RAHA HAI)
+      // setTimeout(() => handleReset(), 500);
     }
   };
 
@@ -650,7 +663,6 @@ export default function RetailCounter() {
                               value={uhId}
                               onChange={(e) => setUhId(e.target.value)}
                               maxLength={10}
-                              required
                             />
                           </div>
                         </div>
@@ -1062,7 +1074,10 @@ export default function RetailCounter() {
       />
       <BillPreviewModal
         show={isBillModalOpen}
-        onClose={() => setIsBillModalOpen(false)}
+        onClose={() => {
+          setIsBillModalOpen(false);
+          handleReset();
+        }}
         cart={billData}
         customerName={customerName}
         mobile={mobile}
