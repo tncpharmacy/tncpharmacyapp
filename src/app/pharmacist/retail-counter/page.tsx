@@ -187,39 +187,6 @@ export default function RetailCounter() {
     setIsQtyModalOpen(true);
   };
 
-  // Dropdown Change Handler: Dispatch API call and set the active ID
-  const handleSelectMedicine = (selectedOption: OptionType | null) => {
-    if (selectedOption) {
-      const selectedMedicine = productList.find(
-        (m) => m.id === selectedOption.value
-      );
-      if (
-        !selectedMedicine ||
-        typeof selectedMedicine.category_id === "undefined"
-      ) {
-        console.error("Selected medicine or category_id is missing.");
-        return;
-      }
-
-      const genericId = selectedMedicine.id;
-      const categoryId = selectedMedicine.category_id;
-      setSelectedGenericId(null);
-      setSelectedMedicine(selectedMedicine);
-      if (categoryId === 1) {
-        dispatch(getProductByGenericId(genericId));
-        setSelectedGenericId(genericId);
-      } else {
-        handleSkipGenericModal(selectedMedicine);
-      }
-    } else {
-      setSelectedGenericId(null);
-      setSelectedMedicine(null);
-      setIsModalOpen(false);
-      setIsQtyModalOpen(false);
-      setItemToConfirm(null);
-    }
-  };
-
   const handleBackToGeneric = () => {
     setIsQtyModalOpen(false);
     setIsModalOpen(true);
@@ -523,18 +490,6 @@ export default function RetailCounter() {
                 <div className="row g-3 align-items-end">
                   <div className="col-md-8">
                     <div className="txt_col">
-                      {/* <SingleSelectDropdown
-                        medicines={productList}
-                        selected={
-                          selectedMedicine
-                            ? {
-                                label: selectedMedicine.medicine_name,
-                                value: selectedMedicine.id,
-                              }
-                            : null
-                        }
-                        onChange={handleSelectMedicine}
-                      /> */}
                       <GlobalProductSearchBox
                         placeholder="Search product..."
                         onSelect={(item) => {

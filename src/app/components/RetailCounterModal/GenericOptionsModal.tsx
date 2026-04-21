@@ -56,9 +56,7 @@ const GenericOptionsModal: React.FC<GenericOptionsModalProps> = ({
       const normalize = (str: string) =>
         str?.toLowerCase().replace(/\s+/g, "").trim();
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const matchFn = (item: any) =>
-        normalize(item.medicine_name) ===
-        normalize(selectedOriginalItem.medicine_name);
+      const matchFn = (item: any) => item.id === selectedOriginalItem.id;
 
       const existsInFullList = sorted.some(matchFn);
 
@@ -238,10 +236,7 @@ const GenericOptionsModal: React.FC<GenericOptionsModalProps> = ({
                       ) : (
                         processedList.map((item, index) => {
                           const isSelected =
-                            normalize(item.medicine_name) ===
-                            normalize(
-                              selectedOriginalItem?.medicine_name || ""
-                            );
+                            item.id === selectedOriginalItem?.id;
                           return (
                             <tr
                               key={item.id}

@@ -2,18 +2,12 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useAppDispatch, useAppSelector } from "@/lib/hooks";
-import {
-  getSearchProductBased,
-  getSearchSuggestions,
-} from "@/lib/features/medicineSlice/medicineSlice";
+import { getSearchProductBased } from "@/lib/features/medicineSlice/medicineSlice";
 import { Medicine } from "@/types/medicine";
 import { useRouter } from "next/navigation";
-import { encodeId } from "@/lib/utils/encodeDecode";
 import { formatPrice } from "@/lib/utils/formatPrice";
-import TncLoader from "../TncLoader/TncLoader";
 
 type SearchMatch = {
-  // _matchType: "medicine" | "generic" | "manufacturer";
   data: Medicine;
 };
 
@@ -28,8 +22,6 @@ type Props = {
 export default function GlobalProductSearchBox({
   placeholder = "Search medicines...",
   onSelect,
-  redirectOnSelect = false,
-  className = "",
   onKeyDown,
 }: Props) {
   const dispatch = useAppDispatch();
