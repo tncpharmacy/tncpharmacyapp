@@ -249,6 +249,13 @@ export const ENDPOINTS = {
     GET_BY_ID: (buyerId: number, addressId: number) =>
       `/address/view/${buyerId}/address/${addressId}/`,
     DELETE: (id: number) => `/address/delete/?id=${id}`,
+
+    // Pharmacist Create Buyer Address
+    PHARMACIST_BUYER_ADDRESS_CREATE: "/address/pharmacist/create/",
+    PHARMACIST_BUYER_ADDRESS_GET: (buyerId: number) =>
+      `/address/pharmacist/view/${buyerId}/`,
+    PHARMACIST_BUYER_ADDRESS_GET_BY_ID: (buyerId: number, addressId: number) =>
+      `/address/pharmacist/view/${buyerId}/address/${addressId}/`,
   },
 
   // Purchase Stock

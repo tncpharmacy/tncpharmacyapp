@@ -555,7 +555,7 @@ const BillPreviewModal: React.FC<BillPreviewModalProps> = ({
                 >
                   <thead className="table-light">
                     <tr>
-                      <th>Medicine</th>
+                      <th style={{ width: "260px" }}>Medicine</th>
                       <th>Qty</th>
                       <th>MRP (₹)</th>
                       <th>Discount (%)</th>
@@ -575,11 +575,7 @@ const BillPreviewModal: React.FC<BillPreviewModalProps> = ({
                       return (
                         <tr key={idx}>
                           <td>{item.medicine_name}</td>
-                          <td>
-                            {item.pack_size
-                              ? `${item.pack_size} × ${item.qty}`
-                              : item.qty}
-                          </td>
+                          <td>{item.qty}</td>
                           <td>{formatPrice(mrp)}</td>
                           <td>{item.Disc}</td>
                           <td>{formatPrice(item.rate)}</td>

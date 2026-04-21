@@ -4,6 +4,7 @@ import GlobalProductSearchBox from "@/app/components/GlobalProductSearchBox/Glob
 import GlobalSearchBox from "@/app/components/GlobalSearchBox/GlobalSearchBox";
 import SingleSelectDropdown from "@/app/components/Input/SingleSelectDropdown";
 import AddBillingItemModal from "@/app/components/RetailCounterModal/AddBillingItemModal";
+import BillPreviewModal from "@/app/components/RetailCounterModal/BillPreviewModal";
 import GenericOptionsModal from "@/app/components/RetailCounterModal/GenericOptionsModal";
 import HealthBagModal from "@/app/components/RetailCounterModal/HealthBagModal";
 import WhatsappWaitModal from "@/app/components/RetailCounterModal/WhatsappWaitModal";
@@ -112,15 +113,20 @@ export default function OcrExtractionLogic({
     cart: [],
     customerName: "",
     mobile: "",
-    pharmacy_id: pharmacy_id || 1, // pharmacy_id defined earlier in your component
+    pharmacy_id: pharmacy_id || 1,
   });
+  const [isBillModalOpen, setIsBillModalOpen] = useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [billData, setBillData] = useState<any[]>([]);
   const [customerName, setCustomerName] = useState("");
   const [mobile, setMobile] = useState("");
   const [uhId, setUhId] = useState("");
   const [referredByHospital, setReferredByHospital] = useState("");
   const [referredByDoctor, setReferredByDoctor] = useState("");
   const [additionalDiscount, setAdditionalDiscount] = useState<string>("0");
-
+  const [selectedAddressId, setSelectedAddressId] = useState<number | null>(
+    null
+  );
   const [isHealthBagOpen, setIsHealthBagOpen] = useState(false);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [cart, setCart] = useState<any[]>([]);
@@ -136,6 +142,11 @@ export default function OcrExtractionLogic({
   useEffect(() => {
     dispatch(getProductList(null));
   }, [dispatch]);
+
+  useEffect(() => {
+    setCart([]);
+    setSelectedAddressId(null);
+  }, [prescriptionId]);
 
   // -------------------------------------------------------------------
   // ❌ OCR *REMOVED COMPLETELY*
@@ -292,15 +303,49 @@ export default function OcrExtractionLogic({
 
     if (success) {
       toast.success("Order Created Successfully!");
-      setCart([]);
+
+      // 🔥 BILL DATA SET KAR
+      const formattedCart = data.cart.map((item) => {
+        const mrp = Number(item.unitPrice || item.MRP || 0);
+        const qty = Number(item.qty || 0);
+        const disc = Number(item.Disc || 0);
+
+        const rate = mrp - (mrp * disc) / 100;
+        const subtotal = rate * qty;
+
+        return {
+          ...item,
+          mrp,
+          MRP: mrp,
+          rate,
+          subtotal,
+        };
+      });
+
+      setBillData(formattedCart);
+      setAdditionalDiscount(data.additionalDiscount);
+
+      setCustomerName(buyerName || "");
+      setMobile(String(buyerMobile || ""));
+      setUhId("");
+      setReferredByDoctor(referredByDoctor || "Self");
+      setReferredByHospital(referredByHospital || "Self");
+      // 🔥 MODAL OPEN
+      setIsBillModalOpen(true);
       setIsHealthBagOpen(false);
+      setCart([]);
     }
   };
+
   const handleCreateOrder = async (
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     finalCart: any[],
     discountValue: string
   ) => {
+    if (!selectedAddressId) {
+      toast.error("Please select address");
+      return false;
+    }
     try {
       // 🔹 1) Products mapping (same rehne de)
       const products = finalCart.map((item) => {
@@ -346,7 +391,7 @@ export default function OcrExtractionLogic({
         amount: String(finalAmount.toFixed(2)),
         order_type: 2,
         pharmacy_id: pharmacy_id,
-        address_id: 29,
+        address_id: selectedAddressId,
         prescription_id: prescriptionId,
         referred_by_doctor: referredByDoctor || "Self",
         referred_by_hospital: referredByHospital || "Self",
@@ -514,11 +559,28 @@ export default function OcrExtractionLogic({
         onGenerateOrder={(finalCart) => handleGenerateOrderFromModal(finalCart)} // Order flow
         onRemove={handleRemoveItem}
         onUpdateCart={handleUpdateCartFromModal}
+        onSelectAddress={(id) => setSelectedAddressId(id)}
+        buyerId={buyerId}
       />
 
       <WhatsappWaitModal
         isOpen={isWhatsappWaitModalOpen}
         onClose={closeWhatsappWait}
+      />
+
+      <BillPreviewModal
+        show={isBillModalOpen}
+        onClose={() => {
+          setIsBillModalOpen(false);
+        }}
+        cart={billData}
+        customerName={customerName}
+        mobile={mobile}
+        uhid={uhId}
+        referredByDoctor={referredByDoctor}
+        referredByHospital={referredByHospital}
+        pharmacy_id={pharmacy_id}
+        additionalDiscount={additionalDiscount}
       />
     </Row>
   );

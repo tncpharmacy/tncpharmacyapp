@@ -5,6 +5,9 @@ import {
   updateAddress,
   deleteAddress,
   setDefaultAddress,
+  createAddressBuyerByPharmacist,
+  fetchAddressBuyerByPharmacist,
+  fetchAddressBuyerByPharmacistById,
 } from "@/lib/api/address";
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import { Address, AddressResponse } from "@/types/address";
@@ -28,6 +31,52 @@ const initialState: AddressState = {
 // ===============================
 // ASYNC THUNKS
 // ===============================
+
+export const addAddressBuyerByPharmacist = createAsyncThunk(
+  "address/createBuyerByPharmacist",
+  async (data: Address, { rejectWithValue }) => {
+    try {
+      const response = await createAddressBuyerByPharmacist(data);
+      return response;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (err: any) {
+      return rejectWithValue(err.message || "Failed to create address");
+    }
+  }
+);
+
+export const getAddressBuyerByPharmacist = createAsyncThunk<
+  Address[], // ✅ return type
+  number
+>("address/fetchBuyerByPharmacist", async (buyerId, { rejectWithValue }) => {
+  try {
+    const res = await fetchAddressBuyerByPharmacist(buyerId);
+    return res.data;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } catch (err: any) {
+    return rejectWithValue(err.response?.data || err.message);
+  }
+});
+
+export const getAddressBuyerByPharmacistById = createAsyncThunk(
+  "address/fetchBuyerByPharmacistById",
+  async (
+    { buyerId, addressId }: { buyerId: number; addressId: number },
+    { rejectWithValue }
+  ) => {
+    try {
+      const response = await fetchAddressBuyerByPharmacistById(
+        buyerId,
+        addressId
+      );
+      return response;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (err: any) {
+      return rejectWithValue(err.message || "Failed to fetch address by id");
+    }
+  }
+);
+
 export const getAddress = createAsyncThunk(
   "address/fetchAll",
   async (buyerId: number, { rejectWithValue }) => {
@@ -124,6 +173,54 @@ const addressSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
+
+      // ======= CREATE ADDRESS BUYER BY PHARMACIST =======
+      .addCase(addAddressBuyerByPharmacist.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(
+        addAddressBuyerByPharmacist.fulfilled,
+        (state, action: PayloadAction<Address>) => {
+          state.loading = false;
+          state.addresses.push(action.payload);
+          state.message = "Address added successfully.";
+        }
+      )
+      .addCase(addAddressBuyerByPharmacist.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+
+      // ======= FETCH ADDRESS BUYER BY PHARMACIST =======
+      .addCase(getAddressBuyerByPharmacist.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(getAddressBuyerByPharmacist.fulfilled, (state, action) => {
+        state.loading = false;
+        state.addresses = action.payload;
+      })
+      .addCase(getAddressBuyerByPharmacist.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+
+      // ======= FETCH ADDRESS BUYER BY PHARMACIST BY ID =======
+      .addCase(getAddressBuyerByPharmacistById.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(
+        getAddressBuyerByPharmacistById.fulfilled,
+        (state, action: PayloadAction<Address>) => {
+          state.loading = false;
+          state.selectedAddress = action.payload;
+          state.error = null;
+        }
+      )
+      .addCase(getAddressBuyerByPharmacistById.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+
       // ======= FETCH ALL =======
       .addCase(getAddress.pending, (state) => {
         state.loading = true;

@@ -5,6 +5,7 @@ import { Address, AddressResponse } from "@/types/address";
 import "../../(user)/css/user-style.css";
 import {
   addAddress,
+  addAddressBuyerByPharmacist,
   getAddress,
 } from "@/lib/features/addressSlice/addressSlice";
 import { useAppDispatch, useAppSelector } from "@/lib/hooks";
@@ -18,7 +19,7 @@ interface ConfirmLocationModalProps {
   userId: number;
 }
 
-export default function ConfirmLocationModal({
+export default function AddAddressBuyerByPharmacistModal({
   show,
   onClose,
   locationDetails,
@@ -51,20 +52,20 @@ export default function ConfirmLocationModal({
     (state) => state.address.selectedAddress as any
   );
 
-  useEffect(() => {
-    const addr = selectedAddress?.data;
-    if (addr) {
-      setFormData({
-        name: addr.name || "",
-        mobile: addr.mobile || "",
-        address: addr.address || "",
-        location: addr.location || "",
-        pincode: addr.pincode || "",
-        address_type_id: addr.address_type_id || 0,
-        default_address: addr.default_address || 0,
-      });
-    }
-  }, [selectedAddress]);
+  //   useEffect(() => {
+  //     const addr = selectedAddress?.data;
+  //     if (addr) {
+  //       setFormData({
+  //         name: addr.name || "",
+  //         mobile: addr.mobile || "",
+  //         address: addr.address || "",
+  //         location: addr.location || "",
+  //         pincode: addr.pincode || "",
+  //         address_type_id: addr.address_type_id || 0,
+  //         default_address: addr.default_address || 0,
+  //       });
+  //     }
+  //   }, [selectedAddress]);
 
   useEffect(() => {
     if (locationDetails) {
@@ -188,17 +189,14 @@ export default function ConfirmLocationModal({
     try {
       // ✅ Redux slice call
       const resultAction = await dispatch(
-        addAddress(formData as Address)
+        addAddressBuyerByPharmacist(formData as Address)
       ).unwrap();
 
       toast.success("Address added successfully! 🎉");
-      // console.log("✅ API Response:", resultAction);
-      // ✅ Parent ko batado data refresh kare
-      onSubmit(resultAction);
-      await dispatch(getAddress(userId));
+      //   setShowAddAddressModal(false);
+      //   onSubmit(resultAction);
       // ✅ Modal close karo
       onClose();
-
       // ✅ Form reset karo
       setFormData({
         id: 0,

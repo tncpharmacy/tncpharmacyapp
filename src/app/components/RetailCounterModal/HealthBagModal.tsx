@@ -16,6 +16,12 @@ import {
 import SmartCreateInput from "./SmartCreateInput";
 import TncLoader from "../TncLoader/TncLoader";
 import SmartCreateInputWithoutLabel from "./SmartCreateInputWithoutLabel";
+import {
+  getAddressBuyerByPharmacist,
+  getAddressBuyerByPharmacistById,
+} from "@/lib/features/addressSlice/addressSlice";
+import ConfirmLocationModal from "../address/ConfirmLocationModal";
+import AddAddressBuyerByPharmacistModal from "../address/AddAddressBuyerByPharmacistModal";
 
 interface HealthBagModalProps {
   isOpen: boolean;
@@ -29,6 +35,8 @@ interface HealthBagModalProps {
   onUpdateCart?: (updatedCart: any[]) => void;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   onGenerateOrder?: (data: { cart: any[]; additionalDiscount: string }) => void;
+  onSelectAddress?: (addressId: number | null) => void;
+  buyerId?: number | null;
 }
 
 const HealthBagModal: React.FC<HealthBagModalProps> = ({
@@ -39,6 +47,8 @@ const HealthBagModal: React.FC<HealthBagModalProps> = ({
   onRemove,
   onUpdateCart,
   onGenerateOrder,
+  onSelectAddress,
+  buyerId,
 }) => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [localCart, setLocalCart] = React.useState<any[]>(cartItems);
@@ -55,7 +65,13 @@ const HealthBagModal: React.FC<HealthBagModalProps> = ({
   );
   // 🔥 MODAL LOADER
   const [modalLoading, setModalLoading] = React.useState(false);
+  const [selectedAddressId, setSelectedAddressId] = React.useState<
+    number | null
+  >(null);
+  const [showAddAddressModal, setShowAddAddressModal] = React.useState(false);
 
+  const { addresses } = useAppSelector((state) => state.address);
+  console.log("00", buyerId);
   // 🔥 Fetch dropdown data on modal open
   React.useEffect(() => {
     if (!isOpen) return;
@@ -76,11 +92,23 @@ const HealthBagModal: React.FC<HealthBagModalProps> = ({
 
     loadData();
   }, [isOpen, dispatch]);
+  console.log("ADDRESSES =>", addresses);
+  React.useEffect(() => {
+    if (!isOpen) return;
 
-  // React.useEffect(() => {
-  //   dispatch(getProductDurations());
-  //   dispatch(getProductInstructions());
-  // }, [dispatch]);
+    dispatch(getAddressBuyerByPharmacist(buyerId || 0));
+  }, [isOpen, buyerId]);
+
+  React.useEffect(() => {
+    if (addresses.length > 0) {
+      const defaultAddr = addresses.find((a) => a.default_address === 1);
+
+      if (defaultAddr?.id !== undefined) {
+        setSelectedAddressId(defaultAddr.id);
+        onSelectAddress?.(defaultAddr.id);
+      }
+    }
+  }, [addresses]);
 
   React.useEffect(() => {
     setLocalCart(cartItems);
@@ -121,387 +149,450 @@ const HealthBagModal: React.FC<HealthBagModalProps> = ({
   const grandTotal =
     totals.total - (totals.total * Number(additionalDiscount)) / 100;
   return (
-    <Modal show={isOpen} onHide={onClose} size="xl">
-      {modalLoading && (
-        <div
-          className="position-absolute top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center"
-          style={{
-            background: "rgba(255,255,255,0.7)",
-            backdropFilter: "blur(3px)",
-            zIndex: 10,
-          }}
-        >
-          <div className="text-center">
-            <TncLoader />
-          </div>
-        </div>
-      )}
-      <Modal.Header closeButton>
-        <Modal.Title>
-          🛒 Health Bag / Billing Cart ({localCart.length} items)
-        </Modal.Title>
-      </Modal.Header>
-
-      <Modal.Body>
-        {localCart.length === 0 ? (
-          <p className="text-center">Your Health Bag is empty.</p>
-        ) : (
-          <Table bordered hover responsive>
-            <thead>
-              <tr>
-                <th style={{ width: "260px" }}>Medicine</th>
-                <th style={{ width: "80px", textAlign: "center" }}>Qty</th>
-                <th style={{ width: "110px", textAlign: "center" }}>Doses</th>
-                <th style={{ width: "180px" }}>Instruction</th>
-                <th style={{ width: "120px" }}>Duration</th>
-                <th style={{ width: "90px" }}>MRP (₹)</th>
-                <th style={{ width: "90px" }}>Disc (%)</th>
-                <th style={{ width: "90px" }}>Rate</th>
-                <th style={{ width: "110px" }}>Subtotal (₹)</th>
-                <th style={{ width: "60px" }}></th>
-              </tr>
-            </thead>
-
-            <tbody>
-              {localCart.map((item, index) => {
-                const { unitPrice = 0, price = 0 } = item;
-                const mrp = Number(item.unitPrice) || 0;
-                const disc = Number(item.Disc) || 0;
-                const qty = Number(item.qty) || 0;
-
-                const rate = mrp - (mrp * disc) / 100;
-                const subtotal = rate * qty;
-                const inputStyle = {
-                  height: "38px",
-                  fontSize: "14px",
-                };
-                return (
-                  <tr key={index}>
-                    <td style={{ width: "250px" }}>
-                      {/* Medicine */}
-                      <div
-                        style={{
-                          display: "flex",
-                          flexDirection: "column",
-                          overflow: "hidden",
-                        }}
-                      >
-                        <span
-                          style={{
-                            fontWeight: 600,
-                            fontSize: "14px",
-                            lineHeight: "18px",
-                            display: "-webkit-box",
-                            WebkitLineClamp: 2, // 👈 max 2 line
-                            WebkitBoxOrient: "vertical",
-                            overflow: "hidden",
-                            textOverflow: "ellipsis",
-                          }}
-                          className="pd-title"
-                        >
-                          {item.medicine_name}
-                        </span>
-
-                        <span
-                          style={{
-                            fontSize: "12px",
-                            color: "#666",
-                            marginTop: "2px",
-                            whiteSpace: "nowrap",
-                            overflow: "hidden",
-                            textOverflow: "ellipsis",
-                          }}
-                          className="pd-title"
-                        >
-                          {item.pack_size || "N/A"}
-                        </span>
-
-                        <span
-                          style={{
-                            fontSize: "12px",
-                            color: "#28a745",
-                            marginTop: "2px",
-                          }}
-                          className="pd-title"
-                        >
-                          {item.manufacturer_name || item.manufacturer || "N/A"}
-                        </span>
-                      </div>
-                    </td>
-
-                    {/* Qty - DIRECT INPUT */}
-                    <td>
-                      <input
-                        type="number"
-                        className="form-control"
-                        value={String(item.qty)}
-                        maxLength={2}
-                        onChange={(e) => {
-                          const v = e.target.value;
-                          if (/^\d*$/.test(v)) {
-                            handleUpdate(index, "qty", v === "" ? "" : v);
-                          }
-                        }}
-                        onBlur={() => {
-                          let qty = Number(item.qty);
-
-                          if (!qty || qty <= 0) qty = 1; // prevent zero qty
-                          handleUpdate(index, "qty", qty);
-                        }}
-                        style={{ width: "70px" }}
-                      />
-                    </td>
-
-                    {/* Doses - DIRECT DROPDOWN */}
-                    <td style={{ minWidth: "130px" }}>
-                      <DoseInstructionSelect
-                        type="select"
-                        label=""
-                        name="dose_form"
-                        value={item.dose_form || ""}
-                        colSm={12}
-                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                        onChange={(e: any) =>
-                          handleUpdate(index, "dose_form", e.target.value)
-                        }
-                        isTableEditMode={true}
-                      />
-                    </td>
-
-                    {/* Instruction - DIRECT INPUT */}
-                    <td>
-                      <SmartCreateInputWithoutLabel
-                        label=""
-                        value={item.remarks || ""}
-                        placeholder=""
-                        list={instructionList}
-                        createAction={createProductInstruction}
-                        refreshAction={getProductInstructions}
-                        onChange={(val) => {
-                          handleUpdate(index, "remarks", val);
-                        }}
-                      />
-                    </td>
-
-                    {/* Duration - DIRECT INPUT */}
-                    <td>
-                      <SmartCreateInputWithoutLabel
-                        label=""
-                        value={item.duration || ""}
-                        placeholder=""
-                        list={durationList}
-                        createAction={createProductDuration}
-                        refreshAction={getProductDurations}
-                        onChange={(val) => {
-                          handleUpdate(index, "duration", val);
-                        }}
-                      />
-                    </td>
-                    {/* Price Mrp */}
-                    <td
-                      style={{
-                        textAlign: "center",
-                        width: "80px",
-                        // backgroundColor: "#f5f5f5",
-                      }}
-                    >
-                      <input
-                        type="text"
-                        className="form-control"
-                        value={formatPrice(item.unitPrice)}
-                        readOnly
-                        tabIndex={-1}
-                        style={{
-                          ...inputStyle,
-                          width: "80px",
-                          backgroundColor: "#f5f5f5",
-                        }}
-                      />
-                    </td>
-                    {/* Editable Discount */}
-                    <td style={{ textAlign: "center", width: "70px" }}>
-                      <input
-                        type="number"
-                        className="form-control"
-                        value={item.Disc ?? 0}
-                        max={99}
-                        min={0}
-                        // onChange={(e) =>
-                        //   handleEditChange(idx, "Disc", e.target.value)
-                        // }
-                        style={{ ...inputStyle, width: "80px" }}
-                        onChange={(e) => {
-                          const val = e.target.value;
-
-                          // ❗ Allow only digits and maxLength = 2
-                          if (val.length <= 2) {
-                            handleUpdate(index, "Disc", val);
-                          }
-                        }}
-                      />
-                    </td>
-
-                    {/* Rate */}
-                    <td
-                      style={{
-                        textAlign: "center",
-                        width: "90px",
-                      }}
-                    >
-                      <input
-                        type="text"
-                        className="form-control"
-                        value={formatPrice(rate)}
-                        readOnly
-                        tabIndex={-1}
-                        style={{
-                          ...inputStyle,
-                          width: "80px",
-                          backgroundColor: "#f5f5f5",
-                        }}
-                      />
-                    </td>
-
-                    {/* SubTotal */}
-                    <td
-                      style={{
-                        textAlign: "center",
-                        width: "90px",
-                      }}
-                    >
-                      <input
-                        type="text"
-                        className="form-control"
-                        value={formatPrice(subtotal)}
-                        readOnly
-                        tabIndex={-1}
-                        style={{
-                          ...inputStyle,
-                          width: "80px",
-                          backgroundColor: "#f5f5f5",
-                        }}
-                      />
-                    </td>
-
-                    <td>
-                      <Button
-                        variant="danger"
-                        size="sm"
-                        onClick={() => onRemove(index)}
-                      >
-                        <FaTrash size={14} />
-                      </Button>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </Table>
-        )}
-
-        <div className="d-flex align-items-center mt-3">
-          <input
-            type="checkbox"
-            id="addDisc"
-            checked={showSummary}
-            onChange={(e) => setShowSummary(e.target.checked)}
-            style={{ marginRight: "8px" }}
-          />
-          <label htmlFor="addDisc" style={{ fontWeight: 500 }}>
-            Add Additional Discount
-          </label>
-        </div>
-        {showSummary && (
+    <>
+      <Modal show={isOpen} onHide={onClose} size="xl">
+        {modalLoading && (
           <div
+            className="position-absolute top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center"
             style={{
-              marginTop: "15px",
-              padding: "15px",
-              border: "1px solid #e0e0e0",
-              borderRadius: "8px",
-              background: "#f9fafb",
-              width: "320px",
-              marginLeft: "auto",
+              background: "rgba(255,255,255,0.7)",
+              backdropFilter: "blur(3px)",
+              zIndex: 10,
             }}
           >
-            {/* TOTAL */}
-            <div className="d-flex justify-content-between mb-2">
-              <h6
-                className="fw-bold mb-2"
-                style={{ color: "red", whiteSpace: "nowrap" }}
-              >
-                Total: ₹{formatPrice(totals.total)}
-              </h6>
-            </div>
-
-            {/* ADDITIONAL DISCOUNT */}
-            <div className="mb-2">
-              <div
-                className="d-flex align-items-center mb-2"
-                style={{ gap: "8px" }}
-              >
-                <span
-                  className="fw-semibold"
-                  style={{ color: "green", whiteSpace: "nowrap" }}
-                >
-                  Additional Discount:
-                </span>
-
-                <input
-                  type="text"
-                  className="form-control"
-                  style={{ width: "60px" }}
-                  maxLength={2}
-                  value={additionalDiscount}
-                  onChange={(e) => {
-                    const val = e.target.value;
-                    if (/^\d{0,2}$/.test(val)) setAdditionalDiscount(val);
-                  }}
-                />
-
-                <span className="fw-bold">(%)</span>
-              </div>
-            </div>
-
-            {/* GRAND TOTAL */}
-            <div className="d-flex justify-content-between mt-2">
-              <h5 className="fw-bold text-primary mb-3">
-                Grand Total: ₹{formatPrice(grandTotal)}
-              </h5>
+            <div className="text-center">
+              <TncLoader />
             </div>
           </div>
         )}
-      </Modal.Body>
+        <Modal.Header closeButton>
+          <Modal.Title>
+            🛒 Health Bag / Billing Cart ({localCart.length} items)
+          </Modal.Title>
+        </Modal.Header>
 
-      <Modal.Footer>
-        <Button variant="secondary" onClick={onClose}>
-          Close
-        </Button>
+        <Modal.Body>
+          <div className="d-flex justify-content-between align-items-center mb-3">
+            {/* 🔽 ADDRESS DROPDOWN */}
+            <select
+              className="form-control"
+              style={{ maxWidth: "500px" }}
+              value={selectedAddressId ?? ""}
+              onChange={(e) => {
+                const id = Number(e.target.value);
+                setSelectedAddressId(id);
+                onSelectAddress?.(id);
+                // OPTIONAL: full detail fetch
+                if (!buyerId) return;
 
-        {!showSummary && (
+                dispatch(
+                  getAddressBuyerByPharmacistById({
+                    buyerId: buyerId, // now safe
+                    addressId: id,
+                  })
+                );
+              }}
+            >
+              <option value="">Select Address</option>
+
+              {addresses?.map((item, index) => {
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                const addr = (item as any).data || item;
+
+                return (
+                  <option key={addr.id ?? index} value={addr.id}>
+                    {`${addr.address}, ${addr.pincode}, ${addr.location}`}
+                  </option>
+                );
+              })}
+            </select>
+
+            {/* ➕ ADD ADDRESS */}
+            <button
+              className="btn btn-success ms-2"
+              onClick={() => setShowAddAddressModal(true)}
+            >
+              + Add Address
+            </button>
+          </div>
+          {localCart.length === 0 ? (
+            <p className="text-center">Your Health Bag is empty.</p>
+          ) : (
+            <Table bordered hover responsive>
+              <thead>
+                <tr>
+                  <th style={{ width: "260px" }}>Medicine</th>
+                  <th style={{ width: "80px", textAlign: "center" }}>Qty</th>
+                  <th style={{ width: "110px", textAlign: "center" }}>Doses</th>
+                  <th style={{ width: "180px" }}>Instruction</th>
+                  <th style={{ width: "120px" }}>Duration</th>
+                  <th style={{ width: "90px" }}>MRP (₹)</th>
+                  <th style={{ width: "90px" }}>Disc (%)</th>
+                  <th style={{ width: "90px" }}>Rate</th>
+                  <th style={{ width: "110px" }}>Subtotal (₹)</th>
+                  <th style={{ width: "60px" }}></th>
+                </tr>
+              </thead>
+
+              <tbody>
+                {localCart.map((item, index) => {
+                  const { unitPrice = 0, price = 0 } = item;
+                  const mrp = Number(item.unitPrice) || 0;
+                  const disc = Number(item.Disc) || 0;
+                  const qty = Number(item.qty) || 0;
+
+                  const rate = mrp - (mrp * disc) / 100;
+                  const subtotal = rate * qty;
+                  const inputStyle = {
+                    height: "38px",
+                    fontSize: "14px",
+                  };
+                  return (
+                    <tr key={index}>
+                      <td style={{ width: "250px" }}>
+                        {/* Medicine */}
+                        <div
+                          style={{
+                            display: "flex",
+                            flexDirection: "column",
+                            overflow: "hidden",
+                          }}
+                        >
+                          <span
+                            style={{
+                              fontWeight: 600,
+                              fontSize: "14px",
+                              lineHeight: "18px",
+                              display: "-webkit-box",
+                              WebkitLineClamp: 2, // 👈 max 2 line
+                              WebkitBoxOrient: "vertical",
+                              overflow: "hidden",
+                              textOverflow: "ellipsis",
+                            }}
+                            className="pd-title"
+                          >
+                            {item.medicine_name}
+                          </span>
+
+                          <span
+                            style={{
+                              fontSize: "12px",
+                              color: "#666",
+                              marginTop: "2px",
+                              whiteSpace: "nowrap",
+                              overflow: "hidden",
+                              textOverflow: "ellipsis",
+                            }}
+                            className="pd-title"
+                          >
+                            {item.pack_size || "N/A"}
+                          </span>
+
+                          <span
+                            style={{
+                              fontSize: "12px",
+                              color: "#28a745",
+                              marginTop: "2px",
+                            }}
+                            className="pd-title"
+                          >
+                            {item.manufacturer_name ||
+                              item.manufacturer ||
+                              "N/A"}
+                          </span>
+                        </div>
+                      </td>
+
+                      {/* Qty - DIRECT INPUT */}
+                      <td>
+                        <input
+                          type="number"
+                          className="form-control"
+                          value={String(item.qty)}
+                          maxLength={2}
+                          onChange={(e) => {
+                            const v = e.target.value;
+                            if (/^\d*$/.test(v)) {
+                              handleUpdate(index, "qty", v === "" ? "" : v);
+                            }
+                          }}
+                          onBlur={() => {
+                            let qty = Number(item.qty);
+
+                            if (!qty || qty <= 0) qty = 1; // prevent zero qty
+                            handleUpdate(index, "qty", qty);
+                          }}
+                          style={{ width: "70px" }}
+                        />
+                      </td>
+
+                      {/* Doses - DIRECT DROPDOWN */}
+                      <td style={{ minWidth: "130px" }}>
+                        <DoseInstructionSelect
+                          type="select"
+                          label=""
+                          name="dose_form"
+                          value={item.dose_form || ""}
+                          colSm={12}
+                          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                          onChange={(e: any) =>
+                            handleUpdate(index, "dose_form", e.target.value)
+                          }
+                          isTableEditMode={true}
+                        />
+                      </td>
+
+                      {/* Instruction - DIRECT INPUT */}
+                      <td>
+                        <SmartCreateInputWithoutLabel
+                          label=""
+                          value={item.remarks || ""}
+                          placeholder=""
+                          list={instructionList}
+                          createAction={createProductInstruction}
+                          refreshAction={getProductInstructions}
+                          onChange={(val) => {
+                            handleUpdate(index, "remarks", val);
+                          }}
+                        />
+                      </td>
+
+                      {/* Duration - DIRECT INPUT */}
+                      <td>
+                        <SmartCreateInputWithoutLabel
+                          label=""
+                          value={item.duration || ""}
+                          placeholder=""
+                          list={durationList}
+                          createAction={createProductDuration}
+                          refreshAction={getProductDurations}
+                          onChange={(val) => {
+                            handleUpdate(index, "duration", val);
+                          }}
+                        />
+                      </td>
+                      {/* Price Mrp */}
+                      <td
+                        style={{
+                          textAlign: "center",
+                          width: "80px",
+                          // backgroundColor: "#f5f5f5",
+                        }}
+                      >
+                        <input
+                          type="text"
+                          className="form-control"
+                          value={formatPrice(item.unitPrice)}
+                          readOnly
+                          tabIndex={-1}
+                          style={{
+                            ...inputStyle,
+                            width: "80px",
+                            backgroundColor: "#f5f5f5",
+                          }}
+                        />
+                      </td>
+                      {/* Editable Discount */}
+                      <td style={{ textAlign: "center", width: "70px" }}>
+                        <input
+                          type="number"
+                          className="form-control"
+                          value={item.Disc ?? 0}
+                          max={99}
+                          min={0}
+                          // onChange={(e) =>
+                          //   handleEditChange(idx, "Disc", e.target.value)
+                          // }
+                          style={{ ...inputStyle, width: "80px" }}
+                          onChange={(e) => {
+                            const val = e.target.value;
+
+                            // ❗ Allow only digits and maxLength = 2
+                            if (val.length <= 2) {
+                              handleUpdate(index, "Disc", val);
+                            }
+                          }}
+                        />
+                      </td>
+
+                      {/* Rate */}
+                      <td
+                        style={{
+                          textAlign: "center",
+                          width: "90px",
+                        }}
+                      >
+                        <input
+                          type="text"
+                          className="form-control"
+                          value={formatPrice(rate)}
+                          readOnly
+                          tabIndex={-1}
+                          style={{
+                            ...inputStyle,
+                            width: "80px",
+                            backgroundColor: "#f5f5f5",
+                          }}
+                        />
+                      </td>
+
+                      {/* SubTotal */}
+                      <td
+                        style={{
+                          textAlign: "center",
+                          width: "90px",
+                        }}
+                      >
+                        <input
+                          type="text"
+                          className="form-control"
+                          value={formatPrice(subtotal)}
+                          readOnly
+                          tabIndex={-1}
+                          style={{
+                            ...inputStyle,
+                            width: "80px",
+                            backgroundColor: "#f5f5f5",
+                          }}
+                        />
+                      </td>
+
+                      <td>
+                        <Button
+                          variant="danger"
+                          size="sm"
+                          onClick={() => onRemove(index)}
+                        >
+                          <FaTrash size={14} />
+                        </Button>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </Table>
+          )}
+
+          <div className="d-flex align-items-center mt-3">
+            <input
+              type="checkbox"
+              id="addDisc"
+              checked={showSummary}
+              onChange={(e) => setShowSummary(e.target.checked)}
+              style={{ marginRight: "8px" }}
+            />
+            <label htmlFor="addDisc" style={{ fontWeight: 500 }}>
+              Add Additional Discount
+            </label>
+          </div>
+          {showSummary && (
+            <div
+              style={{
+                marginTop: "15px",
+                padding: "15px",
+                border: "1px solid #e0e0e0",
+                borderRadius: "8px",
+                background: "#f9fafb",
+                width: "320px",
+                marginLeft: "auto",
+              }}
+            >
+              {/* TOTAL */}
+              <div className="d-flex justify-content-between mb-2">
+                <h6
+                  className="fw-bold mb-2"
+                  style={{ color: "red", whiteSpace: "nowrap" }}
+                >
+                  Total: ₹{formatPrice(totals.total)}
+                </h6>
+              </div>
+
+              {/* ADDITIONAL DISCOUNT */}
+              <div className="mb-2">
+                <div
+                  className="d-flex align-items-center mb-2"
+                  style={{ gap: "8px" }}
+                >
+                  <span
+                    className="fw-semibold"
+                    style={{ color: "green", whiteSpace: "nowrap" }}
+                  >
+                    Additional Discount:
+                  </span>
+
+                  <input
+                    type="text"
+                    className="form-control"
+                    style={{ width: "60px" }}
+                    maxLength={2}
+                    value={additionalDiscount}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      if (/^\d{0,2}$/.test(val)) setAdditionalDiscount(val);
+                    }}
+                  />
+
+                  <span className="fw-bold">(%)</span>
+                </div>
+              </div>
+
+              {/* GRAND TOTAL */}
+              <div className="d-flex justify-content-between mt-2">
+                <h5 className="fw-bold text-primary mb-3">
+                  Grand Total: ₹{formatPrice(grandTotal)}
+                </h5>
+              </div>
+            </div>
+          )}
+        </Modal.Body>
+
+        <Modal.Footer>
+          <Button variant="secondary" onClick={onClose}>
+            Close
+          </Button>
+
+          {!showSummary && (
+            <Button
+              variant="primary"
+              onClick={() => {
+                onUpdateCart?.(localCart);
+                onProceed?.(localCart);
+              }}
+            >
+              Add To Patient HealthBag
+            </Button>
+          )}
           <Button
             variant="primary"
             onClick={() => {
               onUpdateCart?.(localCart);
-              onProceed?.(localCart);
+              onGenerateOrder?.({
+                cart: localCart,
+                additionalDiscount: additionalDiscount,
+              });
             }}
           >
-            Add To Patient HealthBag
+            Generate Order
           </Button>
-        )}
-        <Button
-          variant="primary"
-          onClick={() => {
-            onUpdateCart?.(localCart);
-            onGenerateOrder?.({
-              cart: localCart,
-              additionalDiscount: additionalDiscount,
-            });
-          }}
-        >
-          Generate Order
-        </Button>
-      </Modal.Footer>
-    </Modal>
+        </Modal.Footer>
+      </Modal>
+      <AddAddressBuyerByPharmacistModal
+        show={showAddAddressModal}
+        onClose={() => setShowAddAddressModal(false)}
+        locationDetails={{}} // empty bhej
+        userId={buyerId || 0}
+        onSubmit={(newAddress) => {
+          // 🔥 dropdown refresh
+          dispatch(getAddressBuyerByPharmacist(buyerId || 0));
+
+          // 🔥 auto select new address
+          if (newAddress?.id) {
+            setSelectedAddressId(newAddress.id);
+          }
+        }}
+      />
+      ;
+    </>
   );
 };
 

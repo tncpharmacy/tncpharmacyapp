@@ -75,3 +75,41 @@ export const deleteAddress = async (
   );
   return res.data;
 };
+
+// =========================
+// PHARMACIST CREATE BUYER ADDRESS
+// =========================
+export const createAddressBuyerByPharmacist = async (
+  data: Address
+): Promise<Address> => {
+  const res = await axiosInstance.post<Address>(
+    ENDPOINTS.ADDRESS.PHARMACIST_BUYER_ADDRESS_CREATE,
+    data
+  );
+  return res.data;
+};
+
+// =========================
+// PHARMACIST BUYER ADDRESS
+// =========================
+export const fetchAddressBuyerByPharmacist = async (
+  buyerId: number
+): Promise<AddressResponse> => {
+  const res = await axiosInstance.get<AddressResponse>(
+    ENDPOINTS.ADDRESS.PHARMACIST_BUYER_ADDRESS_GET(buyerId)
+  );
+  return res.data;
+};
+
+// =========================
+// PHARMACIST BUYER ADDRESS GET BY ID (Single Address)
+// =========================
+export const fetchAddressBuyerByPharmacistById = async (
+  buyerId: number,
+  addressId: number
+): Promise<Address> => {
+  const res = await axiosInstance.get<Address>(
+    ENDPOINTS.ADDRESS.GET_BY_ID(buyerId, addressId)
+  );
+  return res.data;
+};
