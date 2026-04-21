@@ -70,6 +70,7 @@ export interface InputPropsColSm {
 export default function RetailCounter() {
   const router = useRouter();
   // SINGLE SHARED REF FOR ANY CELL
+  const tableRef = useRef<HTMLDivElement | null>(null);
   const doseRef = useRef<HTMLDivElement | null>(null);
   const qtyRef = useRef<HTMLInputElement | null>(null);
   const instructionRef = useRef<HTMLInputElement | null>(null);
@@ -653,7 +654,14 @@ export default function RetailCounter() {
                       </div>
                     </div>
                   </div>
-                  <div className="table-responsive">
+                  <div
+                    ref={tableRef}
+                    className="table-responsive"
+                    style={{
+                      maxHeight: "300px",
+                      overflowY: "auto",
+                    }}
+                  >
                     <table className="table table-bordered align-middle">
                       <thead className="table-light">
                         <tr>
