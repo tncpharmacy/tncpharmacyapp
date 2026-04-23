@@ -99,6 +99,9 @@ export interface PharmacistOrder {
   pincode: string;
   district: string;
   state_name: string;
+  deliveryStatusName: string;
+  delivery_status_name: string;
+  delivery_status: string;
   pharmacy_address: string;
   prescription_url: string;
   products: OrderProduct[];

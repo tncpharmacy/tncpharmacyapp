@@ -235,6 +235,10 @@ export const ENDPOINTS = {
         orderType ?? ""
       }&payment_mode=${paymentMode ?? ""}`,
     GET_REPORT: "/order/report/",
+
+    ORDER_STATUS: (orderId: number) =>
+      `/order/pharmacist/update-delivery-status/${orderId}/`,
+
     // GET_ORDER_LIST_BY_ID_SUPERADMIN: (orderId: number) => `/order/detail/${orderId}/`,
     // GET_ORDER_LIST_SUPERADMIN: "/order/list/",
   },

@@ -27,8 +27,10 @@ import { formatDate } from "@/lib/utils/dateFormatter";
 import {
   getReportOrderWiseApi,
   getReportProductWiseApi,
+  updateDeliveryStatusApi,
 } from "@/lib/api/pharmacistOrder";
 import { formatPrice } from "@/lib/utils/formatPrice";
+import StatusConfirmModal from "@/app/components/StatusConfirmModal/StatusConfirmModal";
 
 const mediaPrescriptionBase = process.env.NEXT_PUBLIC_PRESCRIPTION_BASE_URL;
 
@@ -75,6 +77,14 @@ export default function OrderList() {
   const [modalLoading, setModalLoading] = useState(false);
   // export loading
   const [exportLoading, setExportLoading] = useState(false);
+  // order delivery status
+  const [confirmModal, setConfirmModal] = useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [selectedOrder, setSelectedOrder] = useState<any>(null);
+  const [statusLoading, setStatusLoading] = useState(false);
+  // sales report state
+  const [reportType, setReportType] = useState<"order" | "product">("order");
+
   // bill print state
   const [isBillPreviewOpen, setIsBillPreviewOpen] = useState(false);
   const [billPreviewData, setBillPreviewData] = useState({
@@ -182,7 +192,7 @@ export default function OrderList() {
   // 🗓️ Aaj ki date (YYYY-MM-DD)
   const today = new Date().toISOString().split("T")[0];
   //  get report order wise
-  const handleOrderWiseExport = async () => {
+  const handleExport = async () => {
     if (!startDate || !endDate) {
       alert("Please select both start and end dates.");
       return;
@@ -191,129 +201,18 @@ export default function OrderList() {
     try {
       setExportLoading(true);
 
-      let grandTotal = 0;
       const res = await getReportOrderWiseApi({
         startDate,
         endDate,
         orderType:
-          orderTypes && orderTypes !== "0" ? Number(orderTypes) : undefined,
+          reportType === "order" && orderTypes && orderTypes !== "0"
+            ? Number(orderTypes)
+            : undefined,
         paymentMode:
-          paymentMode && paymentMode !== "0" ? Number(paymentMode) : undefined,
+          reportType === "order" && paymentMode && paymentMode !== "0"
+            ? Number(paymentMode)
+            : undefined,
       });
-
-      // ✅ FIX: correct data extraction
-      const apiData = res?.data?.data;
-
-      if (!Array.isArray(apiData) || apiData.length === 0) {
-        alert("No data found for selected filters.");
-        setShowReport(false);
-        return;
-      }
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const rows: any[] = [];
-      let serial = 1;
-
-      for (const orderDetails of apiData) {
-        const products = orderDetails.products ?? [];
-
-        if (!products.length) continue;
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        products.forEach((p: any, index: number) => {
-          // ✅ ADD TOTAL ONLY ONCE PER ORDER
-          if (index === 0) {
-            grandTotal += Number(orderDetails.amount || 0);
-          }
-          rows.push({
-            "Sr. No.": index === 0 ? serial++ : "",
-
-            // ✅ ONLY FIRST ROW FULL DATA
-            "Order Id": index === 0 ? orderDetails.orderId ?? "" : "",
-            "Patient Name": index === 0 ? orderDetails.buyerName ?? "" : "",
-            Mobile: index === 0 ? orderDetails.buyerNumber ?? "" : "",
-            "Order Date": index === 0 ? orderDetails.orderDate ?? "" : "",
-            Amount: index === 0 ? formatPrice(orderDetails.amount ?? "") : "",
-            "Order Type": index === 0 ? orderDetails.orderType ?? "" : "",
-            "Payment Mode": index === 0 ? orderDetails.paymentMode ?? "" : "",
-            // ✅ ALWAYS PRINT PRODUCT DATA
-            "Medicine Name": p.medicine_name ?? "",
-            Quantity: p.quantity ?? "",
-          });
-        });
-      }
-
-      // ✅ Excel creation
-      const workbook = new ExcelJS.Workbook();
-      const worksheet = workbook.addWorksheet("Orders");
-
-      const header = Object.keys(rows[0]);
-      worksheet.addRow(header);
-
-      rows.forEach((r) => worksheet.addRow(Object.values(r)));
-      // 🔥 YAHAN ADD KARNA HAI
-      worksheet.addRow([]);
-
-      const totalRow = worksheet.addRow([
-        "",
-        "",
-        "",
-        "",
-        "Grand Total",
-        formatPrice(grandTotal),
-      ]);
-      totalRow.font = { bold: true };
-
-      // Header styling
-      const headerRow = worksheet.getRow(1);
-      headerRow.eachCell((cell) => {
-        cell.font = { bold: true };
-        cell.fill = {
-          type: "pattern",
-          pattern: "solid",
-          fgColor: { argb: "B4C4E0" },
-        };
-        cell.alignment = { horizontal: "center", vertical: "middle" };
-        cell.border = {
-          top: { style: "thin" },
-          left: { style: "thin" },
-          right: { style: "thin" },
-          bottom: { style: "thin" },
-        };
-      });
-
-      // Borders for all cells
-      worksheet.eachRow((row) => {
-        row.eachCell((cell) => {
-          cell.border = {
-            top: { style: "thin" },
-            left: { style: "thin" },
-            right: { style: "thin" },
-            bottom: { style: "thin" },
-          };
-        });
-      });
-
-      // Download file
-      const buffer = await workbook.xlsx.writeBuffer();
-      saveAs(new Blob([buffer]), `orders_${startDate}_to_${endDate}.xlsx`);
-      // ✅ RESET FORM
-      setStartDate("");
-      setEndDate("");
-      setOrderTypes("");
-      setPaymentMode("");
-      setShowReport(false);
-    } catch (error) {
-      console.error("Export Error:", error);
-      alert("Export failed. Check console.");
-    } finally {
-      setExportLoading(false);
-    }
-  };
-  // get report product wise
-  const handleProductWiseExport = async () => {
-    try {
-      setExportLoading(true);
-
-      const res = await getReportProductWiseApi(); // 👈 tera API
 
       const apiData = res?.data?.data;
 
@@ -321,81 +220,193 @@ export default function OrderList() {
         alert("No data found");
         return;
       }
-
-      // 🔥 PRODUCT AGGREGATION
-      const productMap: Record<string, number> = {};
-
-      for (const order of apiData) {
-        const products = order.products ?? [];
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        products.forEach((p: any) => {
-          const name = p.medicine_name || "Unknown";
-          const qty = Number(p.quantity || 0);
-
-          if (productMap[name]) {
-            productMap[name] += qty;
-          } else {
-            productMap[name] = qty;
-          }
-        });
-      }
-
-      // 🔥 CONVERT TO ROWS
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const rows: any[] = [];
-      let serial = 1;
+      let rows: any[] = [];
 
-      Object.entries(productMap).forEach(([name, qty]) => {
-        rows.push({
-          "Sr. No.": serial++,
+      let grandTotal = 0;
+      // 🔥 PRODUCT WISE
+      if (reportType === "product") {
+        const productMap: Record<string, number> = {};
+
+        for (const order of apiData) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          order.products?.forEach((p: any) => {
+            const name = p.medicine_name;
+            const qty = Number(p.quantity || 0);
+
+            productMap[name] = (productMap[name] || 0) + qty;
+          });
+        }
+
+        let i = 1;
+        rows = Object.entries(productMap).map(([name, qty]) => ({
+          "Sr. No.": i++,
           "Product Name": name,
           Quantity: qty,
-        });
-      });
+        }));
+      }
 
-      // 🔥 EXCEL
+      // 🔥 ORDER WISE (same tera existing logic)
+      else {
+        let serial = 1;
+        for (const orderDetails of apiData) {
+          const products = orderDetails.products ?? [];
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          products.forEach((p: any, index: number) => {
+            if (index === 0) {
+              grandTotal += Number(orderDetails.amount || 0); // 🔥 correct
+            }
+            rows.push({
+              "Sr. No.": index === 0 ? serial++ : "",
+              "Order Id": index === 0 ? orderDetails.orderId : "",
+              "Patient Name": index === 0 ? orderDetails.buyerName : "",
+              Mobile: index === 0 ? orderDetails.buyerNumber : "",
+              "Order Date": index === 0 ? orderDetails.orderDate : "",
+              Amount: index === 0 ? orderDetails.amount : "",
+              "Medicine Name": p.medicine_name,
+              Quantity: p.quantity,
+            });
+          });
+        }
+      }
+
+      // 🔥 Excel same
       const workbook = new ExcelJS.Workbook();
-      const worksheet = workbook.addWorksheet("Product Report");
+      const worksheet = workbook.addWorksheet("Report");
 
       const header = Object.keys(rows[0]);
       worksheet.addRow(header);
 
       rows.forEach((r) => worksheet.addRow(Object.values(r)));
 
-      // Header styling
-      const headerRow = worksheet.getRow(1);
-      headerRow.eachCell((cell) => {
-        cell.font = { bold: true };
-        cell.fill = {
-          type: "pattern",
-          pattern: "solid",
-          fgColor: { argb: "B4C4E0" },
-        };
-        cell.alignment = { horizontal: "center" };
-      });
+      // ✅ ONLY FOR ORDER REPORT
+      if (reportType === "order") {
+        worksheet.addRow([]);
 
-      // Borders
-      worksheet.eachRow((row) => {
-        row.eachCell((cell) => {
-          cell.border = {
-            top: { style: "thin" },
-            left: { style: "thin" },
-            right: { style: "thin" },
-            bottom: { style: "thin" },
+        const totalRow = worksheet.addRow([
+          "",
+          "",
+          "",
+          "",
+          "Grand Total",
+          formatPrice(grandTotal),
+        ]);
+
+        totalRow.font = { bold: true };
+
+        totalRow.eachCell((cell) => {
+          cell.fill = {
+            type: "pattern",
+            pattern: "solid",
+            fgColor: { argb: "D9EAD3" },
           };
         });
-      });
+      }
 
-      // Download
+      // 👇 ab normal styling chalegi
+      const headerRow = worksheet.getRow(1);
       const buffer = await workbook.xlsx.writeBuffer();
-      saveAs(new Blob([buffer]), `product_report.xlsx`);
-    } catch (error) {
-      console.error(error);
+      saveAs(
+        new Blob([buffer]),
+        `${reportType}_report_${startDate}_to_${endDate}.xlsx`
+      );
+
+      setShowReport(false);
+    } catch (err) {
+      console.error(err);
       alert("Export failed");
     } finally {
       setExportLoading(false);
     }
   };
+  // get report product wise
+  // const handleProductWiseExport = async () => {
+  //   try {
+  //     setExportLoading(true);
+
+  //     const res = await getReportProductWiseApi(); // 👈 tera API
+
+  //     const apiData = res?.data?.data;
+
+  //     if (!Array.isArray(apiData) || apiData.length === 0) {
+  //       alert("No data found");
+  //       return;
+  //     }
+
+  //     // 🔥 PRODUCT AGGREGATION
+  //     const productMap: Record<string, number> = {};
+
+  //     for (const order of apiData) {
+  //       const products = order.products ?? [];
+  //       // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  //       products.forEach((p: any) => {
+  //         const name = p.medicine_name || "Unknown";
+  //         const qty = Number(p.quantity || 0);
+
+  //         if (productMap[name]) {
+  //           productMap[name] += qty;
+  //         } else {
+  //           productMap[name] = qty;
+  //         }
+  //       });
+  //     }
+
+  //     // 🔥 CONVERT TO ROWS
+  //     // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  //     const rows: any[] = [];
+  //     let serial = 1;
+
+  //     Object.entries(productMap).forEach(([name, qty]) => {
+  //       rows.push({
+  //         "Sr. No.": serial++,
+  //         "Product Name": name,
+  //         Quantity: qty,
+  //       });
+  //     });
+
+  //     // 🔥 EXCEL
+  //     const workbook = new ExcelJS.Workbook();
+  //     const worksheet = workbook.addWorksheet("Product Report");
+
+  //     const header = Object.keys(rows[0]);
+  //     worksheet.addRow(header);
+
+  //     rows.forEach((r) => worksheet.addRow(Object.values(r)));
+
+  //     // Header styling
+  //     const headerRow = worksheet.getRow(1);
+  //     headerRow.eachCell((cell) => {
+  //       cell.font = { bold: true };
+  //       cell.fill = {
+  //         type: "pattern",
+  //         pattern: "solid",
+  //         fgColor: { argb: "B4C4E0" },
+  //       };
+  //       cell.alignment = { horizontal: "center" };
+  //     });
+
+  //     // Borders
+  //     worksheet.eachRow((row) => {
+  //       row.eachCell((cell) => {
+  //         cell.border = {
+  //           top: { style: "thin" },
+  //           left: { style: "thin" },
+  //           right: { style: "thin" },
+  //           bottom: { style: "thin" },
+  //         };
+  //       });
+  //     });
+
+  //     // Download
+  //     const buffer = await workbook.xlsx.writeBuffer();
+  //     saveAs(new Blob([buffer]), `product_report.xlsx`);
+  //   } catch (error) {
+  //     console.error(error);
+  //     alert("Export failed");
+  //   } finally {
+  //     setExportLoading(false);
+  //   }
+  // };
 
   //END EXPORT / REPORT LOGIC
 
@@ -472,6 +483,50 @@ export default function OrderList() {
     }
     setShowPreview(true);
   };
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const handleStatusClick = (order: any) => {
+    setSelectedOrder(order);
+    setConfirmModal(true);
+  };
+
+  const handleConfirmStatus = async () => {
+    if (!selectedOrder) return;
+
+    try {
+      setStatusLoading(true);
+
+      const currentStatus = Number(selectedOrder.delivery_status);
+      const newStatus = currentStatus === 1 ? 2 : 1;
+
+      await updateDeliveryStatusApi({
+        orderId: selectedOrder.orderId,
+        delivery_status: String(newStatus),
+      });
+
+      // UI update
+      setFilteredData((prev) =>
+        prev.map((item) =>
+          item.orderId === selectedOrder.orderId
+            ? {
+                ...item,
+                delivery_status: String(newStatus), // 👈 IMPORTANT
+                deliveryStatusName:
+                  newStatus === 2 ? "Delivered" : "In Process",
+              }
+            : item
+        )
+      );
+
+      // dispatch(getPharmacistOrders());
+      setConfirmModal(false);
+    } catch (err) {
+      console.error(err);
+      alert("Status update failed");
+    } finally {
+      setStatusLoading(false);
+    }
+  };
+
   return (
     <>
       <Header />
@@ -483,7 +538,7 @@ export default function OrderList() {
             hasMore={visibleCount < filteredData.length}
             // className="body_content"
           >
-            <div style={{ overflowX: "hidden", width: "100%" }}>
+            <div style={{ width: "100%" }}>
               <div
                 className="row align-items-center"
                 style={{ marginLeft: 0, marginRight: 0 }}
@@ -497,7 +552,10 @@ export default function OrderList() {
                 <div className="col-md-6 col-12 d-flex justify-content-md-end justify-content-start mt-2 mb-2 gap-2">
                   <Button
                     variant="outline-primary"
-                    onClick={() => setShowReport(true)}
+                    onClick={() => {
+                      setReportType("order");
+                      setShowReport(true);
+                    }}
                     className="btn-style1"
                   >
                     <i className="bi bi-file-earmark-text"></i>{" "}
@@ -506,7 +564,10 @@ export default function OrderList() {
 
                   <Button
                     variant="outline-primary"
-                    onClick={handleProductWiseExport}
+                    onClick={() => {
+                      setReportType("product");
+                      setShowReport(true);
+                    }}
                     className="btn-style1"
                   >
                     <i className="bi bi-file-earmark-text"></i>{" "}
@@ -584,6 +645,7 @@ export default function OrderList() {
                         <th className="fw-bold text-start">Type</th>
                         <th className="fw-bold text-start">Mode</th>
                         <th className="fw-bold text-start">Date</th>
+                        <th className="fw-bold text-center">Status</th>
                         <th className="fw-bold text-center">Action</th>
                       </tr>
                     </thead>
@@ -627,6 +689,31 @@ export default function OrderList() {
                                   </td>
                                   <td className="text-start">
                                     {formatDate(p.orderDate ?? "")}
+                                  </td>
+                                  <td>
+                                    <div className="status-toggle">
+                                      <button
+                                        className={`toggle-btn ${
+                                          Number(p.delivery_status) === 1
+                                            ? "active processing"
+                                            : ""
+                                        }`}
+                                        onClick={() => handleStatusClick(p)}
+                                      >
+                                        In Process
+                                      </button>
+
+                                      <button
+                                        className={`toggle-btn ${
+                                          Number(p.delivery_status) === 2
+                                            ? "active delivered"
+                                            : ""
+                                        }`}
+                                        onClick={() => handleStatusClick(p)}
+                                      >
+                                        Delivered
+                                      </button>
+                                    </div>
                                   </td>
                                   <td className="text-center">
                                     <button
@@ -993,53 +1080,81 @@ export default function OrderList() {
         <Modal.Body>
           <div className="container-fluid">
             <div className="row align-items-end">
-              <Input
-                label="Start Date"
-                type="date"
-                name="startDate"
-                value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
-                required
-                max={today}
-                colSm={3}
-              />
-              <Input
-                label="End Date"
-                type="date"
-                name="endDate"
-                value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
-                required
-                max={today}
-                colSm={3}
-              />
-              <Input
-                label="Order Type"
-                type="select"
-                name="orderTypes"
-                value={orderTypes}
-                onChange={(e) => setOrderTypes(e.target.value)}
-                required
-                options={[
-                  { value: "1", label: "Online" },
-                  { value: "2", label: "Offline" },
-                ]}
-                colSm={3}
-              />
+              {reportType === "order" && (
+                <>
+                  <Input
+                    label="Start Date"
+                    type="date"
+                    name="startDate"
+                    value={startDate}
+                    onChange={(e) => setStartDate(e.target.value)}
+                    required
+                    max={today}
+                    colSm={3}
+                  />
+                  <Input
+                    label="End Date"
+                    type="date"
+                    name="endDate"
+                    value={endDate}
+                    onChange={(e) => setEndDate(e.target.value)}
+                    required
+                    max={today}
+                    colSm={3}
+                  />
+                  <Input
+                    label="Order Type"
+                    type="select"
+                    name="orderTypes"
+                    value={orderTypes}
+                    onChange={(e) => setOrderTypes(e.target.value)}
+                    required
+                    options={[
+                      { value: "1", label: "Online" },
+                      { value: "2", label: "Offline" },
+                    ]}
+                    colSm={3}
+                  />
 
-              <Input
-                label="Payment Mode"
-                type="select"
-                name="paymentMode"
-                value={paymentMode}
-                onChange={(e) => setPaymentMode(e.target.value)}
-                required
-                options={[
-                  { value: "1", label: "Online" },
-                  { value: "2", label: "COD" },
-                ]}
-                colSm={3}
-              />
+                  <Input
+                    label="Payment Mode"
+                    type="select"
+                    name="paymentMode"
+                    value={paymentMode}
+                    onChange={(e) => setPaymentMode(e.target.value)}
+                    required
+                    options={[
+                      { value: "1", label: "Online" },
+                      { value: "2", label: "COD" },
+                    ]}
+                    colSm={3}
+                  />
+                </>
+              )}
+              {reportType === "product" && (
+                <>
+                  <Input
+                    label="Start Date"
+                    type="date"
+                    name="startDate"
+                    value={startDate}
+                    onChange={(e) => setStartDate(e.target.value)}
+                    required
+                    max={today}
+                    colSm={6}
+                  />
+                  <Input
+                    label="End Date"
+                    type="date"
+                    name="endDate"
+                    value={endDate}
+                    onChange={(e) => setEndDate(e.target.value)}
+                    required
+                    max={today}
+                    colSm={6}
+                  />
+                </>
+              )}
             </div>
           </div>
         </Modal.Body>
@@ -1050,7 +1165,7 @@ export default function OrderList() {
           </Button>
           <Button
             variant="primary"
-            onClick={handleOrderWiseExport}
+            onClick={handleExport}
             disabled={exportLoading}
           >
             {exportLoading ? (
@@ -1123,6 +1238,16 @@ export default function OrderList() {
         additionalDiscount={additionalDiscount}
         referredByDoctor={billPreviewData.referredByDoctor}
         referredByHospital={billPreviewData.referredByHospital}
+      />
+      <StatusConfirmModal
+        show={confirmModal}
+        onClose={() => setConfirmModal(false)}
+        onConfirm={handleConfirmStatus}
+        loading={statusLoading}
+        title="Change Order Status"
+        message={`Are you sure you want to mark this order as ${
+          selectedOrder?.deliveryStatus === 1 ? "Delivered" : "In Process"
+        }?`}
       />
     </>
   );

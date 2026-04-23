@@ -51,3 +51,16 @@ export const getReportOrderWiseApi = ({
 export const getReportProductWiseApi = () => {
   return api.get(ENDPOINTS.PHARMACIST_ORDER.GET_REPORT);
 };
+
+// order status change
+export const updateDeliveryStatusApi = ({
+  orderId,
+  delivery_status,
+}: {
+  orderId: number;
+  delivery_status: string;
+}) => {
+  return api.put(ENDPOINTS.PHARMACIST_ORDER.ORDER_STATUS(orderId), {
+    delivery_status,
+  });
+};
