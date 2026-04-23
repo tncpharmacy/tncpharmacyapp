@@ -306,7 +306,7 @@ export default function PharmacyForm({ id }: Props) {
           setFormData((prev) => ({
             ...prev,
             district,
-            state: String(matchedState?.value || ""),
+            state: stateName,
           }));
           setStateName(stateName);
         } else {

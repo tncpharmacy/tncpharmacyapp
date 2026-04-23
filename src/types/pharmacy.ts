@@ -17,7 +17,7 @@ export interface Pharmacy {
   status: "Active" | "Inactive"; // sirf do hi state assume kiya
   created_on?: string; // ISO datetime
   updated_on?: string; // ISO datetime
-  state: number;
+  state: string;
   created_by: number | null;
   updated_by: number | null;
   password: string;
