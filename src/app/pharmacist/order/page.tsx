@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Button, Modal, OverlayTrigger, Tooltip } from "react-bootstrap";
 import "../css/pharmacy-style.css";
 import SideNav from "@/app/pharmacist/components/SideNav/page";
@@ -172,7 +172,7 @@ export default function OrderList() {
     setTimeout(() => {
       setVisibleCount((prev) => prev + 5);
       setLoadings(false);
-    }, 3000); // spinner for 3 sec
+    }, 500); // spinner for 3 sec
   };
 
   const handleBuyerChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -189,7 +189,7 @@ export default function OrderList() {
     dispatch(getPharmacistOrderByBuyerId({ buyerId }));
   };
 
-  // 🗓️ Aaj ki date (YYYY-MM-DD)
+  // 🗓️ today date (YYYY-MM-DD)
   const today = new Date().toISOString().split("T")[0];
   //  get report order wise
   const handleExport = async () => {
@@ -421,14 +421,6 @@ export default function OrderList() {
       });
   };
 
-  // const formatDate = (dateString: string) => {
-  //   const d = new Date(dateString);
-  //   return d.toLocaleString("en-IN", {
-  //     day: "2-digit",
-  //     month: "short",
-  //     year: "numeric",
-  //   });
-  // };
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleReprint = (order: any) => {
     const cartItems =
@@ -535,7 +527,7 @@ export default function OrderList() {
         <div className="body_right">
           <InfiniteScroll
             loadMore={loadMore}
-            hasMore={visibleCount < filteredData.length}
+            hasMore={visibleCount < orders.length}
             // className="body_content"
           >
             <div style={{ width: "100%" }}>
@@ -693,25 +685,16 @@ export default function OrderList() {
                                   <td>
                                     <div className="status-toggle">
                                       <button
-                                        className={`toggle-btn ${
-                                          Number(p.delivery_status) === 1
-                                            ? "active processing"
-                                            : ""
-                                        }`}
-                                        onClick={() => handleStatusClick(p)}
-                                      >
-                                        In Process
-                                      </button>
-
-                                      <button
-                                        className={`toggle-btn ${
+                                        className={`status-pill ${
                                           Number(p.delivery_status) === 2
-                                            ? "active delivered"
-                                            : ""
+                                            ? "delivered"
+                                            : "processing"
                                         }`}
                                         onClick={() => handleStatusClick(p)}
                                       >
-                                        Delivered
+                                        {Number(p.delivery_status) === 2
+                                          ? "Delivered"
+                                          : "In Process"}
                                       </button>
                                     </div>
                                   </td>
