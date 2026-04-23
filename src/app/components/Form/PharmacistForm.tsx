@@ -148,20 +148,25 @@ export default function PharmacistForm({ id }: Props) {
       return false;
     }
 
-    if (formData.aadhar_number.replace(/-/g, "").length !== 12) {
-      toast.error("Aadhar number is required");
-      return false;
+    // ✅ Aadhar validation (optional but must be 12 digits if filled)
+    if (formData.aadhar_number) {
+      const cleanAadhar = formData.aadhar_number.replace(/\D/g, ""); // only digits
+
+      if (cleanAadhar.length !== 12) {
+        toast.error("Aadhar must be 12 digits");
+        return false;
+      }
     }
 
-    if (formData.license_number.length < 12) {
-      toast.error("License number is required");
-      return false;
-    }
+    // if (formData.license_number.length < 12) {
+    //   toast.error("License number is required");
+    //   return false;
+    // }
 
-    if (!formData.license_valid_upto) {
-      toast.error("License validity date is required");
-      return false;
-    }
+    // if (!formData.license_valid_upto) {
+    //   toast.error("License validity date is required");
+    //   return false;
+    // }
 
     return true;
   };
@@ -339,19 +344,22 @@ export default function PharmacistForm({ id }: Props) {
                   label="Aadhar Number"
                   name="aadhar_number"
                   value={formData.aadhar_number}
-                  required
-                  onChange={(value) =>
+                  // required
+                  onChange={(value) => {
+                    const clean = value.replace(/\D/g, "");
+                    if (clean.length > 12) return;
+
                     setFormData((prev) => ({
                       ...prev,
                       aadhar_number: value,
-                    }))
-                  }
+                    }));
+                  }}
                 />
                 <LicenseInput
                   label="License Number"
                   name="license_number"
                   value={formData.license_number}
-                  required
+                  // required
                   onChange={(value) =>
                     setFormData((prev) => ({
                       ...prev,
@@ -365,7 +373,7 @@ export default function PharmacistForm({ id }: Props) {
                   name="license_valid_upto"
                   value={formData.license_valid_upto}
                   onChange={handleChange}
-                  required
+                  // required
                 />
                 <InputFile
                   label="Upload Documents"

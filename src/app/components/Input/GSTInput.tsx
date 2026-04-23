@@ -22,6 +22,13 @@ const GSTInput: React.FC<GSTInputProps> = ({
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value.toUpperCase();
 
+    // ✅ empty allow
+    if (!val) {
+      setError("");
+      onChange(""); // parent ko bhi clear bhej
+      return;
+    }
+
     if (val.length > 15) return;
 
     let isValid = true;
@@ -29,25 +36,23 @@ const GSTInput: React.FC<GSTInputProps> = ({
     for (let i = 0; i < val.length; i++) {
       const char = val[i];
 
-      if (i < 2 && !/[0-9]/.test(char)) isValid = false; // first 2 digits
-      else if (i >= 2 && i < 7 && !/[A-Z]/.test(char))
-        isValid = false; // next 5 letters
-      else if (i >= 7 && i < 11 && !/[0-9]/.test(char))
-        isValid = false; // next 4 digits
-      else if (i === 11 && !/[A-Z]/.test(char)) isValid = false; // letter
-      else if (i === 12 && !/[A-Z0-9]/.test(char))
-        isValid = false; // alphanumeric
-      else if (i === 13 && char !== "Z") isValid = false; // Z
-      else if (i === 14 && !/[A-Z0-9]/.test(char)) isValid = false; // alphanumeric
+      if (i < 2 && !/[0-9]/.test(char)) isValid = false;
+      else if (i >= 2 && i < 7 && !/[A-Z]/.test(char)) isValid = false;
+      else if (i >= 7 && i < 11 && !/[0-9]/.test(char)) isValid = false;
+      else if (i === 11 && !/[A-Z]/.test(char)) isValid = false;
+      else if (i === 12 && !/[A-Z0-9]/.test(char)) isValid = false;
+      else if (i === 13 && char !== "Z") isValid = false;
+      else if (i === 14 && !/[A-Z0-9]/.test(char)) isValid = false;
     }
 
+    // ❌ invalid but typing allowed
     if (!isValid) {
       setError("Invalid GST format. Example: 09AALCT9310Q1Z1");
-      return;
     } else {
       setError("");
     }
 
+    // ✅ always update parent
     onChange(val);
   };
 

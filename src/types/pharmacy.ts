@@ -57,7 +57,8 @@ export interface PharmacySuperAdminForm {
   email_id: string;
   pincode: string;
   district: string;
-  state: number;
+  state: string;
+  // stateName: string;
   address: string;
   status: "Active" | "Inactive";
   documents: Document[]; // multiple files

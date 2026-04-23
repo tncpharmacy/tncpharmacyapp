@@ -48,7 +48,7 @@ export default function PharmacyForm({ id }: Props) {
     email_id: "",
     pincode: "",
     district: "",
-    state: 0,
+    state: "",
     address: "",
     status: "Active",
     login_id: "",
@@ -57,7 +57,7 @@ export default function PharmacyForm({ id }: Props) {
   });
 
   const [loading, setLoading] = useState(false);
-
+  const [stateName, setStateName] = useState("");
   const dispatch = useAppDispatch();
   const { states, loading: statesLoading } = useAppSelector(
     (state) => state.states
@@ -82,10 +82,21 @@ export default function PharmacyForm({ id }: Props) {
         .then((res) => {
           setFormData((prev) => ({
             ...prev,
-            ...res,
             id: res.id ?? id,
-            login_id: res.login_id,
-            documents: res.documents || [], // 👈 backend ke docs aa gaye
+            pharmacy_id_code: res.pharmacy_id_code || "",
+            pharmacy_name: res.pharmacy_name || "",
+            user_name: res.user_name || "",
+            license_number: res.license_number || "",
+            license_valid_upto: res.license_valid_upto || "",
+            gst_number: res.gst_number || "",
+            email_id: res.email_id || "",
+            login_id: res.login_id || "",
+            address: res.address || "",
+            district: res.district || "",
+            pincode: res.pincode || "",
+            state: String(res.state || ""),
+            status: res.status || "Active",
+            documents: res.documents || [],
             uploadedFiles: [],
           }));
         })
@@ -103,19 +114,19 @@ export default function PharmacyForm({ id }: Props) {
       [name]: value,
     }));
 
-    if (name === "license_number") {
-      const regex = /^[A-Z]{4}-[0-9]{6}$/;
+    // if (name === "license_number") {
+    //   const regex = /^[A-Z]{4}-[0-9]{6}$/;
 
-      if (value.length > 11) return; // max length control
+    //   if (value.length > 11) return; // max length control
 
-      if (value && !regex.test(value)) {
-        setLicenseError("Please enter license in this format: DIOL-102882");
-      } else {
-        setLicenseError("");
-      }
-    }
+    //   if (value && !regex.test(value)) {
+    //     setLicenseError("Please enter license in this format: DIOL-102882");
+    //   } else {
+    //     setLicenseError("");
+    //   }
+    // }
 
-    // 👇 Password banane ka logic
+    // 👇 Password logic
     if (name === "user_name" || name === "login_id") {
       const first4 = (name === "user_name" ? value : formData.user_name).slice(
         0,
@@ -140,20 +151,22 @@ export default function PharmacyForm({ id }: Props) {
       return false;
     }
 
-    if (!formData.gst_number || formData.gst_number.length !== 15) {
-      toast.error("GST number is required");
-      return false;
+    if (formData.gst_number) {
+      if (formData.gst_number.length !== 15) {
+        toast.error("Invalid GST number");
+        return false;
+      }
     }
 
-    if (!formData.license_number || formData.license_number.length < 10) {
-      toast.error("License number is required");
-      return false;
-    }
+    // if (!formData.license_number || formData.license_number.length < 10) {
+    //   toast.error("License number is required");
+    //   return false;
+    // }
 
-    if (!formData.license_valid_upto) {
-      toast.error("License validity date is required");
-      return false;
-    }
+    // if (!formData.license_valid_upto) {
+    //   toast.error("License validity date is required");
+    //   return false;
+    // }
 
     if (!formData.email_id.includes("@")) {
       toast.error("Email id is required");
@@ -170,21 +183,16 @@ export default function PharmacyForm({ id }: Props) {
       return false;
     }
 
-    if (!formData.district.trim()) {
-      toast.error("District is required");
-      return false;
-    }
-
     if (formData.pincode.length !== 6) {
       toast.error("Pincode is required");
       return false;
     }
 
-    if (!formData.state) {
-      toast.error("Please select state");
+    // 👇 sirf ensure karo ki API se data aaya hai
+    if (!formData.district || !formData.state) {
+      toast.error("Enter valid pincode to fetch location");
       return false;
     }
-
     return true;
   };
   const handleSubmit = async (e: React.FormEvent) => {
@@ -205,7 +213,7 @@ export default function PharmacyForm({ id }: Props) {
     formDataToSend.append("address", formData.address);
     formDataToSend.append("district", formData.district);
     formDataToSend.append("pincode", formData.pincode);
-    formDataToSend.append("state", String(formData.state)); // backend ko id chahiye
+    formDataToSend.append("state", String(stateName)); // backend ko id chahiye
     formDataToSend.append("status", formData.status);
 
     // ✅ password -> sirf create mode me bhejna
@@ -270,6 +278,47 @@ export default function PharmacyForm({ id }: Props) {
     }
   };
 
+  const handlePincodeChange = async (value: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      pincode: value,
+    }));
+
+    // only 6 digit
+    if (value.length === 6) {
+      try {
+        const res = await fetch(
+          `https://api.postalpincode.in/pincode/${value}`
+        );
+        const data = await res.json();
+
+        if (data[0].Status === "Success") {
+          const postOffice = data[0].PostOffice[0];
+
+          const district = postOffice.District;
+          const stateName = postOffice.State;
+
+          // 👇 state id find (important)
+          const matchedState = options.find(
+            (s) => s.label.toLowerCase() === stateName.toLowerCase()
+          );
+
+          setFormData((prev) => ({
+            ...prev,
+            district,
+            state: String(matchedState?.value || ""),
+          }));
+          setStateName(stateName);
+        } else {
+          toast.error("Invalid pincode");
+        }
+      } catch (err) {
+        console.error(err);
+        toast.error("Pincode fetch failed");
+      }
+    }
+  };
+
   return (
     <>
       <Header />
@@ -310,7 +359,7 @@ export default function PharmacyForm({ id }: Props) {
                   label="GST Number"
                   name="gst_number"
                   value={formData.gst_number}
-                  required
+                  // required
                   onChange={(value) =>
                     setFormData((prev) => ({
                       ...prev,
@@ -322,7 +371,7 @@ export default function PharmacyForm({ id }: Props) {
                   label="License Number"
                   name="license_number"
                   value={formData.license_number}
-                  required
+                  // required
                   onChange={(value) =>
                     setFormData((prev) => ({
                       ...prev,
@@ -336,7 +385,7 @@ export default function PharmacyForm({ id }: Props) {
                   name="license_valid_upto"
                   value={formData.license_valid_upto}
                   onChange={handleChange}
-                  required
+                  // required
                 />
                 <EmailInput
                   label="Email"
@@ -370,38 +419,41 @@ export default function PharmacyForm({ id }: Props) {
                   onChange={handleChange}
                   required
                 />
-                <Input
-                  type="text"
-                  label="District"
-                  name="district"
-                  value={formData.district}
-                  onChange={handleChange}
-                  required
-                />
                 <PincodeInput
                   label="Pincode"
                   name="pincode"
                   value={formData.pincode}
                   required
-                  onChange={(value) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      pincode: value,
-                    }))
-                  }
+                  onChange={handlePincodeChange}
                 />
-                <SelectInput
-                  label="State"
-                  name="state"
-                  value={formData.state}
-                  options={options}
-                  onChange={(e) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      state: parseInt(e.target.value, 10), // 👈 number me convert
-                    }))
-                  }
-                />
+                <div className="col-md-4">
+                  <div className="txt_col">
+                    <span className="lbl1">District</span>
+                    <input
+                      className="txt1"
+                      type="text"
+                      name="district"
+                      value={formData.district}
+                      onChange={handleChange}
+                      required
+                      disabled
+                    />
+                  </div>
+                </div>
+                <div className="col-md-4">
+                  <div className="txt_col">
+                    <span className="lbl1">State</span>
+                    <input
+                      className="txt1"
+                      type="text"
+                      name="state"
+                      value={stateName}
+                      onChange={handleChange}
+                      required
+                      disabled
+                    />
+                  </div>
+                </div>
                 {/* <Input
                   label="Status"
                   name="status"

@@ -273,7 +273,7 @@ export default function BuyerLoginModal({
 
                 {otpCode && step === 2 && (
                   <p className="text-muted mt-2" style={{ fontSize: "13px" }}>
-                    {/* (Debug OTP: {otpCode}) */}
+                    (Debug OTP: {otpCode})
                   </p>
                 )}
               </div>
