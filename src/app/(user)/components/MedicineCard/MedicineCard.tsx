@@ -34,20 +34,10 @@ export default function MedicineCard({
   const [isHovered, setIsHovered] = useState(false);
   const [openUpward, setOpenUpward] = useState(false);
   // --- Local states for instant UI ---
-  const [localBag, setLocalBag] = useState<number[]>([]);
+  // const [localBag, setLocalBag] = useState<number[]>([]);
+  const [localState, setLocalState] = useState<{ [key: number]: boolean }>({});
   const [processingIds, setProcessingIds] = useState<number[]>([]);
 
-  const formatCurrency = (value: number) =>
-    new Intl.NumberFormat("en-IN", {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    }).format(value);
-
-  //const originalMrp = mrp ?? Math.floor(Math.random() * (5000 - 200 + 1)) + 200;
-  // const discountPercent = parseFloat(discount || "0");
-  // const discountedPrice = originalMrp - (originalMrp * discountPercent) / 100;
-  // const originalMrp = mrp || 0;
-  // 👉 original MRP
   const originalMrp =
     mrp !== null && mrp !== undefined && Number(mrp) > 0 ? Number(mrp) : 275;
 
@@ -75,120 +65,87 @@ export default function MedicineCard({
     userId: buyer?.id || null,
   });
 
-  // ---------- CHECK IF IN CART ----------
-  // const isInBag =
-  //   localBag.includes(id) ||
-  //   items.some(
-  //     (i) =>
-  //       i.productid === id || // backend
-  //       i.product_id === id // local/guest
-  //   );
-
-  // ---------- SYNC LOCAL CART ----------
-  useEffect(() => {
-    if (items?.length) {
-      setLocalBag(
-        items.map((i) => i.productid || i.product_id).filter(Boolean)
-      );
-    } else {
-      setLocalBag([]);
-    }
-  }, [items]);
-
   // ---------- MERGE GUEST CART ----------
   useEffect(() => {
     if (buyer?.id) mergeGuestCart();
   }, [buyer?.id, mergeGuestCart]);
 
-  // // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  // const [guestItems, setGuestItems] = useState<any[]>([]);
-  // useEffect(() => {
-  //   if (!buyer?.id) {
-  //     const lsData = localStorage.getItem("healthbag");
-
-  //     if (!lsData) {
-  //       setGuestItems([]); // 🔥 ensure empty
-  //       return;
-  //     }
-
-  //     try {
-  //       setGuestItems(JSON.parse(lsData));
-  //     } catch {
-  //       setGuestItems([]);
-  //     }
-  //   }
-  // }, [buyer?.id]);
-
   // --- Handlers ---
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleAdd = async (item: any) => {
-    // 🟢 LOGIN USER
-    if (buyer?.id) {
-      await addItem({
-        id: 0,
-        buyer_id: buyer?.id,
-        product_id: id,
-        quantity: 1,
-      } as HealthBag);
-    }
-
-    // 🔵 GUEST USER (FULL DATA STORE)
-    else {
-      const lsData = localStorage.getItem("healthbag");
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      let current: any[] = [];
-
-      try {
-        current = lsData ? JSON.parse(lsData) : [];
-      } catch {
-        current = [];
+    // 🔥 start processing
+    setProcessingIds((prev) => [...prev, id]);
+    setLocalState((prev) => ({ ...prev, [id]: true }));
+    try {
+      // 🟢 LOGIN USER
+      if (buyer?.id) {
+        addItem({
+          id: 0,
+          buyer_id: buyer?.id,
+          product_id: id,
+          quantity: 1,
+        } as HealthBag);
       }
 
-      const newItem = {
-        id: 0,
-        productid: id,
-        qty: 1,
+      // 🔵 GUEST USER (FULL DATA STORE)
+      else {
+        const lsData = localStorage.getItem("healthbag");
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        let current: any[] = [];
 
-        name: item?.ProductName || medicine_name,
-        manufacturer: item?.Manufacturer || manufacturer_name,
-        pack_size: item?.PackSize || pack_size,
-        mrp: Number(item?.MRP ?? mrp ?? 0),
-        discount: Number(item?.Discount ?? discount ?? 0),
-        category_id: Number(item?.category_id ?? 0),
-        image: item?.DefaultImageURL || primary_image || null,
-      };
+        try {
+          current = lsData ? JSON.parse(lsData) : [];
+        } catch {
+          current = [];
+        }
 
-      const exists = current.find((i) => i.productid === id);
+        const newItem = {
+          id: 0,
+          productid: id,
+          qty: 1,
 
-      let updated;
+          name: item?.ProductName || medicine_name,
+          manufacturer: item?.Manufacturer || manufacturer_name,
+          pack_size: item?.PackSize || pack_size,
+          mrp: Number(item?.MRP ?? mrp ?? 0),
+          discount: Number(item?.Discount ?? discount ?? 0),
+          category_id: Number(item?.category_id ?? 0),
+          image: item?.DefaultImageURL || primary_image || null,
+        };
 
-      if (exists) {
-        updated = current.map((i) =>
-          i.productid === id ? { ...i, qty: i.qty + 1 } : i
-        );
-      } else {
-        updated = [...current, newItem];
+        const exists = current.find((i) => i.productid === id);
+
+        let updated;
+
+        if (exists) {
+          updated = current.map((i) =>
+            i.productid === id ? { ...i, qty: i.qty + 1 } : i
+          );
+        } else {
+          updated = [...current, newItem];
+        }
+
+        // ✅ SAVE FULL DATA IN LS
+        localStorage.setItem("healthbag", JSON.stringify(updated));
+
+        // ✅ ONLY SYNC REDUX (NO LOCAL STATE)
+        dispatch(loadLocalHealthBag());
       }
-
-      // ✅ SAVE FULL DATA IN LS
-      localStorage.setItem("healthbag", JSON.stringify(updated));
-
-      // ✅ ONLY SYNC REDUX (NO LOCAL STATE)
-      dispatch(loadLocalHealthBag());
+    } catch (err) {
+      console.error("Add failed:", err);
+      setLocalState((prev) => ({ ...prev, [id]: false }));
+    } finally {
+      setProcessingIds((prev) => prev.filter((pid) => pid !== id));
     }
   };
 
   const handleRemove = async (productId: number) => {
     setProcessingIds((prev) => [...prev, productId]);
-
+    setLocalState((prev) => ({ ...prev, [id]: false }));
     try {
-      // 🟢 LOGIN USER
       if (buyer?.id) {
-        await removeItem(productId);
-      }
-
-      // 🔵 GUEST USER
-      else {
+        removeItem(productId);
+      } else {
         const lsData = localStorage.getItem("healthbag");
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         let current: any[] = [];
@@ -204,25 +161,18 @@ export default function MedicineCard({
         );
 
         localStorage.setItem("healthbag", JSON.stringify(updated));
-
-        // ✅ sync redux
         dispatch(loadLocalHealthBag());
       }
+    } catch (err) {
+      // ❌ rollback
+      setLocalState((prev) => ({ ...prev, [id]: true }));
     } finally {
-      setProcessingIds((prev) => prev.filter((id) => id !== productId));
+      setProcessingIds((prev) => prev.filter((pid) => pid !== id));
     }
   };
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const getProductId = (item: any) => {
-    return item.productid ?? item.product_id ?? id;
-  };
-
-  const source = items;
-
-  const isInBag = source.some(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (i: any) => getProductId(i) === id
-  );
+  const isInBag = items.some((i: any) => Number(i.product_id) === id);
+  const showRemove = localState[id] !== undefined ? localState[id] : isInBag;
 
   // 👇 onClick function
   const handleClick = (id: number) => {
@@ -396,17 +346,14 @@ export default function MedicineCard({
                 : "ADD"}
             </button> */}
             <button
-              className="btn-1 btn-HO"
-              style={{
-                backgroundColor: isInBag ? "#0b5ed7" : "#ff7b00",
-                color: "#fff",
-              }}
+              className={`btn-1 btn-HO ${showRemove ? "remove" : "add"}`}
+              style={{ borderRadius: "35px" }}
               disabled={processingIds.includes(id)}
-              onClick={() => (isInBag ? handleRemove(id) : handleAdd(id))}
+              onClick={() => (showRemove ? handleRemove(id) : handleAdd(id))}
             >
               {processingIds.includes(id)
                 ? "Processing..."
-                : isInBag
+                : showRemove
                 ? "REMOVE"
                 : "ADD"}
             </button>

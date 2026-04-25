@@ -45,6 +45,11 @@ export interface BuyerState {
 
   list: BuyerOrderItem[];
   details: OrderDetail | null;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  reorderCart: any[];
+  prescriptionUrl: string | null;
+  prescriptionId: number | null;
+  reorderLoading: boolean;
 }
 
 export interface BuyerOrderItem {
@@ -134,4 +139,15 @@ export interface OrderDetail {
     remark: string | null;
     status: string;
   }>;
+}
+
+export interface ReorderCartResponse {
+  success: boolean;
+  statusCode: number;
+  message: string;
+  data: {
+    prescription_url: string | null;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    items: any[];
+  };
 }

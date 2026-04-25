@@ -70,6 +70,10 @@ const nextConfig: NextConfig = {
         destination: "/medicines-details/:id",
       },
       {
+        source: "/reorder-bag",
+        destination: "/reorder-bag",
+      },
+      {
         source: "/health-bag",
         destination: "/health-bag",
       },

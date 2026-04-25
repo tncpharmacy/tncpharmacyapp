@@ -20,5 +20,10 @@ export interface HealthBagResponse {
   success: boolean;
   statusCode: number;
   message: string;
-  data: HealthBag[];
+  data: HealthBagData;
+}
+
+interface HealthBagData {
+  prescription_id: number | null;
+  items: HealthBag[];
 }

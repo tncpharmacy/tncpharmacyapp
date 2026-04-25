@@ -227,7 +227,7 @@ const healthBagSlice = createSlice({
         getHealthBag.fulfilled,
         (state, action: PayloadAction<HealthBagResponse>) => {
           state.loading = false;
-          state.items = action.payload.data;
+          state.items = action.payload?.data?.items || [];
           state.error = null;
         }
       )

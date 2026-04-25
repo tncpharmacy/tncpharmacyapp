@@ -119,6 +119,9 @@ export const ENDPOINTS = {
     POST_ORDER: (buyerId: number) => `/order/create-order/${buyerId}/`,
     GET_ORDER_LIST: (buyerId: number) => `/order/buyer/list/${buyerId}`,
     GET_ORDER_DETAIL: (orderId: number) => `/order/buyer/detail/${orderId}`,
+    RE_ORDER: (orderId: number) => `/order/buyer/reorder/${orderId}/`,
+    RE_ORDER_CART: (buyerId: number) =>
+      `/order/buyer/reorder-cart/view/${buyerId}/`,
   },
 
   // Prescription Upload

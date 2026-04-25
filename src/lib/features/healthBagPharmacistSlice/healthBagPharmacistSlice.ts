@@ -154,7 +154,9 @@ const healthBagSPharmacistSlice = createSlice({
         getHealthBag.fulfilled,
         (state, action: PayloadAction<HealthBagResponse>) => {
           state.loading = false;
-          state.items = action.payload.data;
+          state.items = Array.isArray(action.payload?.data)
+            ? action.payload.data
+            : [];
           state.error = null;
         }
       )

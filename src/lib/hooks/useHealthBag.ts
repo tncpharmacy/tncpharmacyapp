@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
   getHealthBag,
@@ -8,7 +8,7 @@ import {
   increaseHealthBagQty,
   decreaseHealthBagQty,
 } from "@/lib/features/healthBagSlice/healthBagSlice";
-import { RootState } from "@/lib/store";
+import { AppDispatch, RootState } from "@/lib/store";
 import { HealthBag } from "@/types/healthBag";
 import {
   createHealthBag,
@@ -20,20 +20,28 @@ import {
 const GUEST_KEY = "healthbag";
 
 export const useHealthBag = ({ userId }: { userId: number | null }) => {
-  const dispatch = useDispatch();
-  const { items } = useSelector((state: RootState) => state.healthBag);
+  const dispatch = useDispatch<AppDispatch>();
   const [mounted, setMounted] = useState(false);
+  const { items } = useSelector((state: RootState) => state.healthBag);
 
+  const normalizedItems = useMemo(() => {
+    const safeItems = Array.isArray(items) ? items : [];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return safeItems.map((i: any) => ({
+      ...i,
+      product_id: Number(i.product_id ?? i.productid ?? i.id),
+    }));
+  }, [items]);
   // 🔹 Load cart on mount
-  useEffect(() => {
-    if (userId) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      dispatch(getHealthBag(userId) as any);
-    } else {
-      dispatch(loadLocalHealthBag());
-    }
-    setMounted(true);
-  }, [userId, dispatch]);
+  // useEffect(() => {
+  //   if (userId) {
+  //     // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  //     dispatch(getHealthBag(userId) as any);
+  //   } else {
+  //     dispatch(loadLocalHealthBag());
+  //   }
+  //   setMounted(true);
+  // }, [userId, dispatch]);
 
   // 🔹 Fetch cart depending on login state
   const fetchCart = useCallback(async () => {
@@ -41,7 +49,7 @@ export const useHealthBag = ({ userId }: { userId: number | null }) => {
       // ✅ Logged-in user → fetch from API
       try {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        await dispatch(getHealthBag(userId) as any);
+        await dispatch(getHealthBag(userId)).unwrap();
       } catch (err) {
         console.error("Error fetching API cart:", err);
       }
@@ -60,18 +68,14 @@ export const useHealthBag = ({ userId }: { userId: number | null }) => {
   const addItem = useCallback(
     async (item: HealthBag) => {
       if (!mounted) return;
-      const already = items.find(
+      const already = normalizedItems.find(
         (i) =>
           i.product_id === item.product_id || i.productid === item.product_id
       );
 
       if (already) {
         // 🔥 instead of return → increase qty
-        await increaseQty(
-          already.id,
-          item.product_id,
-          already.qty + item.quantity
-        );
+        await increaseQty(already.id, item.product_id, already.qty + 1);
         return;
       }
 
@@ -82,9 +86,8 @@ export const useHealthBag = ({ userId }: { userId: number | null }) => {
             product_id: item.product_id,
             quantity: item.quantity || 1,
           });
-          // ✅ Reload from backend
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          dispatch(getHealthBag(userId) as any);
+
+          dispatch(getHealthBag(userId));
         } catch (err) {
           console.error("Add item failed:", err);
         }
@@ -92,7 +95,7 @@ export const useHealthBag = ({ userId }: { userId: number | null }) => {
         dispatch(addLocalHealthBag(item));
       }
     },
-    [userId, mounted, items, dispatch]
+    [userId, mounted, normalizedItems, dispatch]
   );
 
   // 🔹 Remove item
@@ -101,7 +104,9 @@ export const useHealthBag = ({ userId }: { userId: number | null }) => {
       if (!mounted) return;
 
       // ✅ find item by productid (not product_id)
-      const itemToDelete = items.find((i) => i.productid === productId);
+      const itemToDelete = normalizedItems.find(
+        (i) => Number(i.product_id ?? i.productid ?? i.id) === Number(productId)
+      );
       if (!itemToDelete) return;
 
       if (userId) {
@@ -109,7 +114,7 @@ export const useHealthBag = ({ userId }: { userId: number | null }) => {
           // console.log("🗑 Removing cart item id:", itemToDelete.id);
           await deleteHealthBag(itemToDelete.id); // ✅ send correct cart id to API
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          dispatch(getHealthBag(userId) as any);
+          await (dispatch(getHealthBag(userId)) as any).unwrap();
         } catch (err) {
           console.error("Remove item failed:", err);
         }
@@ -117,7 +122,7 @@ export const useHealthBag = ({ userId }: { userId: number | null }) => {
         dispatch(removeLocalHealthBag(productId));
       }
     },
-    [userId, mounted, items, dispatch]
+    [userId, mounted, normalizedItems, dispatch]
   );
 
   const increaseQty = useCallback(
@@ -184,7 +189,7 @@ export const useHealthBag = ({ userId }: { userId: number | null }) => {
       // ✅ Wait for all API calls to finish, then re-fetch cart cleanly
       await new Promise((resolve) => setTimeout(resolve, 500)); // small delay
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      await dispatch(getHealthBag(userId) as any);
+      await (dispatch(getHealthBag(userId)) as any).unwrap();
 
       // ✅ Trigger header update manually (optional)
       window.dispatchEvent(new Event("healthBagUpdated"));
@@ -213,7 +218,7 @@ export const useHealthBag = ({ userId }: { userId: number | null }) => {
   }, [userId, mergeGuestCart]);
 
   return {
-    items,
+    items: normalizedItems,
     addItem,
     removeItem,
     mergeGuestCart,

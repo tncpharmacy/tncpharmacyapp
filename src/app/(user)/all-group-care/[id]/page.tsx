@@ -130,8 +130,9 @@ export default function AllGroupCare() {
   const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
-    if (items?.length) setLocalBag(items.map((i) => i.productid));
-    else setLocalBag([]);
+    if (items) {
+      setLocalBag(items.map((i) => i.productid));
+    }
   }, [items]);
 
   useEffect(() => {
@@ -199,49 +200,65 @@ export default function AllGroupCare() {
   // --- Handlers ---
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleAdd = async (item: any) => {
-    if (buyer?.id) {
-      await addItem({
-        id: 0,
-        buyer_id: buyer?.id,
-        product_id: item.medicine_id,
-        quantity: 1,
-      } as HealthBag);
-    } else {
-      const newItem = {
-        id: 0,
-        productid: item.medicine_id,
-        qty: 1,
+    const id = item.medicine_id;
 
-        // 🔥 STORE FULL DATA
-        name: item.ProductName || item.medicine_name,
-        manufacturer: item.Manufacturer || item.manufacturer_name,
-        pack_size: item.PackSize || item.pack_size,
-        mrp: Number(item.MRP ?? item.mrp ?? 0),
-        discount: Number(item.Discount ?? item.discount ?? 0),
-        category_id: Number(item.category_id ?? 0),
-        image: item.DefaultImageURL || item.medicine_image || null, // 🔥 important
-      };
+    // 🔥 start processing
+    // setProcessingIds((prev) => [...prev, id]);
+    // ✅ OPTIMISTIC UPDATE
+    setLocalBag((prev) => [...new Set([...prev, id])]);
 
-      const exists = guestItems.find((i) => i.productid === item.medicine_id);
-
-      let updated;
-
-      if (exists) {
-        updated = guestItems.map((i) =>
-          i.productid === item.id ? { ...i, qty: i.qty + 1 } : i
-        );
+    try {
+      if (buyer?.id) {
+        await addItem({
+          id: 0,
+          buyer_id: buyer?.id,
+          product_id: item.medicine_id,
+          quantity: 1,
+        } as HealthBag);
       } else {
-        updated = [...guestItems, newItem];
-      }
+        const newItem = {
+          id: 0,
+          productid: item.medicine_id,
+          qty: 1,
 
-      localStorage.setItem("healthbag", JSON.stringify(updated));
-      setGuestItems(updated);
-      dispatch(loadLocalHealthBag());
+          // 🔥 STORE FULL DATA
+          name: item.ProductName || item.medicine_name,
+          manufacturer: item.Manufacturer || item.manufacturer_name,
+          pack_size: item.PackSize || item.pack_size,
+          mrp: Number(item.MRP ?? item.mrp ?? 0),
+          discount: Number(item.Discount ?? item.discount ?? 0),
+          category_id: Number(item.category_id ?? 0),
+          image: item.DefaultImageURL || item.medicine_image || null, // 🔥 important
+        };
+
+        const exists = guestItems.find((i) => i.productid === item.medicine_id);
+
+        let updated;
+
+        if (exists) {
+          updated = guestItems.map((i) =>
+            i.productid === item.id ? { ...i, qty: i.qty + 1 } : i
+          );
+        } else {
+          updated = [...guestItems, newItem];
+        }
+
+        localStorage.setItem("healthbag", JSON.stringify(updated));
+        setGuestItems(updated);
+        dispatch(loadLocalHealthBag());
+      }
+    } catch (err) {
+      console.error("Add failed:", err);
+      setLocalBag((prev) => prev.filter((pid) => pid !== id));
+    } finally {
+      // ✅ sabse important fix
+      setProcessingIds((prev) => prev.filter((pid) => pid !== id));
     }
   };
 
   const handleRemove = async (productId: number) => {
-    setProcessingIds((prev) => [...prev, productId]);
+    // setProcessingIds((prev) => [...prev, productId]);
+    setLocalBag((prev) => prev.filter((id) => id !== productId));
 
     try {
       // 🟢 LOGIN USER
@@ -260,6 +277,9 @@ export default function AllGroupCare() {
         setGuestItems(updated);
         dispatch(loadLocalHealthBag());
       }
+    } catch (err) {
+      // rollback
+      setLocalBag((prev) => [...prev, productId]);
     } finally {
       setProcessingIds((prev) => prev.filter((id) => id !== productId));
     }
@@ -359,18 +379,8 @@ export default function AllGroupCare() {
                         : `${mediaBase}${item.default_image.document}`
                       : "/images/tnc-default.png";
 
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    const getProductId = (item: any) => {
-                      return (
-                        item.productid ?? item.product_id ?? item.medicine_id
-                      );
-                    };
-                    const source = buyer?.id ? items : guestItems;
+                    const isInBag = localBag.includes(item.medicine_id);
 
-                    const isInBag = source.some(
-                      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                      (i: any) => getProductId(i) === item.medicine_id
-                    );
                     return isMobile ? (
                       // 💻 DESKTOP/TABLET → CARD DESIGN (Reusable Component 🔥)
                       <ProductCardUI

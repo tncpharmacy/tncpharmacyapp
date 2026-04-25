@@ -22,18 +22,26 @@ const initialState: PrescriptionState = {
   success: false,
 };
 
-export const uploadPrescriptionFromBuyerCartThunk = createAsyncThunk(
+export const uploadPrescriptionFromBuyerCartThunk = createAsyncThunk<
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  any,
+  { formData: FormData; token: string },
+  { rejectValue: string }
+>(
   "prescription/uploadFromBuyerCart",
-  async (
-    { formData, token }: { formData: FormData; token: string },
-    { rejectWithValue }
-  ) => {
+  async ({ formData, token }, { rejectWithValue }) => {
     try {
       const res = await uploadPrescriptionFromBuyerCart({ formData, token });
+      // 🔥 safety
+      if (!res) {
+        return rejectWithValue("No response from server");
+      }
       return res;
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
-      return rejectWithValue(err.response?.data || "Upload failed");
+      return rejectWithValue(
+        err?.response?.data?.message || err?.response?.data || "Upload failed"
+      );
     }
   }
 );
@@ -95,7 +103,9 @@ const prescriptionSlice = createSlice({
         (state, action) => {
           state.loading = false;
           state.success = true;
-          state.data = action.payload?.data;
+
+          state.data = action.payload?.data ?? [];
+          state.error = null;
         }
       )
       .addCase(

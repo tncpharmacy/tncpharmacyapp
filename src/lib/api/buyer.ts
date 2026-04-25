@@ -53,3 +53,14 @@ export const buyerGetOrderListApi = async (buyerId: number) => {
 export const buyerGetOrderDetailsApi = async (orderId: number) => {
   return axiosInstance.get(ENDPOINTS.BUYER.GET_ORDER_DETAIL(orderId));
 };
+
+// 🔹 GET RE-Order
+// 🔹 RE-Order (FIXED)
+export const buyerReOrderApi = async (orderId: number) => {
+  return axiosInstance.post(ENDPOINTS.BUYER.RE_ORDER(orderId));
+};
+
+// 🔹 GET Cart Temp
+export const buyerReOrderCartApi = async (buyerId: number) => {
+  return axiosInstance.get(ENDPOINTS.BUYER.RE_ORDER_CART(buyerId));
+};

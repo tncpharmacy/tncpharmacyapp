@@ -154,10 +154,8 @@ export default function AllProducts() {
   }, [dispatch, currentUrl, categoryIdNum, subCategoryIdNum]);
 
   useEffect(() => {
-    if (items?.length) {
+    if (items) {
       setLocalBag(items.map((i) => i.productid));
-    } else {
-      setLocalBag([]);
     }
   }, [items]);
 
@@ -207,65 +205,89 @@ export default function AllProducts() {
   // --- Handlers ---
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleAdd = async (item: any) => {
-    if (buyer?.id) {
-      await addItem({
-        id: 0,
-        buyer_id: buyer?.id,
-        product_id: item.product_id,
-        quantity: 1,
-      } as HealthBag);
-    } else {
-      const newItem = {
-        id: 0,
-        productid: item.product_id,
-        qty: 1,
+    const id = item.product_id;
 
-        // 🔥 STORE FULL DATA
-        name: item.ProductName || item.productname,
-        manufacturer: item.Manufacturer || item.manufacturer,
-        pack_size: item.PackSize || item.pack_size,
-        mrp: Number(item.MRP ?? item.mrp ?? 0),
-        discount: Number(item.Discount ?? item.discount ?? 0),
-        category_id: categoryIdNum,
-        image: item.DefaultImageURL || item.medicine_image || null, // 🔥 important
-      };
+    // 🔥 start processing
+    // setProcessingIds((prev) => [...prev, id]);
+    // ✅ OPTIMISTIC UPDATE
+    setLocalBag((prev) => [...new Set([...prev, id])]);
 
-      const exists = guestItems.find((i) => i.productid === item.product_id);
-
-      let updated;
-
-      if (exists) {
-        updated = guestItems.map((i) =>
-          i.productid === item.product_id ? { ...i, qty: i.qty + 1 } : i
-        );
+    try {
+      if (buyer?.id) {
+        await addItem({
+          id: 0,
+          buyer_id: buyer?.id,
+          product_id: item.product_id,
+          quantity: 1,
+        } as HealthBag);
       } else {
-        updated = [...guestItems, newItem];
-      }
+        const newItem = {
+          id: 0,
+          productid: item.product_id,
+          qty: 1,
 
-      localStorage.setItem("healthbag", JSON.stringify(updated));
-      setGuestItems(updated);
-      dispatch(loadLocalHealthBag());
+          // 🔥 STORE FULL DATA
+          name: item.ProductName || item.productname,
+          manufacturer: item.Manufacturer || item.manufacturer,
+          pack_size: item.PackSize || item.pack_size,
+          mrp: Number(item.MRP ?? item.mrp ?? 0),
+          discount: Number(item.Discount ?? item.discount ?? 0),
+          image: item.DefaultImageURL || item.medicine_image || null,
+        };
+
+        const cart = JSON.parse(localStorage.getItem("healthbag") || "[]");
+
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const exists = cart.find((i: any) => i.productid === item.product_id);
+
+        let updated;
+
+        if (exists) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          updated = cart.map((i: any) =>
+            i.productid === item.product_id ? { ...i, qty: i.qty + 1 } : i
+          );
+        } else {
+          updated = [...cart, newItem];
+        }
+
+        localStorage.setItem("healthbag", JSON.stringify(updated));
+        // setGuestItems(updated);
+        dispatch(loadLocalHealthBag());
+      }
+    } catch (err) {
+      console.error("Add failed:", err);
+      setLocalBag((prev) => prev.filter((pid) => pid !== id));
+    } finally {
+      // ✅ sabse important fix
+      setProcessingIds((prev) => prev.filter((pid) => pid !== id));
     }
   };
 
   const handleRemove = async (productId: number) => {
-    setProcessingIds((prev) => [...prev, productId]);
+    // setProcessingIds((prev) => [...prev, productId]);
+    setLocalBag((prev) => prev.filter((id) => id !== productId));
 
     try {
-      // 🟢 LOGIN USER
       if (buyer?.id) {
         await removeItem(productId);
-      }
-      // 🔵 GUEST USER
-      else {
-        const updated = guestItems.filter(
-          (item) => (item.productid ?? item.product_id) !== productId
+      } else {
+        // ✅ ALWAYS fresh data lo
+        const cart = JSON.parse(localStorage.getItem("healthbag") || "[]");
+
+        const updated = cart.filter(
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          (item: any) => (item.productid ?? item.product_id) !== productId
         );
 
         localStorage.setItem("healthbag", JSON.stringify(updated));
-        setGuestItems(updated);
+
+        setGuestItems(updated); // optional but ok
         dispatch(loadLocalHealthBag());
       }
+    } catch (err) {
+      // rollback
+      setLocalBag((prev) => [...prev, productId]);
     } finally {
       setProcessingIds((prev) => prev.filter((id) => id !== productId));
     }
@@ -395,16 +417,7 @@ export default function AllProducts() {
                       ? `${mediaBase}${defaultImg.document}`
                       : "/images/tnc-default.png";
 
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    const getProductId = (item: any) => {
-                      return item.productid ?? item.product_id ?? item.id;
-                    };
-                    const source = buyer?.id ? items : guestItems;
-
-                    const isInBag = source.some(
-                      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                      (i: any) => getProductId(i) === item.product_id
-                    );
+                    const isInBag = localBag.includes(item.product_id);
 
                     return isMobile ? (
                       // 💻 DESKTOP/TABLET → CARD DESIGN (Reusable Component 🔥)

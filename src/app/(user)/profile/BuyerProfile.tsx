@@ -21,6 +21,7 @@ import { LocationDetails } from "@/types/address";
 import {
   getBuyerOrderDetails,
   getBuyerOrdersList,
+  reOrder,
 } from "@/lib/features/buyerSlice/buyerSlice";
 
 import { BuyerOrderItem, OrderDetails } from "@/types/order";
@@ -313,6 +314,18 @@ export default function BuyerProfile() {
     } catch (error) {
       toast.error("Failed to set default address");
       console.error(error);
+    }
+  };
+
+  const handleReOrder = async (orderId: number) => {
+    try {
+      await dispatch(reOrder(orderId)).unwrap();
+      toast.success("Reorder placed successfully!");
+      router.push("/reorder-bag");
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (err: any) {
+      console.error(err);
+      toast.error(err || "Reorder failed");
     }
   };
 
@@ -694,7 +707,8 @@ export default function BuyerProfile() {
                                     </p>
                                   </div>
 
-                                  <div className="text-end">
+                                  <div className="d-flex justify-content-end gap-2">
+                                    {/* 🔹 Details */}
                                     <button
                                       className="btn btn-outline-primary btn-sm"
                                       onClick={() =>
@@ -703,6 +717,18 @@ export default function BuyerProfile() {
                                       title="Order Details"
                                     >
                                       <i className="bi bi-eye-fill"></i> Details
+                                    </button>
+
+                                    {/* 🔹 Reorder */}
+                                    <button
+                                      className="btn btn-success btn-sm"
+                                      onClick={() =>
+                                        handleReOrder(order.orderId)
+                                      }
+                                      title="Reorder"
+                                    >
+                                      <i className="bi bi-arrow-repeat"></i>{" "}
+                                      Reorder
                                     </button>
                                   </div>
                                 </div>

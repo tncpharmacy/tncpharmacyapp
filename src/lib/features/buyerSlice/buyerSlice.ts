@@ -7,6 +7,8 @@ import {
   buyerGetOrderListApi,
   buyerLoginApi,
   buyerRegisterApi,
+  buyerReOrderApi,
+  buyerReOrderCartApi,
   buyerUpdateApi,
 } from "@/lib/api/buyer";
 import {
@@ -15,6 +17,7 @@ import {
   BuyerOrderItem,
   BuyerState,
   OrderDetail,
+  ReorderCartResponse,
 } from "@/types/buyer";
 import { loadBuyerFromToken } from "@/lib/utils/decodeToken";
 import { safeLocalStorage } from "@/lib/utils/safeLocalStorage";
@@ -53,6 +56,10 @@ const initialState: BuyerState = {
   orderCreated: false,
   list: [],
   details: null,
+  reorderCart: [],
+  prescriptionUrl: null,
+  prescriptionId: null,
+  reorderLoading: false,
 };
 
 //
@@ -244,6 +251,39 @@ export const getBuyerOrderDetails = createAsyncThunk<
   } catch (err: any) {
     return rejectWithValue(
       err.response?.data?.message || "Failed to fetch order details"
+    );
+  }
+});
+
+// 🔹 Reorder API
+export const reOrder = createAsyncThunk<
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  any,
+  number,
+  { rejectValue: string }
+>("buyer/reOrder", async (orderId, { rejectWithValue }) => {
+  try {
+    const res = await buyerReOrderApi(orderId);
+    return res.data;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } catch (err: any) {
+    return rejectWithValue(err.response?.data?.message || "Reorder failed");
+  }
+});
+
+// 🔹 Reorder Cart View
+export const getReOrderCart = createAsyncThunk<
+  ReorderCartResponse,
+  number,
+  { rejectValue: string }
+>("buyer/getReOrderCart", async (buyerId, { rejectWithValue }) => {
+  try {
+    const res = await buyerReOrderCartApi(buyerId);
+    return res.data;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } catch (err: any) {
+    return rejectWithValue(
+      err.response?.data?.message || "Failed to fetch reorder cart"
     );
   }
 });
@@ -455,6 +495,32 @@ const buyerSlice = createSlice({
       .addCase(getBuyerOrderDetails.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload ?? "Error loading order details";
+      })
+      // 🔹 Reorder
+      .addCase(reOrder.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(reOrder.fulfilled, (state) => {
+        state.loading = false;
+        // toast.success("Reorder created!");
+      })
+      .addCase(reOrder.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload ?? "Reorder failed";
+      })
+
+      // 🔹 Reorder Cart
+      .addCase(getReOrderCart.pending, (state) => {
+        state.reorderLoading = true;
+      })
+      .addCase(getReOrderCart.fulfilled, (state, action) => {
+        state.reorderLoading = false;
+        state.reorderCart = action.payload?.data?.items ?? [];
+        state.prescriptionUrl = action.payload?.data?.prescription_url ?? null;
+      })
+      .addCase(getReOrderCart.rejected, (state, action) => {
+        state.reorderLoading = false;
+        state.error = action.payload ?? "Error loading reorder cart";
       });
   },
 });
