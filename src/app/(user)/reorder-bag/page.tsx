@@ -268,11 +268,7 @@ export default function ReOrderBag() {
   };
 
   // 🟢 Merge: cart items (from LS/API) + product details (from all product list)
-  const sourceItems = buyer?.id
-    ? reorderCart.length > 0
-      ? reorderCart // ✅ reorder priority
-      : bagItem // fallback
-    : guestItems;
+  const sourceItems = buyer?.id ? reorderCart : guestItems;
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   function getFinalImage(item: any, isLoggedIn: boolean) {
@@ -557,10 +553,6 @@ export default function ReOrderBag() {
     router.push(path);
   };
 
-  const handleItemSelect = (item: CartItem) => {
-    isSelecting.current = true;
-    handleSelect(item);
-  };
   const isCartEmpty = mergedItems.length === 0;
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

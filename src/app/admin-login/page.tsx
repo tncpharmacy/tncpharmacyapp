@@ -5,6 +5,7 @@ import { Modal } from "react-bootstrap";
 import { useAppDispatch, useAppSelector } from "@/lib/hooks";
 import { clearState, loginUser } from "@/lib/features/authSlice/authSlice";
 import "../styles/style-login.css";
+import { FaEye, FaEyeSlash } from "react-icons/fa";
 
 interface LoginFormProps {
   show: boolean;
@@ -21,7 +22,7 @@ export default function Login({ show, handleClose }: LoginFormProps) {
   const [login_id, setLoginId] = useState("");
   const [password, setPassword] = useState("");
   const [mounted, setMounted] = useState(false);
-
+  const [showPassword, setShowPassword] = useState(false);
   const [localError, setLocalError] = useState("");
   const errorText = localError.toLowerCase();
 
@@ -185,14 +186,14 @@ export default function Login({ show, handleClose }: LoginFormProps) {
                     *
                   </span>
                 </span>
+
                 <input
                   ref={passwordInputRef}
-                  type="password"
+                  type={showPassword ? "text" : "password"}
                   className="txtlogin"
                   value={password}
                   onChange={(e) => {
                     const value = e.target.value;
-
                     if (value.length <= 15) {
                       setPassword(value);
                     }
@@ -202,8 +203,24 @@ export default function Login({ show, handleClose }: LoginFormProps) {
                     border: errorText.includes("password")
                       ? "1px solid red"
                       : "",
+                    paddingRight: "40px", // 👈 icon ke liye space
                   }}
                 />
+
+                {/* 👁 Eye Icon */}
+                <span
+                  onClick={() => setShowPassword(!showPassword)}
+                  style={{
+                    position: "absolute",
+                    right: "10px",
+                    top: "50%",
+                    transform: "translateY(-50%)",
+                    cursor: "pointer",
+                    fontSize: "18px",
+                  }}
+                >
+                  {showPassword ? <FaEyeSlash /> : <FaEye />}
+                </span>
               </div>
               <button
                 type="button"

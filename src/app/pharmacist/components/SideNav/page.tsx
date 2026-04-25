@@ -15,9 +15,9 @@ export default function SideNav() {
   // console.log("pathname", pathname);
   return (
     <div className="side_menu">
-      <span className="btnsidemenu cursor-pointer text-xl">
+      {/* <span className="btnsidemenu cursor-pointer text-xl">
         <i className="bi bi-arrow-left"></i>
-      </span>
+      </span> */}
 
       <ul className="side_menu-list">
         <li>

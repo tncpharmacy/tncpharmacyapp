@@ -320,7 +320,7 @@ export default function BuyerProfile() {
   const handleReOrder = async (orderId: number) => {
     try {
       await dispatch(reOrder(orderId)).unwrap();
-      toast.success("Reorder placed successfully!");
+      // toast.success("Reorder placed successfully!");
       router.push("/reorder-bag");
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
