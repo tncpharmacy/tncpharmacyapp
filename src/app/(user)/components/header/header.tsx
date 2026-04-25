@@ -226,7 +226,7 @@ const SiteHeader = ({ initialCategories, initialSubcategories }: Props) => {
       try {
         if (userId) {
           const res = await fetchHealthBag(userId);
-          setLocalCount(res.data?.length || 0);
+          setLocalCount(res.data?.items?.length || 0);
         } else {
           const guest = localStorage.getItem("healthBagGuest");
           const guestItems = guest ? JSON.parse(guest) : [];
