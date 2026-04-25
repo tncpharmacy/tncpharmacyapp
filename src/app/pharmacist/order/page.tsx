@@ -167,13 +167,38 @@ export default function OrderList() {
 
   //infinte scroll records
   const loadMore = () => {
-    if (loadings || visibleCount >= orders.length) return;
+    if (loadings || visibleCount >= filteredData.length) return;
+
     setLoadings(true);
+
     setTimeout(() => {
-      setVisibleCount((prev) => prev + 5);
+      setVisibleCount((prev) => prev + 10);
       setLoadings(false);
-    }, 500); // spinner for 3 sec
+    }, 300);
   };
+
+  useEffect(() => {
+    const container = document.querySelector(".body_right");
+
+    if (!container) return;
+
+    const handleScroll = () => {
+      if (
+        container.scrollTop + container.clientHeight >=
+        container.scrollHeight - 50
+      ) {
+        loadMore();
+      }
+    };
+
+    container.addEventListener("scroll", handleScroll);
+
+    return () => container.removeEventListener("scroll", handleScroll);
+  }, [filteredData, visibleCount]);
+
+  useEffect(() => {
+    setVisibleCount(10);
+  }, [searchTerm, selectedBuyer, orderType]);
 
   const handleBuyerChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const value = e.target.value;
@@ -525,251 +550,239 @@ export default function OrderList() {
       <div className="body_wrap">
         <SideNav />
         <div className="body_right">
-          <InfiniteScroll
-            loadMore={loadMore}
-            hasMore={visibleCount < orders.length}
-            // className="body_content"
-          >
-            <div style={{ width: "100%" }}>
-              <div
-                className="row align-items-center"
-                style={{ marginLeft: 0, marginRight: 0 }}
-              >
-                {/* LEFT TITLE */}
-                <div className="pageTitle col-md-6 col-12 text-start mt-2">
-                  <i className="bi bi-receipt"></i> Order Summary
-                </div>
+          <div style={{ width: "100%" }}>
+            <div
+              className="row align-items-center"
+              style={{ marginLeft: 0, marginRight: 0 }}
+            >
+              {/* LEFT TITLE */}
+              <div className="pageTitle col-md-6 col-12 text-start mt-2">
+                <i className="bi bi-receipt"></i> Order Summary
+              </div>
 
-                {/* RIGHT BUTTON GROUP */}
-                <div className="col-md-6 col-12 d-flex justify-content-md-end justify-content-start mt-2 mb-2 gap-2">
-                  <Button
-                    variant="outline-primary"
-                    onClick={() => {
-                      setReportType("order");
-                      setShowReport(true);
-                    }}
-                    className="btn-style1"
-                  >
-                    <i className="bi bi-file-earmark-text"></i>{" "}
-                    <span className="fw-semibold">Sales Report Orderwise</span>
-                  </Button>
+              {/* RIGHT BUTTON GROUP */}
+              <div className="col-md-6 col-12 d-flex justify-content-md-end justify-content-start mt-2 mb-2 gap-2">
+                <Button
+                  variant="outline-primary"
+                  onClick={() => {
+                    setReportType("order");
+                    setShowReport(true);
+                  }}
+                  className="btn-style1"
+                >
+                  <i className="bi bi-file-earmark-text"></i>{" "}
+                  <span className="fw-semibold">Sales Report Orderwise</span>
+                </Button>
 
-                  <Button
-                    variant="outline-primary"
-                    onClick={() => {
-                      setReportType("product");
-                      setShowReport(true);
-                    }}
-                    className="btn-style1"
-                  >
-                    <i className="bi bi-file-earmark-text"></i>{" "}
-                    <span className="fw-semibold">
-                      Sales Report Productwise
-                    </span>
-                  </Button>
-                </div>
+                <Button
+                  variant="outline-primary"
+                  onClick={() => {
+                    setReportType("product");
+                    setShowReport(true);
+                  }}
+                  className="btn-style1"
+                >
+                  <i className="bi bi-file-earmark-text"></i>{" "}
+                  <span className="fw-semibold">Sales Report Productwise</span>
+                </Button>
               </div>
             </div>
+          </div>
 
-            <div className="main_content">
-              <div className="col-sm-12">
-                <div className="row">
-                  <div className="col-md-6">
-                    <div className="txt_col">
-                      <span className="lbl1">Search</span>
-                      <input
-                        type="text"
-                        placeholder="Search..."
-                        className="txt1"
-                        value={searchTerm}
-                        onChange={(e) => {
-                          setSearchTerm(e.target.value);
-                        }}
-                      />
-                    </div>
+          <div className="main_content">
+            <div className="col-sm-12">
+              <div className="row">
+                <div className="col-md-6">
+                  <div className="txt_col">
+                    <span className="lbl1">Search</span>
+                    <input
+                      type="text"
+                      placeholder="Search..."
+                      className="txt1"
+                      value={searchTerm}
+                      onChange={(e) => {
+                        setSearchTerm(e.target.value);
+                      }}
+                    />
                   </div>
-                  <div className="col-md-3">
-                    <div className="txt_col">
-                      <span className="lbl1">Select Patient</span>
-                      <select
-                        className="txt1"
-                        value={selectedBuyer}
-                        onChange={handleBuyerChange}
-                      >
-                        <option value="">-Select Buyer-</option>
-                        {pharmacyBuyers?.data?.map((b) => (
-                          <option key={b.id} value={b.id}>
-                            {b.name}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  </div>
-
-                  <div className="col-md-3">
-                    <div className="txt_col">
-                      <span className="lbl1">Order Type</span>
-                      <select
-                        className="txt1"
-                        name="orderType"
-                        value={orderType}
-                        onChange={(e) => setOrderType(e.target.value)}
-                        required
-                      >
-                        <option value="">-Select-</option>
-                        <option value={"Online"}>Online</option>
-                        <option value={"Offline"}>Offline</option>
-                      </select>
-                    </div>
+                </div>
+                <div className="col-md-3">
+                  <div className="txt_col">
+                    <span className="lbl1">Select Patient</span>
+                    <select
+                      className="txt1"
+                      value={selectedBuyer}
+                      onChange={handleBuyerChange}
+                    >
+                      <option value="">-Select Buyer-</option>
+                      {pharmacyBuyers?.data?.map((b) => (
+                        <option key={b.id} value={b.id}>
+                          {b.name}
+                        </option>
+                      ))}
+                    </select>
                   </div>
                 </div>
 
-                <div className="scroll_table">
-                  <table className="table cust_table1">
-                    <thead>
-                      <tr>
-                        {/* <th style={{ width: "0px" }}></th> */}
-                        <th className="fw-bold text-start">Order Id</th>
-                        <th className="fw-bold text-start">Name</th>
-                        <th className="fw-bold text-start">Mobile</th>
-                        {/* <th className="fw-bold text-start">GST</th> */}
-                        <th className="fw-bold text-start">Amount</th>
-                        <th className="fw-bold text-start">Type</th>
-                        <th className="fw-bold text-start">Mode</th>
-                        <th className="fw-bold text-start">Date</th>
-                        <th className="fw-bold text-center">Status</th>
-                        <th className="fw-bold text-center">Action</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {listLoading ? (
-                        <TableLoader colSpan={9} text="Loading records..." />
-                      ) : (
-                        <>
-                          {filteredData
-                            .slice()
-                            .sort(
-                              (a, b) =>
-                                new Date(b.orderDate).getTime() -
-                                new Date(a.orderDate).getTime()
-                            )
-                            .slice(0, visibleCount)
-                            .map((p: PharmacistOrder) => {
-                              return (
-                                <tr key={p.orderId}>
-                                  {/* <td></td> */}
-                                  <td className="text-start">
-                                    {p.orderId ?? ""}
-                                  </td>
-                                  <td className="text-start">
-                                    {p.buyerName ?? ""}
-                                  </td>
-                                  <td className="text-start">
-                                    {p.buyerNumber ?? ""}
-                                  </td>
-                                  {/* <td className="text-start">
+                <div className="col-md-3">
+                  <div className="txt_col">
+                    <span className="lbl1">Order Type</span>
+                    <select
+                      className="txt1"
+                      name="orderType"
+                      value={orderType}
+                      onChange={(e) => setOrderType(e.target.value)}
+                      required
+                    >
+                      <option value="">-Select-</option>
+                      <option value={"Online"}>Online</option>
+                      <option value={"Offline"}>Offline</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <div className="scroll_table">
+                <table className="table cust_table1">
+                  <thead>
+                    <tr>
+                      {/* <th style={{ width: "0px" }}></th> */}
+                      <th className="fw-bold text-start">Order Id</th>
+                      <th className="fw-bold text-start">Name</th>
+                      <th className="fw-bold text-start">Mobile</th>
+                      {/* <th className="fw-bold text-start">GST</th> */}
+                      <th className="fw-bold text-start">Amount</th>
+                      <th className="fw-bold text-start">Type</th>
+                      <th className="fw-bold text-start">Mode</th>
+                      <th className="fw-bold text-start">Date</th>
+                      <th className="fw-bold text-center">Status</th>
+                      <th className="fw-bold text-center">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {listLoading ? (
+                      <TableLoader colSpan={9} text="Loading records..." />
+                    ) : (
+                      <>
+                        {filteredData
+                          .slice()
+                          .sort(
+                            (a, b) =>
+                              new Date(b.orderDate).getTime() -
+                              new Date(a.orderDate).getTime()
+                          )
+                          .slice(0, visibleCount)
+                          .map((p: PharmacistOrder) => {
+                            return (
+                              <tr key={p.orderId}>
+                                {/* <td></td> */}
+                                <td className="text-start">
+                                  {p.orderId ?? ""}
+                                </td>
+                                <td className="text-start">
+                                  {p.buyerName ?? ""}
+                                </td>
+                                <td className="text-start">
+                                  {p.buyerNumber ?? ""}
+                                </td>
+                                {/* <td className="text-start">
                                 {p.gst_number ?? ""}
                               </td> */}
-                                  <td className="text-start">
-                                    {formatPrice(Number(p.amount))}
-                                  </td>
-                                  <td className="text-start">
-                                    {p.orderType ?? ""}
-                                  </td>
-                                  <td className="text-start">
-                                    {p.paymentMode ?? ""}
-                                  </td>
-                                  <td className="text-start">
-                                    {formatDate(p.orderDate ?? "")}
-                                  </td>
-                                  <td>
-                                    <div className="status-toggle">
-                                      <button
-                                        className={`status-pill ${
-                                          Number(p.delivery_status) === 2
-                                            ? "delivered"
-                                            : "processing"
-                                        }`}
-                                        onClick={() => handleStatusClick(p)}
-                                      >
-                                        {Number(p.delivery_status) === 2
-                                          ? "Delivered"
-                                          : "In Process"}
-                                      </button>
-                                    </div>
-                                  </td>
-                                  <td className="text-center">
+                                <td className="text-start">
+                                  {formatPrice(Number(p.amount))}
+                                </td>
+                                <td className="text-start">
+                                  {p.orderType ?? ""}
+                                </td>
+                                <td className="text-start">
+                                  {p.paymentMode ?? ""}
+                                </td>
+                                <td className="text-start">
+                                  {formatDate(p.orderDate ?? "")}
+                                </td>
+                                <td>
+                                  <div className="status-toggle">
                                     <button
-                                      className="btn btn-light btn-sm"
-                                      title="Order Details"
-                                      onClick={() => handleHistory(p.orderId)}
+                                      className={`status-pill ${
+                                        Number(p.delivery_status) === 2
+                                          ? "delivered"
+                                          : "processing"
+                                      }`}
+                                      onClick={() => handleStatusClick(p)}
                                     >
-                                      <i className="bi bi-eye-fill"></i>
+                                      {Number(p.delivery_status) === 2
+                                        ? "Delivered"
+                                        : "In Process"}
                                     </button>
-                                    <button
-                                      className="btn btn-sm btn-light"
-                                      onClick={() =>
-                                        handleViewPrescription(
-                                          p.prescription_url
-                                        )
-                                      }
-                                      title="View Prescription"
-                                    >
-                                      <i className="bi bi-file-earmark-text text-danger"></i>
-                                    </button>
-                                    <button
-                                      className="btn btn-light btn-sm ms-2"
-                                      title="Order Reprint"
-                                      onClick={() =>
-                                        handleReprintFromTable(p.orderId)
-                                      }
-                                    >
-                                      <i className="bi bi-printer-fill"></i>
-                                    </button>
-                                  </td>
-                                </tr>
-                              );
-                            })}
-                        </>
-                      )}
-                      {/* Spinner row */}
-                      {loadings && (
-                        <TableLoader colSpan={9} text="Loading more..." />
-                      )}
+                                  </div>
+                                </td>
+                                <td className="text-center">
+                                  <button
+                                    className="btn btn-light btn-sm"
+                                    title="Order Details"
+                                    onClick={() => handleHistory(p.orderId)}
+                                  >
+                                    <i className="bi bi-eye-fill"></i>
+                                  </button>
+                                  <button
+                                    className="btn btn-sm btn-light"
+                                    onClick={() =>
+                                      handleViewPrescription(p.prescription_url)
+                                    }
+                                    title="View Prescription"
+                                  >
+                                    <i className="bi bi-file-earmark-text text-danger"></i>
+                                  </button>
+                                  <button
+                                    className="btn btn-light btn-sm ms-2"
+                                    title="Order Reprint"
+                                    onClick={() =>
+                                      handleReprintFromTable(p.orderId)
+                                    }
+                                  >
+                                    <i className="bi bi-printer-fill"></i>
+                                  </button>
+                                </td>
+                              </tr>
+                            );
+                          })}
+                      </>
+                    )}
+                    {/* Spinner row */}
+                    {loadings && (
+                      <TableLoader colSpan={9} text="Loading more..." />
+                    )}
 
-                      {/* No more records */}
-                      {!listLoading &&
-                        !loadings &&
-                        filteredData.length === 0 && (
-                          <tr>
-                            <td
-                              colSpan={9}
-                              className="text-center py-2 text-muted fw-bold fs-6"
-                            >
-                              No records found
-                            </td>
-                          </tr>
-                        )}
+                    {/* No more records */}
+                    {!listLoading && !loadings && filteredData.length === 0 && (
+                      <tr>
+                        <td
+                          colSpan={9}
+                          className="text-center py-2 text-muted fw-bold fs-6"
+                        >
+                          No records found
+                        </td>
+                      </tr>
+                    )}
 
-                      {!listLoading &&
-                        !loadings &&
-                        filteredData.length > 0 &&
-                        visibleCount >= filteredData.length && (
-                          <tr>
-                            <td
-                              colSpan={9}
-                              className="text-center py-2 text-muted fw-bold fs-6"
-                            >
-                              No more records
-                            </td>
-                          </tr>
-                        )}
-                    </tbody>
-                  </table>
-                </div>
+                    {!listLoading &&
+                      !loadings &&
+                      filteredData.length > 0 &&
+                      visibleCount >= filteredData.length && (
+                        <tr>
+                          <td
+                            colSpan={9}
+                            className="text-center py-2 text-muted fw-bold fs-6"
+                          >
+                            No more records
+                          </td>
+                        </tr>
+                      )}
+                  </tbody>
+                </table>
               </div>
             </div>
-          </InfiniteScroll>
+          </div>
         </div>
       </div>
 
