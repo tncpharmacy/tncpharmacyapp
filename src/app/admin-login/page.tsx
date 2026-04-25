@@ -219,7 +219,7 @@ export default function Login({ show, handleClose }: LoginFormProps) {
                     fontSize: "18px",
                   }}
                 >
-                  {showPassword ? <FaEyeSlash /> : <FaEye />}
+                  {showPassword ? <FaEye /> : <FaEyeSlash />}
                 </span>
               </div>
               <button
