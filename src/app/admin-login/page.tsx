@@ -12,7 +12,7 @@ interface LoginFormProps {
   handleClose: () => void;
 }
 
-export default function Login({ show, handleClose }: LoginFormProps) {
+export default function AdminLoginPage({ show, handleClose }: LoginFormProps) {
   const dispatch = useAppDispatch();
   const { user, loading, error, restoreComplete } = useAppSelector(
     (state) => state.auth
@@ -94,7 +94,7 @@ export default function Login({ show, handleClose }: LoginFormProps) {
 
     if (loginUser.fulfilled.match(res)) {
       redirectUser(res.payload.user.user_type);
-      handleClose();
+      // handleClose();
     } else {
       setLocalError("❌ Incorrect Login ID or Password");
     }
@@ -118,23 +118,20 @@ export default function Login({ show, handleClose }: LoginFormProps) {
   if (!mounted) return null;
 
   return (
-    <Modal
-      size="lg"
-      show={show}
-      onHide={handleClose}
-      centered
-      className="loginmodal"
-    >
-      <Modal.Body className="p-0">
+    <div className="login_page_wrapper">
+      <div className="login_overlay" />
+
+      <div className="login_container">
         <div className="row">
-          <div className="col-md-5 pe-0 d-none d-md-block">
+          <div className="col-md-5 d-none d-md-block">
             <img
-              src="../images/login-banner.gif"
+              src="/images/login-banner.gif"
               className="w-100"
               alt="Login Banner"
             />
           </div>
-          <div className="col-md-7 ps-md-0 d-flex align-items-center">
+
+          <div className="col-md-7 d-flex align-items-center">
             <div className="login_form">
               <span className="login_title">Login here</span>
               <div className="row_login">
@@ -247,7 +244,7 @@ export default function Login({ show, handleClose }: LoginFormProps) {
             </div>
           </div>
         </div>
-      </Modal.Body>
-    </Modal>
+      </div>
+    </div>
   );
 }

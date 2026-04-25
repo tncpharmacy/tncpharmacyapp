@@ -142,6 +142,10 @@ const nextConfig: NextConfig = {
 
       // Admin dashboard routes
       {
+        source: "/admin",
+        destination: "/admin-login",
+      },
+      {
         source: "/admin-dashboard",
         destination: "/admin/admin-dashboard",
       },

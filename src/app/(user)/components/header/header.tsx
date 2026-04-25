@@ -594,7 +594,16 @@ const SiteHeader = ({ initialCategories, initialSubcategories }: Props) => {
             <ul className="user_right">
               <li>
                 <div className="dropdown-user">
-                  <span className="user_p dropdownbtn">
+                  {/* 🔥 TOP BUTTON */}
+                  <span
+                    className="user_p dropdownbtn"
+                    onClick={() => {
+                      if (!buyer) {
+                        setShowBuyerLogin(true); // 👈 login modal open
+                      }
+                    }}
+                    style={{ cursor: "pointer" }}
+                  >
                     <i>
                       <Image
                         className="user_icon"
@@ -602,67 +611,44 @@ const SiteHeader = ({ initialCategories, initialSubcategories }: Props) => {
                         alt="Profile"
                       />
                     </i>
-                    Account
+
+                    {/* 🔥 TEXT CHANGE */}
+                    {buyer ? "Account" : "Login"}
                   </span>
-                  <div
-                    className="dropdown-user-content"
-                    style={{ zIndex: "9999" }}
-                  >
-                    {!mounted ? (
-                      <p>
-                        <b>Welcome</b>
-                        <br />
-                        To access account & manage orders
-                      </p>
-                    ) : buyer ? (
+
+                  {/* 🔥 DROPDOWN ONLY AFTER LOGIN */}
+                  {buyer && (
+                    <div
+                      className="dropdown-user-content"
+                      style={{ zIndex: "9999" }}
+                    >
                       <div>
                         <p>
                           <b>Welcome</b>
                           <br />
                           {buyer?.name || "User"}
                         </p>
+
                         <hr className="border-secondary" />
+
                         <Link href="/profile?tab=profile">My Account</Link>
                         <Link href="/profile?tab=order">My Orders</Link>
                         <Link href="/profile?tab=address">My Address</Link>
+
                         <button className="btn1 mt-2" onClick={handleLogout}>
                           Logout
                         </button>
                       </div>
-                    ) : (
-                      <div>
-                        <p>
-                          <b>Welcome</b>
-                          <br />
-                          To access account & manage orders
-                        </p>
-                        <div className="d-flex">
-                          <button
-                            className="btn1 me-2"
-                            onClick={() => setShowLogin(true)}
-                          >
-                            Admin Login
-                          </button>
-                          <Login
-                            show={showLogin}
-                            handleClose={() => setShowLogin(false)}
-                          />
-                          <button
-                            className="btn1"
-                            onClick={() => {
-                              setShowBuyerLogin(true);
-                            }}
-                          >
-                            Patient Login
-                          </button>
-                          <BuyerLoginModal
-                            show={showBuyerLogin}
-                            handleClose={() => setShowBuyerLogin(false)}
-                          />
-                        </div>
-                      </div>
-                    )}
-                  </div>
+                    </div>
+                  )}
+
+                  {/* 🔥 LOGIN MODAL (ONLY WHEN NOT LOGGED IN) */}
+                  {!buyer && (
+                    <BuyerLoginModal
+                      show={showBuyerLogin}
+                      handleClose={() => setShowBuyerLogin(false)}
+                    />
+                  )}
                 </div>
               </li>
 
