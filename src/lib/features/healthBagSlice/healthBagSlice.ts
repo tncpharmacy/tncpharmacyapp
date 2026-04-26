@@ -15,6 +15,7 @@ import { HealthBag, HealthBagResponse } from "@/types/healthBag";
 // ===============================
 interface HealthBagState {
   items: HealthBag[];
+  prescription_id: number | null;
   loading: boolean;
   error: string | null;
   message: string | null;
@@ -22,6 +23,7 @@ interface HealthBagState {
 
 const initialState: HealthBagState = {
   items: [],
+  prescription_id: null,
   loading: false,
   error: null,
   message: null,
@@ -228,6 +230,7 @@ const healthBagSlice = createSlice({
         (state, action: PayloadAction<HealthBagResponse>) => {
           state.loading = false;
           state.items = action.payload?.data?.items || [];
+          state.prescription_id = action.payload?.data?.prescription_id ?? null;
           state.error = null;
         }
       )

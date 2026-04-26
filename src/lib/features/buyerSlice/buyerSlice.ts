@@ -516,7 +516,7 @@ const buyerSlice = createSlice({
       .addCase(getReOrderCart.fulfilled, (state, action) => {
         state.reorderLoading = false;
         state.reorderCart = action.payload?.data?.items ?? [];
-        state.prescriptionUrl = action.payload?.data?.prescription_url ?? null;
+        state.prescriptionId = action.payload?.data?.prescription_id ?? null;
       })
       .addCase(getReOrderCart.rejected, (state, action) => {
         state.reorderLoading = false;

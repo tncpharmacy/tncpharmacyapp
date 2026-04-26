@@ -146,6 +146,7 @@ export default function ReOrderBag() {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [guestItems, setGuestItems] = useState<any[]>([]);
   const reorderCart = useAppSelector((state) => state.buyer.reorderCart);
+  const prescriptionId = useAppSelector((state) => state.buyer.prescriptionId);
 
   useEffect(() => {
     if (!buyer?.id) {
@@ -327,7 +328,7 @@ export default function ReOrderBag() {
 
       manufacturer: item.manufacturer || "",
       pack_size: item.pack_size || "",
-      prescription_required: item.prescription_required || 0,
+      prescription_required: Number(item.prescription_required) || 0,
 
       qty: quantities[item.productid] ?? Number(item.qty) ?? 1,
 
@@ -461,20 +462,14 @@ export default function ReOrderBag() {
       setShowBuyerLogin(true);
       return;
     }
-
     if (!billingAddress) {
       toast.error("Please select delivery address!");
       return;
     }
-
-    // 🔥 prescription_id API se (cart level)
-    const prescriptionId = bagItem?.[0]?.prescription_id ?? null;
-
-    // 🔥 FINAL CONDITION
-    const shouldOpenModal =
-      !prescriptionId &&
-      mergedItems.some((item) => item.prescription_required === 1);
-
+    const hasRxProduct = mergedItems.some(
+      (item) => item.prescription_required === 1
+    );
+    const shouldOpenModal = !prescriptionId && hasRxProduct;
     if (shouldOpenModal) {
       setShowPrescriptionModal(true);
     } else {

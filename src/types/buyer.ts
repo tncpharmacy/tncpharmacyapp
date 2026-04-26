@@ -147,6 +147,7 @@ export interface ReorderCartResponse {
   message: string;
   data: {
     prescription_url: string | null;
+    prescription_id: number | null;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     items: any[];
   };

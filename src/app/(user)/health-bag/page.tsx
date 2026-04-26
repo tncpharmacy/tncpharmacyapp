@@ -146,6 +146,9 @@ export default function HealthBags() {
   });
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [guestItems, setGuestItems] = useState<any[]>([]);
+  const bagPrescriptionId = useAppSelector(
+    (state) => state.healthBag.prescription_id
+  );
 
   useEffect(() => {
     if (!buyer?.id) {
@@ -532,20 +535,14 @@ export default function HealthBags() {
       setShowBuyerLogin(true);
       return;
     }
-
     if (!billingAddress) {
       toast.error("Please select delivery address!");
       return;
     }
-
-    // 🔥 prescription_id API se (cart level)
-    const prescriptionId = bagItem?.[0]?.prescription_id ?? null;
-
-    // 🔥 FINAL CONDITION
-    const shouldOpenModal =
-      !prescriptionId &&
-      mergedItems.some((item) => item.prescription_required === 1);
-
+    const hasRxProduct = mergedItems.some(
+      (item) => item.prescription_required === 1
+    );
+    const shouldOpenModal = !bagPrescriptionId && hasRxProduct;
     if (shouldOpenModal) {
       setShowPrescriptionModal(true);
     } else {

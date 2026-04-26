@@ -613,11 +613,11 @@ const SiteHeader = ({ initialCategories, initialSubcategories }: Props) => {
                     </i>
 
                     {/* 🔥 TEXT CHANGE */}
-                    {buyer ? "Account" : "Login"}
+                    {mounted ? (buyer ? "Account" : "Login") : ""}
                   </span>
 
                   {/* 🔥 DROPDOWN ONLY AFTER LOGIN */}
-                  {buyer && (
+                  {mounted && buyer && (
                     <div
                       className="dropdown-user-content"
                       style={{ zIndex: "9999" }}
@@ -643,7 +643,7 @@ const SiteHeader = ({ initialCategories, initialSubcategories }: Props) => {
                   )}
 
                   {/* 🔥 LOGIN MODAL (ONLY WHEN NOT LOGGED IN) */}
-                  {!buyer && (
+                  {mounted && !buyer && (
                     <BuyerLoginModal
                       show={showBuyerLogin}
                       handleClose={() => setShowBuyerLogin(false)}
