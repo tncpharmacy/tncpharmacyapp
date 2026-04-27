@@ -166,6 +166,7 @@ export default function HealthBags() {
       }
     }
   }, [buyer?.id]);
+
   const activeAddresses = useAppSelector((state) => state.address.addresses);
   // ✅ Filter only actie addresses
   const defaultAddress = activeAddresses?.find(
@@ -352,9 +353,11 @@ export default function HealthBags() {
   };
 
   // 🟢 Merge: cart items (from LS/API) + product details (from all product list)
-  const sourceItems = buyer?.id
-    ? [...bagItem].sort((a, b) => a.productid - b.productid)
-    : guestItems;
+  // const sourceItems = buyer?.id
+  //   ? [...bagItem].sort((a, b) => a.productid - b.productid)
+  //   : guestItems;
+
+  const sourceItems = bagItem;
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   function getFinalImage(item: any, isLoggedIn: boolean) {
@@ -629,11 +632,14 @@ export default function HealthBags() {
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const getImageUrl = (img: any) => {
-    if (!img) return "/images/tnc-default.png";
-
     const base = mediaBase?.replace(/\/$/, "") || "";
 
-    // ARRAY
+    // ❌ NULL / EMPTY → local default
+    if (!img) {
+      return "/images/tnc-default.png";
+    }
+
+    // ✅ ARRAY
     if (Array.isArray(img)) {
       const defaultImg = img.find((i) => i.default_image === 1);
       if (defaultImg?.document) {
@@ -641,16 +647,17 @@ export default function HealthBags() {
       }
     }
 
-    // OBJECT
-    if (img.document) {
+    // ✅ OBJECT
+    if (typeof img === "object" && img.document) {
       return `${base}/${img.document.replace(/^\//, "")}`;
     }
 
-    // STRING
+    // ✅ STRING
     if (typeof img === "string") {
       return img.startsWith("http") ? img : `${base}/${img.replace(/^\//, "")}`;
     }
 
+    // 🔥 fallback
     return "/images/tnc-default.png";
   };
 

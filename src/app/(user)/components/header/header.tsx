@@ -795,7 +795,10 @@ const SiteHeader = ({ initialCategories, initialSubcategories }: Props) => {
               <li className="mobile-category">
                 <div
                   className="category-title"
-                  onClick={() => router.push("/all-medicine")}
+                  onClick={() => {
+                    setShowMobileMenu(false);
+                    router.push("/all-medicine");
+                  }}
                 >
                   All Medicine
                 </div>

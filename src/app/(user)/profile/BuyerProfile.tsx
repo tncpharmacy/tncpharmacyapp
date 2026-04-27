@@ -99,6 +99,18 @@ export default function BuyerProfile() {
     }
   }, [billingAddresses.length, selectedAddressId, billingAddresses]);
 
+  useEffect(() => {
+    if (showOrderModal) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "auto";
+    }
+
+    return () => {
+      document.body.style.overflow = "auto";
+    };
+  }, [showOrderModal]);
+
   // const formatted: BuyerOrderDetail = {
   //   id: d.orderId,
   //   order_no: d.orderId.toString(),
@@ -141,6 +153,7 @@ export default function BuyerProfile() {
       orderType: o.orderType,
       paymentMode: o.paymentMode,
       address: o.address,
+      prescription_url: o.prescription_url,
       products:
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         o.products?.map((p: any) => ({
@@ -204,8 +217,9 @@ export default function BuyerProfile() {
   }, [allOrders, hasMore, loading, page, visibleOrders.length]);
 
   useEffect(() => {
+    if (showOrderModal) return; // ❌ modal open → no scroll
+
     const handleScroll = () => {
-      // near bottom of page
       if (
         window.innerHeight + window.scrollY >=
         document.body.offsetHeight - 300
@@ -215,8 +229,9 @@ export default function BuyerProfile() {
     };
 
     window.addEventListener("scroll", handleScroll, { passive: true });
+
     return () => window.removeEventListener("scroll", handleScroll);
-  }, [loadMoreOrders]);
+  }, [loadMoreOrders, showOrderModal]);
 
   // Fetch orders & addresses
   useEffect(() => {
@@ -358,6 +373,11 @@ export default function BuyerProfile() {
   if (!buyer && pathname === "/profile" && tab === "order") {
     return null;
   }
+
+  const getFileType = (url?: string) => {
+    if (!url) return "";
+    return url.split(".").pop()?.toLowerCase();
+  };
 
   if (!isClient) return null;
 
@@ -670,9 +690,53 @@ export default function BuyerProfile() {
                                 style={{
                                   borderRadius: "8px",
                                   border: "1px solid #e0e0e0",
+                                  position: "relative",
                                 }}
                               >
                                 <div className="card-body d-flex flex-column justify-content-between">
+                                  {order?.prescription_url &&
+                                    (() => {
+                                      const type = order.prescription_url
+                                        .split(".")
+                                        .pop()
+                                        ?.toLowerCase();
+                                      const isImage = [
+                                        "jpg",
+                                        "jpeg",
+                                        "png",
+                                      ].includes(type || "");
+
+                                      return (
+                                        <img
+                                          src={
+                                            isImage
+                                              ? order.prescription_url
+                                              : "/images/pdf-icon.png"
+                                          }
+                                          alt="prescription"
+                                          onClick={(e) => {
+                                            e.stopPropagation(); // ✅ important (card click conflict avoid)
+                                            window.open(
+                                              order.prescription_url,
+                                              "_blank"
+                                            );
+                                          }}
+                                          style={{
+                                            position: "absolute",
+                                            top: "10px",
+                                            right: "10px",
+                                            width: "40px",
+                                            height: "40px",
+                                            objectFit: "cover",
+                                            borderRadius: "6px",
+                                            border: "1px solid #ddd",
+                                            cursor: "pointer",
+                                            background: "#fff",
+                                            padding: "2px",
+                                          }}
+                                        />
+                                      );
+                                    })()}
                                   <div>
                                     <h6 className="mb-2 text-primary fw-semibold">
                                       Order Number: {order.orderId}

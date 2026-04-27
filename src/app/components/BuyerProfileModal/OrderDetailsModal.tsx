@@ -46,6 +46,28 @@ export default function OrderDetailsModal({
   const isDeliveryApplied =
     Math.abs(orderAmount - itemsTotal - DELIVERY_FEE) < 1;
 
+  const prescriptionUrl = order?.prescription_url;
+  const getFileType = (url?: string) => {
+    if (!url) return "";
+    return url.split(".").pop()?.toLowerCase() || "";
+  };
+
+  const getFileIcon = (type: string) => {
+    switch (type) {
+      case "pdf":
+        return "/images/pdf-icon.png";
+
+      case "jpg":
+      case "jpeg":
+        return "/images/jpg-icon.png";
+
+      case "png":
+        return "/images/png-icon.png";
+
+      default:
+        return "";
+    }
+  };
   return (
     <Modal show={show} onHide={onClose} size="lg" centered>
       {/* 🔥 LOADER */}
@@ -70,7 +92,7 @@ export default function OrderDetailsModal({
             </Modal.Title>
           </Modal.Header>
 
-          <Modal.Body style={{ maxHeight: "200vh", overflowY: "auto" }}>
+          <Modal.Body style={{ maxHeight: "100%", overflowY: "auto" }}>
             {/* Patient Details */}
             <div className="mb-3 p-3 border rounded bg-light">
               <h5 className="fw-semibold mb-3 text-primary">Patient Details</h5>
@@ -220,6 +242,40 @@ export default function OrderDetailsModal({
                 </div>
               </div>
             </div>
+
+            {/* Prescription Section */}
+            {order?.prescription_url &&
+              (() => {
+                const url = order.prescription_url;
+                const type = getFileType(url);
+
+                return (
+                  <div className="mb-3 p-3 border rounded bg-white">
+                    <h5 className="fw-semibold mb-3 text-primary">
+                      Prescription
+                    </h5>
+
+                    <div
+                      className="d-flex align-items-center gap-3"
+                      style={{ cursor: "pointer" }}
+                      onClick={() => window.open(url, "_blank")}
+                    >
+                      {/* ICON */}
+                      <img
+                        src={getFileIcon(type)}
+                        alt={type}
+                        width={40}
+                        height={40}
+                      />
+
+                      {/* TEXT */}
+                      <span className="fw-semibold text-primary">
+                        {type ? type.toUpperCase() : "FILE"} - View Prescription
+                      </span>
+                    </div>
+                  </div>
+                );
+              })()}
 
             {/* Product List */}
             <h5 className="fw-semibold mb-3 text-primary">Items</h5>

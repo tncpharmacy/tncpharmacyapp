@@ -37,6 +37,15 @@ export default function MedicineCard({
   // const [localBag, setLocalBag] = useState<number[]>([]);
   const [localState, setLocalState] = useState<{ [key: number]: boolean }>({});
   const [processingIds, setProcessingIds] = useState<number[]>([]);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth <= 768);
+    checkMobile();
+
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
 
   const originalMrp =
     mrp !== null && mrp !== undefined && Number(mrp) > 0 ? Number(mrp) : 275;

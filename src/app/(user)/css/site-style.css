@@ -431,7 +431,7 @@ html {
 }
 
 .btn-1 {
-    background: #ff7b00;
+    /* background: #ff7b00; */
     color: #ffffff;
     border: 0;
     font-size: 14px;
@@ -735,25 +735,29 @@ footer .border-top {
   font-weight: 600;
   border: none;
   padding: 6px 14px;
-  border-radius: 6px;
+  border-radius: 35px;
   cursor: pointer;
-  transition: all 0.2s ease-in-out;
 }
 
-/* 🟠 Add button (default orange, hover blue) */
+/* ADD */
 .btn-HO.add {
-  background-color: #ff7b00; /* orange */
-}
-.btn-HO.add:hover {
-  background-color: #0b5ed7; /* blue */
+  background-color: #ff7b00;
 }
 
-/* 🔵 Remove button (default blue, hover orange) */
+/* REMOVE */
 .btn-HO.remove {
-  background-color: #0b5ed7; /* blue */
+  background-color: #0b5ed7;
 }
-.btn-HO.remove:hover {
-  background-color: #ff7b00; /* orange */
+
+/* DESKTOP HOVER ONLY */
+@media (hover: hover) {
+  .btn-HO.add:hover {
+    background-color: #0b5ed7;
+  }
+
+  .btn-HO.remove:hover {
+    background-color: #ff7b00;
+  }
 }
 
 /* Custom white bold outline button */

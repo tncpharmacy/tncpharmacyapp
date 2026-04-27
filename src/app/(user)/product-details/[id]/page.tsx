@@ -528,7 +528,7 @@ export default function ProductPage() {
 
   const NextArrow: React.FC<ArrowProps> = ({ onClick }) => (
     <div
-      className="slick-arrow slick-next"
+      // className="slick-arrow slick-next"
       onClick={onClick}
       style={{
         right: "-25px",
@@ -548,7 +548,7 @@ export default function ProductPage() {
 
   const PrevArrow: React.FC<ArrowProps> = ({ onClick }) => (
     <div
-      className="slick-arrow slick-prev"
+      // className="slick-arrow slick-prev"
       onClick={onClick}
       style={{
         left: "-25px",

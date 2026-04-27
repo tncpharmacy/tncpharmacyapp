@@ -121,6 +121,7 @@ export interface OrderDetail {
   orderType: string;
   paymentMode: string;
   additional_discount?: string;
+  prescription_url: string;
 
   products: Array<{
     id: number;

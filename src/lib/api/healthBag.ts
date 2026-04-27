@@ -31,18 +31,20 @@ export const createHealthBag = async (
   return res.data;
 };
 
-export const deleteHealthBag = async (
-  id: number
-): Promise<{ message: string }> => {
+export const deleteHealthBag = async (id: number) => {
   try {
     const res = await axiosInstance.delete(ENDPOINTS.HEALTHBAG.DELETE(id));
-    return res.data;
+
+    return res.data ?? true;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (err: any) {
-    console.error(
-      "❌ deleteHealthBag error:",
-      err.response?.data || err.message
-    );
+    console.error("❌ deleteHealthBag FULL ERROR:", err);
+
+    // already deleted / not found
+    if (err.response?.status === 404) {
+      return true;
+    }
+
     throw err;
   }
 };

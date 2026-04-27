@@ -51,6 +51,7 @@ export interface OrderDetails {
   buyerEmail: string;
   buyerNumber: string;
   buyer_uhid: string;
+  prescription_url: string;
 }
 
 export interface BuyerAddress {
