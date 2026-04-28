@@ -9,7 +9,15 @@ import { safeLocalStorage } from "@/lib/utils/safeLocalStorage"; // << add this
 const api = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_BASE_URL,
   timeout: 30000,
+  withCredentials: true,
 });
+
+function getCookie(name: string) {
+  if (typeof document === "undefined") return null;
+  const value = `; ${document.cookie}`;
+  const parts = value.split(`; ${name}=`);
+  if (parts.length === 2) return parts.pop()?.split(";").shift();
+}
 
 // 🔹 Unauthorized callback
 let onUnauthorized: ((url?: string) => void) | null = null;
@@ -42,7 +50,10 @@ api.interceptors.request.use(
     ];
 
     const url = config.url || "";
-
+    const csrfToken = getCookie("csrftoken");
+    if (csrfToken && config.headers) {
+      config.headers["X-CSRFToken"] = csrfToken;
+    }
     const isPublic =
       url.includes("/medicine") ||
       url.includes("/masterapp/care-group/") ||
