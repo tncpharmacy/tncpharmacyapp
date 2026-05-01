@@ -4,7 +4,7 @@ import axios, {
   InternalAxiosRequestConfig,
 } from "axios";
 
-import { safeLocalStorage } from "@/lib/utils/safeLocalStorage"; // << add this
+import { safeLocalStorage } from "@/lib/utils/safeLocalStorage";
 
 const api = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_BASE_URL,
@@ -123,7 +123,7 @@ api.interceptors.response.use(
     // 🔥 ✅ ADD THIS BLOCK HERE (TOP PE)
     if (url.includes("manufacturer/search")) {
       // console.log("🚫 Ignoring manufacturer API error");
-      return Promise.reject(error); // ❌ logout mat kar
+      return Promise.reject(error);
     }
     /**
      * 🚨 TOKEN INVALID CASES
@@ -132,7 +132,7 @@ api.interceptors.response.use(
      * - Backend custom "token expired" messages
      */
     if (error.response?.status === 401) {
-      onUnauthorized?.(error.config?.url); // ✅ URL pass karo
+      onUnauthorized?.(error.config?.url);
     }
 
     return Promise.reject(error);

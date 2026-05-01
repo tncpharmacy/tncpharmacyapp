@@ -1,4 +1,4 @@
-"use client";
+// "use client";
 
 import React from "react";
 import "../css/site-style.css";
@@ -6,6 +6,45 @@ import "../css/user-style.css";
 import "bootstrap/dist/css/bootstrap.min.css";
 import SiteHeader from "@/app/(user)/components/header/header";
 import Footer from "@/app/(user)/components/footer/footer";
+
+export const metadata = {
+  title: "Return Policy",
+  description:
+    "Read TnC Pharmacy's return policy. Learn about eligibility, non-returnable items, return process, and timelines.",
+
+  alternates: {
+    canonical: "https://tncpharmacy.in/return-policy",
+  },
+
+  openGraph: {
+    title: "Return Policy | TnC Pharmacy",
+    description:
+      "Understand our return policy for medicines and healthcare products.",
+    url: "https://tncpharmacy.in/return-policy",
+    siteName: "TnC Pharmacy",
+    type: "website",
+    images: [
+      {
+        url: "https://tncpharmacy.in/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "Return Policy - TnC Pharmacy",
+      },
+    ],
+  },
+
+  twitter: {
+    card: "summary_large_image",
+    title: "Return Policy | TnC Pharmacy",
+    description: "Know how returns work at TnC Pharmacy.",
+    images: ["https://tncpharmacy.in/og-image.png"],
+  },
+
+  robots: {
+    index: true,
+    follow: true,
+  },
+};
 
 export default function ReturnPolicy() {
   return (

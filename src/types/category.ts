@@ -22,3 +22,10 @@ export interface CreateCategoryDTO {
   description?: string;
   status?: "Active" | "Inactive";
 }
+
+export interface CategoryResponseSeo {
+  success: boolean;
+  statusCode: number;
+  message: string;
+  data: Category; // ✅ array hata de
+}

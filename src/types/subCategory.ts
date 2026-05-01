@@ -25,3 +25,10 @@ export interface CreateSubCategoryDTO {
   description?: string;
   status?: "Active" | "Inactive";
 }
+
+export interface SubCategoryResponseSeo {
+  success: boolean;
+  statusCode: number;
+  message: string;
+  data: SubCategory;
+}

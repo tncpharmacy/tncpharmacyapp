@@ -1,6 +1,10 @@
 import axiosInstance from "@/lib/axios";
 import { ENDPOINTS } from "@/lib/config";
-import { Category, CategoryResponse } from "@/types/category";
+import {
+  Category,
+  CategoryResponse,
+  CategoryResponseSeo,
+} from "@/types/category";
 
 // =========================
 // GET ALL CATEGORIES
@@ -27,6 +31,18 @@ export const fetchCategoriesAllList = async (): Promise<CategoryResponse> => {
 // =========================
 export const fetchCategoryById = async (id: number): Promise<Category> => {
   const res = await axiosInstance.get<Category>(
+    ENDPOINTS.CATEGORY.GET_BY_ID(id)
+  );
+  return res.data;
+};
+
+// ===========================
+// GET CATEGORY BY ID FOR SEO
+// ===========================
+export const fetchCategoryByIdForSeo = async (
+  id: number
+): Promise<CategoryResponseSeo> => {
+  const res = await axiosInstance.get<CategoryResponseSeo>(
     ENDPOINTS.CATEGORY.GET_BY_ID(id)
   );
   return res.data;

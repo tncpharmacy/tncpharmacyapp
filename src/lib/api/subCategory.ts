@@ -17,7 +17,11 @@ export interface UpdateSubCategoryDTO {
 
 import axiosInstance from "@/lib/axios";
 import { ENDPOINTS } from "@/lib/config";
-import { SubCategory, SubCategoryResponse } from "@/types/subCategory";
+import {
+  SubCategory,
+  SubCategoryResponse,
+  SubCategoryResponseSeo,
+} from "@/types/subCategory";
 
 // GET ALL
 export const fetchSubcategories = async (): Promise<SubCategoryResponse> => {
@@ -41,6 +45,16 @@ export const fetchSubcategoryById = async (
   id: number
 ): Promise<SubCategoryResponse> => {
   const res = await axiosInstance.get<SubCategoryResponse>(
+    ENDPOINTS.SUBCATEGORY.GET_BY_ID(id)
+  );
+  return res.data;
+};
+
+// GET BY ID For SEO
+export const fetchSubcategoryByIdForSeo = async (
+  id: number
+): Promise<SubCategoryResponseSeo> => {
+  const res = await axiosInstance.get<SubCategoryResponseSeo>(
     ENDPOINTS.SUBCATEGORY.GET_BY_ID(id)
   );
   return res.data;

@@ -1,5 +1,5 @@
 "use client";
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import "../../css/header-style.css";
 import "../../../styles/style-login.css";
 import { Image } from "react-bootstrap";
@@ -9,24 +9,19 @@ import Link from "next/link";
 import { Category } from "@/types/category";
 import { Medicine } from "@/types/medicine";
 import PrescriptionUploadModal from "@/app/(user)/components/PrescriptionUploadModal/PrescriptionUploadModal";
-import Login from "@/app/admin-login/page";
 import BuyerLoginModal from "@/app/buyer-login/page";
 import { encodeId } from "@/lib/utils/encodeDecode";
-import { getCategoriesList } from "@/lib/features/categorySlice/categorySlice";
 import {
   getCategoryIdBySubcategory,
-  getProductList,
   getSearchSuggestions,
 } from "@/lib/features/medicineSlice/medicineSlice";
 import { useHealthBag } from "@/lib/hooks/useHealthBag";
 import { buyerLogout } from "@/lib/features/buyerSlice/buyerSlice";
-import { getSubcategoriesList } from "@/lib/features/subCategorySlice/subCategorySlice";
 import { fetchHealthBag } from "@/lib/api/healthBag";
 import {
   clearLocalHealthBag,
   loadLocalHealthBag,
 } from "@/lib/features/healthBagSlice/healthBagSlice";
-import { formatAmount } from "@/lib/utils/formatAmount";
 
 type SearchMatch = {
   _matchType: "medicine" | "generic" | "manufacturer";
@@ -403,12 +398,30 @@ const SiteHeader = ({ initialCategories, initialSubcategories }: Props) => {
     setOpenCategoryId((prev) => (prev === categoryId ? null : categoryId));
   };
 
+  const topMenuNames = [
+    "Healthcare & Medical Supplies",
+    "Health Essentials & OTC",
+    "Ayurveda & Herbal",
+    "Nutrition & Supplements",
+    "Wellness & Lifestyle",
+  ];
+
   const filteredCategories = categories.filter(
     (cat) => cat.category_name !== "Medicines" && cat.status === "Active"
   );
+  // const topCategories = topMenuNames
+  //   .map((name) => filteredCategories.find((cat) => cat.category_name === name))
+  //   .filter(Boolean);
+  // 👉 TOP MENU
+  const topCategories = filteredCategories.filter((cat) =>
+    topMenuNames.includes(cat.category_name)
+  );
 
-  // console.log("filteredCategories", filteredCategories);
-  // ---------- RENDER ----------
+  // 👉 MORE MENU
+  const moreCategories = filteredCategories.filter(
+    (cat) => !topMenuNames.includes(cat.category_name)
+  );
+
   return (
     <header id="header">
       <div className="mid_header">
@@ -429,7 +442,7 @@ const SiteHeader = ({ initialCategories, initialSubcategories }: Props) => {
                 placeholder="Search for medicines & products..."
                 value={headerSearch}
                 onChange={(e) => {
-                  setIsArrowNavigation(false); // 🔥 typing शुरू → filter allowed
+                  setIsArrowNavigation(false);
                   setHeaderSearch(e.target.value);
                   setHighlightIndex(-1);
                 }}
@@ -678,7 +691,7 @@ const SiteHeader = ({ initialCategories, initialSubcategories }: Props) => {
       </div>
 
       {/* ---------- MENU ---------- */}
-      <div className="menu_header">
+      <nav className="menu_header">
         <div className="container">
           {categories?.length > 0 && (
             <ul className="main_menu">
@@ -688,7 +701,7 @@ const SiteHeader = ({ initialCategories, initialSubcategories }: Props) => {
                 </Link>
               </li>
 
-              {filteredCategories.slice(0, 5).map((cat, index) => {
+              {topCategories.map((cat, index) => {
                 const filteredSubcategories = subcategories.filter(
                   (sub) => String(sub.category_id) === String(cat.id)
                 );
@@ -729,7 +742,7 @@ const SiteHeader = ({ initialCategories, initialSubcategories }: Props) => {
                   <a href="#">More</a>
                   <div className="megamenu-panel2">
                     <ul className="megamenu-list">
-                      {filteredCategories.slice(5).map((cat) => (
+                      {moreCategories.map((cat) => (
                         <li key={cat.id}>
                           <Link href={`/all-product/${encodeId(cat.id)}`}>
                             {cat.category_name}
@@ -766,7 +779,7 @@ const SiteHeader = ({ initialCategories, initialSubcategories }: Props) => {
             </ul>
           )}
         </div>
-      </div>
+      </nav>
       {/* ---------- MOBILE SIDE MENU ---------- */}
       {showMobileMenu && (
         <>
@@ -777,7 +790,7 @@ const SiteHeader = ({ initialCategories, initialSubcategories }: Props) => {
           />
 
           {/* Drawer */}
-          <div className="mobile-side-menu">
+          <nav className="mobile-side-menu" aria-label="Mobile Navigation">
             <div className="mobile-menu-header">
               <span>Hello, {buyer ? buyer.name : "Guest"}</span>
               <button
@@ -877,7 +890,7 @@ const SiteHeader = ({ initialCategories, initialSubcategories }: Props) => {
                 />
               </button>
             </div> */}
-          </div>
+          </nav>
         </>
       )}
       <PrescriptionUploadModal

@@ -4,10 +4,6 @@ import {
 } from "@/lib/api/medicine";
 import { fetchCategories } from "@/lib/api/category";
 
-function shuffle<T>(arr: T[]) {
-  return [...arr].sort(() => 0.5 - Math.random());
-}
-
 export async function getHomeData() {
   try {
     const [groupCareRes, cat5Res, cat7Res, cat9Res, categoryRes] =
@@ -21,9 +17,9 @@ export async function getHomeData() {
 
     return {
       groupCare: groupCareRes?.data || [],
-      category5: shuffle(cat5Res?.data || []),
-      category7: shuffle(cat7Res?.data || []),
-      category9: shuffle(cat9Res?.data || []),
+      category5: cat5Res?.data || [],
+      category7: cat7Res?.data || [],
+      category9: cat9Res?.data || [],
       categories: categoryRes.data || [],
     };
   } catch (err) {

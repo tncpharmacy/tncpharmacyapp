@@ -511,22 +511,20 @@ export default function OrderList() {
 
     try {
       setStatusLoading(true);
-
       const currentStatus = Number(selectedOrder.delivery_status);
       const newStatus = currentStatus === 1 ? 2 : 1;
-
+      const orderId = Number(selectedOrder.orderId);
       await updateDeliveryStatusApi({
-        orderId: selectedOrder.orderId,
+        orderId,
         delivery_status: String(newStatus),
       });
-
-      // UI update
+      // ✅ UI UPDATE (IMPORTANT)
       setFilteredData((prev) =>
         prev.map((item) =>
-          item.orderId === selectedOrder.orderId
+          Number(item.orderId) === orderId
             ? {
                 ...item,
-                delivery_status: String(newStatus), // 👈 IMPORTANT
+                delivery_status: String(newStatus),
                 deliveryStatusName:
                   newStatus === 2 ? "Delivered" : "In Process",
               }
@@ -534,7 +532,6 @@ export default function OrderList() {
         )
       );
 
-      // dispatch(getPharmacistOrders());
       setConfirmModal(false);
     } catch (err) {
       console.error(err);
@@ -543,6 +540,9 @@ export default function OrderList() {
       setStatusLoading(false);
     }
   };
+
+  const nextStatus =
+    Number(selectedOrder?.delivery_status) === 1 ? "Delivered" : "In Process";
 
   return (
     <>
@@ -1241,9 +1241,7 @@ export default function OrderList() {
         onConfirm={handleConfirmStatus}
         loading={statusLoading}
         title="Change Order Status"
-        message={`Are you sure you want to mark this order as ${
-          selectedOrder?.deliveryStatus === 1 ? "Delivered" : "In Process"
-        }?`}
+        message={`Are you sure you want to mark this order as ${nextStatus}?`}
       />
     </>
   );

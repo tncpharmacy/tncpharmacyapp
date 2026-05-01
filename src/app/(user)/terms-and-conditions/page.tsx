@@ -1,4 +1,4 @@
-"use client";
+// "use client";
 
 import React from "react";
 import "../css/site-style.css";
@@ -6,6 +6,45 @@ import "../css/user-style.css";
 import "bootstrap/dist/css/bootstrap.min.css";
 import SiteHeader from "@/app/(user)/components/header/header";
 import Footer from "@/app/(user)/components/footer/footer";
+
+export const metadata = {
+  title: "Terms & Conditions",
+  description:
+    "Read the Terms & Conditions of TnC Pharmacy. Understand eligibility, orders, payments, returns, shipping, and usage policies.",
+
+  alternates: {
+    canonical: "https://tncpharmacy.in/terms-and-conditions",
+  },
+
+  openGraph: {
+    title: "Terms & Conditions | TnC Pharmacy",
+    description:
+      "Learn about the terms and conditions for using TnC Pharmacy services.",
+    url: "https://tncpharmacy.in/terms-and-conditions",
+    siteName: "TnC Pharmacy",
+    type: "website",
+    images: [
+      {
+        url: "https://tncpharmacy.in/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "Terms & Conditions - TnC Pharmacy",
+      },
+    ],
+  },
+
+  twitter: {
+    card: "summary_large_image",
+    title: "Terms & Conditions | TnC Pharmacy",
+    description: "Understand the rules and policies of TnC Pharmacy.",
+    images: ["https://tncpharmacy.in/og-image.png"],
+  },
+
+  robots: {
+    index: true,
+    follow: true,
+  },
+};
 
 export default function TermsAndConditions() {
   return (

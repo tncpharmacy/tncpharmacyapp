@@ -1,4 +1,4 @@
-"use client";
+// "use client";
 
 import React from "react";
 import "../css/site-style.css";
@@ -6,6 +6,45 @@ import "../css/user-style.css";
 import "bootstrap/dist/css/bootstrap.min.css";
 import SiteHeader from "@/app/(user)/components/header/header";
 import Footer from "@/app/(user)/components/footer/footer";
+
+export const metadata = {
+  title: "Shipping Policy | Delivery Information",
+  description:
+    "Read TnC Pharmacy's shipping policy. Learn about delivery timelines, shipping charges, coverage areas, and order tracking across India.",
+
+  alternates: {
+    canonical: "https://tncpharmacy.in/shipping-policy",
+  },
+
+  openGraph: {
+    title: "Shipping Policy | TnC Pharmacy",
+    description:
+      "Know about delivery time, shipping charges, and order tracking at TnC Pharmacy.",
+    url: "https://tncpharmacy.in/shipping-policy",
+    siteName: "TnC Pharmacy",
+    type: "website",
+    images: [
+      {
+        url: "https://tncpharmacy.in/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "Shipping Policy - TnC Pharmacy",
+      },
+    ],
+  },
+
+  twitter: {
+    card: "summary_large_image",
+    title: "Shipping Policy | TnC Pharmacy",
+    description: "Delivery timelines, shipping charges, and tracking details.",
+    images: ["https://tncpharmacy.in/og-image.png"],
+  },
+
+  robots: {
+    index: true,
+    follow: true,
+  },
+};
 
 export default function ShippingPolicy() {
   return (

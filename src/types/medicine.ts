@@ -111,6 +111,18 @@ export interface MedicineResponse {
   group_name: string;
   next: string;
 }
+
+export interface MedicineResponseSeo {
+  success: boolean;
+  statusCode: number;
+  message: string;
+  count: number;
+  total_count: number;
+  data: Medicine;
+  group_name: string;
+  next: string;
+}
+
 export interface MedicineMenuResponse {
   success: boolean;
   statusCode: number;

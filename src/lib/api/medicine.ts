@@ -4,6 +4,7 @@ import {
   CareGroupResponse,
   Medicine,
   MedicineResponse,
+  MedicineResponseSeo,
 } from "@/types/medicine";
 // =========================
 // GET ALL MEDICINES List
@@ -37,6 +38,17 @@ export const fetchMenuMedicinesById = async (
   return res.data; // ✅ res.data is now MedicineResponse
 };
 // =========================
+// GET GET BY MENU ID FOR SEO
+// =========================
+export const fetchMenuMedicinesByIdForSeo = async (
+  id: number
+): Promise<MedicineResponseSeo> => {
+  const res = await axiosInstance.get<MedicineResponseSeo>(
+    ENDPOINTS.MEDICINES.GET_BY_MENU_ID(id)
+  );
+  return res.data; // ✅ res.data is now MedicineResponse
+};
+// =========================
 // GET MENU OTHER MEDICINE
 // =========================
 export const fetchMenuOtherMedicinesByCategory = async (
@@ -60,6 +72,17 @@ export const fetchMenuMedicinesByOtherId = async (
   );
   return res.data; // ✅ res.data is now MedicineResponse
 };
+// ================================
+// GET GET BY MENU OTHER ID FOR SEO
+// =================================
+export const fetchMenuMedicinesByOtherIdSeo = async (
+  id: number
+): Promise<MedicineResponseSeo> => {
+  const res = await axiosInstance.get<MedicineResponseSeo>(
+    ENDPOINTS.MEDICINES.GET_BY_MENU_OTHER_ID(id)
+  );
+  return res.data; // ✅ res.data is now MedicineResponse
+};
 // =========================
 // GET MEDICINE ID BY GENERIC
 // =========================
@@ -71,6 +94,20 @@ export const fetchMedicineByGenericId = async (
     url || ENDPOINTS.MEDICINES.GET_MEDICINE_LIST_BY_GENERIC(medicineId);
 
   const res = await axiosInstance.get<MedicineResponse>(finalUrl);
+
+  return res.data;
+};
+// ===================================
+// GET MEDICINE ID BY GENERIC FOR SEO
+// ===================================
+export const fetchMedicineByGenericIdSeo = async (
+  medicineId: number,
+  url?: string
+): Promise<MedicineResponseSeo> => {
+  const finalUrl =
+    url || ENDPOINTS.MEDICINES.GET_MEDICINE_LIST_BY_GENERIC(medicineId);
+
+  const res = await axiosInstance.get<MedicineResponseSeo>(finalUrl);
 
   return res.data;
 };
@@ -86,6 +123,21 @@ export const fetchMedicineByManufacturerId = async (
     ENDPOINTS.MEDICINES.GET_MEDICINE_LIST_BY_MANUFACTURER(manufacturerId);
 
   const res = await axiosInstance.get<MedicineResponse>(finalUrl);
+
+  return res.data;
+};
+// ========================================
+// GET MEDICINE ID BY MANUFACTURER FOR SEO
+// ========================================
+export const fetchMedicineByManufacturerIdSeo = async (
+  manufacturerId: number,
+  url?: string
+): Promise<MedicineResponseSeo> => {
+  const finalUrl =
+    url ||
+    ENDPOINTS.MEDICINES.GET_MEDICINE_LIST_BY_MANUFACTURER(manufacturerId);
+
+  const res = await axiosInstance.get<MedicineResponseSeo>(finalUrl);
 
   return res.data;
 };

@@ -1,6 +1,76 @@
 import { Suspense } from "react";
 import SearchTextClient from "./SearchTextClient";
 
+type Props = {
+  searchParams: Promise<{
+    text?: string;
+  }>;
+};
+
+export const dynamic = "force-dynamic";
+
+export async function generateMetadata({ searchParams }: Props) {
+  const resolvedParams = await searchParams;
+
+  const baseUrl = "https://tncpharmacy.in";
+  const searchText = resolvedParams?.text || "";
+
+  const url = `${baseUrl}/search?text=${encodeURIComponent(searchText)}`;
+
+  // ❌ empty search
+  if (!searchText) {
+    return {
+      title: "Search Medicines | TnC Pharmacy",
+      description: "Search medicines and healthcare products online",
+
+      alternates: {
+        canonical: url,
+      },
+
+      openGraph: {
+        title: "Search Medicines | TnC Pharmacy",
+        description: "Search medicines online",
+        url,
+        siteName: "TnC Pharmacy",
+        type: "website",
+      },
+    };
+  }
+
+  // ✅ dynamic SEO
+  return {
+    title: `${searchText} Products Online | Search ${searchText} | TnC Pharmacy`,
+    description: `Search results for ${searchText}. Buy ${searchText} medicines and healthcare products online.`,
+
+    alternates: {
+      canonical: url,
+    },
+
+    openGraph: {
+      title: `${searchText} | TnC Pharmacy`,
+      description: `Search results for ${searchText}`,
+      url,
+      siteName: "TnC Pharmacy",
+      type: "website",
+      images: [
+        {
+          url: `${baseUrl}/og-image.png`,
+          width: 1200,
+          height: 630,
+          alt: searchText,
+        },
+      ],
+    },
+
+    twitter: {
+      card: "summary_large_image",
+      title: `${searchText} | TnC Pharmacy`,
+      description: `Search results for ${searchText}`,
+      images: [`${baseUrl}/og-image.png`],
+    },
+  };
+}
+
 export default function Page() {
   return (
     <Suspense fallback={<div>Loading...</div>}>
@@ -8,5 +78,3 @@ export default function Page() {
     </Suspense>
   );
 }
-
-export const dynamic = "force-dynamic";

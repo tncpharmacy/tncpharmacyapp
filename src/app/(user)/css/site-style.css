@@ -49,6 +49,9 @@ html {
     height: 60px;
     min-width: 60px;
     border-radius: 8px;
+    display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .category_img img {
@@ -193,6 +196,7 @@ html {
   max-width: 130px;
   margin: 0 auto;
   display: block;
+  /* object-fit: contain; */
 }
 
 .brand_item .b_name {
@@ -450,7 +454,19 @@ html {
     padding-bottom: 50px;
 }
 
+.adv_img {
+  position: relative;
+  width: 100%;
+  height: 140px; /* desktop */
+  border-radius: 10px;
+  overflow: hidden;
+}
 
+@media (max-width: 768px) {
+  .adv_img {
+    height: 90px; /* mobile */
+  }
+}
 /*-- Why section --*/
 .why_section {
     padding-top: 40px;
@@ -459,13 +475,50 @@ html {
 
 .why_box {
     border: 1px solid #e9e9e9;
-    display: flex;
-    align-items: center;
-    gap: 15px;
     padding: 5%;
     border-radius: 5px;
     margin: 10px 0;
     min-height: 100px;
+    display: flex;
+    align-items: flex-start; 
+    gap: 12px;
+    padding: 5%;
+}
+
+.why_icon {
+  flex-shrink: 0;
+}
+
+.why_text {
+  text-align: left; 
+  margin-top: 5px;
+}
+
+.why_text h4 {
+  font-size: 14px;
+  margin-bottom: 4px;
+  font-weight: 600;
+}
+
+.why_text p {
+  font-size: 11px;
+  color: #777;
+  margin: 0;
+}
+
+@media (max-width: 768px) {
+  .why_box {
+    padding: 10px;
+    gap: 8px;
+  }
+
+  .why_text h4 {
+    font-size: 13px;
+  }
+
+  .why_text p {
+    font-size: 11px;
+  }
 }
 
 .why_box img {
@@ -479,8 +532,9 @@ html {
 
 .why_box p {
     margin: 0;
-    font-size: 13px;
+    font-size: 11px;
     color: #777777;
+    line-height: 20px;
 }
 
 /*-- Why section --*/
@@ -1100,3 +1154,40 @@ footer .border-top {
     max-width: 186px;
   }
 }
+
+
+@keyframes scroll-right {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+@keyframes scroll-left {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-100%); }
+}
+
+.marquee {
+  width: 100%;
+  overflow: hidden;
+  white-space: nowrap;
+  background: #fff;
+  padding: 4px 0;
+}
+
+.marquee-text {
+  display: inline-block;
+  padding-left: 100%;
+  color: blue;
+  font-size: 14px;
+  font-weight: 600;
+  animation: scroll-right 30s linear infinite;
+}
+
+@keyframes scroll-right {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+

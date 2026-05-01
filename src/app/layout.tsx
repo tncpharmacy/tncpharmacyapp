@@ -1,25 +1,11 @@
 import type { Metadata } from "next";
+import "./styles/globals.css";
 import "bootstrap/dist/css/bootstrap.min.css";
 import ToastProvider from "@/components/ToastProvider/ToastProvider";
 import Providers from "./Provider";
 
-// Axios setup
-import { setUnauthorizedHandler } from "@/lib/axios";
-import { store } from "@/lib/store";
-import { logout } from "@/lib/features/authSlice/authSlice";
 import AuthInitializer from "@/components/AuthInitializer/AuthInitializer";
 import LayoutFix from "@/components/LayoutFix/LayoutFix";
-
-// run 1 time on app start
-// setUnauthorizedHandler(() => {
-//   store.dispatch(logout());
-//   window.location.href = "/";
-// });
-
-export const metadata: Metadata = {
-  title: "TnC PHARMACY",
-  description: "Trust and Care",
-};
 
 export default function RootLayout({
   children,
@@ -36,10 +22,18 @@ export default function RootLayout({
       </head>
 
       <body>
+        <a href="#main" className="skip-link">
+          Skip to content
+        </a>
+
         <LayoutFix />
+
         <Providers>
-          <AuthInitializer /> {children}
+          <AuthInitializer />
+          {/* ✅ Main content wrapper (IMPORTANT) */}
+          <main id="main">{children}</main>
         </Providers>
+
         <ToastProvider />
       </body>
     </html>

@@ -1,4 +1,4 @@
-"use client";
+// "use client";
 
 import React from "react";
 import "../css/site-style.css";
@@ -7,6 +7,45 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import { Image } from "react-bootstrap";
 import SiteHeader from "@/app/(user)/components/header/header";
 import Footer from "@/app/(user)/components/footer/footer";
+
+export const metadata = {
+  title: "About Us | Online Pharmacy in India",
+  description:
+    "Learn about TnC Pharmacy – a trusted online pharmacy providing genuine medicines, healthcare products, and fast delivery across India.",
+
+  alternates: {
+    canonical: "https://tncpharmacy.in/about-us",
+  },
+
+  openGraph: {
+    title: "About TnC Pharmacy",
+    description:
+      "Know more about TnC Pharmacy – your trusted partner for medicines and healthcare services.",
+    url: "https://tncpharmacy.in/about-us",
+    siteName: "TnC Pharmacy",
+    type: "website",
+    images: [
+      {
+        url: "https://tncpharmacy.in/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "About TnC Pharmacy",
+      },
+    ],
+  },
+
+  twitter: {
+    card: "summary_large_image",
+    title: "About TnC Pharmacy",
+    description: "Trusted online pharmacy delivering medicines across India.",
+    images: ["https://tncpharmacy.in/og-image.png"],
+  },
+
+  robots: {
+    index: true,
+    follow: true,
+  },
+};
 
 export default function AboutUs() {
   return (

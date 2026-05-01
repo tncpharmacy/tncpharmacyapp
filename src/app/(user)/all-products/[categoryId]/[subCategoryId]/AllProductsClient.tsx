@@ -1,18 +1,18 @@
 "use client";
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import "../../css/site-style.css";
-import "../../css/user-style.css";
+import "../../../css/site-style.css";
+import "../../../css/user-style.css";
 import { useRouter } from "next/navigation";
 import { encodeId, decodeId } from "@/lib/utils/encodeDecode";
 import SiteHeader from "@/app/(user)/components/header/header";
 import { useParams } from "next/navigation";
 import { useAppDispatch, useAppSelector } from "@/lib/hooks";
 import {
-  getMedicinesByCategoryId,
+  getCategoryIdBySubcategory,
   resetMedicinesList,
 } from "@/lib/features/medicineSlice/medicineSlice";
-import { Button, Image } from "react-bootstrap";
+import { Image } from "react-bootstrap";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { useHealthBag } from "@/lib/hooks/useHealthBag";
 import { getCategories } from "@/lib/features/categorySlice/categorySlice";
@@ -22,16 +22,16 @@ import { HealthBag } from "@/types/healthBag";
 import TncLoader from "@/app/components/TncLoader/TncLoader";
 import { loadLocalHealthBag } from "@/lib/features/healthBagSlice/healthBagSlice";
 import Pagination from "@/app/components/Pagination/Pagination";
-import ProductCardUI from "../../components/MedicineCard/ProductCardUI";
+import ProductCardUI from "@/app/(user)/components/MedicineCard/ProductCardUI";
+import { getSubcategories } from "@/lib/features/subCategorySlice/subCategorySlice";
 
 const mediaBase = process.env.NEXT_PUBLIC_MEDIA_BASE_URL;
 
-export default function AllProductClient() {
+export default function AllProductsClient() {
   const router = useRouter();
-  const { id: params } = useParams();
+  const prevKeyRef = useRef("");
   const dispatch = useAppDispatch();
-  const decodedId = decodeId(params);
-  const categoryIdNum = Number(decodedId);
+  const params = useParams();
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [guestItems, setGuestItems] = useState<any[]>([]);
   // for pagination
@@ -39,21 +39,38 @@ export default function AllProductClient() {
   const [currentUrl, setCurrentUrl] = useState<string | null>(null);
   const [prevStack, setPrevStack] = useState<string[]>([]);
   const [pageLoading, setPageLoading] = useState(false);
+  const [activeKey, setActiveKey] = useState("");
 
-  const buyer = useAppSelector((state) => state.buyer.buyer);
-  const { items, addItem, removeItem, mergeGuestCart } = useHealthBag({
-    userId: buyer?.id || null,
-  });
+  // 🔹 PARAMS DECODE
+  const categoryIdRaw = params.categoryId;
+  const subCategoryIdRaw = params.subCategoryId;
 
-  const medicines = useAppSelector(
-    (state) => state.medicine.byCategory[categoryIdNum] || []
+  const categoryIdNum = Array.isArray(categoryIdRaw)
+    ? decodeId(categoryIdRaw[0])
+    : categoryIdRaw
+    ? decodeId(categoryIdRaw)
+    : null;
+
+  const subCategoryIdNum = Array.isArray(subCategoryIdRaw)
+    ? decodeId(subCategoryIdRaw[0])
+    : subCategoryIdRaw
+    ? decodeId(subCategoryIdRaw)
+    : null;
+
+  const key = `${categoryIdNum}-${subCategoryIdNum}`;
+
+  const { next: nextUrl } = useAppSelector((state) => state.medicine);
+  const { currentKey, loading } = useAppSelector((state) => state.medicine);
+
+  const medicinesFromStore = useAppSelector((state) =>
+    state.medicine.currentKey === key
+      ? state.medicine.byCategorySubcategory[key] || []
+      : []
   );
-
-  const nextUrl = useAppSelector((state) => state.medicine.next);
-
-  const { loading } = useAppSelector((state) => state.medicine);
+  const medicines = loading ? [] : medicinesFromStore;
 
   const { list: categories } = useAppSelector((state) => state.category);
+  const { list: subCategories } = useAppSelector((state) => state.subcategory);
 
   const [isMobile, setIsMobile] = useState(false);
 
@@ -68,50 +85,82 @@ export default function AllProductClient() {
     return () => window.removeEventListener("resize", checkScreen);
   }, []);
 
-  // --- CALL SHUFFLE HOOK AT TOP-LEVEL (ESLINT SAFE) ---
-  const shuffledFromHook = useShuffledProduct(
-    medicines,
-    `product-page-category-${categoryIdNum}`
-  );
-
-  const finalShuffledList = useMemo(() => {
-    return [...medicines].sort(() => Math.random() - 0.5);
+  // Remove duplicates
+  const uniqueMedicines = useMemo(() => {
+    const map = new Map<number, (typeof medicines)[0]>();
+    medicines.forEach((m) => {
+      if (!map.has(m.product_id)) map.set(m.product_id, m);
+    });
+    return Array.from(map.values());
   }, [medicines]);
 
+  // 🔹 CATEGORY NAME
   const categoryName =
-    categories.find((cat) => cat.id === categoryIdNum)?.category_name ||
-    "Unknown Category";
+    categories.find((c) => c.id === categoryIdNum)?.category_name || "";
 
-  // --- Local states for instant UI ---
+  const subCategoryName =
+    subCategories.find((s) => s.id === subCategoryIdNum)?.sub_category_name ||
+    "";
+
+  // console.log("categoryName", categoryName);
+  // console.log("subCategoryName", subCategoryName);
+  // 🔹 CART STATES
+  // -------------------------------
+  const buyer = useAppSelector((state) => state.buyer.buyer);
+  const { items, addItem, removeItem, mergeGuestCart } = useHealthBag({
+    userId: buyer?.id || null,
+  });
+
   const [localBag, setLocalBag] = useState<number[]>([]);
   const [processingIds, setProcessingIds] = useState<number[]>([]);
+  const [searchTerm, setSearchTerm] = useState("");
 
-  // --- Sync localBag with Redux items ---
+  useEffect(() => {
+    if (!categoryIdNum || !subCategoryIdNum) return;
+
+    const newKey = `${categoryIdNum}-${subCategoryIdNum}`;
+
+    dispatch(resetMedicinesList());
+
+    setPage(1);
+    setCurrentUrl(null);
+    setPrevStack([]);
+
+    dispatch(
+      getCategoryIdBySubcategory({
+        categoryId: categoryIdNum,
+        subCategoryId: subCategoryIdNum,
+      })
+    );
+
+    dispatch(getCategories());
+    dispatch(getSubcategories());
+  }, [dispatch, categoryIdNum, subCategoryIdNum]);
+
+  useEffect(() => {
+    dispatch(resetMedicinesList());
+  }, [dispatch, categoryIdNum, subCategoryIdNum]);
+
+  useEffect(() => {
+    setPageLoading(true);
+
+    dispatch(
+      getCategoryIdBySubcategory({
+        categoryId: categoryIdNum!,
+        subCategoryId: subCategoryIdNum!,
+        url: currentUrl || undefined,
+      })
+    );
+  }, [dispatch, currentUrl, categoryIdNum, subCategoryIdNum]);
+
   useEffect(() => {
     if (items) {
       setLocalBag(items.map((i) => i.productid));
     }
   }, [items]);
 
-  // --- Fetch data initially ---
   useEffect(() => {
-    if (!categoryIdNum) return;
-
-    dispatch(
-      getMedicinesByCategoryId({
-        categoryId: categoryIdNum,
-        url: currentUrl || undefined,
-      })
-    );
-
-    dispatch(getCategories());
-  }, [categoryIdNum, currentUrl, dispatch]);
-
-  // --- Merge guest cart ---
-  useEffect(() => {
-    if (buyer?.id) {
-      mergeGuestCart();
-    }
+    if (buyer?.id) mergeGuestCart();
   }, [buyer?.id, mergeGuestCart]);
 
   useEffect(() => {
@@ -123,14 +172,18 @@ export default function AllProductClient() {
     }
   }, [loading, pageLoading]);
 
-  // --- Filter products (derived from stable finalShuffledList) ---
-  // const filteredMedicines = useMemo(() => {
-  //   if (!searchTerm) return finalShuffledList;
-  //   const lower = searchTerm.toLowerCase();
-  //   return finalShuffledList.filter((med) =>
-  //     (med.ProductName || "").toLowerCase().includes(lower)
-  //   );
-  // }, [finalShuffledList, searchTerm]);
+  // -------------------------------
+  // 🔹 FILTER MEDICINES
+  // -------------------------------
+  const filteredMedicines = useMemo(() => {
+    if (!searchTerm) return medicines;
+
+    const lower = searchTerm.toLowerCase();
+
+    return medicines.filter((med) =>
+      (med.ProductName || "").toLowerCase().includes(lower)
+    );
+  }, [medicines, searchTerm]);
 
   useEffect(() => {
     if (!buyer?.id) {
@@ -244,7 +297,13 @@ export default function AllProductClient() {
     router.push(`/product-details/${encodeId(product_id)}`);
   };
 
-  const isInitialLoading = loading || pageLoading;
+  const handleClickCategory = (categoryIdNum: number) => {
+    router.push(`/all-product/${encodeId(categoryIdNum)}`);
+  };
+  const isInvalidParams = !categoryIdNum || !subCategoryIdNum;
+
+  const isInitialLoading =
+    isInvalidParams || loading || pageLoading || medicines.length === 0;
 
   return (
     <>
@@ -259,9 +318,31 @@ export default function AllProductClient() {
               <div className="row align-items-center mb-3">
                 {/* LEFT SIDE : PRODUCT NAME */}
                 <div className="col-md-9">
-                  <div className="pageTitle mt-3 mb-3">
-                    <Image src={"/images/favicon.png"} alt="" />{" "}
-                    {categoryName || "Loading..."}
+                  <div className="pageTitle mt-3 mb-3 d-flex align-items-start">
+                    {/* LEFT: ICON */}
+                    <Image
+                      src={"/images/favicon.png"}
+                      alt=""
+                      className="title-icon"
+                    />
+
+                    {/* RIGHT: TEXT */}
+                    <div className="title-text ms-2">
+                      <span
+                        className="text-primary"
+                        style={{ cursor: "pointer" }}
+                        onClick={() => {
+                          if (categoryIdNum !== null) {
+                            handleClickCategory(categoryIdNum);
+                          }
+                        }}
+                      >
+                        {categoryName || "Loading..."}
+                      </span>{" "}
+                      <span className="text-primary">/</span>{" "}
+                      <span className="mobile-break text-muted"></span>
+                      {subCategoryName || "Loading..."}
+                    </div>
                   </div>
                 </div>
 
@@ -290,6 +371,7 @@ export default function AllProductClient() {
                   <TncLoader />
                 </div>
               )} */}
+              {/* PRODUCT LIST */}
               <div className="pd_list">
                 {isInitialLoading ? (
                   <div
@@ -303,10 +385,10 @@ export default function AllProductClient() {
                   >
                     <TncLoader />
                   </div>
-                ) : medicines.length === 0 ? (
+                ) : filteredMedicines.length === 0 ? (
                   <p>No products found.</p>
                 ) : (
-                  medicines.map((item, index) => {
+                  filteredMedicines.map((item, index) => {
                     const mrpRaw = item.MRP ?? item.mrp ?? 0;
                     const parsedMrp = Number(mrpRaw);
                     const baseMrp =
@@ -359,7 +441,7 @@ export default function AllProductClient() {
                       <div
                         className="pd_box shadow"
                         key={`${item.product_id}-${index}`}
-                        style={{ boxShadow: "0 2px 5px rgba(0, 0, 0, 0.05)" }}
+                        style={{ boxShadow: "0 2px 5px rgba(0,0,0,0.05)" }}
                       >
                         <div className="pd_img">
                           <Image
@@ -387,19 +469,22 @@ export default function AllProductClient() {
                               className="pd-title hover-link fw-bold"
                               style={{ color: "#264b8c" }}
                             >
-                              {item.ProductName || ""}
+                              {item.ProductName}
                             </h3>
+
                             <h6 className="pd-title fw-bold">
-                              {item.Manufacturer || ""}
+                              {item.Manufacturer}
                             </h6>
 
                             <div className="pd_price">
                               <span className="new_price">
                                 ₹{formattedDiscountedPrice}
                               </span>
-                              <span className="old_price">
-                                <del>MRP ₹{formattedMrp}</del> {discount}% off
-                              </span>
+                              {mrp > 0 && (
+                                <span className="old_price">
+                                  <del>MRP ₹{formattedMrp}</del> {discount}% off
+                                </span>
+                              )}
                             </div>
                           </div>
                           <div>
@@ -427,35 +512,35 @@ export default function AllProductClient() {
                   })
                 )}
               </div>
-              {medicines.length > 0 && !loading && nextUrl && (
-                <div className="d-flex justify-content-center mt-3">
-                  <Pagination
-                    currentPage={page}
-                    hasNext={!!nextUrl}
-                    hasPrev={page > 1}
-                    onPageChange={(newPage) => {
-                      setPageLoading(true);
+              {!loading &&
+                !pageLoading &&
+                (filteredMedicines.length === 50 || page > 1) && (
+                  <div className="d-flex justify-content-center mt-3">
+                    <Pagination
+                      currentPage={page}
+                      hasNext={!!nextUrl}
+                      hasPrev={page > 1}
+                      onPageChange={(newPage) => {
+                        setPageLoading(true);
+                        if (newPage > page && nextUrl) {
+                          setPrevStack((prev) => [...prev, currentUrl || ""]);
+                          setCurrentUrl(nextUrl);
+                          setPage(newPage);
+                        }
 
-                      // 🔥 CLEAR OLD DATA
-                      dispatch(resetMedicinesList());
+                        if (newPage < page) {
+                          const prevUrls = [...prevStack];
 
-                      if (newPage > page && nextUrl) {
-                        setPrevStack((prev) => [...prev, currentUrl || ""]);
-                        setCurrentUrl(nextUrl);
-                        setPage(newPage);
-                      }
+                          const lastUrl = prevUrls.pop();
 
-                      if (newPage < page && prevStack.length > 0) {
-                        const lastUrl = prevStack[prevStack.length - 1];
-
-                        setPrevStack((prev) => prev.slice(0, -1));
-                        setCurrentUrl(lastUrl || null);
-                        setPage(newPage);
-                      }
-                    }}
-                  />
-                </div>
-              )}
+                          setPrevStack(prevUrls);
+                          setCurrentUrl(lastUrl || null);
+                          setPage(newPage);
+                        }
+                      }}
+                    />
+                  </div>
+                )}
             </div>
           </div>
         </div>

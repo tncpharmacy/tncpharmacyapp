@@ -1,4 +1,4 @@
-"use client";
+// "use client";
 
 import React from "react";
 import "../css/site-style.css";
@@ -6,6 +6,45 @@ import "../css/user-style.css";
 import "bootstrap/dist/css/bootstrap.min.css";
 import SiteHeader from "@/app/(user)/components/header/header";
 import Footer from "@/app/(user)/components/footer/footer";
+
+export const metadata = {
+  title: "Privacy Policy",
+  description:
+    "Read TnC Pharmacy's privacy policy to understand how we collect, use, and protect your personal information.",
+
+  alternates: {
+    canonical: "https://tncpharmacy.in/privacy-policy",
+  },
+
+  openGraph: {
+    title: "Privacy Policy | TnC Pharmacy",
+    description:
+      "Learn how TnC Pharmacy collects, uses, and safeguards your personal data.",
+    url: "https://tncpharmacy.in/privacy-policy",
+    siteName: "TnC Pharmacy",
+    type: "website",
+    images: [
+      {
+        url: "https://tncpharmacy.in/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "Privacy Policy - TnC Pharmacy",
+      },
+    ],
+  },
+
+  twitter: {
+    card: "summary_large_image",
+    title: "Privacy Policy | TnC Pharmacy",
+    description: "Understand how your data is protected at TnC Pharmacy.",
+    images: ["https://tncpharmacy.in/og-image.png"],
+  },
+
+  robots: {
+    index: true,
+    follow: true,
+  },
+};
 
 export default function PrivacyPolicy() {
   return (

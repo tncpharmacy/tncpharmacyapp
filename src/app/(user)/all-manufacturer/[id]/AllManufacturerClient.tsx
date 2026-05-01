@@ -9,6 +9,7 @@ import SiteHeader from "@/app/(user)/components/header/header";
 import { useParams } from "next/navigation";
 import { useAppDispatch, useAppSelector } from "@/lib/hooks";
 import {
+  getMedicineByManufacturerId,
   getMedicinesByCategoryId,
   resetMedicinesList,
 } from "@/lib/features/medicineSlice/medicineSlice";
@@ -26,14 +27,15 @@ import ProductCardUI from "../../components/MedicineCard/ProductCardUI";
 
 const mediaBase = process.env.NEXT_PUBLIC_MEDIA_BASE_URL;
 
-export default function AllProductClient() {
+export default function AllManufacturerClient() {
   const router = useRouter();
-  const { id: params } = useParams();
+  const params = useParams();
+  const decodedId = decodeId(params.id as string);
   const dispatch = useAppDispatch();
-  const decodedId = decodeId(params);
   const categoryIdNum = Number(decodedId);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [guestItems, setGuestItems] = useState<any[]>([]);
+
   // for pagination
   const [page, setPage] = useState(1);
   const [currentUrl, setCurrentUrl] = useState<string | null>(null);
@@ -46,14 +48,31 @@ export default function AllProductClient() {
   });
 
   const medicines = useAppSelector(
-    (state) => state.medicine.byCategory[categoryIdNum] || []
+    (state) => state.medicine.manufacturerAlternativesMedicines || []
   );
-
   const nextUrl = useAppSelector((state) => state.medicine.next);
 
   const { loading } = useAppSelector((state) => state.medicine);
 
   const { list: categories } = useAppSelector((state) => state.category);
+
+  // --- CALL SHUFFLE HOOK AT TOP-LEVEL (ESLINT SAFE) ---
+  const shuffledFromHook = useShuffledProduct(
+    medicines,
+    `product-page-category-${categoryIdNum}`
+  );
+
+  const finalShuffledList = medicines;
+
+  const manufacturerName = medicines?.[0]?.manufacturer_name || "Loading...";
+  const categoryName =
+    categories.find((cat) => cat.id === categoryIdNum)?.category_name ||
+    "Unknown Category";
+
+  // --- Local states for instant UI ---
+  const [localBag, setLocalBag] = useState<number[]>([]);
+  const [processingIds, setProcessingIds] = useState<number[]>([]);
+  const [searchTerm, setSearchTerm] = useState("");
 
   const [isMobile, setIsMobile] = useState(false);
 
@@ -68,24 +87,6 @@ export default function AllProductClient() {
     return () => window.removeEventListener("resize", checkScreen);
   }, []);
 
-  // --- CALL SHUFFLE HOOK AT TOP-LEVEL (ESLINT SAFE) ---
-  const shuffledFromHook = useShuffledProduct(
-    medicines,
-    `product-page-category-${categoryIdNum}`
-  );
-
-  const finalShuffledList = useMemo(() => {
-    return [...medicines].sort(() => Math.random() - 0.5);
-  }, [medicines]);
-
-  const categoryName =
-    categories.find((cat) => cat.id === categoryIdNum)?.category_name ||
-    "Unknown Category";
-
-  // --- Local states for instant UI ---
-  const [localBag, setLocalBag] = useState<number[]>([]);
-  const [processingIds, setProcessingIds] = useState<number[]>([]);
-
   // --- Sync localBag with Redux items ---
   useEffect(() => {
     if (items) {
@@ -97,15 +98,18 @@ export default function AllProductClient() {
   useEffect(() => {
     if (!categoryIdNum) return;
 
-    dispatch(
-      getMedicinesByCategoryId({
-        categoryId: categoryIdNum,
-        url: currentUrl || undefined,
-      })
-    );
+    const fetchData = async () => {
+      await dispatch(
+        getMedicineByManufacturerId({
+          id: categoryIdNum,
+          url: currentUrl || undefined,
+        })
+      );
+    };
 
+    fetchData();
     dispatch(getCategories());
-  }, [categoryIdNum, currentUrl, dispatch]);
+  }, [dispatch, categoryIdNum, currentUrl]);
 
   // --- Merge guest cart ---
   useEffect(() => {
@@ -128,9 +132,18 @@ export default function AllProductClient() {
   //   if (!searchTerm) return finalShuffledList;
   //   const lower = searchTerm.toLowerCase();
   //   return finalShuffledList.filter((med) =>
-  //     (med.ProductName || "").toLowerCase().includes(lower)
+  //     (med.medicine_name || "").toLowerCase().includes(lower)
   //   );
   // }, [finalShuffledList, searchTerm]);
+  const filteredMedicines = useMemo(() => {
+    if (!searchTerm) return medicines;
+
+    const lower = searchTerm.toLowerCase();
+
+    return medicines.filter((med) =>
+      (med.medicine_name || "").toLowerCase().includes(lower)
+    );
+  }, [medicines, searchTerm]);
 
   useEffect(() => {
     if (!buyer?.id) {
@@ -152,7 +165,7 @@ export default function AllProductClient() {
   // --- Handlers ---
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleAdd = async (item: any) => {
-    const id = item.product_id;
+    const id = item.id;
 
     // 🔥 start processing
     // setProcessingIds((prev) => [...prev, id]);
@@ -164,42 +177,39 @@ export default function AllProductClient() {
         await addItem({
           id: 0,
           buyer_id: buyer?.id,
-          product_id: item.product_id,
+          product_id: item.id,
           quantity: 1,
         } as HealthBag);
       } else {
         const newItem = {
           id: 0,
-          productid: item.product_id,
+          productid: item.id,
           qty: 1,
 
           // 🔥 STORE FULL DATA
-          name: item.ProductName || item.productname,
-          manufacturer: item.Manufacturer || item.manufacturer,
+          name: item.ProductName || item.medicine_name,
+          manufacturer: item.Manufacturer || item.manufacturer_name,
           pack_size: item.PackSize || item.pack_size,
           mrp: Number(item.MRP ?? item.mrp ?? 0),
           discount: Number(item.Discount ?? item.discount ?? 0),
-          image: item.DefaultImageURL || item.medicine_image || null,
+          category_id: Number(item.category_id ?? 0),
+          image: item.DefaultImageURL || item.medicine_image || null, // 🔥 important
         };
 
-        const cart = JSON.parse(localStorage.getItem("healthbag") || "[]");
-
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const exists = cart.find((i: any) => i.productid === item.product_id);
+        const exists = guestItems.find((i) => i.productid === item.id);
 
         let updated;
 
         if (exists) {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          updated = cart.map((i: any) =>
-            i.productid === item.product_id ? { ...i, qty: i.qty + 1 } : i
+          updated = guestItems.map((i) =>
+            i.productid === item.id ? { ...i, qty: i.qty + 1 } : i
           );
         } else {
-          updated = [...cart, newItem];
+          updated = [...guestItems, newItem];
         }
 
         localStorage.setItem("healthbag", JSON.stringify(updated));
-        // setGuestItems(updated);
+        setGuestItems(updated);
         dispatch(loadLocalHealthBag());
       }
     } catch (err) {
@@ -216,20 +226,18 @@ export default function AllProductClient() {
     setLocalBag((prev) => prev.filter((id) => id !== productId));
 
     try {
+      // 🟢 LOGIN USER
       if (buyer?.id) {
         await removeItem(productId);
-      } else {
-        // ✅ ALWAYS fresh data lo
-        const cart = JSON.parse(localStorage.getItem("healthbag") || "[]");
-
-        const updated = cart.filter(
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          (item: any) => (item.productid ?? item.product_id) !== productId
+      }
+      // 🔵 GUEST USER
+      else {
+        const updated = guestItems.filter(
+          (item) => (item.productid ?? item.product_id ?? item.id) !== productId
         );
 
         localStorage.setItem("healthbag", JSON.stringify(updated));
-
-        setGuestItems(updated); // optional but ok
+        setGuestItems(updated);
         dispatch(loadLocalHealthBag());
       }
     } catch (err) {
@@ -240,8 +248,13 @@ export default function AllProductClient() {
     }
   };
 
-  const handleClick = (product_id: number) => {
-    router.push(`/product-details/${encodeId(product_id)}`);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const handleClick = (item: any) => {
+    if (item.category_id === 1) {
+      router.push(`/medicines-details/${encodeId(item.id)}`);
+    } else {
+      router.push(`/product-details/${encodeId(item.id)}`);
+    }
   };
 
   const isInitialLoading = loading || pageLoading;
@@ -261,7 +274,7 @@ export default function AllProductClient() {
                 <div className="col-md-9">
                   <div className="pageTitle mt-3 mb-3">
                     <Image src={"/images/favicon.png"} alt="" />{" "}
-                    {categoryName || "Loading..."}
+                    {manufacturerName || "Loading..."}
                   </div>
                 </div>
 
@@ -293,20 +306,15 @@ export default function AllProductClient() {
               <div className="pd_list">
                 {isInitialLoading ? (
                   <div
-                    style={{
-                      position: "fixed",
-                      top: "50%",
-                      left: "50%",
-                      transform: "translate(-50%, -50%)",
-                      zIndex: 9999,
-                    }}
+                    className="d-flex justify-content-center align-items-center"
+                    style={{ marginLeft: "100vh" }}
                   >
                     <TncLoader />
                   </div>
-                ) : medicines.length === 0 ? (
+                ) : filteredMedicines.length === 0 ? (
                   <p>No products found.</p>
                 ) : (
-                  medicines.map((item, index) => {
+                  filteredMedicines.map((item, index) => {
                     const mrpRaw = item.MRP ?? item.mrp ?? 0;
                     const parsedMrp = Number(mrpRaw);
                     const baseMrp =
@@ -321,44 +329,42 @@ export default function AllProductClient() {
                     const mrp = Number(baseMrp.toFixed(2));
                     const formattedMrp = formatPrice(mrp);
                     // 👉 discount
-                    const discount = parseFloat(item.Discount || "0") || 0;
+                    const discount = parseFloat(item.discount || "0") || 0;
                     // 👉 discounted price
                     const discountedPriceRaw = mrp - (mrp * discount) / 100;
                     const formattedDiscountedPrice =
                       formatPrice(discountedPriceRaw);
 
-                    const images = item.DefaultImageURL;
-                    const defaultImg = Array.isArray(images)
-                      ? images.find((img) => img.default_image === 1)
-                      : null;
-                    const imageUrl = defaultImg?.document
-                      ? `${mediaBase}${defaultImg.document}`
+                    const imageUrl = item.primary_image?.document
+                      ? item.primary_image.document.startsWith("http")
+                        ? item.primary_image.document
+                        : `${mediaBase}${item.primary_image.document}`
                       : "/images/tnc-default.png";
 
-                    const isInBag = localBag.includes(item.product_id);
+                    const isInBag = localBag.includes(item.id);
 
                     return isMobile ? (
                       // 💻 DESKTOP/TABLET → CARD DESIGN (Reusable Component 🔥)
                       <ProductCardUI
-                        key={`${item.product_id}-${index}`}
+                        key={`${item.id}-${index}`}
                         image={imageUrl}
-                        name={item.ProductName}
-                        manufacturer={item.Manufacturer}
+                        name={item.medicine_name}
+                        manufacturer={item.manufacturer_name}
                         packSize={item.pack_size} // generic nahi h → skip
                         price={formattedDiscountedPrice}
                         mrp={formattedMrp}
                         discount={discount}
                         showRx={false}
                         isInCart={isInBag}
-                        loading={processingIds.includes(item.product_id)}
+                        loading={processingIds.includes(item.id)}
                         onAdd={() => handleAdd(item)}
-                        onRemove={() => handleRemove(item.product_id)}
-                        onClick={() => handleClick(item.product_id)}
+                        onRemove={() => handleRemove(item.id)}
+                        onClick={() => handleClick(item)}
                       />
                     ) : (
                       <div
+                        key={`${item.id}-${index}`}
                         className="pd_box shadow"
-                        key={`${item.product_id}-${index}`}
                         style={{ boxShadow: "0 2px 5px rgba(0, 0, 0, 0.05)" }}
                       >
                         <div className="pd_img">
@@ -374,23 +380,23 @@ export default function AllProductClient() {
                                   ? 0.3
                                   : 1,
                             }}
-                            onClick={() => handleClick(item.product_id)}
+                            onClick={() => handleClick(item)}
                           />
                         </div>
 
                         <div className="pd_content">
                           <div
                             style={{ cursor: "pointer" }}
-                            onClick={() => handleClick(item.product_id)}
+                            onClick={() => handleClick(item)}
                           >
                             <h3
                               className="pd-title hover-link fw-bold"
                               style={{ color: "#264b8c" }}
                             >
-                              {item.ProductName || ""}
+                              {item.medicine_name || ""}
                             </h3>
                             <h6 className="pd-title fw-bold">
-                              {item.Manufacturer || ""}
+                              {item.manufacturer_name || ""}
                             </h6>
 
                             <div className="pd_price">
@@ -407,14 +413,14 @@ export default function AllProductClient() {
                               className={`btn-1 btn-HO ${
                                 isInBag ? "remove" : "add"
                               }`}
-                              disabled={processingIds.includes(item.product_id)}
+                              disabled={processingIds.includes(item.id)}
                               onClick={() =>
                                 isInBag
-                                  ? handleRemove(item.product_id)
+                                  ? handleRemove(item.id)
                                   : handleAdd(item)
                               }
                             >
-                              {processingIds.includes(item.product_id)
+                              {processingIds.includes(item.id)
                                 ? "Processing..."
                                 : isInBag
                                 ? "REMOVE"
@@ -427,7 +433,7 @@ export default function AllProductClient() {
                   })
                 )}
               </div>
-              {medicines.length > 0 && !loading && nextUrl && (
+              {filteredMedicines.length > 0 && !loading && nextUrl && (
                 <div className="d-flex justify-content-center mt-3">
                   <Pagination
                     currentPage={page}

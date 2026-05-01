@@ -79,7 +79,9 @@ export default function ProfileMenu() {
             <span style={{ fontWeight: "400" }}>{pharmacyName}</span>
           </span>
         )}
-
+        <span style={{ fontSize: "14px", fontWeight: "600" }}>
+          Name: <span style={{ fontWeight: "400" }}>{"TnC Pharmacy"}</span>
+        </span>
         {role && (
           <span style={{ fontSize: "14px", fontWeight: "600" }}>
             Role: <span style={{ fontWeight: "400" }}>{role}</span>
@@ -88,13 +90,13 @@ export default function ProfileMenu() {
 
         {email && (
           <span style={{ fontSize: "14px", fontWeight: "600" }}>
-            Email: <span style={{ fontWeight: 400 }}>{email}</span>
+            Email: <span style={{ fontWeight: "400" }}>{email}</span>
           </span>
         )}
 
         {mobile && (
           <span style={{ fontSize: "14px", fontWeight: "600" }}>
-            Mobile: <span style={{ fontWeight: "400" }}>{mobile}</span>
+            Mobile: <span style={{ fontWeight: "400" }}>+91 8062521280</span>
           </span>
         )}
       </div>
