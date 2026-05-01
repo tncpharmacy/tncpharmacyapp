@@ -10,7 +10,7 @@ export const metadata = {
     "Buy medicines online with fast delivery, best prices, and trusted healthcare services across India.",
 
   alternates: {
-    canonical: "https://tncpharmacy.in/",
+    canonical: "/",
   },
 
   openGraph: {

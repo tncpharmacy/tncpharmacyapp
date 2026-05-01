@@ -13,7 +13,7 @@ export const metadata = {
     "Read the Terms & Conditions of TnC Pharmacy. Understand eligibility, orders, payments, returns, shipping, and usage policies.",
 
   alternates: {
-    canonical: "https://tncpharmacy.in/terms-and-conditions",
+    canonical: "/terms-and-conditions",
   },
 
   openGraph: {

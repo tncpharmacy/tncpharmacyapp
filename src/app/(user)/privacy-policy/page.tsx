@@ -13,7 +13,7 @@ export const metadata = {
     "Read TnC Pharmacy's privacy policy to understand how we collect, use, and protect your personal information.",
 
   alternates: {
-    canonical: "https://tncpharmacy.in/privacy-policy",
+    canonical: "/privacy-policy",
   },
 
   openGraph: {

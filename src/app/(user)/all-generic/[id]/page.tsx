@@ -3,19 +3,19 @@ import { decodeId } from "@/lib/utils/encodeDecode";
 import { fetchMedicineByGenericIdSeo } from "@/lib/api/medicine";
 
 type Props = {
-  params: Promise<{
+  params: {
     id: string;
-  }>;
+  };
 };
 
 export async function generateMetadata({ params }: Props) {
-  const resolvedParams = await params;
+  const { id } = params;
 
   const baseUrl = "https://tncpharmacy.in";
-  const decodedId = decodeId(resolvedParams.id);
+  const decodedId = decodeId(id);
   const genericId = Number(decodedId);
 
-  const url = `${baseUrl}/all-generic/${resolvedParams.id}`;
+  const url = `/all-generic/${id}`;
 
   if (isNaN(genericId)) {
     return {
@@ -24,10 +24,15 @@ export async function generateMetadata({ params }: Props) {
 
       alternates: { canonical: url },
 
+      robots: {
+        index: false,
+        follow: false,
+      },
+
       openGraph: {
         title: "Generic Medicines | TnC Pharmacy",
         description: "Browse generic medicines",
-        url,
+        url: `${baseUrl}${url}`,
         siteName: "TnC Pharmacy",
         type: "website",
       },
@@ -48,7 +53,7 @@ export async function generateMetadata({ params }: Props) {
       openGraph: {
         title: `${name} | TnC Pharmacy`,
         description: `Buy ${name} alternatives online`,
-        url,
+        url: `${baseUrl}${url}`,
         siteName: "TnC Pharmacy",
         type: "website",
         images: [

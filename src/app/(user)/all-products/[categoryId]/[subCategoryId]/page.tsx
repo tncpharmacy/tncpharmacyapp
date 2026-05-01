@@ -4,27 +4,27 @@ import AllProductsClient from "./AllProductsClient";
 import { decodeId } from "@/lib/utils/encodeDecode";
 
 type Props = {
-  params: Promise<{
+  params: {
     categoryId: string;
     subCategoryId: string;
-  }>;
+  };
 };
 
 export async function generateMetadata({ params }: Props) {
-  const resolvedParams = await params;
+  const { categoryId, subCategoryId } = params;
 
   const baseUrl = "https://tncpharmacy.in";
 
-  const decodedCategoryId = decodeId(resolvedParams.categoryId);
-  const decodedSubCategoryId = decodeId(resolvedParams.subCategoryId);
+  const decodedCategoryId = decodeId(categoryId);
+  const decodedSubCategoryId = decodeId(subCategoryId);
 
-  const categoryId = Number(decodedCategoryId);
-  const subCategoryId = Number(decodedSubCategoryId);
+  const catId = Number(decodedCategoryId);
+  const subCatId = Number(decodedSubCategoryId);
 
-  const url = `${baseUrl}/all-products/${resolvedParams.categoryId}/${resolvedParams.subCategoryId}`;
+  const url = `/all-products/${categoryId}/${subCategoryId}`;
 
   // ❌ invalid fallback
-  if (isNaN(categoryId) || isNaN(subCategoryId)) {
+  if (isNaN(catId) || isNaN(subCatId)) {
     return {
       title: "Products | TnC Pharmacy",
       description: "Browse products at TnC Pharmacy",
@@ -33,10 +33,15 @@ export async function generateMetadata({ params }: Props) {
         canonical: url,
       },
 
+      robots: {
+        index: false,
+        follow: false,
+      },
+
       openGraph: {
         title: "Products | TnC Pharmacy",
         description: "Browse products at TnC Pharmacy",
-        url,
+        url: `${baseUrl}${url}`,
         siteName: "TnC Pharmacy",
         type: "website",
       },
@@ -51,14 +56,13 @@ export async function generateMetadata({ params }: Props) {
 
   try {
     const [categoryRes, subCategoryRes] = await Promise.all([
-      fetchCategoryByIdForSeo(categoryId),
-      fetchSubcategoryByIdForSeo(subCategoryId),
+      fetchCategoryByIdForSeo(catId),
+      fetchSubcategoryByIdForSeo(subCatId),
     ]);
 
     const categoryName = categoryRes?.data?.category_name || "Products";
     const subCategoryName = subCategoryRes?.data?.sub_category_name || "";
 
-    // ✅ FIXED (important)
     const fullName = subCategoryName
       ? `${categoryName} - ${subCategoryName}`
       : categoryName;
@@ -74,7 +78,7 @@ export async function generateMetadata({ params }: Props) {
       openGraph: {
         title: `${fullName} | TnC Pharmacy`,
         description: `Buy ${fullName} online`,
-        url,
+        url: `${baseUrl}${url}`,
         siteName: "TnC Pharmacy",
         type: "website",
         images: [
@@ -103,10 +107,15 @@ export async function generateMetadata({ params }: Props) {
         canonical: url,
       },
 
+      robots: {
+        index: false,
+        follow: false,
+      },
+
       openGraph: {
         title: "Products | TnC Pharmacy",
         description: "Browse products at TnC Pharmacy",
-        url,
+        url: `${baseUrl}${url}`,
         siteName: "TnC Pharmacy",
         type: "website",
       },

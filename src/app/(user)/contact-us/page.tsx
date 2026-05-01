@@ -6,7 +6,7 @@ export const metadata = {
     "Get in touch with TnC Pharmacy for support, queries, or feedback. Contact us via phone, email, or visit our store in Noida.",
 
   alternates: {
-    canonical: "https://tncpharmacy.in/contact-us",
+    canonical: "/contact-us",
   },
 
   openGraph: {

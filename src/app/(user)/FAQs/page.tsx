@@ -6,7 +6,7 @@ export const metadata = {
     "Find answers to frequently asked questions about orders, delivery, payments, returns, and more at TnC Pharmacy.",
 
   alternates: {
-    canonical: "https://tncpharmacy.in/FAQs",
+    canonical: "/FAQs",
   },
 
   openGraph: {

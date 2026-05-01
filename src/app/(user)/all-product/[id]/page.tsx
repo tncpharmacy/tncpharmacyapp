@@ -3,15 +3,15 @@ import AllProductClient from "./AllProductClient";
 import { decodeId } from "@/lib/utils/encodeDecode";
 
 type Props = {
-  params: Promise<{
+  params: {
     id: string;
-  }>;
+  };
 };
 
 export async function generateMetadata({ params }: Props) {
-  const resolvedParams = await params;
+  const { id } = params;
 
-  const decodedId = decodeId(resolvedParams.id);
+  const decodedId = decodeId(id);
   const categoryIdNum = Number(decodedId);
 
   const baseUrl = "https://tncpharmacy.in";
@@ -23,13 +23,18 @@ export async function generateMetadata({ params }: Props) {
       description: "Browse products at TnC Pharmacy",
 
       alternates: {
-        canonical: `${baseUrl}/all-product/${resolvedParams.id}`,
+        canonical: `/all-product/${id}`,
+      },
+
+      robots: {
+        index: false,
+        follow: false,
       },
 
       openGraph: {
         title: "Products | TnC Pharmacy",
         description: "Browse products at TnC Pharmacy",
-        url: `${baseUrl}/all-product/${resolvedParams.id}`,
+        url: `/all-product/${id}`,
         siteName: "TnC Pharmacy",
         type: "website",
       },
@@ -47,7 +52,7 @@ export async function generateMetadata({ params }: Props) {
 
     const name = res?.data?.category_name || "Products";
 
-    const url = `${baseUrl}/all-product/${resolvedParams.id}`;
+    const url = `/all-product/${id}`;
 
     return {
       title: `${name} Products Online | Buy ${name}`,
@@ -92,13 +97,13 @@ export async function generateMetadata({ params }: Props) {
       description: "Browse products at TnC Pharmacy",
 
       alternates: {
-        canonical: `${baseUrl}/all-product/${resolvedParams.id}`,
+        canonical: `/all-product/${id}`,
       },
 
       openGraph: {
         title: "Products | TnC Pharmacy",
         description: "Browse products at TnC Pharmacy",
-        url: `${baseUrl}/all-product/${resolvedParams.id}`,
+        url: `/all-product/${id}`,
         siteName: "TnC Pharmacy",
         type: "website",
       },

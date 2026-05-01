@@ -3,15 +3,16 @@ import MedicinesDetailsClient from "./MedicinesDetailsClient";
 import { decodeId } from "@/lib/utils/encodeDecode";
 
 type Props = {
-  params: Promise<{
+  params: {
     id: string;
-  }>;
+  };
 };
 
 export async function generateMetadata({ params }: Props) {
-  const resolvedParams = await params;
+  const { id } = params;
 
-  const decodedId = decodeId(resolvedParams.id);
+  const baseUrl = "https://tncpharmacy.in";
+  const decodedId = decodeId(id);
   const medicineId = Number(decodedId);
 
   // ❌ invalid case
@@ -31,7 +32,7 @@ export async function generateMetadata({ params }: Props) {
     const manufacturer = medicine?.manufacturer_name || "";
     const image = medicine?.images?.[0]?.document || "/images/tnc-default.png";
 
-    const url = `https://tncpharmacy.in/medicines-details/${resolvedParams.id}`;
+    const url = `/medicines-details/${id}`;
 
     return {
       title: `${name} - Uses, Price, Side Effects`,
@@ -44,7 +45,7 @@ export async function generateMetadata({ params }: Props) {
       openGraph: {
         title: `${name} | TnC Pharmacy`,
         description: `Buy ${name} online with best price`,
-        url: url,
+        url: `${baseUrl}${url}`,
         siteName: "TnC Pharmacy",
         type: "website",
         images: [

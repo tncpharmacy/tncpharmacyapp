@@ -10,7 +10,7 @@ export const metadata = {
     "Explore and buy all types of medicines online at best prices with fast delivery across India from TnC Pharmacy.",
 
   alternates: {
-    canonical: "https://tncpharmacy.in/all-medicine",
+    canonical: "/all-medicine",
   },
 
   openGraph: {

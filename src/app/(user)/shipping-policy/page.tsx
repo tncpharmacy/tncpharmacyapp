@@ -13,7 +13,7 @@ export const metadata = {
     "Read TnC Pharmacy's shipping policy. Learn about delivery timelines, shipping charges, coverage areas, and order tracking across India.",
 
   alternates: {
-    canonical: "https://tncpharmacy.in/shipping-policy",
+    canonical: "/shipping-policy",
   },
 
   openGraph: {

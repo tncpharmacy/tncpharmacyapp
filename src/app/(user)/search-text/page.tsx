@@ -2,20 +2,20 @@ import { Suspense } from "react";
 import SearchTextClient from "./SearchTextClient";
 
 type Props = {
-  searchParams: Promise<{
+  searchParams: {
     text?: string;
-  }>;
+  };
 };
 
 export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ searchParams }: Props) {
-  const resolvedParams = await searchParams;
+  const { text } = searchParams;
 
   const baseUrl = "https://tncpharmacy.in";
-  const searchText = resolvedParams?.text || "";
+  const searchText = text || "";
 
-  const url = `${baseUrl}/search?text=${encodeURIComponent(searchText)}`;
+  const url = `/search?text=${encodeURIComponent(searchText)}`;
 
   // ❌ empty search
   if (!searchText) {
@@ -30,7 +30,7 @@ export async function generateMetadata({ searchParams }: Props) {
       openGraph: {
         title: "Search Medicines | TnC Pharmacy",
         description: "Search medicines online",
-        url,
+        url: `${baseUrl}${url}`,
         siteName: "TnC Pharmacy",
         type: "website",
       },
@@ -49,7 +49,7 @@ export async function generateMetadata({ searchParams }: Props) {
     openGraph: {
       title: `${searchText} | TnC Pharmacy`,
       description: `Search results for ${searchText}`,
-      url,
+      url: `${baseUrl}${url}`,
       siteName: "TnC Pharmacy",
       type: "website",
       images: [

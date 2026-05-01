@@ -14,7 +14,7 @@ export const metadata = {
     "Learn about TnC Pharmacy – a trusted online pharmacy providing genuine medicines, healthcare products, and fast delivery across India.",
 
   alternates: {
-    canonical: "https://tncpharmacy.in/about-us",
+    canonical: "/about-us",
   },
 
   openGraph: {
@@ -50,6 +50,33 @@ export const metadata = {
 export default function AboutUs() {
   return (
     <div className="page-wrapper bg-light">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "Organization",
+            name: "TnC Pharmacy",
+            url: "https://tncpharmacy.in",
+            logo: "https://tncpharmacy.in/og-image.png",
+            contactPoint: {
+              "@type": "ContactPoint",
+              telephone: "+91-7042079595",
+              contactType: "customer service",
+              areaServed: "IN",
+            },
+            address: {
+              "@type": "PostalAddress",
+              streetAddress:
+                "Shop No. 61, Ground Floor, Ganga Shopping Complex",
+              addressLocality: "Noida",
+              addressRegion: "UP",
+              postalCode: "201301",
+              addressCountry: "IN",
+            },
+          }),
+        }}
+      />
       {/* <SiteHeader /> */}
 
       <section className="container my-5">

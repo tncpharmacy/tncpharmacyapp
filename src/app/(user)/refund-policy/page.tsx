@@ -13,7 +13,7 @@ export const metadata = {
     "Read TnC Pharmacy's refund policy. Learn about refund eligibility, non-refundable items, refund process, and timelines.",
 
   alternates: {
-    canonical: "https://tncpharmacy.in/refund-policy",
+    canonical: "/refund-policy",
   },
 
   openGraph: {

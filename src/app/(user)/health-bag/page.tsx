@@ -12,7 +12,7 @@ export const metadata = {
   },
 
   alternates: {
-    canonical: "https://tncpharmacy.in/health-bag",
+    canonical: "/health-bag",
   },
 
   openGraph: {

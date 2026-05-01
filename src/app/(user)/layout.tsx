@@ -52,10 +52,6 @@ export const metadata = {
     description: "Buy medicines online with fast delivery and best prices.",
     images: ["https://tncpharmacy.in/og-image.png"],
   },
-
-  alternates: {
-    canonical: "https://tncpharmacy.in",
-  },
 };
 
 export default async function UserLayout({

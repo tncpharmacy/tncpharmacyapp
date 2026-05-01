@@ -3,19 +3,19 @@ import { decodeId } from "@/lib/utils/encodeDecode";
 import { fetchGroupCareById } from "@/lib/api/medicine";
 
 type Props = {
-  params: Promise<{
+  params: {
     id: string;
-  }>;
+  };
 };
 
 export async function generateMetadata({ params }: Props) {
-  const resolvedParams = await params;
+  const { id } = params;
 
   const baseUrl = "https://tncpharmacy.in";
-  const decodedId = decodeId(resolvedParams.id);
+  const decodedId = decodeId(id);
   const groupId = Number(decodedId);
 
-  const url = `${baseUrl}/all-group-care/${resolvedParams.id}`;
+  const url = `/all-group-care/${id}`;
 
   // ❌ invalid fallback
   if (isNaN(groupId)) {
@@ -25,10 +25,15 @@ export async function generateMetadata({ params }: Props) {
 
       alternates: { canonical: url },
 
+      robots: {
+        index: false,
+        follow: false,
+      },
+
       openGraph: {
         title: "Group Care | TnC Pharmacy",
         description: "Browse group care products",
-        url,
+        url: `${baseUrl}${url}`,
         siteName: "TnC Pharmacy",
         type: "website",
       },
@@ -57,7 +62,7 @@ export async function generateMetadata({ params }: Props) {
       openGraph: {
         title: `${name} | TnC Pharmacy`,
         description: `Buy ${name} products online`,
-        url,
+        url: `${baseUrl}${url}`,
         siteName: "TnC Pharmacy",
         type: "website",
         images: [
@@ -87,7 +92,7 @@ export async function generateMetadata({ params }: Props) {
       openGraph: {
         title: "Group Care | TnC Pharmacy",
         description: "Browse group care products",
-        url,
+        url: `${baseUrl}${url}`,
         siteName: "TnC Pharmacy",
         type: "website",
       },
