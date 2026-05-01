@@ -9,10 +9,6 @@ export default async function sitemap() {
       lastModified: new Date(),
     },
     {
-      url: "https://tncpharmacy.in/all-medicine",
-      lastModified: new Date(),
-    },
-    {
       url: "https://tncpharmacy.in/about-us",
       lastModified: new Date(),
     },
@@ -54,10 +50,6 @@ export default async function sitemap() {
     },
     {
       url: "https://tncpharmacy.in/all-group-care/NA",
-      lastModified: new Date(),
-    },
-    {
-      url: "https://tncpharmacy.in/search-text?text=dol",
       lastModified: new Date(),
     },
     {
