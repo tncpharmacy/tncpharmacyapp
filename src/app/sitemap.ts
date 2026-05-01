@@ -33,11 +33,47 @@ export default async function sitemap() {
       lastModified: new Date(),
     },
     {
-      url: "https://tncpharmacy.in/terms-and-conditions",
+      url: "https://tncpharmacy.in/terms-conditions",
       lastModified: new Date(),
     },
     {
-      url: "https://tncpharmacy.in/FAQs",
+      url: "https://tncpharmacy.in/faqs",
+      lastModified: new Date(),
+    },
+    {
+      url: "https://tncpharmacy.in/careers",
+      lastModified: new Date(),
+    },
+    {
+      url: "https://tncpharmacy.in/news-and-media",
+      lastModified: new Date(),
+    },
+    {
+      url: "https://tncpharmacy.in/licence",
+      lastModified: new Date(),
+    },
+    {
+      url: "https://tncpharmacy.in/how-to-order",
+      lastModified: new Date(),
+    },
+    {
+      url: "https://tncpharmacy.in/blog",
+      lastModified: new Date(),
+    },
+    {
+      url: "https://tncpharmacy.in/partner",
+      lastModified: new Date(),
+    },
+    {
+      url: "https://tncpharmacy.in/prescription-guide",
+      lastModified: new Date(),
+    },
+    {
+      url: "https://tncpharmacy.in/offers",
+      lastModified: new Date(),
+    },
+    {
+      url: "https://tncpharmacy.in/reviews",
       lastModified: new Date(),
     },
     {

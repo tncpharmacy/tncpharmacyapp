@@ -29,140 +29,117 @@ const Footer = () => {
           data-aos-duration="1000"
           data-aos-delay="0"
         >
-          {/* Left Section */}
-          <div className="col-sm-9">
-            <div className="row">
-              {/* About */}
-              <div className="col-6 col-sm-3">
-                <h5 className="ftr_title">About TnC Pharmacy</h5>
-                <ul className="ftr_link">
-                  <li>
-                    <Link href="/about-us">About Us</Link>
-                  </li>
-                  {/* <li>
+          <div className="row">
+            {/* About */}
+            <div className="col-6 col-sm-3">
+              <h5 className="ftr_title">About TnC Pharmacy</h5>
+              <ul className="ftr_link">
+                <li>
+                  <Link href="/about-us">About Us</Link>
+                </li>
+                {/* <li>
                     <a href="#">Our Stores</a>
                   </li> */}
-                  <li>
-                    <Link href="#">Careers</Link>
-                  </li>
-                  <li>
-                    <Link href="#">News & Media</Link>
-                  </li>
-                  {/* <li>
-                    <a href="#">Our Blogs</a>
-                  </li> */}
-                  <li>
-                    <Link href="/contact-us">Contact Us</Link>
-                  </li>
-                  <li>
-                    <Link href="/FAQs">FAQs</Link>
-                  </li>
-                </ul>
-              </div>
-
-              {/* Policies */}
-              <div className="col-6 col-sm-3">
-                <h5 className="ftr_title">Our Policies</h5>
-                <ul className="ftr_link">
-                  <li>
-                    <Link href="/return-policy">Return Policy</Link>
-                  </li>
-                  <li>
-                    <Link href="/refund-policy">Refund Policy</Link>
-                  </li>
-                  <li>
-                    <Link href="/shipping-policy">Shipping Policy</Link>
-                  </li>
-                  <li>
-                    <Link href="/privacy-policy">Privacy Policy</Link>
-                  </li>
-                  <li>
-                    <Link href="/terms-and-conditions">Terms & Conditions</Link>
-                  </li>
-                  {/* <li>
-                    <a href="#">Editorial Policy</a>
-                  </li> */}
-                </ul>
-              </div>
-
-              {/* Product Categories 1 */}
-              <div className="col-6 col-sm-3">
-                <h5 className="ftr_title">Product Categories</h5>
-                <div className="row product-cat-row">
-                  <div className="col-12">
-                    <ul className="ftr_link">
-                      {reorderedCategories.slice(0, 5).map((cat, idx) => (
-                        <li key={idx}>
-                          <Link
-                            href={
-                              cat.id === 1
-                                ? "/all-medicine"
-                                : `/all-product/${encodeId(cat.id)}`
-                            }
-                          >
-                            {cat.category_name}
-                          </Link>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                </div>
-              </div>
-
-              {/* Product Categories 2 */}
-              <div className="col-6 col-sm-3">
-                <h5 className="ftr_title">Product Categories</h5>
-                <div className="row product-cat-row">
-                  <div className="col-12">
-                    <ul className="ftr_link">
-                      {reorderedCategories.slice(5).map((cat, idx) => (
-                        <li key={idx}>
-                          <Link
-                            href={
-                              cat.id === 1
-                                ? "/all-medicine"
-                                : `/all-product/${encodeId(cat.id)}`
-                            }
-                          >
-                            {cat.category_name}
-                          </Link>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                </div>
-              </div>
+                <li>
+                  <Link href="careers">Careers</Link>
+                </li>
+                <li>
+                  <Link href="news-and-media">News & Media</Link>
+                </li>
+                <li>
+                  <Link href="/blog">Blog / Health </Link>
+                </li>
+                <li>
+                  <Link href="/faqs">FAQs</Link>
+                </li>
+              </ul>
             </div>
-          </div>
 
-          {/* Right Section */}
-          <div className="col-sm-3">
-            <h5 className="ftr_title">Customer Service</h5>
-            <ul className="ftr_link">
-              <li>
-                <i className="bi bi-headphones"></i>
-                <a href="#">+91 7042079595 </a>
-                <span>(10:00 AM - 6:00 PM)</span>
-              </li>
-              <li>
-                <i className="bi bi-whatsapp"></i>
-                <a href="#">+91 8062521280 </a>
-                <span>(24x7 hrs)</span>
-              </li>
-              <li>
-                <i className="bi bi-envelope"></i>
-                <a href="#">care@tncpharmacy.in</a>
-              </li>
-              <li>
-                <span>
-                  <b className="fw-semibold ">Address</b>
-                  <br />
-                  TnC Pharmacy and Labs Pvt. Ltd. Shop No. 61, Ground Floor,
-                  Ganga Shopping Complex, Block 1, Sector 29, Noida, Uttar
-                  Pradesh – 201301
-                </span>
-              </li>
-            </ul>
+            {/* Policies */}
+            <div className="col-6 col-sm-3">
+              <h5 className="ftr_title">Our Policies</h5>
+              <ul className="ftr_link">
+                <li>
+                  <Link href="/return-policy">Return Policy</Link>
+                </li>
+                <li>
+                  <Link href="/refund-policy">Refund Policy</Link>
+                </li>
+                <li>
+                  <Link href="/shipping-policy">Shipping Policy</Link>
+                </li>
+                <li>
+                  <Link href="/privacy-policy">Privacy Policy</Link>
+                </li>
+                <li>
+                  <Link href="/terms-conditions">Terms & Conditions</Link>
+                </li>
+                <li>
+                  <Link href="/licence">Licence Information</Link>
+                </li>
+              </ul>
+            </div>
+            {/* About */}
+            <div className="col-6 col-sm-3">
+              <h5 className="ftr_title">Explore TnC Pharmacy</h5>
+              <ul className="ftr_link">
+                <li>
+                  <Link href="/contact-us">Contact Us</Link>
+                </li>
+                {/* <li>
+                    <a href="#">Our Stores</a>
+                  </li> */}
+                <li>
+                  <Link href="/how-to-order">How to Order</Link>
+                </li>
+                <li>
+                  <Link href="/prescription-guide">Prescription Guide</Link>
+                </li>
+                <li>
+                  <Link href="/partner">Partner with Us </Link>
+                </li>
+                <li>
+                  <Link href="/offers">Offers & Deals</Link>
+                </li>
+                <li>
+                  <Link href="/reviews">Testimonials</Link>
+                </li>
+              </ul>
+            </div>
+
+            {/* Right Section */}
+            <div className="col-6 col-sm-3">
+              <h5 className="ftr_title">Customer Service</h5>
+              <ul className="ftr_link">
+                <li>
+                  <i className="bi bi-headphones"></i>
+                  <a href="tel:+918062521280">+91 8062521280 </a>
+                  <span>(24x7)</span>
+                </li>
+                {/* <li>
+                  <i className="bi bi-headphones"></i>
+                  <a href="#">+91 7042079595 </a>
+                  <span>(10:00 AM - 6:00 PM)</span>
+                </li> */}
+                <li>
+                  <i className="bi bi-whatsapp"></i>
+                  <a href="https://wa.me/917042079595">+91 7042079595 </a>
+                </li>
+                <li>
+                  <i className="bi bi-envelope"></i>
+                  <a href="#">care@tncpharmacy.in</a>
+                </li>
+                <li>
+                  <span>
+                    <b className="fw-semibold ">Address</b>
+                    <br />
+                    TnC Pharmacy and Labs Pvt. Ltd. Shop No. 61, Ground Floor,
+                    Ganga Shopping Complex, Block 1, Sector 29, Noida, Uttar
+                    Pradesh – 201301
+                  </span>
+                </li>
+              </ul>
+            </div>
           </div>
         </div>
       </div>

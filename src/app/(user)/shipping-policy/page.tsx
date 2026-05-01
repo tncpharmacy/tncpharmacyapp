@@ -4,13 +4,12 @@ import React from "react";
 import "../css/site-style.css";
 import "../css/user-style.css";
 import "bootstrap/dist/css/bootstrap.min.css";
-import SiteHeader from "@/app/(user)/components/header/header";
 import Footer from "@/app/(user)/components/footer/footer";
 
 export const metadata = {
-  title: "Shipping Policy | Delivery Information",
+  title: "Shipping & Delivery Policy | TnC Pharmacy -- Free & Fast Delivery",
   description:
-    "Read TnC Pharmacy's shipping policy. Learn about delivery timelines, shipping charges, coverage areas, and order tracking across India.",
+    "TnC Pharmacy delivers across India. Same-day delivery in Noida NCR. Free shipping on qualifying orders. Track your medicine delivery in real-time.",
 
   alternates: {
     canonical: "/shipping-policy",
@@ -19,7 +18,7 @@ export const metadata = {
   openGraph: {
     title: "Shipping Policy | TnC Pharmacy",
     description:
-      "Know about delivery time, shipping charges, and order tracking at TnC Pharmacy.",
+      "Delivery timelines, shipping charges, coverage, tracking, and packaging details at TnC Pharmacy.",
     url: "https://tncpharmacy.in/shipping-policy",
     siteName: "TnC Pharmacy",
     type: "website",
@@ -28,7 +27,7 @@ export const metadata = {
         url: "https://tncpharmacy.in/og-image.png",
         width: 1200,
         height: 630,
-        alt: "Shipping Policy - TnC Pharmacy",
+        alt: "Shipping Policy TnC Pharmacy",
       },
     ],
   },
@@ -36,7 +35,8 @@ export const metadata = {
   twitter: {
     card: "summary_large_image",
     title: "Shipping Policy | TnC Pharmacy",
-    description: "Delivery timelines, shipping charges, and tracking details.",
+    description:
+      "Know delivery timelines, shipping charges, and tracking details.",
     images: ["https://tncpharmacy.in/og-image.png"],
   },
 
@@ -50,62 +50,82 @@ export default function ShippingPolicy() {
   return (
     <>
       <div className="page-wrapper bg-light">
-        {/* <SiteHeader /> */}
-
         <section className="container my-5">
-          <div className="row justify-content-center">
-            <div className="col-md-12">
-              <div className="card shadow-sm border-0 rounded-3 p-4 p-md-5">
-                <h2 className="fw-bold text-center mb-4 text-primary">
-                  Shipping Policy
-                </h2>
-                <hr />
+          <div className="col-lg-10 mx-auto bg-white p-4 p-md-5 shadow-sm rounded-3">
+            <h1 className="fw-bold text-primary mb-4">Shipping Policy</h1>
 
-                <div
-                  style={{
-                    fontSize: "0.93rem",
-                    lineHeight: "1.7",
-                    color: "#333",
-                  }}
-                >
-                  <h5 className="fw-semibold mt-4">1. Delivery Coverage</h5>
-                  <p>
-                    We deliver across major cities and towns in India. Some
-                    remote areas may not be serviceable due to logistic
-                    limitations.
-                  </p>
+            <p>
+              <strong>Effective Date:</strong> May 2026
+            </p>
 
-                  <h5 className="fw-semibold mt-4">
-                    2. Estimated Delivery Time
-                  </h5>
-                  <p>
-                    Orders are typically shipped within{" "}
-                    <strong>1–2 business days</strong>
-                    and delivered within <strong>3–7 business days</strong>{" "}
-                    depending on your location.
-                  </p>
+            <h5 className="fw-bold mt-4">Delivery Coverage</h5>
+            <p>
+              TnC Pharmacy delivers across India. We currently serve all major
+              cities and towns. Delivery availability to your specific location
+              can be checked by entering your pincode during checkout.
+            </p>
 
-                  <h5 className="fw-semibold mt-4">3. Shipping Charges</h5>
-                  <p>
-                    We offer free shipping on orders above ₹499. Orders below
-                    that may incur a nominal delivery charge.
-                  </p>
+            <h5 className="fw-bold mt-4">Delivery Timelines</h5>
 
-                  <h5 className="fw-semibold mt-4">4. Order Tracking</h5>
-                  <p>
-                    Once your order is shipped, a tracking link will be shared
-                    via email or SMS for real-time updates.
-                  </p>
-
-                  <div className="text-center mt-5">
-                    <p className="text-secondary small mb-0">
-                      © {new Date().getFullYear()} TnC Pharmacy. All Rights
-                      Reserved.
-                    </p>
-                  </div>
-                </div>
-              </div>
+            <div className="table-responsive mt-3">
+              <table className="table table-bordered">
+                <thead className="table-dark">
+                  <tr>
+                    <th>Region</th>
+                    <th>Standard Delivery</th>
+                    <th>Express Delivery</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>Noida / Delhi NCR</td>
+                    <td>24–48 hours</td>
+                    <td>Same day (if ordered before 12 PM)</td>
+                  </tr>
+                  <tr>
+                    <td>
+                      Metro Cities (Mumbai, Bangalore, Chennai, Kolkata,
+                      Hyderabad)
+                    </td>
+                    <td>2–4 business days</td>
+                    <td>1–2 business days</td>
+                  </tr>
+                  <tr>
+                    <td>Tier 2 Cities</td>
+                    <td>3–5 business days</td>
+                    <td>2–3 business days</td>
+                  </tr>
+                  <tr>
+                    <td>Other Areas / Remote Locations</td>
+                    <td>5–7 business days</td>
+                    <td>Not available</td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
+
+            <h5 className="fw-bold mt-4">Shipping Charges</h5>
+            <p>
+              Free shipping is available on orders above the qualifying amount
+              (displayed at checkout). For orders below the threshold, a nominal
+              shipping fee applies based on your location and order weight.
+            </p>
+
+            <h5 className="fw-bold mt-4">Order Tracking</h5>
+            <p>
+              Once your order is dispatched, you will receive a tracking link
+              via SMS and email. You can also track your order by logging into
+              your account and visiting the {"'My Orders'"} section.
+            </p>
+
+            <h5 className="fw-bold mt-4">Packaging</h5>
+            <p>
+              All medicines are packed in tamper-proof, temperature-appropriate
+              packaging to maintain product integrity. Prescription medicines
+              are sealed separately with batch number and expiry details
+              visible. Cold-chain products (if applicable) are shipped with ice
+              packs in insulated packaging.
+            </p>
           </div>
         </section>
 

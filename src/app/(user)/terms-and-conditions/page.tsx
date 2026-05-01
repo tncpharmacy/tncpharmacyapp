@@ -4,13 +4,12 @@ import React from "react";
 import "../css/site-style.css";
 import "../css/user-style.css";
 import "bootstrap/dist/css/bootstrap.min.css";
-import SiteHeader from "@/app/(user)/components/header/header";
 import Footer from "@/app/(user)/components/footer/footer";
 
 export const metadata = {
-  title: "Terms & Conditions",
+  title: "Terms & Conditions | TnC Pharmacy",
   description:
-    "Read the Terms & Conditions of TnC Pharmacy. Understand eligibility, orders, payments, returns, shipping, and usage policies.",
+    "Read the terms and conditions for using TnC Pharmacy's online pharmacy services. Covers ordering, payments, prescriptions, and liability.",
 
   alternates: {
     canonical: "/terms-and-conditions",
@@ -19,7 +18,7 @@ export const metadata = {
   openGraph: {
     title: "Terms & Conditions | TnC Pharmacy",
     description:
-      "Learn about the terms and conditions for using TnC Pharmacy services.",
+      "Understand the rules, responsibilities, and policies for using our services.",
     url: "https://tncpharmacy.in/terms-and-conditions",
     siteName: "TnC Pharmacy",
     type: "website",
@@ -28,7 +27,7 @@ export const metadata = {
         url: "https://tncpharmacy.in/og-image.png",
         width: 1200,
         height: 630,
-        alt: "Terms & Conditions - TnC Pharmacy",
+        alt: "Terms and Conditions TnC Pharmacy",
       },
     ],
   },
@@ -36,7 +35,8 @@ export const metadata = {
   twitter: {
     card: "summary_large_image",
     title: "Terms & Conditions | TnC Pharmacy",
-    description: "Understand the rules and policies of TnC Pharmacy.",
+    description:
+      "Know the terms for ordering medicines and using our services.",
     images: ["https://tncpharmacy.in/og-image.png"],
   },
 
@@ -53,130 +53,116 @@ export default function TermsAndConditions() {
         {/* <SiteHeader /> */}
 
         <section className="container my-5">
-          <div className="row justify-content-center">
-            <div className="col-md-12">
-              <div className="card shadow-sm border-0 rounded-3 p-4 p-md-5">
-                {/* Heading section */}
-                <h2 className="fw-bold text-center mb-4 text-primary">
-                  Terms & Conditions
-                </h2>
-                <hr />
+          <div className="col-lg-10 mx-auto bg-white p-4 p-md-5 shadow-sm rounded-3">
+            {/* H1 */}
+            <h1 className="fw-bold text-primary mb-4">Terms & Conditions</h1>
 
-                {/* Terms Content */}
-                <div
-                  className="terms-content"
-                  style={{
-                    fontSize: "0.93rem",
-                    lineHeight: "1.7",
-                    color: "#333",
-                  }}
-                >
-                  <h5 className="fw-semibold mt-4">1. Introduction</h5>
-                  <p>
-                    Welcome to <strong>Our Platform</strong>. By accessing or
-                    using our website, mobile application, or services, you
-                    agree to comply with and be bound by the following Terms and
-                    Conditions. Please read them carefully before using our
-                    services.
-                  </p>
+            <p>
+              <strong>Effective Date:</strong> May 2026
+            </p>
 
-                  <h5 className="fw-semibold mt-4">
-                    2. Eligibility & Account Responsibility
-                  </h5>
-                  <p>
-                    You must be at least 18 years old to register or make
-                    purchases on our platform. You are responsible for
-                    maintaining the confidentiality of your login credentials
-                    and all activities under your account.
-                  </p>
+            <p>
+              Please read these Terms & Conditions ({'"Terms"'}) carefully
+              before using the TnC Pharmacy website (www.tncpharmacy.in) and
+              services. By accessing or using our website, you agree to be bound
+              by these Terms.
+            </p>
 
-                  <h5 className="fw-semibold mt-4">3. Product Information</h5>
-                  <p>
-                    We strive to provide accurate product details, pricing, and
-                    images. However, minor variations may occur. Prices and
-                    product availability are subject to change without prior
-                    notice.
-                  </p>
+            {/* 1 */}
+            <h5 className="fw-bold mt-4">1. About Us</h5>
+            <p>
+              TnC Pharmacy and Labs Pvt. Ltd. is a registered company operating
+              an online pharmacy platform. We are licensed to sell and
+              distribute pharmaceutical products in accordance with the Drugs
+              and Cosmetics Act, 1940 and applicable rules.
+            </p>
 
-                  <h5 className="fw-semibold mt-4">4. Orders & Payments</h5>
-                  <p>
-                    By placing an order, you authorize us to charge your
-                    selected payment method. Orders may be canceled by us in
-                    case of stock unavailability, pricing errors, or payment
-                    failure. Refunds will be processed as per our{" "}
-                    <a href="/refund-policy" className="text-primary">
-                      Refund Policy
-                    </a>
-                    .
-                  </p>
+            {/* 2 */}
+            <h5 className="fw-bold mt-4">2. Eligibility</h5>
+            <p>
+              You must be at least 18 years of age to use our services. By
+              creating an account or placing an order, you confirm that you are
+              legally eligible. Minors may only use our services under the
+              supervision of a parent or legal guardian.
+            </p>
 
-                  <h5 className="fw-semibold mt-4">5. Shipping & Delivery</h5>
-                  <p>
-                    We aim to deliver products within the estimated timelines.
-                    Delays may occur due to logistics or unforeseen
-                    circumstances. Please refer to our{" "}
-                    <a href="/shipping-policy" className="text-primary">
-                      Shipping Policy
-                    </a>{" "}
-                    for more details.
-                  </p>
+            {/* 3 */}
+            <h5 className="fw-bold mt-4">3. Account Responsibility</h5>
+            <p>
+              You are responsible for maintaining the confidentiality of your
+              account credentials. You agree to provide accurate and complete
+              information during registration. You must notify us immediately of
+              any unauthorized use of your account.
+            </p>
 
-                  <h5 className="fw-semibold mt-4">6. Returns & Refunds</h5>
-                  <p>
-                    If you receive a damaged or incorrect product, please raise
-                    a return request within the specified time. Returns are
-                    accepted as per our{" "}
-                    <a href="/return-policy" className="text-primary">
-                      Return Policy
-                    </a>
-                    .
-                  </p>
+            {/* 4 */}
+            <h5 className="fw-bold mt-4">4. Ordering & Prescriptions</h5>
+            <p>
+              All prescription medicines require a valid prescription from a
+              registered medical practitioner. We reserve the right to reject or
+              cancel orders if the prescription is invalid, illegible, or does
+              not meet regulatory requirements. Our pharmacists may contact you
+              or your doctor for prescription clarification.
+            </p>
 
-                  <h5 className="fw-semibold mt-4">7. Intellectual Property</h5>
-                  <p>
-                    All logos, content, graphics, and trademarks are the
-                    property of their respective owners. Unauthorized use is
-                    strictly prohibited.
-                  </p>
+            {/* 5 */}
+            <h5 className="fw-bold mt-4">5. Pricing & Payment</h5>
+            <p>
+              All prices displayed on our website are in Indian Rupees (INR) and
+              include applicable taxes unless stated otherwise. We reserve the
+              right to modify prices without prior notice. In case of pricing
+              errors, we will notify you and offer the option to proceed at the
+              correct price or cancel the order.
+            </p>
 
-                  <h5 className="fw-semibold mt-4">
-                    8. Limitation of Liability
-                  </h5>
-                  <p>
-                    We shall not be liable for any indirect, incidental, or
-                    consequential damages arising out of your use or inability
-                    to use our services or products.
-                  </p>
+            {/* 6 */}
+            <h5 className="fw-bold mt-4">6. Product Information</h5>
+            <p>
+              We make every effort to display accurate product information
+              including descriptions, images, and pricing. However, we do not
+              warrant that descriptions are error-free or complete. Product
+              images are for illustration purposes and actual products may vary
+              slightly in appearance.
+            </p>
 
-                  <h5 className="fw-semibold mt-4">9. Changes to Terms</h5>
-                  <p>
-                    We reserve the right to update or modify these Terms at any
-                    time. Updates will be effective upon posting on this page.
-                    Please check periodically for changes.
-                  </p>
+            {/* 7 */}
+            <h5 className="fw-bold mt-4">7. Intellectual Property</h5>
+            <p>
+              All content on this website including text, graphics, logos,
+              images, and software is the property of TnC Pharmacy and Labs Pvt.
+              Ltd. or its licensors and is protected by intellectual property
+              laws. You may not reproduce, distribute, or create derivative
+              works without our written consent.
+            </p>
 
-                  <h5 className="fw-semibold mt-4">10. Contact Us</h5>
-                  <p>
-                    If you have any questions about these Terms, you can contact
-                    our support team at{" "}
-                    <a
-                      href="mailto: care@tncpharmacy.in"
-                      className="text-primary"
-                    >
-                      care@tncpharmacy.in
-                    </a>
-                    .
-                  </p>
+            {/* 8 */}
+            <h5 className="fw-bold mt-4">8. Limitation of Liability</h5>
+            <p>
+              TnC Pharmacy shall not be liable for any indirect, incidental,
+              special, or consequential damages arising from the use of our
+              services. Our maximum liability for any claim shall not exceed the
+              amount paid by you for the specific order in question. We are not
+              liable for delays caused by courier partners, natural disasters,
+              or events beyond our control.
+            </p>
 
-                  <div className="text-center mt-5">
-                    <p className="text-secondary small mb-0">
-                      © {new Date().getFullYear()} Tnc Pharmacy. All Rights
-                      Reserved.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
+            {/* 9 */}
+            <h5 className="fw-bold mt-4">9. Governing Law</h5>
+            <p>
+              These Terms are governed by the laws of India. Any disputes
+              arising from these Terms shall be subject to the exclusive
+              jurisdiction of the courts in Noida, Uttar Pradesh.
+            </p>
+
+            {/* 10 */}
+            <h5 className="fw-bold mt-4">10. Contact</h5>
+            <p>
+              For questions about these Terms, contact:
+              <br />
+              <strong>Email:</strong> legal@tncpharmacy.in
+              <br />
+              <strong>Phone:</strong> +91 7042079595
+            </p>
           </div>
         </section>
 

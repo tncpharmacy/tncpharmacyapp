@@ -1,21 +1,25 @@
 import ContactUsClient from "./ContactUsClient";
 
 export const metadata = {
-  title: "Contact Us | Customer Support & Help",
+  title: "Contact TnC Pharmacy | 24x7 Support | Noida, Uttar Pradesh",
+
   description:
-    "Get in touch with TnC Pharmacy for support, queries, or feedback. Contact us via phone, email, or visit our store in Noida.",
+    "Contact TnC Pharmacy at +91 8062521280 (24x7). Visit us at Sector 29, Noida. Email support@tncpharmacy.in. Fast response guaranteed.",
 
   alternates: {
     canonical: "/contact-us",
   },
 
   openGraph: {
-    title: "Contact TnC Pharmacy",
+    title: "Contact TnC Pharmacy | 24x7 Customer Support",
+
     description:
-      "Reach out to TnC Pharmacy for support, queries, and assistance.",
+      "Get in touch with TnC Pharmacy via phone, email, or visit our Noida store. 24x7 support available.",
+
     url: "https://tncpharmacy.in/contact-us",
     siteName: "TnC Pharmacy",
     type: "website",
+
     images: [
       {
         url: "https://tncpharmacy.in/og-image.png",
@@ -28,8 +32,12 @@ export const metadata = {
 
   twitter: {
     card: "summary_large_image",
-    title: "Contact TnC Pharmacy",
-    description: "Need help? Contact our support team anytime.",
+
+    title: "Contact TnC Pharmacy Support",
+
+    description:
+      "Need help? Contact TnC Pharmacy via phone, email, or visit our Noida location.",
+
     images: ["https://tncpharmacy.in/og-image.png"],
   },
 

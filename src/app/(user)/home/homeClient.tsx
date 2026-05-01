@@ -7,10 +7,19 @@ export default function HomeClient(props: any) {
   return (
     <>
       <h1 className="visually-hidden">
-        Online Pharmacy & Medicine Delivery in India
+        Online Pharmacy in Noida – Buy Medicines Online with Fast Delivery | TnC
+        Pharmacy
       </h1>
 
       <Banner />
+      <div className="container mt-3">
+        <p className="text-muted small">
+          TnC Pharmacy is a trusted online pharmacy in Noida Sector 29 offering
+          genuine medicines, healthcare products, and fast medicine delivery
+          across Noida and Delhi NCR. Order medicines online with pharmacist
+          verification, affordable prices, and reliable doorstep delivery.
+        </p>
+      </div>
       <Marquee />
       <HealthConditions groupCare={props.initialGroupCare} />
 

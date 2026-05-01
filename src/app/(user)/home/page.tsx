@@ -5,35 +5,44 @@ import HomeClient from "./homeClient";
 export const revalidate = 60;
 
 export const metadata = {
-  title: "Online Pharmacy | Medicine Delivery",
+  title:
+    "Online Pharmacy India | Buy Medicines Online up to 70% Off | TnC Pharmacy",
+
   description:
-    "Buy medicines online with fast delivery, best prices, and trusted healthcare services across India.",
+    "TnC Pharmacy – India's trusted online pharmacy. Buy genuine medicines, healthcare products & ayurvedic supplements at up to 70% off. Pharmacist verified. Free delivery. COD available.",
 
   alternates: {
     canonical: "/",
   },
 
   openGraph: {
-    title: "TnC Pharmacy - Online Medicine Delivery",
+    title: "Online Pharmacy India | Buy Medicines Online | TnC Pharmacy",
+
     description:
-      "Order medicines online with fast delivery and trusted healthcare services.",
+      "Buy medicines online with up to 70% off. Genuine products, fast delivery, and pharmacist verified orders.",
+
     url: "https://tncpharmacy.in/",
     siteName: "TnC Pharmacy",
     type: "website",
+
     images: [
       {
         url: "https://tncpharmacy.in/og-image.png",
         width: 1200,
         height: 630,
-        alt: "TnC Pharmacy",
+        alt: "Online Pharmacy India - TnC Pharmacy",
       },
     ],
   },
 
   twitter: {
     card: "summary_large_image",
-    title: "TnC Pharmacy - Online Medicine Delivery",
-    description: "Buy medicines online with fast delivery and best prices.",
+
+    title: "Buy Medicines Online | TnC Pharmacy",
+
+    description:
+      "Order medicines online with fast delivery, genuine products, and best prices.",
+
     images: ["https://tncpharmacy.in/og-image.png"],
   },
 

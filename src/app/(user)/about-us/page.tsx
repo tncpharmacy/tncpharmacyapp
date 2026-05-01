@@ -1,26 +1,22 @@
-// "use client";
-
 import React from "react";
 import "../css/site-style.css";
 import "../css/user-style.css";
 import "bootstrap/dist/css/bootstrap.min.css";
-import { Image } from "react-bootstrap";
-import SiteHeader from "@/app/(user)/components/header/header";
 import Footer from "@/app/(user)/components/footer/footer";
 
 export const metadata = {
-  title: "About Us | Online Pharmacy in India",
+  title: "About TnC Pharmacy | Trusted Online Pharmacy in Noida, India",
   description:
-    "Learn about TnC Pharmacy – a trusted online pharmacy providing genuine medicines, healthcare products, and fast delivery across India.",
+    "Learn about TnC Pharmacy and Labs Pvt. Ltd. -- your trusted online pharmacy for genuine medicines, healthcare devices, and wellness products. 100% pharmacist verified orders.",
 
   alternates: {
     canonical: "/about-us",
   },
 
   openGraph: {
-    title: "About TnC Pharmacy",
+    title: "About TnC Pharmacy | Trusted Online Pharmacy",
     description:
-      "Know more about TnC Pharmacy – your trusted partner for medicines and healthcare services.",
+      "Know more about TnC Pharmacy and our mission to make healthcare affordable and accessible.",
     url: "https://tncpharmacy.in/about-us",
     siteName: "TnC Pharmacy",
     type: "website",
@@ -37,7 +33,7 @@ export const metadata = {
   twitter: {
     card: "summary_large_image",
     title: "About TnC Pharmacy",
-    description: "Trusted online pharmacy delivering medicines across India.",
+    description: "Trusted online pharmacy delivering genuine medicines.",
     images: ["https://tncpharmacy.in/og-image.png"],
   },
 
@@ -46,7 +42,6 @@ export const metadata = {
     follow: true,
   },
 };
-
 export default function AboutUs() {
   return (
     <div className="page-wrapper bg-light">
@@ -81,99 +76,134 @@ export default function AboutUs() {
 
       <section className="container my-5">
         <div className="row justify-content-center">
-          <div className="col-lg-10 col-md-12">
-            <div className="card shadow-sm border-0 rounded-3 p-4 p-md-5">
-              <h2 className="fw-bold text-center mb-4 text-primary">
-                About TnC Pharmacy
-              </h2>
+          <div className="col-lg-10">
+            <div className="bg-white shadow-sm rounded-3 p-4 p-md-5">
+              {/* TITLE */}
+              <h1 className="fw-bold text-primary mb-4">About TnC Pharmacy</h1>
 
-              <p className="text-muted text-center mb-5">
-                Delivering health and wellness to your doorstep with trust and
-                care.
+              {/* WHO WE ARE */}
+              <h5 className="fw-bold mt-4">Who We Are</h5>
+
+              <p>
+                TnC Pharmacy and Labs Pvt. Ltd. is a trusted online pharmacy and
+                healthcare solutions provider based in Noida, Uttar Pradesh.
+                Founded with the mission of making quality healthcare
+                accessible, affordable, and convenient, we bring genuine
+                medicines and wellness products right to your doorstep.
               </p>
 
-              <div className="about-content">
-                <h5 className="fw-semibold mt-4 text-secondary">Our Story</h5>
-                <p>
-                  TnC Pharmacy was founded with a vision to make healthcare
-                  accessible, affordable, and convenient for everyone. We
-                  understand the importance of timely medicines and reliable
-                  healthcare products — that’s why we bring you a trusted
-                  platform where you can order medicines, wellness products, and
-                  health supplements with ease.
-                </p>
+              <p>
+                The name <strong>TnC</strong> stands for “Trust and Care” — two
+                values that drive everything we do. From sourcing medicines
+                directly from licensed manufacturers to ensuring
+                pharmacist-verified orders, every step in our process is
+                designed to put your health and safety first.
+              </p>
 
-                <h5 className="fw-semibold mt-4 text-secondary">
-                  What We Offer
-                </h5>
-                <ul>
-                  <li>
-                    Wide range of genuine medicines and healthcare essentials
-                  </li>
-                  <li>Doctor consultations and health checkup services</li>
-                  <li>Quick and reliable doorstep delivery</li>
-                  <li>Easy return and refund policies</li>
-                  <li>Secure online payment options</li>
-                </ul>
+              {/* MISSION */}
+              <h5 className="fw-bold mt-4">Our Mission</h5>
+              <p>
+                To make quality healthcare affordable and accessible to every
+                Indian household by leveraging technology, a robust supply
+                chain, and a deep commitment to patient safety. We believe that
+                no one should have to compromise on health due to cost or
+                convenience barriers.
+              </p>
 
-                <h5 className="fw-semibold mt-4 text-secondary">Our Mission</h5>
-                <p>
-                  Our mission is to make quality healthcare products and
-                  services available to everyone, anywhere. We strive to bridge
-                  the gap between pharmacies and patients using technology and
-                  compassion.
-                </p>
+              {/* VISION */}
+              <h5 className="fw-bold mt-4">Our Vision</h5>
+              <p>
+                To become India’s most trusted digital pharmacy platform — known
+                for genuine medicines, transparent pricing, and a healthcare
+                experience that combines the warmth of a neighbourhood pharmacy
+                with the convenience of modern technology.
+              </p>
 
-                <h5 className="fw-semibold mt-4 text-secondary">
-                  Why Choose Us?
-                </h5>
-                <ul>
-                  <li>100% genuine and verified medicines</li>
-                  <li>Licensed pharmacists and trusted suppliers</li>
-                  <li>Affordable prices and regular discounts</li>
-                  <li>Dedicated customer support available 24x7</li>
-                </ul>
+              {/* WHY CHOOSE */}
+              <h5 className="fw-bold mt-4">Why Choose TnC Pharmacy?</h5>
 
-                <div className="text-center mt-4">
-                  <Image
-                    src="/images/about-us.png"
-                    alt="About TnC Pharmacy"
-                    fluid
-                    className="rounded-3 shadow-sm my-3"
-                    style={{ maxHeight: "350px", objectFit: "cover" }}
-                  />
-                </div>
+              <ul className="mt-3">
+                <li>
+                  <strong>100% Genuine Medicines –</strong> Every product is
+                  sourced directly from licensed manufacturers and authorized
+                  distributors. We never deal in counterfeit or grey-market
+                  products.
+                </li>
 
-                <h5 className="fw-semibold mt-4 text-secondary">Contact Us</h5>
-                <p>
-                  Have questions or feedback? We’d love to hear from you.
-                  <br />
-                  <strong>Email:</strong>{" "}
-                  <a href="mailto:care@tncpharmacy.in" className="text-primary">
-                    care@tncpharmacy.in
-                  </a>
-                  <br />
-                  <strong>Phone:</strong> +91 7042079595
-                  <br />
-                  <strong>Address:</strong>
-                  TnC Pharmacy and Labs Pvt. Ltd.
-                  <br />
-                  Shop No. 61, Ground Floor,
-                  <br />
-                  Ganga Shopping Complex, Block 1,
-                  <br />
-                  Sector 29, Noida,
-                  <br />
-                  Uttar Pradesh – 201301
-                </p>
+                <li>
+                  <strong>Up to 70% Off on Generic Medicines –</strong> We
+                  believe quality healthcare should not be a luxury. Our generic
+                  medicine range delivers the same efficacy at a fraction of the
+                  cost.
+                </li>
 
-                <div className="text-center mt-5">
-                  <p className="text-secondary small">
-                    © {new Date().getFullYear()} TnC Pharmacy. All Rights
-                    Reserved.
-                  </p>
-                </div>
-              </div>
+                <li>
+                  <strong>Pharmacist-Verified Orders –</strong> Every
+                  prescription order is reviewed by a qualified pharmacist
+                  before dispatch. Your safety is our responsibility.
+                </li>
+
+                <li>
+                  <strong>Trusted Brand Sourcing –</strong> We partner with
+                  India’s leading pharmaceutical companies including Abbott,
+                  Cipla, Sun Pharma, Dr. Reddy’s, Lupin, Mankind, Dabur,
+                  Himalaya, and many more.
+                </li>
+
+                <li>
+                  <strong>Fast & Free Shipping –</strong> We deliver across
+                  India with free shipping on qualifying orders. Most orders in
+                  the NCR region are delivered within 24–48 hours.
+                </li>
+
+                <li>
+                  <strong>Secure Payments –</strong> Multiple payment options
+                  including UPI, debit/credit cards, net banking, wallets, and
+                  Cash on Delivery for your convenience.
+                </li>
+
+                <li>
+                  <strong>Easy Prescription Upload –</strong> Simply upload a
+                  photo of your prescription, and our pharmacists will prepare
+                  and verify your order.
+                </li>
+              </ul>
+
+              {/* WHAT WE OFFER */}
+              <h5 className="fw-bold mt-4">What We Offer</h5>
+
+              <p>
+                Our product catalogue spans across multiple health categories
+                including Ayurveda & Herbal products, Nutrition & Supplements,
+                Healthcare Devices (BP monitors, glucometers, nebulizers), Baby
+                Care, Personal Care, Women’s Health, and over-the-counter
+                essentials.
+              </p>
+
+              <p>
+                We also offer prescription medicines that are dispensed only
+                against a valid prescription as required by law.
+              </p>
+
+              {/* LOCATION */}
+              <h5 className="fw-bold mt-4">Our Location</h5>
+
+              <p>
+                <strong>TnC Pharmacy and Labs Pvt. Ltd.</strong>
+                <br />
+                Shop No. 61, Ground Floor,
+                <br />
+                Ganga Shopping Complex, Block 1,
+                <br />
+                Sector 29, Noida, Uttar Pradesh – 201301
+                <br />
+                <br />
+                <strong>Phone:</strong> +91 7042079595 (10:00 AM - 6:00 PM)
+                <br />
+                <strong>Phone:</strong> +91 8062521280 (24x7)
+                <br />
+                <strong>Email:</strong> support@tncpharmacy.in
+              </p>
             </div>
           </div>
         </div>

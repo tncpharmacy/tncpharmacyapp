@@ -106,7 +106,7 @@ const nextConfig: NextConfig = {
         destination: "/shipping-policy",
       },
       {
-        source: "/terms-and-conditions",
+        source: "/terms-conditions",
         destination: "/terms-and-conditions",
       },
       {
@@ -118,17 +118,50 @@ const nextConfig: NextConfig = {
         destination: "/editorial-policy",
       },
       {
-        source: "/FAQs",
+        source: "/faqs",
         destination: "/FAQs",
       },
       {
-        source: "/our-stores",
-        destination: "/our-stores",
+        source: "/careers",
+        destination: "/careers",
+      },
+      {
+        source: "/news-media",
+        destination: "/news-and-media",
+      },
+      {
+        source: "/sitemap",
+        destination: "/sitemap",
+      },
+      {
+        source: "/partner",
+        destination: "/partner-with-us",
+      },
+      {
+        source: "/reviews",
+        destination: "/testimonials-and-customer-reviews",
+      },
+      {
+        source: "/prescription-guide",
+        destination: "/prescription-guide",
+      },
+      {
+        source: "/offers",
+        destination: "/offers-and-deals",
+      },
+      {
+        source: "/how-to-order",
+        destination: "/how-to-order",
       },
       {
         source: "/blog",
-        destination: "/blog",
+        destination: "/Blog-health-articles-hub",
       },
+      {
+        source: "/licence",
+        destination: "/licence",
+      },
+
       // {
       //   source: "/address",
       //   destination: "/address/add",

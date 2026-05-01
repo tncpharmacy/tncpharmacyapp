@@ -4,13 +4,12 @@ import React from "react";
 import "../css/site-style.css";
 import "../css/user-style.css";
 import "bootstrap/dist/css/bootstrap.min.css";
-import SiteHeader from "@/app/(user)/components/header/header";
 import Footer from "@/app/(user)/components/footer/footer";
 
 export const metadata = {
-  title: "Refund Policy",
+  title: "Refund Policy | TnC Pharmacy -- Quick & Transparent Refunds",
   description:
-    "Read TnC Pharmacy's refund policy. Learn about refund eligibility, non-refundable items, refund process, and timelines.",
+    "TnC Pharmacy refund policy. Get refunds within 2-7 business days via UPI, card, or bank transfer. Full transparency on all refund timelines.",
 
   alternates: {
     canonical: "/refund-policy",
@@ -19,7 +18,7 @@ export const metadata = {
   openGraph: {
     title: "Refund Policy | TnC Pharmacy",
     description:
-      "Understand how refunds are processed at TnC Pharmacy for medicines and healthcare products.",
+      "Learn about refund eligibility, timelines, payment methods, and cancellation refunds at TnC Pharmacy.",
     url: "https://tncpharmacy.in/refund-policy",
     siteName: "TnC Pharmacy",
     type: "website",
@@ -28,7 +27,7 @@ export const metadata = {
         url: "https://tncpharmacy.in/og-image.png",
         width: 1200,
         height: 630,
-        alt: "Refund Policy - TnC Pharmacy",
+        alt: "Refund Policy TnC Pharmacy",
       },
     ],
   },
@@ -36,7 +35,8 @@ export const metadata = {
   twitter: {
     card: "summary_large_image",
     title: "Refund Policy | TnC Pharmacy",
-    description: "Know how refunds work at TnC Pharmacy.",
+    description:
+      "Refund process, timelines, and eligibility explained clearly.",
     images: ["https://tncpharmacy.in/og-image.png"],
   },
 
@@ -53,68 +53,85 @@ export default function RefundPolicy() {
         {/* <SiteHeader /> */}
 
         <section className="container my-5">
-          <div className="row justify-content-center">
-            <div className="col-md-12">
-              <div className="card shadow-sm border-0 rounded-3 p-4 p-md-5">
-                <h2 className="fw-bold text-center mb-4 text-primary">
-                  Refund Policy
-                </h2>
-                <hr />
+          <div className="col-lg-10 mx-auto bg-white p-4 p-md-5 shadow-sm rounded-3">
+            <h1 className="fw-bold text-primary mb-4">Refund Policy</h1>
 
-                <div
-                  style={{
-                    fontSize: "0.93rem",
-                    lineHeight: "1.7",
-                    color: "#333",
-                  }}
-                >
-                  <div className="terms-content" style={{ fontSize: "0.9rem" }}>
-                    <h5 className="fw-semibold mt-4">1. Refund Eligibility</h5>
-                    <p>
-                      Refunds are applicable only if the product is damaged,
-                      defective, or incorrect. The request must be made within{" "}
-                      <strong>7 days</strong> of receiving the order.
-                    </p>
+            <p>
+              <strong>Effective Date:</strong> May 2026
+            </p>
 
-                    <h5 className="fw-semibold mt-4">
-                      2. Non-Refundable Items
-                    </h5>
-                    <ul>
-                      <li>Opened or used products.</li>
-                      <li>Items without original packaging.</li>
-                      <li>Health or hygiene-related products.</li>
-                    </ul>
+            <h5 className="fw-bold mt-4">When You Are Eligible for a Refund</h5>
+            <p>Refunds are processed in the following scenarios:</p>
 
-                    <h5 className="fw-semibold mt-4">3. Refund Method</h5>
-                    <p>
-                      Approved refunds will be credited to your original payment
-                      method within <strong>5–7 business days</strong>. In some
-                      cases, processing time may vary depending on your bank or
-                      payment provider.
-                    </p>
+            <ul>
+              <li>
+                Your return request has been approved under our Return Policy.
+              </li>
+              <li>Your order was cancelled before it was shipped.</li>
+              <li>
+                A product was out of stock after your order was placed and could
+                not be fulfilled.
+              </li>
+              <li>
+                You were charged an incorrect amount due to a system error.
+              </li>
+            </ul>
 
-                    <h5 className="fw-semibold mt-4">4. Contact for Refunds</h5>
-                    <p>
-                      For refund-related concerns, email us at{" "}
-                      <a
-                        href="mailto: care@tncpharmacy.in"
-                        className="text-primary"
-                      >
-                        care@tncpharmacy.in
-                      </a>
-                      .
-                    </p>
+            <h5 className="fw-bold mt-4">Refund Process</h5>
 
-                    <div className="text-center mt-5">
-                      <p className="text-secondary small mb-0">
-                        © {new Date().getFullYear()} TnC Pharmacy. All Rights
-                        Rights Reserved.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
+            <div className="table-responsive mt-3">
+              <table className="table table-bordered">
+                <thead className="table-dark">
+                  <tr>
+                    <th>Payment Method</th>
+                    <th>Refund Method</th>
+                    <th>Timeline</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>UPI / Wallet</td>
+                    <td>Refunded to same UPI/Wallet</td>
+                    <td>2-3 business days</td>
+                  </tr>
+                  <tr>
+                    <td>Credit / Debit Card</td>
+                    <td>Refunded to same card</td>
+                    <td>5-7 business days</td>
+                  </tr>
+                  <tr>
+                    <td>Net Banking</td>
+                    <td>Refunded to bank account</td>
+                    <td>5-7 business days</td>
+                  </tr>
+                  <tr>
+                    <td>Cash on Delivery</td>
+                    <td>Bank transfer (NEFT/IMPS)</td>
+                    <td>7-10 business days</td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
+
+            <p>
+              For COD refunds, you will need to provide your bank account
+              details (account number, IFSC code, account holder name) to our
+              support team.
+            </p>
+
+            <p>
+              Partial refunds may be issued if only part of your order is being
+              returned or if the product shows signs of use.
+            </p>
+
+            <h5 className="fw-bold mt-4">Cancellation Refunds</h5>
+
+            <p>
+              If you cancel your order before it is shipped, a full refund will
+              be processed within 2–3 business days. Orders that have already
+              been shipped cannot be cancelled but can be returned after
+              delivery under our Return Policy.
+            </p>
           </div>
         </section>
 

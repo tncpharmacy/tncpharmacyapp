@@ -1,18 +1,18 @@
 import FAQsClient from "./FAQsClient";
 
 export const metadata = {
-  title: "FAQs | Help & Support",
+  title: "FAQs | TnC Pharmacy -- Ordering, Delivery, Payments & Returns",
   description:
-    "Find answers to frequently asked questions about orders, delivery, payments, returns, and more at TnC Pharmacy.",
+    "Find answers to common questions about ordering medicines online, prescription upload, delivery timelines, payment methods, returns and refunds at TnC Pharmacy",
 
   alternates: {
-    canonical: "/FAQs",
+    canonical: "/faqs",
   },
 
   openGraph: {
-    title: "FAQs | TnC Pharmacy",
+    title: "Frequently Asked Questions | TnC Pharmacy",
     description:
-      "Get answers to common questions about TnC Pharmacy services, orders, and delivery.",
+      "Find answers about orders, prescriptions, delivery, payments, returns, and refunds at TnC Pharmacy.",
     url: "https://tncpharmacy.in/faqs",
     siteName: "TnC Pharmacy",
     type: "website",
@@ -21,15 +21,16 @@ export const metadata = {
         url: "https://tncpharmacy.in/og-image.png",
         width: 1200,
         height: 630,
-        alt: "FAQs - TnC Pharmacy",
+        alt: "TnC Pharmacy FAQs",
       },
     ],
   },
 
   twitter: {
     card: "summary_large_image",
-    title: "FAQs | TnC Pharmacy",
-    description: "Find quick answers to your questions about TnC Pharmacy.",
+    title: "TnC Pharmacy FAQs",
+    description:
+      "Answers to common questions about medicines, delivery, payments, and returns.",
     images: ["https://tncpharmacy.in/og-image.png"],
   },
 
