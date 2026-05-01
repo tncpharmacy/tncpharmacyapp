@@ -11,7 +11,34 @@ import Footer from "@/app/(user)/components/footer/footer";
 export default function FAQsClient() {
   return (
     <div className="page-wrapper bg-light">
-      {/* <SiteHeader /> */}
+      {/* ✅ YAHAN LAGANA HAI */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "FAQPage",
+            mainEntity: [
+              {
+                "@type": "Question",
+                name: "Do you deliver medicines across India?",
+                acceptedAnswer: {
+                  "@type": "Answer",
+                  text: "Yes, we deliver medicines across India with fast shipping.",
+                },
+              },
+              {
+                "@type": "Question",
+                name: "Are medicines genuine?",
+                acceptedAnswer: {
+                  "@type": "Answer",
+                  text: "All medicines are 100% genuine and sourced from trusted suppliers.",
+                },
+              },
+            ],
+          }),
+        }}
+      />
 
       <section className="container my-5">
         <div className="row justify-content-center">

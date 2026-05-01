@@ -74,5 +74,32 @@ export async function generateMetadata({ params }: Props) {
 }
 
 export default function Page() {
-  return <MedicinesDetailsClient />;
+  return (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "Product",
+            name: "Product Name",
+            image: "image-url",
+            description: "product desc",
+            brand: {
+              "@type": "Brand",
+              name: "Brand Name",
+            },
+            offers: {
+              "@type": "Offer",
+              priceCurrency: "INR",
+              price: "100",
+              availability: "https://schema.org/InStock",
+            },
+          }),
+        }}
+      />
+
+      <MedicinesDetailsClient />
+    </>
+  );
 }
