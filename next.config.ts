@@ -16,6 +16,10 @@ const nextConfig: NextConfig = {
     ],
   },
 
+  experimental: {
+    optimizeCss: true,
+  },
+
   eslint: {
     // Allow production builds even if ESLint errors are present
     ignoreDuringBuilds: true,

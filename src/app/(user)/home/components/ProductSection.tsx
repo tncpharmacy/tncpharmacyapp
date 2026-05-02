@@ -4,7 +4,7 @@ import React, { useMemo, useCallback } from "react";
 import { formatPrice } from "@/lib/utils/formatPrice";
 import Image from "next/image";
 import { Button } from "react-bootstrap";
-import ProductCardUI from "../../components/MedicineCard/ProductCardUI";
+import ProductCardUI from "@/app/(user)/components/MedicineCard/ProductCardUI";
 
 interface ProductSectionProps {
   categoryId: number;

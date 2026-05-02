@@ -5,8 +5,8 @@ import "../css/site-style.css";
 import "../css/user-style.css";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { Accordion } from "react-bootstrap";
-import SiteHeader from "@/app/(user)/components/header/header";
 import Footer from "@/app/(user)/components/footer/footer";
+import Link from "next/link";
 
 export default function FAQsClient() {
   return (
@@ -49,9 +49,9 @@ export default function FAQsClient() {
           <p className="text-muted small">
             Looking to buy medicines online in Noida? Find answers to common
             questions about ordering medicines, uploading prescriptions,
-            delivery timelines, payments, and refunds at TnC Pharmacy. We
-            provide fast medicine delivery across Noida and Delhi NCR with
-            pharmacist support.
+            delivery timelines, payments, and refunds at TnC Pharmacy.{" "}
+            <Link href="/contact-us">Contact Page</Link> or check our{" "}
+            <Link href="/how-to-order">How to Order Guide</Link>.
           </p>
 
           {/* ================= ORDERING ================= */}
@@ -132,9 +132,13 @@ export default function FAQsClient() {
               </Accordion.Header>
               <Accordion.Body>
                 A: Click on the “Upload Prescription” button on our homepage or
-                during checkout. You can take a photo of your prescription or
-                upload a scanned PDF. Our pharmacist will review it and confirm
-                your order.
+                visit our{" "}
+                <Link href="/prescription-guide">
+                  Prescription Upload Guide
+                </Link>
+                . or during checkout. You can take a photo of your prescription
+                or upload a scanned PDF. Our pharmacist will review it and
+                confirm your order.
               </Accordion.Body>
             </Accordion.Item>
 
@@ -213,10 +217,11 @@ export default function FAQsClient() {
             <Accordion.Item eventKey="9">
               <Accordion.Header>Q: Where do you deliver?</Accordion.Header>
               <Accordion.Body>
-                A: We deliver across India. Most orders within the NCR region
-                (Delhi, Noida, Gurgaon, Ghaziabad) are delivered within 24–48
-                hours. For other cities, delivery typically takes 3–7 business
-                days depending on your location.
+                A: We deliver across India. For full details, check our{" "}
+                <Link href="/shipping-policy">Shipping Policy</Link>. Most
+                orders within the NCR region (Delhi, Noida, Gurgaon, Ghaziabad)
+                are delivered within 24–48 hours. For other cities, delivery
+                typically takes 3–7 business days depending on your location.
               </Accordion.Body>
             </Accordion.Item>
 
@@ -288,8 +293,9 @@ export default function FAQsClient() {
               <Accordion.Body>
                 A: Due to regulatory requirements, medicines cannot be returned
                 once delivered unless they are damaged, defective, or the wrong
-                item was sent. Please refer to our Return Policy page for
-                complete details.
+                item was sent. Please refer to our{" "}
+                <Link href="/return-policy">Return Policy</Link> for complete
+                details.
               </Accordion.Body>
             </Accordion.Item>
 
@@ -298,8 +304,8 @@ export default function FAQsClient() {
               <Accordion.Body>
                 A: If your return is approved, refunds are processed within 5–7
                 business days to your original payment method. For COD orders,
-                refunds are made via bank transfer. See our Refund Policy page
-                for details.
+                refunds are made via bank transfer. See our{" "}
+                <Link href="/refund-policy">Refund Policy</Link> for details.
               </Accordion.Body>
             </Accordion.Item>
 
@@ -316,8 +322,9 @@ export default function FAQsClient() {
           </Accordion>
 
           <p className="mt-4 fw-bold">
-            Still have questions? Contact our support team at +91 8062521280
-            (24x7) or email support@tncpharmacy.in.
+            Still have questions? Visit our{" "}
+            <Link href="/contact-us">Contact Us</Link> or call +91 8062521280
+            (24x7). or email support@tncpharmacy.in.
           </p>
           <p className="mt-4 text-muted small">
             TnC Pharmacy is a trusted online pharmacy in Noida Sector 29

@@ -1,3 +1,4 @@
+import Link from "next/link";
 import Banner from "./components/Banner";
 import HealthConditions from "./components/HealthConditions";
 import Marquee from "./components/Marquee";
@@ -17,7 +18,11 @@ export default function HomeClient(props: any) {
           TnC Pharmacy is a trusted online pharmacy in Noida Sector 29 offering
           genuine medicines, healthcare products, and fast medicine delivery
           across Noida and Delhi NCR. Order medicines online with pharmacist
-          verification, affordable prices, and reliable doorstep delivery.
+          verification, affordable prices, and reliable doorstep delivery. Learn
+          how to <Link href="/how-to-order">order medicines online</Link>, check
+          our <Link href="/offers">latest offers</Link>, or{" "}
+          <Link href="/contact-us">contact our pharmacy in Noida</Link> for
+          assistance.
         </p>
       </div>
       <Marquee />

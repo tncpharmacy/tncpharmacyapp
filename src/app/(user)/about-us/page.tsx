@@ -3,6 +3,7 @@ import "../css/site-style.css";
 import "../css/user-style.css";
 import "bootstrap/dist/css/bootstrap.min.css";
 import Footer from "@/app/(user)/components/footer/footer";
+import Link from "next/link";
 
 export const metadata = {
   title: "About TnC Pharmacy | Trusted Online Pharmacy in Noida, India",
@@ -89,7 +90,10 @@ export default function AboutUs() {
                 healthcare solutions provider based in Noida, Uttar Pradesh.
                 Founded with the mission of making quality healthcare
                 accessible, affordable, and convenient, we bring genuine
-                medicines and wellness products right to your doorstep.
+                medicines and wellness products right to your doorstep. Learn
+                how to <Link href="/how-to-order">order medicines online</Link>,
+                explore our <Link href="/offers">latest offers</Link>, or{" "}
+                <Link href="/contact-us">contact our pharmacy in Noida</Link>.
               </p>
 
               <p>
@@ -165,7 +169,11 @@ export default function AboutUs() {
                 <li>
                   <strong>Easy Prescription Upload –</strong> Simply upload a
                   photo of your prescription, and our pharmacists will prepare
-                  and verify your order.
+                  and verify your order. You can also follow our{" "}
+                  <Link href="/prescription-guide">
+                    Prescription Upload Guide
+                  </Link>{" "}
+                  for step-by-step instructions.
                 </li>
               </ul>
 

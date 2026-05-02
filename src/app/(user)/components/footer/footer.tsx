@@ -1,24 +1,9 @@
 "use client";
 import "../../css/footer.css";
-import { getCategoriesList } from "@/lib/features/categorySlice/categorySlice";
-import { useAppDispatch, useAppSelector } from "@/lib/hooks";
-import { encodeId } from "@/lib/utils/encodeDecode";
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect } from "react";
 
 const Footer = () => {
-  const dispatch = useAppDispatch();
-  const { list: categories } = useAppSelector((state) => state.category);
-  const reorderedCategories = [
-    ...categories.filter((cat) => cat.category_name === "Medicines"),
-    ...categories.filter((cat) => cat.category_name !== "Medicines"),
-  ];
-
-  useEffect(() => {
-    dispatch(getCategoriesList());
-  }, [dispatch]);
-
   return (
     <footer>
       {/* ======= Top Section ======= */}
@@ -113,7 +98,7 @@ const Footer = () => {
               <ul className="ftr_link">
                 <li>
                   <i className="bi bi-headphones"></i>
-                  <a href="tel:+918062521280">+91 8062521280 </a>
+                  <Link href="tel:+918062521280">+91 8062521280 </Link>
                   <span>(24x7)</span>
                 </li>
                 {/* <li>
@@ -123,11 +108,11 @@ const Footer = () => {
                 </li> */}
                 <li>
                   <i className="bi bi-whatsapp"></i>
-                  <a href="https://wa.me/917042079595">+91 7042079595 </a>
+                  <Link href="https://wa.me/917042079595">+91 7042079595 </Link>
                 </li>
                 <li>
                   <i className="bi bi-envelope"></i>
-                  <a href="#">care@tncpharmacy.in</a>
+                  <Link href="#">care@tncpharmacy.in</Link>
                 </li>
                 <li>
                   <span>
@@ -213,7 +198,8 @@ const Footer = () => {
               © 2025 TnC Pharmacy | All Rights Reserved
             </div>
             <div className="col-sm-6 text-end">
-              Developed by: <a href="#">Heuristtic Minds</a>
+              Developed by:{" "}
+              <Link href="https://heuristticminds.com/">Heuristtic Minds</Link>
             </div>
           </div>
         </div>

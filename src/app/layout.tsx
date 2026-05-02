@@ -1,4 +1,3 @@
-import type { Metadata } from "next";
 import "./styles/globals.css";
 import "bootstrap/dist/css/bootstrap.min.css";
 import ToastProvider from "@/components/ToastProvider/ToastProvider";

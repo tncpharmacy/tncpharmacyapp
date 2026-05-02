@@ -12,7 +12,7 @@ export const metadata = {
     "TnC Pharmacy – India's trusted online pharmacy. Buy genuine medicines, healthcare products & ayurvedic supplements at up to 70% off. Pharmacist verified. Free delivery. COD available.",
 
   alternates: {
-    canonical: "/",
+    canonical: "https://tncpharmacy.in/",
   },
 
   openGraph: {

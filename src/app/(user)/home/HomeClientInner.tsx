@@ -13,6 +13,7 @@ import { HealthBag } from "@/types/healthBag";
 import { loadLocalHealthBag } from "@/lib/features/healthBagSlice/healthBagSlice";
 
 import dynamic from "next/dynamic";
+import Link from "next/link";
 const ProductSection = dynamic(() => import("./components/ProductSection"), {
   loading: () => <div style={{ height: 300 }} />,
 });
@@ -261,6 +262,14 @@ export default function HomeClientInner({
       <AdvBanner />
       {/* WhySection */}
       <WhySection />
+      <div className="container my-4">
+        <p className="text-muted small text-center">
+          Looking for affordable medicines? Explore our{" "}
+          <Link href="/offers">discount medicine deals</Link> or read our{" "}
+          <Link href="/faqs">pharmacy FAQs</Link> for help with orders,
+          prescriptions, and delivery.
+        </p>
+      </div>
       {/* WhatsAppToast */}
       <WhatsAppToast />
       {/* Footer */}

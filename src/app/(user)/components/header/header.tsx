@@ -739,7 +739,7 @@ const SiteHeader = ({ initialCategories, initialSubcategories }: Props) => {
               {/* More Menu */}
               {categories.length > 5 && (
                 <li className="position-relative">
-                  <a href="#">More</a>
+                  <Link href="#">More</Link>
                   <div className="megamenu-panel2">
                     <ul className="megamenu-list">
                       {moreCategories.map((cat) => (

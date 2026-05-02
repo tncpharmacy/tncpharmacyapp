@@ -1,4 +1,6 @@
 import React from "react";
+import "../css/site-style.css";
+import "../css/user-style.css";
 import "bootstrap/dist/css/bootstrap.min.css";
 import Footer from "@/app/(user)/components/footer/footer";
 

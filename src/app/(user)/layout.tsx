@@ -1,6 +1,5 @@
 import { getMenuData } from "@/lib/server/menu";
 import SiteHeader from "@/app/(user)/components/header/header";
-import "bootstrap/dist/css/bootstrap.min.css";
 
 // export const dynamic = "force-dynamic";
 export const revalidate = 60;
