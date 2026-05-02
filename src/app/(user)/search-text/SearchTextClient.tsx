@@ -12,11 +12,9 @@ import React, {
 import "../css/site-style.css";
 import "../css/user-style.css";
 import { useRouter, useSearchParams } from "next/navigation";
-import SiteHeader from "@/app/(user)/components/header/header";
 import { useAppDispatch, useAppSelector } from "@/lib/hooks";
 import { useHealthBag } from "@/lib/hooks/useHealthBag";
 import Footer from "@/app/(user)/components/footer/footer";
-import { Image } from "react-bootstrap";
 import { HealthBag } from "@/types/healthBag";
 import { Medicine } from "@/types/medicine";
 import { encodeId } from "@/lib/utils/encodeDecode";
@@ -24,6 +22,7 @@ import TncLoader from "@/app/components/TncLoader/TncLoader";
 import { loadLocalHealthBag } from "@/lib/features/healthBagSlice/healthBagSlice";
 import Pagination from "@/app/components/Pagination/Pagination";
 import ProductCardUI from "../components/MedicineCard/ProductCardUI";
+import Image from "next/image";
 
 const mediaBase = process.env.NEXT_PUBLIC_MEDIA_BASE_URL;
 const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL;
@@ -246,7 +245,12 @@ export default function SearchTextClient() {
                 {/* LEFT SIDE : PRODUCT NAME */}
                 <div className="col-md-9">
                   <div className="pageTitle mt-3 mb-3">
-                    <Image src={"/images/favicon.png"} alt="" />{" "}
+                    <Image
+                      src={"/images/favicon.png"}
+                      alt=""
+                      width={30}
+                      height={30}
+                    />{" "}
                     {searchText || "Loading..."}
                   </div>
                 </div>
@@ -346,6 +350,9 @@ export default function SearchTextClient() {
                           <Image
                             src={img}
                             alt=""
+                            width={200}
+                            height={200}
+                            sizes="(max-width: 768px) 50vw, 200px"
                             style={{
                               height: "220px",
                               objectFit: "contain",

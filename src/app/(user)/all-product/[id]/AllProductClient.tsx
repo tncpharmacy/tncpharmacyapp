@@ -5,14 +5,12 @@ import "../../css/site-style.css";
 import "../../css/user-style.css";
 import { useRouter } from "next/navigation";
 import { encodeId, decodeId } from "@/lib/utils/encodeDecode";
-import SiteHeader from "@/app/(user)/components/header/header";
 import { useParams } from "next/navigation";
 import { useAppDispatch, useAppSelector } from "@/lib/hooks";
 import {
   getMedicinesByCategoryId,
   resetMedicinesList,
 } from "@/lib/features/medicineSlice/medicineSlice";
-import { Button, Image } from "react-bootstrap";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { useHealthBag } from "@/lib/hooks/useHealthBag";
 import { getCategories } from "@/lib/features/categorySlice/categorySlice";
@@ -23,6 +21,7 @@ import TncLoader from "@/app/components/TncLoader/TncLoader";
 import { loadLocalHealthBag } from "@/lib/features/healthBagSlice/healthBagSlice";
 import Pagination from "@/app/components/Pagination/Pagination";
 import ProductCardUI from "../../components/MedicineCard/ProductCardUI";
+import Image from "next/image";
 
 const mediaBase = process.env.NEXT_PUBLIC_MEDIA_BASE_URL;
 
@@ -260,7 +259,12 @@ export default function AllProductClient() {
                 {/* LEFT SIDE : PRODUCT NAME */}
                 <div className="col-md-9">
                   <div className="pageTitle mt-3 mb-3">
-                    <Image src={"/images/favicon.png"} alt="" />{" "}
+                    <Image
+                      src={"/images/favicon.png"}
+                      alt=""
+                      width={30}
+                      height={30}
+                    />{" "}
                     {categoryName || "Loading..."}
                   </div>
                 </div>
@@ -365,6 +369,9 @@ export default function AllProductClient() {
                           <Image
                             src={imageUrl}
                             alt=""
+                            width={200}
+                            height={200}
+                            sizes="(max-width: 768px) 50vw, 200px"
                             style={{
                               height: "220px",
                               objectFit: "contain",

@@ -94,7 +94,6 @@ export default function HealthConditions({ groupCare }: any) {
                         alt={group.group_name}
                         width={60}
                         height={60}
-                        priority
                         sizes="(max-width: 768px) 50vw, 20vw"
                         style={{
                           objectFit: "contain",

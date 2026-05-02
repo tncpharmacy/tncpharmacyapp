@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import MedicineCard from "./MedicineCard";
-import { Image } from "react-bootstrap";
 import { Medicine } from "@/types/medicine";
 import TncLoader from "@/app/components/TncLoader/TncLoader";
 import { useAppDispatch, useAppSelector } from "@/lib/hooks";
@@ -9,6 +8,7 @@ import {
   getSearchSuggestions,
   resetMedicinesList,
 } from "@/lib/features/medicineSlice/medicineSlice";
+import Image from "next/image";
 
 interface MedicineListProps {
   medicines: Medicine[] | undefined | null;
@@ -62,7 +62,8 @@ const MedicineList: React.FC<MedicineListProps> = ({
       <div className="row align-items-center mb-3">
         <div className="col-md-9">
           <div className="pageTitle mt-3 mb-3">
-            <Image src={"/images/favicon.png"} alt="" /> Medicine
+            <Image src={"/images/favicon.png"} alt="" width={30} height={30} />{" "}
+            Medicine
           </div>
         </div>
 

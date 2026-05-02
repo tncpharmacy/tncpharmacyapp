@@ -2,7 +2,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import "../../css/header-style.css";
 import "../../../styles/style-login.css";
-import { Image } from "react-bootstrap";
 import { useAppDispatch, useAppSelector } from "@/lib/hooks";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -22,6 +21,7 @@ import {
   clearLocalHealthBag,
   loadLocalHealthBag,
 } from "@/lib/features/healthBagSlice/healthBagSlice";
+import Image from "next/image";
 
 type SearchMatch = {
   _matchType: "medicine" | "generic" | "manufacturer";
@@ -428,7 +428,13 @@ const SiteHeader = ({ initialCategories, initialSubcategories }: Props) => {
         <div className="container">
           <div className="header_wrap">
             <Link href="/" className="logo">
-              <Image src="/images/logo.png" alt="Logo" />
+              <Image
+                src="/images/logo.png"
+                alt="Logo"
+                width={180}
+                height={40}
+                priority
+              />
             </Link>
 
             {/* ---------- SEARCH ---------- */}
@@ -622,6 +628,9 @@ const SiteHeader = ({ initialCategories, initialSubcategories }: Props) => {
                         className="user_icon"
                         src="/images/icons/icon-profile.svg"
                         alt="Profile"
+                        width={24}
+                        height={24}
+                        loading="lazy"
                       />
                     </i>
 
@@ -673,6 +682,9 @@ const SiteHeader = ({ initialCategories, initialSubcategories }: Props) => {
                         className="user_icon"
                         src="/images/icons/icon-cart.svg"
                         alt="Cart"
+                        width={24}
+                        height={24}
+                        loading="lazy"
                       />
                       <span className="count">{items?.length || 0}</span>
                     </i>
@@ -769,6 +781,7 @@ const SiteHeader = ({ initialCategories, initialSubcategories }: Props) => {
                     width={20}
                     height={20}
                     alt="Upload"
+                    loading="lazy"
                   />
                 </button>
                 <PrescriptionUploadModal

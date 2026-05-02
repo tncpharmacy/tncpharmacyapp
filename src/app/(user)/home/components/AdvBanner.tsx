@@ -9,7 +9,6 @@ export default function AdvBanner() {
             src="/images/adv-banner-4.jpg"
             alt="Medical Service Banner"
             fill
-            priority
             sizes="100vw"
           />
         </div>

@@ -5,14 +5,12 @@ import "../../../css/site-style.css";
 import "../../../css/user-style.css";
 import { useRouter } from "next/navigation";
 import { encodeId, decodeId } from "@/lib/utils/encodeDecode";
-import SiteHeader from "@/app/(user)/components/header/header";
 import { useParams } from "next/navigation";
 import { useAppDispatch, useAppSelector } from "@/lib/hooks";
 import {
   getCategoryIdBySubcategory,
   resetMedicinesList,
 } from "@/lib/features/medicineSlice/medicineSlice";
-import { Image } from "react-bootstrap";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { useHealthBag } from "@/lib/hooks/useHealthBag";
 import { getCategories } from "@/lib/features/categorySlice/categorySlice";
@@ -24,6 +22,7 @@ import { loadLocalHealthBag } from "@/lib/features/healthBagSlice/healthBagSlice
 import Pagination from "@/app/components/Pagination/Pagination";
 import ProductCardUI from "@/app/(user)/components/MedicineCard/ProductCardUI";
 import { getSubcategories } from "@/lib/features/subCategorySlice/subCategorySlice";
+import Image from "next/image";
 
 const mediaBase = process.env.NEXT_PUBLIC_MEDIA_BASE_URL;
 
@@ -323,9 +322,9 @@ export default function AllProductsClient() {
                     <Image
                       src={"/images/favicon.png"}
                       alt=""
-                      className="title-icon"
+                      width={30}
+                      height={30}
                     />
-
                     {/* RIGHT: TEXT */}
                     <div className="title-text ms-2">
                       <span
@@ -447,6 +446,9 @@ export default function AllProductsClient() {
                           <Image
                             src={imageUrl}
                             alt=""
+                            width={200}
+                            height={200}
+                            sizes="(max-width: 768px) 50vw, 200px"
                             style={{
                               height: "220px",
                               objectFit: "contain",

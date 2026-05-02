@@ -6,13 +6,13 @@ import { encodeId } from "@/lib/utils/encodeDecode";
 import { useAppDispatch, useAppSelector } from "@/lib/hooks";
 import { useHealthBag } from "@/lib/hooks/useHealthBag";
 import { HealthBag } from "@/types/healthBag";
-import { Image } from "react-bootstrap";
 import { formatAmount } from "@/lib/utils/formatAmount";
 import {
   loadLocalHealthBag,
   removeLocalHealthBag,
 } from "@/lib/features/healthBagSlice/healthBagSlice";
 import { formatPrice } from "@/lib/utils/formatPrice";
+import Image from "next/image";
 
 const mediaBase = process.env.NEXT_PUBLIC_MEDIA_BASE_URL;
 
@@ -227,14 +227,23 @@ export default function MedicineCard({
               onMouseLeave={() =>
                 imageSrc !== "/images/tnc-default.png" && setIsHovered(false)
               }
-              style={{ display: "inline-block" }}
+              style={{
+                width: "80px",
+                height: "80px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
             >
               <Image
                 src={imageSrc}
-                alt=""
-                width={70}
-                height={60}
+                alt={medicine_name}
+                width={80}
+                height={80}
+                loading="lazy"
+                sizes="80px"
                 style={{
+                  objectFit: "contain",
                   opacity: imageSrc === "/images/tnc-default.png" ? 0.3 : 1,
                 }}
               />
@@ -245,17 +254,31 @@ export default function MedicineCard({
               <div
                 className={`zoomBox shadow-xl ${isHovered ? "active" : ""}`}
                 style={{
-                  top: openUpward ? "-320px" : "70px",
+                  top: openUpward ? "-220px" : "70px",
+                  position: "absolute",
+                  width: "250px",
+                  height: "250px",
+                  padding: "10px",
+                  background: "#fff",
+                  borderRadius: "10px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  overflow: "hidden",
+                  zIndex: 9999,
                 }}
               >
                 {isHovered && (
                   <Image
                     src={imageSrc}
                     alt={medicine_name}
-                    // fill
+                    width={220}
+                    height={220}
+                    sizes="250px"
                     style={{
-                      height: "100%",
                       objectFit: "contain",
+                      width: "100%",
+                      height: "100%",
                     }}
                   />
                 )}
