@@ -333,59 +333,13 @@ export default function AllGenericClient() {
                 {!hasFetched || isInitialLoading ? (
                   <>
                     {Array.from({ length: 10 }).map((_, i) => (
-                      <div
-                        key={i}
-                        className="pd_box shadow"
-                        style={{
-                          padding: "10px",
-                          animation: "pulse 1.5s infinite",
-                        }}
-                      >
-                        <div
-                          style={{
-                            height: "220px",
-                            background: "#e5e7eb",
-                            borderRadius: "8px",
-                            marginBottom: "10px",
-                          }}
-                        />
-
-                        <div
-                          style={{
-                            height: "15px",
-                            background: "#e5e7eb",
-                            width: "80%",
-                            marginBottom: "6px",
-                          }}
-                        />
-
-                        <div
-                          style={{
-                            height: "12px",
-                            background: "#e5e7eb",
-                            width: "60%",
-                            marginBottom: "10px",
-                          }}
-                        />
-
-                        <div
-                          style={{
-                            height: "30px",
-                            background: "#e5e7eb",
-                            borderRadius: "6px",
-                          }}
-                        />
+                      <div key={i} className="pd_box shadow skeleton-card">
+                        <div className="skeleton-img" />
+                        <div className="skeleton-line w-80" />
+                        <div className="skeleton-line w-60" />
+                        <div className="skeleton-btn" />
                       </div>
                     ))}
-                    <style>
-                      {`
-                        @keyframes pulse {
-                          0% { opacity: 0.6; }
-                          50% { opacity: 1; }
-                          100% { opacity: 0.6; }
-                        }
-                      `}
-                    </style>
                   </>
                 ) : filteredMedicines.length === 0 ? (
                   <p>No products found.</p>

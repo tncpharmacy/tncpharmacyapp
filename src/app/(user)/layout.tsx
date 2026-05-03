@@ -1,3 +1,4 @@
+import "bootstrap/dist/css/bootstrap.min.css";
 import { getMenuData } from "@/lib/server/menu";
 import SiteHeader from "@/app/(user)/components/header/header";
 

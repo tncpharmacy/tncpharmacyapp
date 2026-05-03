@@ -37,10 +37,8 @@ import { getCategories } from "@/lib/features/categorySlice/categorySlice";
 import { getSubcategories } from "@/lib/features/subCategorySlice/subCategorySlice";
 import { getGenericsAllList } from "@/lib/features/genericSlice/genericSlice";
 import { getManufacturersAllList } from "@/lib/features/manufacturerSlice/manufacturerSlice";
+import Slider from "react-slick";
 
-const Slider = dynamic(() => import("react-slick"), {
-  ssr: false,
-});
 const Footer = dynamic(() => import("@/app/(user)/components/footer/footer"), {
   ssr: false,
 });
@@ -134,6 +132,7 @@ export default function MedicinesDetailsClient({
   // for modal open and close state
   const [showModal, setShowModal] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(0);
+
   // start for increse header count code
   const buyer = useAppSelector((state) => state.buyer.buyer);
   const {

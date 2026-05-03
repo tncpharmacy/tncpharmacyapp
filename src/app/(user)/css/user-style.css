@@ -1903,3 +1903,49 @@ width: 33%;
   font-weight: 600;    /* 👈 bold text */
   color: #111;
 }
+
+.skl {
+  background: #e5e7eb;
+  border-radius: 6px;
+  animation: pulse 1.5s infinite;
+}
+
+.skeleton-title {
+  height: 30px;
+  width: 70%;
+  margin-bottom: 15px;
+}
+
+.skeleton-text {
+  height: 15px;
+  width: 90%;
+  margin-bottom: 10px;
+}
+
+.skeleton-text-lg {
+  height: 20px;
+  width: 60%;
+  margin-bottom: 15px;
+}
+
+.skeleton-image {
+  height: 250px;
+  width: 100%;
+}
+
+.skeleton-price {
+  height: 25px;
+  width: 60%;
+  margin-bottom: 15px;
+}
+
+.skeleton-btn {
+  height: 40px;
+  width: 100%;
+}
+
+@keyframes pulse {
+  0% { opacity: 0.6; }
+  50% { opacity: 1; }
+  100% { opacity: 0.6; }
+}

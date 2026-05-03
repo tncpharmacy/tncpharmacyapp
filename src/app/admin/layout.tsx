@@ -1,5 +1,6 @@
 "use client";
 
+import "bootstrap/dist/css/bootstrap.min.css";
 import { useEffect } from "react";
 import ProtectedRoute from "@/components/ProtectedRoute/ProtectedRoute";
 

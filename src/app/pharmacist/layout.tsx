@@ -1,4 +1,5 @@
 // app/pharmacyadmin/layout.tsx
+import "bootstrap/dist/css/bootstrap.min.css";
 import ProtectedRoute from "@/components/ProtectedRoute/ProtectedRoute";
 
 export const metadata = {

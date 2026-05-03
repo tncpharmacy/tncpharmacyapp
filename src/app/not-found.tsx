@@ -1,5 +1,5 @@
 import Link from "next/link";
-import "./(user)/css/site-style.css";
+import "@/app/(user)/css/site-style.css";
 import SiteHeader from "@/app/(user)/components/header/header";
 import Footer from "@/app/(user)/components/footer/footer";
 import { getMenuData } from "@/lib/server/menu";

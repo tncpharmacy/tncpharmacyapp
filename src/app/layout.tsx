@@ -1,4 +1,4 @@
-import "./styles/globals.css";
+import "./styles/common.css";
 import "bootstrap/dist/css/bootstrap.min.css";
 import ToastProvider from "@/components/ToastProvider/ToastProvider";
 import Providers from "./Provider";
