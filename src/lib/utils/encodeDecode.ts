@@ -8,13 +8,23 @@ export const encodeId = (id: number) => {
 
 export const decodeId = (encoded: string | string[] | undefined) => {
   if (!encoded) return null;
-  const str = Array.isArray(encoded) ? encoded[0] : encoded;
 
-  // restore padding and normal Base64 chars
-  const padded = str
-    .padEnd(str.length + ((4 - (str.length % 4)) % 4), "=")
-    .replace(/-/g, "+")
-    .replace(/_/g, "/");
+  try {
+    const str = Array.isArray(encoded) ? encoded[0] : encoded;
 
-  return parseInt(atob(padded));
+    const padded = str
+      .padEnd(str.length + ((4 - (str.length % 4)) % 4), "=")
+      .replace(/-/g, "+")
+      .replace(/_/g, "/");
+
+    const decoded = atob(padded);
+
+    const num = parseInt(decoded);
+
+    if (isNaN(num)) return null; // 🔥 extra safety
+
+    return num;
+  } catch (error) {
+    return null; // 🔥 MOST IMPORTANT
+  }
 };

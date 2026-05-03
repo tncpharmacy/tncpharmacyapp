@@ -3,7 +3,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import "../../css/site-style.css";
 import "../../css/user-style.css";
-import { useRouter, useParams } from "next/navigation";
+import { useRouter, useParams, notFound } from "next/navigation";
 import { encodeId, decodeId } from "@/lib/utils/encodeDecode";
 import { useAppDispatch, useAppSelector } from "@/lib/hooks";
 import {
@@ -14,7 +14,6 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import { useHealthBag } from "@/lib/hooks/useHealthBag";
 import { getCategories } from "@/lib/features/categorySlice/categorySlice";
 import Footer from "@/app/(user)/components/footer/footer";
-import { useShuffledProduct } from "@/lib/hooks/useShuffledProduct";
 import { HealthBag } from "@/types/healthBag";
 import TncLoader from "@/app/components/TncLoader/TncLoader";
 import { loadLocalHealthBag } from "@/lib/features/healthBagSlice/healthBagSlice";
@@ -51,8 +50,11 @@ export default function AllGroupCareClient() {
   const nextUrl = useAppSelector((state) => state.medicine.next);
   const { groupName } = useAppSelector((state) => state.medicine);
   const { loading } = useAppSelector((state) => state.medicine);
-  const { list: categories } = useAppSelector((state) => state.category);
   const [isMobile, setIsMobile] = useState(false);
+
+  if (!categoryIdNum) {
+    notFound();
+  }
 
   useEffect(() => {
     const checkScreen = () => {
@@ -64,18 +66,6 @@ export default function AllGroupCareClient() {
 
     return () => window.removeEventListener("resize", checkScreen);
   }, []);
-  // SHUFFLE SAFE
-  const shuffledFromHook = useShuffledProduct(
-    medicines,
-    `groupcare-page-${categoryIdNum}`
-  );
-
-  const finalShuffledList = medicines;
-
-  // CATEGORY NAME
-  const categoryName =
-    categories.find((cat) => cat.id === categoryIdNum)?.category_name ||
-    "Unknown Category";
 
   // Fetch API calls
   useEffect(() => {
@@ -285,7 +275,11 @@ export default function AllGroupCareClient() {
   };
 
   const handleClick = (medicine_id: number) => {
-    router.push(`/product-details/${encodeId(medicine_id)}`);
+    router.push(
+      `/product-details/${encodeId(medicine_id)}?group=${encodeId(
+        categoryIdNum
+      )}`
+    );
   };
 
   const isInitialLoading = loading || pageLoading;

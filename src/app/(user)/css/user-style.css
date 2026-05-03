@@ -943,9 +943,7 @@ display: flex;
   }
 
   /* Content tighten */
-  .medicine-info-col {
-    margin-bottom: 10px;
-  }
+  
 
   .herotab_list {
     display: flex;

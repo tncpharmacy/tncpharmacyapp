@@ -11,7 +11,7 @@ import React, {
 } from "react";
 import "../css/site-style.css";
 import "../css/user-style.css";
-import { useRouter, useSearchParams } from "next/navigation";
+import { notFound, useRouter, useSearchParams } from "next/navigation";
 import { useAppDispatch, useAppSelector } from "@/lib/hooks";
 import { useHealthBag } from "@/lib/hooks/useHealthBag";
 import Footer from "@/app/(user)/components/footer/footer";
@@ -57,7 +57,9 @@ export default function SearchTextClient() {
   const [guestItems, setGuestItems] = useState<any[]>([]);
 
   const [isMobile, setIsMobile] = useState(false);
-
+  if (!searchText) {
+    notFound();
+  }
   useEffect(() => {
     const checkScreen = () => {
       setIsMobile(window.innerWidth < 768); // mobile breakpoint

@@ -106,6 +106,70 @@ export async function generateMetadata({ params }: Props) {
   }
 }
 
-export default function Page() {
-  return <AllGroupCareClient />;
+export default async function Page({ params }: Props) {
+  const { id } = params;
+
+  const decodedId = decodeId(id);
+  const groupId = Number(decodedId);
+
+  let groupName = "Group Care";
+
+  try {
+    if (!isNaN(groupId)) {
+      const res = await fetchGroupCareById(groupId);
+      groupName = res?.group_name || "Group Care";
+    }
+  } catch (e) {}
+
+  const pageUrl = `https://tncpharmacy.in/all-group-care/${id}`;
+
+  return (
+    <>
+      {/* ✅ CollectionPage Schema */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "CollectionPage",
+            name: `${groupName} Products`,
+            url: pageUrl,
+          }),
+        }}
+      />
+
+      {/* ✅ Breadcrumb Schema */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "BreadcrumbList",
+            itemListElement: [
+              {
+                "@type": "ListItem",
+                position: 1,
+                name: "Home",
+                item: "https://tncpharmacy.in",
+              },
+              {
+                "@type": "ListItem",
+                position: 2,
+                name: "Group Care",
+                item: "https://tncpharmacy.in/all-group-care",
+              },
+              {
+                "@type": "ListItem",
+                position: 3,
+                name: groupName,
+                item: pageUrl,
+              },
+            ],
+          }),
+        }}
+      />
+
+      <AllGroupCareClient />
+    </>
+  );
 }

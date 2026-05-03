@@ -679,6 +679,19 @@ export default function HealthBagClient() {
       <section className="py-4 bg-light">
         <div className="container">
           <div className="row g-4">
+            <nav aria-label="breadcrumb">
+              <ol className="breadcrumb">
+                <li className="breadcrumb-item">
+                  <Link href="/" style={{ textDecoration: "none" }}>
+                    Home
+                  </Link>
+                </li>
+
+                <li className="breadcrumb-item active" aria-current="page">
+                  Health Bag
+                </li>
+              </ol>
+            </nav>
             {/* Left: Items List */}
             <div className={isCartEmpty ? "col-12" : "col-lg-8"}>
               {mounted && buyer?.id ? (

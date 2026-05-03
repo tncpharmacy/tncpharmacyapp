@@ -185,7 +185,7 @@ export default function MedicineCard({
 
   // 👇 onClick function
   const handleClick = (id: number) => {
-    router.push(`/medicines-details/${encodeId(id)}`);
+    router.push(`/medicines-details/${encodeId(id)}?src=all`);
   };
 
   let imageSrc = "/images/tnc-default.png";

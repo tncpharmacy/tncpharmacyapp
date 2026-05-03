@@ -73,33 +73,90 @@ export async function generateMetadata({ params }: Props) {
   }
 }
 
-export default function Page() {
+export default async function Page({ params }: Props) {
+  const { id } = params;
+
+  const baseUrl = "https://tncpharmacy.in";
+  const decodedId = decodeId(id);
+  const productId = Number(decodedId);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let product: any = null;
+
+  try {
+    if (!isNaN(productId)) {
+      const res = await fetchMenuMedicinesByOtherIdSeo(productId);
+      product = res?.data;
+    }
+  } catch (e) {}
+
+  const name = product?.medicine_name || "Product";
+  const description =
+    product?.description || "Buy medicine online at best price";
+  const image =
+    product?.images?.[0]?.document || `${baseUrl}/images/tnc-default.png`;
+  const brand = product?.manufacturer_name || "Generic";
+  const price = Number(product?.mrp ?? 0);
+  const discount = Number(product?.discount ?? 0);
+
+  const finalPrice =
+    price && discount ? price - (price * discount) / 100 : price;
+
+  const url = `${baseUrl}/product-details/${id}`;
+
   return (
     <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify({
-            "@context": "https://schema.org",
-            "@type": "Product",
-            name: "Product Name",
-            image: "image-url",
-            description: "product desc",
-            brand: {
-              "@type": "Brand",
-              name: "Brand Name",
-            },
-            offers: {
-              "@type": "Offer",
-              priceCurrency: "INR",
-              price: "100",
-              availability: "https://schema.org/InStock",
-            },
-          }),
-        }}
-      />
+      {/* ✅ PRODUCT SCHEMA */}
+      {product && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org/",
+              "@type": "Product",
 
-      <ProductDetailsClient />
+              name: name,
+              image: [image],
+              description: description,
+              sku: productId,
+              url: url,
+
+              brand: {
+                "@type": "Brand",
+                name: brand,
+              },
+
+              offers: {
+                "@type": "Offer",
+                url: url,
+                priceCurrency: "INR",
+                price: finalPrice,
+                availability: "https://schema.org/InStock",
+                itemCondition: "https://schema.org/NewCondition",
+              },
+
+              // ⭐ optional (agar future me rating aaye)
+              ...(product?.rating && {
+                aggregateRating: {
+                  "@type": "AggregateRating",
+                  ratingValue: product.rating,
+                  reviewCount: product.reviewCount || 1,
+                },
+              }),
+
+              // 💊 pharmacy specific
+              additionalProperty: [
+                {
+                  "@type": "PropertyValue",
+                  name: "Prescription Required",
+                  value: product?.prescription_required ? "Yes" : "No",
+                },
+              ],
+            }),
+          }}
+        />
+      )}
+
+      <ProductDetailsClient product={product} />
     </>
   );
 }

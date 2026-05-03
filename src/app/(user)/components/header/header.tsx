@@ -630,12 +630,18 @@ const SiteHeader = ({ initialCategories, initialSubcategories }: Props) => {
                         alt="Profile"
                         width={24}
                         height={24}
-                        loading="lazy"
+                        priority
                       />
                     </i>
 
                     {/* 🔥 TEXT CHANGE */}
-                    {mounted ? (buyer ? "Account" : "Login") : ""}
+                    <span>
+                      {buyer === undefined
+                        ? "..."
+                        : buyer
+                        ? "Account"
+                        : "Login"}
+                    </span>
                   </span>
 
                   {/* 🔥 DROPDOWN ONLY AFTER LOGIN */}
@@ -684,7 +690,7 @@ const SiteHeader = ({ initialCategories, initialSubcategories }: Props) => {
                         alt="Cart"
                         width={24}
                         height={24}
-                        loading="lazy"
+                        priority
                       />
                       <span className="count">{items?.length || 0}</span>
                     </i>
@@ -781,7 +787,7 @@ const SiteHeader = ({ initialCategories, initialSubcategories }: Props) => {
                     width={20}
                     height={20}
                     alt="Upload"
-                    loading="lazy"
+                    priority
                   />
                 </button>
                 <PrescriptionUploadModal

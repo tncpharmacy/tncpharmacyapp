@@ -58,11 +58,62 @@ export default async function Page() {
     console.error("SSR medicine error:", err);
   }
 
+  <script
+    type="application/ld+json"
+    dangerouslySetInnerHTML={{
+      __html: JSON.stringify({
+        "@context": "https://schema.org",
+        "@type": "CollectionPage",
+        name: "All Medicines Online",
+        url: "https://tncpharmacy.in/all-medicine",
+      }),
+    }}
+  />;
   return (
-    <AllMedicineClient
-      initialData={initialData}
-      initialNext={initialNext}
-      initialCount={initialCount}
-    />
+    <>
+      {/* Collection Page Schema */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "CollectionPage",
+            name: "All Medicines Online",
+            url: "https://tncpharmacy.in/all-medicine",
+          }),
+        }}
+      />
+
+      {/* Breadcrumb Schema */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "BreadcrumbList",
+            itemListElement: [
+              {
+                "@type": "ListItem",
+                position: 1,
+                name: "Home",
+                item: "https://tncpharmacy.in",
+              },
+              {
+                "@type": "ListItem",
+                position: 2,
+                name: "All Medicines",
+                item: "https://tncpharmacy.in/all-medicine",
+              },
+            ],
+          }),
+        }}
+      />
+
+      <AllMedicineClient
+        initialData={initialData}
+        initialNext={initialNext}
+        initialCount={initialCount}
+      />
+    </>
   );
 }

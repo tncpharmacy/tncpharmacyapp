@@ -3,7 +3,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import "../../css/site-style.css";
 import "../../css/user-style.css";
-import { useRouter } from "next/navigation";
+import { notFound, useRouter } from "next/navigation";
 import { encodeId, decodeId } from "@/lib/utils/encodeDecode";
 import { useParams } from "next/navigation";
 import { useAppDispatch, useAppSelector } from "@/lib/hooks";
@@ -56,6 +56,10 @@ export default function AllProductClient() {
 
   const [isMobile, setIsMobile] = useState(false);
 
+  if (!decodedId) {
+    notFound();
+  }
+
   useEffect(() => {
     const checkScreen = () => {
       setIsMobile(window.innerWidth < 768); // mobile breakpoint
@@ -66,16 +70,6 @@ export default function AllProductClient() {
 
     return () => window.removeEventListener("resize", checkScreen);
   }, []);
-
-  // --- CALL SHUFFLE HOOK AT TOP-LEVEL (ESLINT SAFE) ---
-  const shuffledFromHook = useShuffledProduct(
-    medicines,
-    `product-page-category-${categoryIdNum}`
-  );
-
-  const finalShuffledList = useMemo(() => {
-    return [...medicines].sort(() => Math.random() - 0.5);
-  }, [medicines]);
 
   const categoryName =
     categories.find((cat) => cat.id === categoryIdNum)?.category_name ||
@@ -240,7 +234,9 @@ export default function AllProductClient() {
   };
 
   const handleClick = (product_id: number) => {
-    router.push(`/product-details/${encodeId(product_id)}`);
+    router.push(
+      `/product-details/${encodeId(product_id)}?cat=${encodeId(categoryIdNum!)}`
+    );
   };
 
   const isInitialLoading = loading || pageLoading;

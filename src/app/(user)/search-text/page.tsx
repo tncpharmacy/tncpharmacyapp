@@ -27,6 +27,11 @@ export async function generateMetadata({ searchParams }: Props) {
         canonical: url,
       },
 
+      robots: {
+        index: false,
+        follow: true,
+      },
+
       openGraph: {
         title: "Search Medicines | TnC Pharmacy",
         description: "Search medicines online",
@@ -71,10 +76,31 @@ export async function generateMetadata({ searchParams }: Props) {
   };
 }
 
-export default function Page() {
+export default function Page({ searchParams }: Props) {
+  const searchText = searchParams?.text || "";
+
   return (
-    <Suspense fallback={<div>Loading...</div>}>
-      <SearchTextClient />
-    </Suspense>
+    <>
+      {/* ⚠️ Optional Schema */}
+      {searchText && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "SearchResultsPage",
+              name: `Search results for ${searchText}`,
+              url: `https://tncpharmacy.in/search?text=${encodeURIComponent(
+                searchText
+              )}`,
+            }),
+          }}
+        />
+      )}
+
+      <Suspense fallback={<div>Loading...</div>}>
+        <SearchTextClient />
+      </Suspense>
+    </>
   );
 }

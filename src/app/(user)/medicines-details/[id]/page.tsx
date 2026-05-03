@@ -73,33 +73,64 @@ export async function generateMetadata({ params }: Props) {
   }
 }
 
-export default function Page() {
+export default async function Page({ params }: Props) {
+  const { id } = params;
+
+  const decodedId = decodeId(id);
+  const medicineId = Number(decodedId);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let medicine: any = null;
+
+  try {
+    const res = await fetchMenuMedicinesByIdForSeo(medicineId);
+    medicine = res?.data || null;
+  } catch (err) {
+    console.error("Medicine fetch error:", err);
+  }
+
+  const name = medicine?.medicine_name || "Medicine";
+  const description = medicine?.description || "";
+  const manufacturer = medicine?.manufacturer_name || "TnC Pharmacy";
+  const image = medicine?.images?.[0]?.document || "/images/tnc-default.png";
+
+  const mrp = Number(medicine?.mrp ?? 0);
+  const discount = Number(medicine?.discount ?? 0);
+
+  const finalPrice = mrp && discount ? mrp - (mrp * discount) / 100 : mrp;
+
   return (
     <>
+      {/* ✅ DYNAMIC SCHEMA */}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
           __html: JSON.stringify({
             "@context": "https://schema.org",
             "@type": "Product",
-            name: "Product Name",
-            image: "image-url",
-            description: "product desc",
+
+            name: name,
+            image: [image],
+            description: description,
+
             brand: {
               "@type": "Brand",
-              name: "Brand Name",
+              name: manufacturer,
             },
+
             offers: {
               "@type": "Offer",
+              url: `https://tncpharmacy.in/medicines-details/${id}`,
               priceCurrency: "INR",
-              price: "100",
+              price: finalPrice,
               availability: "https://schema.org/InStock",
+              itemCondition: "https://schema.org/NewCondition",
             },
           }),
         }}
       />
 
-      <MedicinesDetailsClient />
+      {/* ✅ PASS DATA TO CLIENT */}
+      <MedicinesDetailsClient medicine={medicine} />
     </>
   );
 }

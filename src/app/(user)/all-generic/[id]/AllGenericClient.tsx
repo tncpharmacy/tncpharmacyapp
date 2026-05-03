@@ -3,7 +3,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import "../../css/site-style.css";
 import "../../css/user-style.css";
-import { useRouter } from "next/navigation";
+import { notFound, useRouter } from "next/navigation";
 import { encodeId, decodeId } from "@/lib/utils/encodeDecode";
 import { useParams } from "next/navigation";
 import { useAppDispatch, useAppSelector } from "@/lib/hooks";
@@ -52,20 +52,7 @@ export default function AllGenericClient() {
 
   const { loading } = useAppSelector((state) => state.medicine);
 
-  const { list: categories } = useAppSelector((state) => state.category);
-
-  // --- CALL SHUFFLE HOOK AT TOP-LEVEL (ESLINT SAFE) ---
-  const shuffledFromHook = useShuffledProduct(
-    medicines,
-    `product-page-category-${categoryIdNum}`
-  );
-
-  const finalShuffledList = medicines;
-
   const genericName = medicines?.[0]?.generic_name || "Loading...";
-  const categoryName =
-    categories.find((cat) => cat.id === categoryIdNum)?.category_name ||
-    "Unknown Category";
 
   // --- Local states for instant UI ---
   const [localBag, setLocalBag] = useState<number[]>([]);
@@ -73,6 +60,10 @@ export default function AllGenericClient() {
   const [searchTerm, setSearchTerm] = useState("");
 
   const [isMobile, setIsMobile] = useState(false);
+
+  if (!decodedId) {
+    notFound();
+  }
 
   useEffect(() => {
     const checkScreen = () => {
@@ -247,11 +238,18 @@ export default function AllGenericClient() {
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleClick = (item: any) => {
+    let url = "";
+
     if (item.category_id === 1) {
-      router.push(`/medicines-details/${encodeId(item.id)}`);
+      url = `/medicines-details/${encodeId(item.id)}?gen=${encodeId(
+        categoryIdNum!
+      )}`;
     } else {
-      router.push(`/product-details/${encodeId(item.id)}`);
+      url = `/product-details/${encodeId(item.id)}?gen=${encodeId(
+        categoryIdNum!
+      )}`;
     }
+    router.push(url);
   };
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const getMedicineImage = (medicine: any) => {

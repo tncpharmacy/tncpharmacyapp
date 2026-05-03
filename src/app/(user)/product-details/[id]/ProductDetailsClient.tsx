@@ -2,175 +2,89 @@
 import React, { useEffect, useState } from "react";
 import "../../css/site-style.css";
 import "../../css/user-style.css";
-import SiteHeader from "@/app/(user)/components/header/header";
-import Slider from "react-slick";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 import { Modal } from "react-bootstrap";
-import { useParams, useRouter } from "next/navigation";
-import { decodeId } from "@/lib/utils/encodeDecode";
-import HorizontalAccordionTabs from "@/app/(user)/product-details/HorizontalAccordionTabs";
+import {
+  notFound,
+  useParams,
+  useRouter,
+  useSearchParams,
+} from "next/navigation";
+import { decodeId, encodeId } from "@/lib/utils/encodeDecode";
 import { useAppDispatch, useAppSelector } from "@/lib/hooks";
 import {
-  getMedicinesMenuById,
+  getGroupCare,
   getMedicinesMenuByOtherId,
 } from "@/lib/features/medicineSlice/medicineSlice";
-import {
-  Medicine,
-  MedicineSafety,
-  SafetyFieldKeys,
-  SafetyLabelKeys,
-} from "@/types/medicine";
+import { Medicine } from "@/types/medicine";
 import Link from "next/link";
 import Image from "next/image";
-import Footer from "@/app/(user)/components/footer/footer";
 import { useHealthBag } from "@/lib/hooks/useHealthBag";
 import { HealthBag } from "@/types/healthBag";
 import { formatAmount } from "@/lib/utils/formatAmount";
 import { formatPrice } from "@/lib/utils/formatPrice";
 import { loadLocalHealthBag } from "@/lib/features/healthBagSlice/healthBagSlice";
+import dynamic from "next/dynamic";
+import { getCategories } from "@/lib/features/categorySlice/categorySlice";
+import { getSubcategories } from "@/lib/features/subCategorySlice/subCategorySlice";
+import { fetchGenericAllList } from "@/lib/api/generic";
+import { getGenericsAllList } from "@/lib/features/genericSlice/genericSlice";
+import { getManufacturersAllList } from "@/lib/features/manufacturerSlice/manufacturerSlice";
 
-// Types
-interface PackOption {
-  id: string;
-  label: string;
-  price: number;
-}
-
-interface Product {
-  title: string;
-  brand: string;
-  rating: number;
-  ratingCount: number;
-  flavour: string;
-  highlights: string[];
-  packOptions: PackOption[];
-}
-
-// Utility
-function formatRs(n: number) {
-  return `₹${n.toLocaleString("en-IN")}`;
-}
-
-// Components
-const ThumbnailGallery: React.FC<{
-  thumbnails: string[];
-  selectedImage: string;
-  setSelectedImage: (img: string) => void;
-}> = ({ thumbnails, selectedImage, setSelectedImage }) => (
-  <div className="w-full md:w-20 flex md:flex-col items-center gap-3 overflow-auto">
-    {thumbnails.map((t) => (
-      <button
-        key={t}
-        onClick={() => setSelectedImage(t)}
-        className={`border rounded-lg p-1 hover:shadow-md transition-all duration-150 ${
-          selectedImage === t ? "ring-2 ring-green-400" : ""
-        }`}
-      >
-        <img src={t} alt="thumb" className="w-16 h-16 object-cover rounded" />
-      </button>
-    ))}
-  </div>
-);
-
-const ProductHighlights: React.FC<{ highlights: string[] }> = ({
-  highlights,
-}) => (
-  <div className="mt-6">
-    <h3 className="text-sm font-medium text-gray-800">Product highlights</h3>
-    <ul className="list-disc list-inside mt-2 text-gray-600 space-y-1">
-      {highlights.map((h, i) => (
-        <li key={i}>{h}</li>
-      ))}
-    </ul>
-  </div>
-);
-
-const PackSelector: React.FC<{
-  packOptions: PackOption[];
-  selectedPack: string;
-  setSelectedPack: (id: string) => void;
-}> = ({ packOptions, selectedPack, setSelectedPack }) => (
-  <div className="mt-4">
-    <div className="text-sm text-gray-700">Pack Size</div>
-    <div className="mt-2 flex gap-3">
-      {packOptions.map((opt) => (
-        <button
-          key={opt.id}
-          onClick={() => setSelectedPack(opt.id)}
-          className={`border rounded-lg px-3 py-2 text-sm font-medium hover:shadow-sm transition ${
-            selectedPack === opt.id
-              ? "bg-red-50 border-red-300 text-red-700"
-              : "bg-white text-gray-700"
-          }`}
-        >
-          <div>{opt.label}</div>
-          <div className="text-xs mt-1">{formatRs(opt.price)}</div>
-        </button>
-      ))}
-    </div>
-  </div>
-);
-
-const QuantitySelector: React.FC<{
-  qty: number;
-  setQty: (qty: number) => void;
-}> = ({ qty, setQty }) => (
-  <div className="flex items-center border rounded-md overflow-hidden">
-    <button
-      onClick={() => setQty(Math.max(1, qty - 1))}
-      className="px-3 py-2 text-lg"
-    >
-      −
-    </button>
-    <div className="px-4 py-2 min-w-[44px] text-center">{qty}</div>
-    <button onClick={() => setQty(qty + 1)} className="px-3 py-2 text-lg">
-      +
-    </button>
-  </div>
-);
-
-const PriceBox: React.FC<{
-  price: number;
-  qty: number;
-  addToCart: () => void;
-}> = ({ price, qty, addToCart }) => (
-  <div className="bg-gray-50 border rounded-lg p-4 shadow-sm sticky bottom-4 md:static">
-    <div className="flex items-center justify-between">
-      <div>
-        <div className="text-sm text-gray-500">Price</div>
-        <div className="text-2xl font-semibold text-gray-900">
-          {formatRs(price)}
-        </div>
-        <div className="text-xs text-gray-400">Inclusive of all taxes</div>
-      </div>
-      <QuantitySelector qty={qty} setQty={() => {}} />
-    </div>
-    <div className="mt-4">
-      <button
-        onClick={addToCart}
-        className="w-full bg-red-500 hover:bg-red-600 text-white rounded-md py-3 font-medium shadow"
-      >
-        Add to cart
-      </button>
-      <div className="mt-2 text-xs text-gray-500">
-        <p>New GST benefit included in this MRP, may differ from label</p>
-        <p>Not returnable • Read policy</p>
-      </div>
-    </div>
-  </div>
-);
-
+const Slider = dynamic(() => import("react-slick"), {
+  ssr: false,
+});
+const Footer = dynamic(() => import("@/app/(user)/components/footer/footer"), {
+  ssr: false,
+});
 const mediaBase = process.env.NEXT_PUBLIC_MEDIA_BASE_URL;
-// Main Page
-export default function ProductDetailsClient() {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export default function ProductDetailsClient({ product }: { product: any }) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { id: params } = useParams();
   const dispatch = useAppDispatch();
   const decodedId = decodeId(params);
-  const getByIdMedicines = useAppSelector(
+  const reduxProduct = useAppSelector(
     (state) => state.medicine.otherMedicines
   ) as unknown as Medicine;
+
+  const catParam = searchParams.get("cat");
+  const subParam = searchParams.get("sub");
+  const genParam = searchParams.get("gen");
+  const manufParam = searchParams.get("manuf");
+  const groupParam = searchParams.get("group");
+  const groupId = decodeId(groupParam || undefined);
+  const manufId = decodeId(manufParam || undefined);
+  const genericId = decodeId(genParam || undefined);
+  const categoryId = decodeId(catParam || undefined);
+  const subCategoryId = decodeId(subParam || undefined);
+  const { list: categories } = useAppSelector((state) => state.category);
+  const { list: subCategories } = useAppSelector((state) => state.subcategory);
+  const { list: generics } = useAppSelector((state) => state.generic);
+  const { list: manufacturers } = useAppSelector((state) => state.manufacturer);
+  const { groupCare: groups } = useAppSelector((state) => state.medicine);
+
+  const categoryName = categories.find(
+    (c) => c.id === categoryId
+  )?.category_name;
+
+  const subCategoryName = subCategories.find(
+    (s) => s.id === subCategoryId
+  )?.sub_category_name;
+
+  const genericName = generics.find(
+    (g) => g.id_generic === genericId
+  )?.generic_name;
+
+  const groupName = groups.find((g) => g.id === groupId)?.group_name;
+
+  const manufacturerName = manufacturers.find(
+    (m) => m.id_manufacturer === manufId
+  )?.manufacturer_name;
+
+  const data = product || reduxProduct;
   const {
     id,
     medicine_name,
@@ -186,7 +100,7 @@ export default function ProductDetailsClient() {
     description,
     product_introduction,
     images,
-  } = getByIdMedicines;
+  } = data || {};
 
   const [activeSectionId, setActiveSectionId] = useState("1");
   const [quantity, setQuantity] = useState(1);
@@ -194,14 +108,15 @@ export default function ProductDetailsClient() {
   // --- Local states for instant UI ---
   const [localBag, setLocalBag] = useState<number[]>([]);
   const [processingIds, setProcessingIds] = useState<number[]>([]);
+  // for modal open and close state
+  const [showModal, setShowModal] = useState(false);
+  const [selectedIndex, setSelectedIndex] = useState(0);
   // start for increse header count code
   const buyer = useAppSelector((state) => state.buyer.buyer);
   const {
     items: bagItem,
     addItem,
-    removeItem,
     mergeGuestCart,
-    fetchCart,
     increaseQty,
     decreaseQty,
     updateGuestQuantity,
@@ -214,6 +129,17 @@ export default function ProductDetailsClient() {
     { id: "2", title: "Description" },
   ];
   const [isMobile, setIsMobile] = useState(false);
+
+  if (!decodedId) {
+    notFound();
+  }
+  useEffect(() => {
+    dispatch(getCategories());
+    dispatch(getSubcategories());
+    dispatch(getGenericsAllList());
+    dispatch(getManufacturersAllList());
+    dispatch(getGroupCare());
+  }, [dispatch]);
 
   useEffect(() => {
     const checkScreen = () => setIsMobile(window.innerWidth < 768);
@@ -232,14 +158,19 @@ export default function ProductDetailsClient() {
   };
   // 🧩 Find default image safely
   const primaryImage =
-    images?.find((img) => img.default_image === 1) || images?.[0] || null;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    data?.images?.find((img: any) => img.default_image === 1) ||
+    data?.images?.[0] ||
+    null;
 
   // 🧩 Build image list safely
   const imageList = React.useMemo(() => {
     if (!images || images.length === 0) return [];
     const others = images
-      ?.filter((img) => img.id !== primaryImage?.id)
-      ?.map((img) => getRelativePath(img.document));
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      ?.filter((img: any) => img.id !== primaryImage?.id)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      ?.map((img: any) => getRelativePath(img.document));
     return [
       ...(primaryImage ? [getRelativePath(primaryImage.document)] : []),
       ...(others ?? []),
@@ -247,10 +178,6 @@ export default function ProductDetailsClient() {
   }, [images, primaryImage]);
 
   const hasImages = imageList && imageList.length > 0;
-
-  const [selectedImage, setSelectedImage] = useState(
-    "/images/product-main.jpg"
-  );
 
   useEffect(() => {
     if (!id || !bagItem) return;
@@ -373,49 +300,11 @@ export default function ProductDetailsClient() {
     }
   };
 
-  const handleRemove = async (productId: number) => {
-    setLocalBag((prev) => prev.filter((id) => id !== productId));
-    setProcessingIds((prev) => [...prev, productId]);
-    try {
-      await removeItem(productId);
-    } finally {
-      setProcessingIds((prev) => prev.filter((id) => id !== productId));
-    }
-  };
-
-  const [qty, setQty] = useState(1);
-  const [selectedPack, setSelectedPack] = useState("500g");
   useEffect(() => {
-    if (decodedId) dispatch(getMedicinesMenuByOtherId(decodedId));
-  }, [decodedId]);
-
-  const product: Product = {
-    title:
-      "Nutrabay Wellness All-Natural Plant Protein + Superfoods | For Muscles & Digestion | Gourmet Chocolate",
-    brand: "Nutrabay Retail Pvt. Ltd.",
-    rating: 4.3,
-    ratingCount: 14,
-    flavour: "Gourmet Chocolate",
-    highlights: [
-      "It may help in faster absorption of protein",
-      "It is gluten and dairy-free",
-      "It can help in managing appetite",
-    ],
-    packOptions: [
-      { id: "500g", label: "500 gm Powder", price: 901 },
-      { id: "1kg", label: "1 kg Powder", price: 1525 },
-    ],
-  };
-
-  const thumbnails = [
-    "/images/thumb-1.jpg",
-    "/images/thumb-2.jpg",
-    "/images/thumb-3.jpg",
-    "/images/thumb-4.jpg",
-  ];
-
-  const [showModal, setShowModal] = useState(false);
-  const [selectedIndex, setSelectedIndex] = useState(0);
+    if (!product && decodedId) {
+      dispatch(getMedicinesMenuByOtherId(decodedId));
+    }
+  }, [dispatch, decodedId, product]);
 
   const openModal = (index: React.SetStateAction<number>) => {
     setSelectedIndex(index);
@@ -437,16 +326,8 @@ export default function ProductDetailsClient() {
     initialSlide: selectedIndex,
   };
 
-  const price =
-    product.packOptions.find((p) => p.id === selectedPack)?.price ??
-    product.packOptions[0].price;
-
-  const addToCart = () => {
-    alert(`${product.title}\nAdded ${qty} × ${selectedPack} to cart`);
-  };
-
-  const mrps = Number(getByIdMedicines?.mrp ?? 0);
-  const discounts = Number(getByIdMedicines?.discount ?? 0);
+  const mrps = Number(data?.mrp ?? 0);
+  const discounts = Number(data?.discount ?? 0);
 
   useEffect(() => {
     // safe calculation with fallback
@@ -637,6 +518,8 @@ export default function ProductDetailsClient() {
       </div>
     </div>
   );
+
+  console.log("manu", manufacturerName);
   return (
     <>
       {/* <SiteHeader /> */}
@@ -644,15 +527,87 @@ export default function ProductDetailsClient() {
         <div className="container py-4">
           <nav aria-label="breadcrumb" style={{ fontSize: "13px" }}>
             <ol className="breadcrumb">
-              <li className="breadcrumb-item">
-                <Link href="/">Home</Link>
-              </li>
-              {/* <li className="breadcrumb-item">
-                <a href="#">All Medicine</a>
-              </li> */}
-              <li className="breadcrumb-item active" aria-current="page">
-                {medicine_name}
-              </li>
+              <nav aria-label="breadcrumb" style={{ fontSize: "13px" }}>
+                <ol className="breadcrumb">
+                  <li className="breadcrumb-item">
+                    <Link href="/" style={{ textDecoration: "none" }}>
+                      Home
+                    </Link>
+                  </li>
+                  {/* all-product */}
+                  {categoryName && (
+                    <li className="breadcrumb-item text-primary">
+                      <span
+                        style={{ cursor: "pointer" }}
+                        onClick={() =>
+                          router.push(`/all-product/${encodeId(categoryId!)}`)
+                        }
+                      >
+                        {categoryName}
+                      </span>
+                    </li>
+                  )}
+                  {/* all-generic */}
+                  {genericName && (
+                    <li className="breadcrumb-item text-primary">
+                      <span
+                        style={{ cursor: "pointer" }}
+                        onClick={() =>
+                          router.push(`/all-generic/${encodeId(genericId!)}`)
+                        }
+                      >
+                        {genericName}
+                      </span>
+                    </li>
+                  )}
+                  {/* all-manufacturer */}
+                  {manufacturerName && (
+                    <li className="breadcrumb-item text-primary">
+                      <span
+                        style={{ cursor: "pointer" }}
+                        onClick={() =>
+                          router.push(`/all-manufacturer/${encodeId(manufId!)}`)
+                        }
+                      >
+                        {manufacturerName}
+                      </span>
+                    </li>
+                  )}
+                  {/* all-group-care */}
+                  {groupName && (
+                    <li className="breadcrumb-item text-primary">
+                      <span
+                        style={{ cursor: "pointer" }}
+                        onClick={() =>
+                          router.push(`/all-group-care/${encodeId(groupId!)}`)
+                        }
+                      >
+                        {groupName}
+                      </span>
+                    </li>
+                  )}
+                  {/* all-products */}
+                  {subCategoryName && (
+                    <li className="breadcrumb-item text-primary">
+                      <span
+                        style={{ cursor: "pointer" }}
+                        onClick={() =>
+                          router.push(
+                            `/all-products/${encodeId(categoryId!)}/${encodeId(
+                              subCategoryId!
+                            )}`
+                          )
+                        }
+                      >
+                        {subCategoryName}
+                      </span>
+                    </li>
+                  )}
+                  <li className="breadcrumb-item active" aria-current="page">
+                    {medicine_name}
+                  </li>
+                </ol>
+              </nav>
             </ol>
           </nav>
 
@@ -725,13 +680,6 @@ export default function ProductDetailsClient() {
                             const fullUrl = cleanedBase
                               ? `${cleanedBase}/${cleanedSrc}`
                               : rawSrc;
-
-                            // debug log (remove after debugging)
-                            // eslint-disable-next-line no-console
-                            // console.log(
-                            //   `[PRODUCT IMAGE] index=${index} ->`,
-                            //   fullUrl
-                            // );
 
                             return (
                               <div
@@ -928,61 +876,6 @@ export default function ProductDetailsClient() {
                       : "Add to Health Bag"}
                   </button>
                 </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="min-h-screen bg-gray-50 py-8 px-4 md:px-12 lg:px-20 d-none">
-          <div className="max-w-6xl mx-auto bg-white rounded-2xl shadow-md overflow-hidden">
-            <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
-              {/* Gallery */}
-              <div className="md:col-span-7 p-6 flex flex-col md:flex-row gap-6">
-                <ThumbnailGallery
-                  thumbnails={thumbnails}
-                  selectedImage={selectedImage}
-                  setSelectedImage={setSelectedImage}
-                />
-                <div className="flex-1 flex items-start justify-center">
-                  <div className="w-full max-w-lg">
-                    <img
-                      src={selectedImage}
-                      alt="product"
-                      className="w-full h-auto rounded-lg object-contain shadow-sm"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Product Info */}
-              <div className="md:col-span-5 p-6 flex flex-col gap-6">
-                <div>
-                  <h1 className="text-xl md:text-2xl font-semibold">
-                    {product.title}
-                  </h1>
-                  <p className="text-sm text-gray-500 mt-1">{product.brand}</p>
-                  <div className="mt-3 flex items-center gap-3">
-                    <div className="bg-green-600 text-white text-xs px-2 py-1 rounded">
-                      {product.rating} ★
-                    </div>
-                    <div className="text-sm text-gray-600">
-                      {product.ratingCount} Ratings
-                    </div>
-                  </div>
-                  <div className="mt-4">
-                    <div className="text-sm text-gray-700">Flavour</div>
-                    <div className="mt-2 inline-block border rounded-md px-3 py-1 text-sm text-orange-800 bg-orange-50">
-                      {product.flavour}
-                    </div>
-                  </div>
-                  <PackSelector
-                    packOptions={product.packOptions}
-                    selectedPack={selectedPack}
-                    setSelectedPack={setSelectedPack}
-                  />
-                  <ProductHighlights highlights={product.highlights} />
-                </div>
-                <PriceBox price={price} qty={qty} addToCart={addToCart} />
               </div>
             </div>
           </div>

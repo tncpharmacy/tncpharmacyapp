@@ -129,6 +129,83 @@ export async function generateMetadata({ params }: Props) {
   }
 }
 
-export default function Page() {
-  return <AllProductsClient />;
+export default async function Page({ params }: Props) {
+  const { categoryId, subCategoryId } = params;
+
+  const decodedCategoryId = decodeId(categoryId);
+  const decodedSubCategoryId = decodeId(subCategoryId);
+
+  const catId = Number(decodedCategoryId);
+  const subCatId = Number(decodedSubCategoryId);
+
+  let categoryName = "Products";
+  let subCategoryName = "";
+
+  try {
+    if (!isNaN(catId) && !isNaN(subCatId)) {
+      const [categoryRes, subCategoryRes] = await Promise.all([
+        fetchCategoryByIdForSeo(catId),
+        fetchSubcategoryByIdForSeo(subCatId),
+      ]);
+
+      categoryName = categoryRes?.data?.category_name || "Products";
+      subCategoryName = subCategoryRes?.data?.sub_category_name || "";
+    }
+  } catch (e) {}
+
+  const fullName = subCategoryName
+    ? `${categoryName} - ${subCategoryName}`
+    : categoryName;
+
+  const pageUrl = `https://tncpharmacy.in/all-products/${categoryId}/${subCategoryId}`;
+
+  return (
+    <>
+      {/* ✅ CollectionPage */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "CollectionPage",
+            name: `${fullName} Products`,
+            url: pageUrl,
+          }),
+        }}
+      />
+
+      {/* ✅ Breadcrumb */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "BreadcrumbList",
+            itemListElement: [
+              {
+                "@type": "ListItem",
+                position: 1,
+                name: "Home",
+                item: "https://tncpharmacy.in",
+              },
+              {
+                "@type": "ListItem",
+                position: 2,
+                name: categoryName,
+                item: `https://tncpharmacy.in/all-product/${categoryId}`,
+              },
+              {
+                "@type": "ListItem",
+                position: 3,
+                name: subCategoryName || "Products",
+                item: pageUrl,
+              },
+            ],
+          }),
+        }}
+      />
+
+      <AllProductsClient />
+    </>
+  );
 }

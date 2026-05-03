@@ -83,6 +83,70 @@ export async function generateMetadata({ params }: Props) {
   }
 }
 
-export default function Page() {
-  return <AllManufacturerClient />;
+export default async function Page({ params }: Props) {
+  const { id } = params;
+
+  const decodedId = decodeId(id);
+  const manufacturerId = Number(decodedId);
+
+  let manufacturerName = "Manufacturer";
+
+  try {
+    if (!isNaN(manufacturerId)) {
+      const res = await fetchMedicineByManufacturerIdSeo(manufacturerId);
+      manufacturerName = res?.data?.manufacturer_name || "Manufacturer";
+    }
+  } catch (e) {}
+
+  const pageUrl = `https://tncpharmacy.in/all-manufacturer/${id}`;
+
+  return (
+    <>
+      {/* ✅ CollectionPage Schema */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "CollectionPage",
+            name: `${manufacturerName} Medicines`,
+            url: pageUrl,
+          }),
+        }}
+      />
+
+      {/* ✅ Breadcrumb Schema */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "BreadcrumbList",
+            itemListElement: [
+              {
+                "@type": "ListItem",
+                position: 1,
+                name: "Home",
+                item: "https://tncpharmacy.in",
+              },
+              {
+                "@type": "ListItem",
+                position: 2,
+                name: "Manufacturers",
+                item: "https://tncpharmacy.in/all-manufacturer",
+              },
+              {
+                "@type": "ListItem",
+                position: 3,
+                name: manufacturerName,
+                item: pageUrl,
+              },
+            ],
+          }),
+        }}
+      />
+
+      <AllManufacturerClient />
+    </>
+  );
 }

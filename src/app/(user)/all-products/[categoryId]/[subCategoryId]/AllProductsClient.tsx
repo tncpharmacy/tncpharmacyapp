@@ -3,7 +3,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import "../../../css/site-style.css";
 import "../../../css/user-style.css";
-import { useRouter } from "next/navigation";
+import { notFound, useRouter } from "next/navigation";
 import { encodeId, decodeId } from "@/lib/utils/encodeDecode";
 import { useParams } from "next/navigation";
 import { useAppDispatch, useAppSelector } from "@/lib/hooks";
@@ -72,6 +72,12 @@ export default function AllProductsClient() {
   const { list: subCategories } = useAppSelector((state) => state.subcategory);
 
   const [isMobile, setIsMobile] = useState(false);
+
+  const isNotCategories = !categoryIdNum || !subCategoryIdNum;
+
+  if (isNotCategories) {
+    notFound();
+  }
 
   useEffect(() => {
     const checkScreen = () => {
@@ -293,7 +299,11 @@ export default function AllProductsClient() {
   };
 
   const handleClick = (product_id: number) => {
-    router.push(`/product-details/${encodeId(product_id)}`);
+    router.push(
+      `/product-details/${encodeId(product_id)}?cat=${encodeId(
+        categoryIdNum!
+      )}&sub=${encodeId(subCategoryIdNum!)}`
+    );
   };
 
   const handleClickCategory = (categoryIdNum: number) => {

@@ -167,7 +167,7 @@ const HorizontalAccordionTabs: React.FC<IDProps> = ({ id }) => {
                         >
                           {/* Left Side */}
                           <div>
-                            <div>
+                            <div className="pd-title">
                               <Link
                                 href={`/medicines-details/${encodeId(item.id)}`}
                               >
@@ -175,7 +175,7 @@ const HorizontalAccordionTabs: React.FC<IDProps> = ({ id }) => {
                               </Link>
                             </div>
                             <div
-                              className="descr"
+                              className="descr pd-title"
                               style={{ color: "#28a745", fontSize: "13px" }}
                             >
                               {item.manufacturer_name}

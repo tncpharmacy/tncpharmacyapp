@@ -49,6 +49,7 @@ export interface Medicine {
   medicine_code: string;
   unit: string;
   medicine_name: string;
+  group_name: string;
   H1_Restricted: number;
   prescription_required: number;
   manufacturer_name?: string;
