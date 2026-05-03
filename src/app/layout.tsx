@@ -5,6 +5,7 @@ import Providers from "./Provider";
 
 import AuthInitializer from "@/components/AuthInitializer/AuthInitializer";
 import LayoutFix from "@/components/LayoutFix/LayoutFix";
+import CookieBanner from "@/app/components/CookieBanner/CookieBanner";
 
 export default function RootLayout({
   children,
@@ -32,7 +33,7 @@ export default function RootLayout({
           {/* ✅ Main content wrapper (IMPORTANT) */}
           <main id="main">{children}</main>
         </Providers>
-
+        <CookieBanner />
         <ToastProvider />
       </body>
     </html>

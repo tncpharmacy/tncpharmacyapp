@@ -636,11 +636,13 @@ const SiteHeader = ({ initialCategories, initialSubcategories }: Props) => {
 
                     {/* 🔥 TEXT CHANGE */}
                     <span>
-                      {buyer === undefined
-                        ? "..."
-                        : buyer
-                        ? "Account"
-                        : "Login"}
+                      <span>
+                        <span
+                          style={{ minWidth: "60px", display: "inline-block" }}
+                        >
+                          {!mounted ? "Login" : buyer ? "Account" : "Login"}
+                        </span>
+                      </span>
                     </span>
                   </span>
 
