@@ -16,6 +16,67 @@ interface MedicineListProps {
   pageLoading: boolean;
 }
 
+const MedicineCardSkeleton = () => {
+  return (
+    <div className="medicine-card">
+      <div className="medicine-content">
+        <div style={{ display: "flex", gap: "10px" }}>
+          <div
+            style={{
+              width: "80px",
+              height: "80px",
+              background: "#e5e7eb",
+              borderRadius: "6px",
+            }}
+          />
+
+          <div style={{ flex: 1 }}>
+            <div
+              style={{
+                height: "14px",
+                background: "#e5e7eb",
+                marginBottom: "6px",
+                width: "80%",
+              }}
+            />
+            <div
+              style={{
+                height: "12px",
+                background: "#e5e7eb",
+                marginBottom: "6px",
+                width: "60%",
+              }}
+            />
+            <div
+              style={{ height: "12px", background: "#e5e7eb", width: "50%" }}
+            />
+          </div>
+        </div>
+
+        <div
+          style={{
+            marginTop: "10px",
+            display: "flex",
+            justifyContent: "space-between",
+          }}
+        >
+          <div
+            style={{ height: "14px", width: "60px", background: "#e5e7eb" }}
+          />
+          <div
+            style={{
+              height: "30px",
+              width: "80px",
+              background: "#e5e7eb",
+              borderRadius: "20px",
+            }}
+          />
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const MedicineList: React.FC<MedicineListProps> = ({
   medicines,
   loading,
@@ -100,8 +161,10 @@ const MedicineList: React.FC<MedicineListProps> = ({
       )}
       {/* First loader */}
       {(loading || pageLoading) && (
-        <div className="text-center my-4">
-          <TncLoader />
+        <div className="medicine-grid">
+          {Array.from({ length: 10 }).map((_, i) => (
+            <MedicineCardSkeleton key={i} />
+          ))}
         </div>
       )}
 

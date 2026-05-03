@@ -39,6 +39,7 @@ export default function AllGenericClient() {
   const [currentUrl, setCurrentUrl] = useState<string | null>(null);
   const [prevStack, setPrevStack] = useState<string[]>([]);
   const [pageLoading, setPageLoading] = useState(false);
+  const [hasFetched, setHasFetched] = useState(false);
 
   const buyer = useAppSelector((state) => state.buyer.buyer);
   const { items, addItem, removeItem, mergeGuestCart } = useHealthBag({
@@ -64,6 +65,12 @@ export default function AllGenericClient() {
   if (!decodedId) {
     notFound();
   }
+
+  useEffect(() => {
+    if (!loading) {
+      setHasFetched(true);
+    }
+  }, [loading]);
 
   useEffect(() => {
     const checkScreen = () => {
@@ -323,18 +330,63 @@ export default function AllGenericClient() {
                 </div>
               )} */}
               <div className="pd_list">
-                {isInitialLoading ? (
-                  <div
-                    style={{
-                      position: "fixed",
-                      top: "50%",
-                      left: "50%",
-                      transform: "translate(-50%, -50%)",
-                      zIndex: 9999,
-                    }}
-                  >
-                    <TncLoader />
-                  </div>
+                {!hasFetched || isInitialLoading ? (
+                  <>
+                    {Array.from({ length: 10 }).map((_, i) => (
+                      <div
+                        key={i}
+                        className="pd_box shadow"
+                        style={{
+                          padding: "10px",
+                          animation: "pulse 1.5s infinite",
+                        }}
+                      >
+                        <div
+                          style={{
+                            height: "220px",
+                            background: "#e5e7eb",
+                            borderRadius: "8px",
+                            marginBottom: "10px",
+                          }}
+                        />
+
+                        <div
+                          style={{
+                            height: "15px",
+                            background: "#e5e7eb",
+                            width: "80%",
+                            marginBottom: "6px",
+                          }}
+                        />
+
+                        <div
+                          style={{
+                            height: "12px",
+                            background: "#e5e7eb",
+                            width: "60%",
+                            marginBottom: "10px",
+                          }}
+                        />
+
+                        <div
+                          style={{
+                            height: "30px",
+                            background: "#e5e7eb",
+                            borderRadius: "6px",
+                          }}
+                        />
+                      </div>
+                    ))}
+                    <style>
+                      {`
+                        @keyframes pulse {
+                          0% { opacity: 0.6; }
+                          50% { opacity: 1; }
+                          100% { opacity: 0.6; }
+                        }
+                      `}
+                    </style>
+                  </>
                 ) : filteredMedicines.length === 0 ? (
                   <p>No products found.</p>
                 ) : (

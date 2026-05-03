@@ -345,6 +345,9 @@ const SiteHeader = ({ initialCategories, initialSubcategories }: Props) => {
     if (e.key === "Enter") {
       e.preventDefault();
 
+      setShowList(false);
+      setHighlightIndex(-1);
+
       if (highlightIndex >= 0) {
         //handleProductSelect(groupedResults[highlightIndex].data);
         handleSearchSelect(groupedResults[highlightIndex]);

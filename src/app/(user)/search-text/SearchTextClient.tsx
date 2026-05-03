@@ -45,7 +45,7 @@ export default function SearchTextClient() {
   const [currentUrl, setCurrentUrl] = useState<string | null>(null);
   const [prevStack, setPrevStack] = useState<string[]>([]);
   const [pageLoading, setPageLoading] = useState(false);
-
+  const [hasFetched, setHasFetched] = useState(false);
   const buyer = useAppSelector((state) => state.buyer.buyer);
   const { items, addItem, removeItem, mergeGuestCart } = useHealthBag({
     userId: buyer?.id || null,
@@ -92,6 +92,7 @@ export default function SearchTextClient() {
         setResults([]);
       } finally {
         setLoading(false);
+        setHasFetched(true);
       }
     };
 
@@ -101,6 +102,7 @@ export default function SearchTextClient() {
   useEffect(() => {
     setCurrentUrl(null);
     setPage(1);
+    setHasFetched(false);
   }, [searchText]);
 
   // SYNC HEALTH BAG
@@ -253,6 +255,7 @@ export default function SearchTextClient() {
                       width={30}
                       height={30}
                     />{" "}
+                    <span className="text-primary">Search Result For</span>{" "}
                     {searchText || "Loading..."}
                   </div>
                 </div>
@@ -277,18 +280,63 @@ export default function SearchTextClient() {
                 </div> */}
               </div>
               <div className="pd_list">
-                {loading || pageLoading ? (
-                  <div
-                    style={{
-                      position: "fixed",
-                      top: "50%",
-                      left: "50%",
-                      transform: "translate(-50%, -50%)",
-                      zIndex: 9999,
-                    }}
-                  >
-                    <TncLoader />
-                  </div>
+                {!hasFetched || loading || pageLoading ? (
+                  <>
+                    {Array.from({ length: 10 }).map((_, i) => (
+                      <div
+                        key={i}
+                        className="pd_box shadow"
+                        style={{
+                          padding: "10px",
+                          animation: "pulse 1.5s infinite",
+                        }}
+                      >
+                        <div
+                          style={{
+                            height: "220px",
+                            background: "#e5e7eb",
+                            borderRadius: "8px",
+                            marginBottom: "10px",
+                          }}
+                        />
+
+                        <div
+                          style={{
+                            height: "15px",
+                            background: "#e5e7eb",
+                            width: "80%",
+                            marginBottom: "6px",
+                          }}
+                        />
+
+                        <div
+                          style={{
+                            height: "12px",
+                            background: "#e5e7eb",
+                            width: "60%",
+                            marginBottom: "10px",
+                          }}
+                        />
+
+                        <div
+                          style={{
+                            height: "30px",
+                            background: "#e5e7eb",
+                            borderRadius: "6px",
+                          }}
+                        />
+                      </div>
+                    ))}
+                    <style>
+                      {`
+                        @keyframes pulse {
+                          0% { opacity: 0.6; }
+                          50% { opacity: 1; }
+                          100% { opacity: 0.6; }
+                        }
+                      `}
+                    </style>
+                  </>
                 ) : results.length === 0 ? (
                   <p>No products found.</p>
                 ) : (
@@ -366,7 +414,8 @@ export default function SearchTextClient() {
 
                         <div className="pd_content">
                           <h3
-                            className="pd-title hover-link"
+                            className="pd-title hover-link fw-bold"
+                            style={{ color: "#264b8c" }}
                             onClick={() => handleCombinedSelect(item)}
                           >
                             {item.medicine_name}

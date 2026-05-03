@@ -57,13 +57,18 @@ export default function AllManufacturerClient() {
   const [localBag, setLocalBag] = useState<number[]>([]);
   const [processingIds, setProcessingIds] = useState<number[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
+  const [hasFetched, setHasFetched] = useState(false);
 
   const [isMobile, setIsMobile] = useState(false);
 
   if (!decodedId) {
     notFound();
   }
-
+  useEffect(() => {
+    if (!loading) {
+      setHasFetched(true);
+    }
+  }, [loading]);
   useEffect(() => {
     const checkScreen = () => {
       setIsMobile(window.innerWidth < 768); // mobile breakpoint
@@ -304,13 +309,63 @@ export default function AllManufacturerClient() {
                 </div>
               )} */}
               <div className="pd_list">
-                {isInitialLoading ? (
-                  <div
-                    className="d-flex justify-content-center align-items-center"
-                    style={{ marginLeft: "100vh" }}
-                  >
-                    <TncLoader />
-                  </div>
+                {!hasFetched || isInitialLoading ? (
+                  <>
+                    {Array.from({ length: 10 }).map((_, i) => (
+                      <div
+                        key={i}
+                        className="pd_box shadow"
+                        style={{
+                          padding: "10px",
+                          animation: "pulse 1.5s infinite",
+                        }}
+                      >
+                        <div
+                          style={{
+                            height: "220px",
+                            background: "#e5e7eb",
+                            borderRadius: "8px",
+                            marginBottom: "10px",
+                          }}
+                        />
+
+                        <div
+                          style={{
+                            height: "15px",
+                            background: "#e5e7eb",
+                            width: "80%",
+                            marginBottom: "6px",
+                          }}
+                        />
+
+                        <div
+                          style={{
+                            height: "12px",
+                            background: "#e5e7eb",
+                            width: "60%",
+                            marginBottom: "10px",
+                          }}
+                        />
+
+                        <div
+                          style={{
+                            height: "30px",
+                            background: "#e5e7eb",
+                            borderRadius: "6px",
+                          }}
+                        />
+                      </div>
+                    ))}
+                    <style>
+                      {`
+                        @keyframes pulse {
+                          0% { opacity: 0.6; }
+                          50% { opacity: 1; }
+                          100% { opacity: 0.6; }
+                        }
+                      `}
+                    </style>
+                  </>
                 ) : filteredMedicines.length === 0 ? (
                   <p>No products found.</p>
                 ) : (
