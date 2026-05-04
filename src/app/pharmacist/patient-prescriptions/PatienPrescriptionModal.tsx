@@ -47,10 +47,9 @@ export default function PatientPrescriptionModal({
     number | null
   >(null);
 
-  // pagination
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
-
+  // Infinite scroll state
+  const [visibleCount, setVisibleCount] = useState(10);
+  const [loadings, setLoadings] = useState(false);
   /* ---------------- INITIAL LOAD ---------------- */
   useEffect(() => {
     dispatch(getPrescriptionListPharmacistThunk()).finally(() => {
@@ -73,9 +72,14 @@ export default function PatientPrescriptionModal({
     );
 
     if (searchTerm) {
-      data = data.filter((item) =>
-        (item.buyer_name ?? "").toLowerCase().includes(searchTerm.toLowerCase())
-      );
+      data = data.filter((item) => {
+        const name = (item.buyer_name ?? "").toLowerCase();
+        const mobile = (item.buyer_number ?? "").toString();
+
+        return (
+          name.includes(searchTerm.toLowerCase()) || mobile.includes(searchTerm)
+        );
+      });
     }
 
     setFilteredData(
@@ -84,16 +88,11 @@ export default function PatientPrescriptionModal({
           new Date(b.created_on).getTime() - new Date(a.created_on).getTime()
       )
     );
-    setCurrentPage(1);
   }, [list, searchTerm, pharmacistId]);
 
   /* ---------------- PAGINATION ---------------- */
-  const totalPages = Math.ceil(filteredData.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const currentItems = filteredData.slice(
-    startIndex,
-    startIndex + itemsPerPage
-  );
+
+  const currentItems = filteredData.slice(0, visibleCount);
 
   /* ---------------- HANDLERS ---------------- */
   const handlePrescriptionView = (id: number) => {
@@ -146,6 +145,39 @@ export default function PatientPrescriptionModal({
     }
   };
 
+  const loadMore = () => {
+    if (loadings || visibleCount >= filteredData.length) return;
+
+    setLoadings(true);
+
+    setTimeout(() => {
+      setVisibleCount((prev) => prev + 10);
+      setLoadings(false);
+    }, 300);
+  };
+
+  useEffect(() => {
+    const container = document.querySelector(".modal-body");
+
+    if (!container) return;
+
+    const handleScroll = () => {
+      if (
+        container.scrollTop + container.clientHeight >=
+        container.scrollHeight - 50
+      ) {
+        loadMore();
+      }
+    };
+
+    container.addEventListener("scroll", handleScroll);
+
+    return () => container.removeEventListener("scroll", handleScroll);
+  }, [filteredData, visibleCount]);
+
+  useEffect(() => {
+    setVisibleCount(10);
+  }, [searchTerm, list]);
   /* ===================================================== */
   return (
     <>
@@ -179,42 +211,48 @@ export default function PatientPrescriptionModal({
           </div>
         </div>
       )}
-
-      <div className="pageTitle mb-2">
-        <i className="bi bi-receipt"></i> Prescription Summary
-      </div>
-
-      {/* ================= SEARCH ================= */}
-      <div className="row mb-3">
-        <div className="col-md-8">
-          <input
-            className="form-control"
-            placeholder="Search patient name..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
+      <div className="modal-right">
+        <div className="pageTitle">
+          <i className="bi bi-receipt"></i> Prescription Summary
         </div>
-      </div>
 
-      {/* ================= TABLE ================= */}
-      <div
-        className="scroll_table position-relative"
-        style={{ minHeight: 400 }}
-      >
-        <table className="table cust_table1 mb-0">
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Prescription</th>
-              <th>Patient</th>
-              <th>Mobile</th>
-              <th>Date</th>
-              <th>Action</th>
-            </tr>
-          </thead>
+        {/* ================= SEARCH ================= */}
+        <div className="row mb-3">
+          <div className="col-md-8">
+            <div className="search_query header_search_query">
+              <a className="query_search_btn" href="#">
+                <i className="bi bi-search"></i>
+              </a>
+              <input
+                type="text"
+                className="form-control"
+                placeholder="Search patient name..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+          </div>
+        </div>
 
-          {/* 🔥 TABLE INLINE LOADER */}
-          {/* {loadingList && (
+        {/* ================= TABLE ================= */}
+        <div
+          className="scroll_table position-relative"
+          style={{ minHeight: 400 }}
+        >
+          <table className="table cust_table1 mb-0">
+            <thead>
+              <tr>
+                <th className="text-start fw-semibold">ID</th>
+                <th className="text-start fw-semibold">Prescription</th>
+                <th className="text-start fw-semibold">Patient</th>
+                <th className="text-start fw-semibold">Mobile</th>
+                <th className="text-start fw-semibold">Date</th>
+                <th className="text-center fw-semibold">Action</th>
+              </tr>
+            </thead>
+
+            {/* 🔥 TABLE INLINE LOADER */}
+            {/* {loadingList && (
             <tbody>
               <tr>
                 <td colSpan={6} className="text-center py-4">
@@ -224,141 +262,147 @@ export default function PatientPrescriptionModal({
             </tbody>
           )} */}
 
-          {!loadingList && (
-            <tbody>
-              {currentItems.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className="text-center">
-                    No data found
-                  </td>
-                </tr>
-              ) : (
-                currentItems.map((p) => {
+            {!loadingList && (
+              <tbody>
+                {currentItems.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className="text-center">
+                      No data found
+                    </td>
+                  </tr>
+                ) : (
+                  currentItems.map((p) => {
+                    const fileUrl = p.prescription_pic.startsWith("http")
+                      ? p.prescription_pic
+                      : `${prescriptionMediaBase}${p.prescription_pic}`;
+                    const ext = fileUrl.split(".").pop()?.toLowerCase();
+                    const isHandledByMe = p.handle_by === Number(pharmacistId);
+                    const isReceived =
+                      p.handle_by !== null && p.handle_by !== 0;
+
+                    return (
+                      <tr key={p.id}>
+                        <td className="text-start">{p.id}</td>
+                        <td className="text-start">
+                          {ext === "pdf" ? (
+                            <i
+                              className="bi bi-file-earmark-pdf text-danger"
+                              style={{ fontSize: 22, cursor: "pointer" }}
+                              onClick={() => handlePrescriptionView(p.id)}
+                            />
+                          ) : (
+                            <Image
+                              src={fileUrl}
+                              style={{
+                                width: 50,
+                                height: 50,
+                                objectFit: "cover",
+                                cursor: "pointer",
+                              }}
+                              onClick={() => handlePrescriptionView(p.id)}
+                            />
+                          )}
+                        </td>
+                        <td className="text-start">{p.buyer_name}</td>
+                        <td className="text-start">{p.buyer_number}</td>
+                        <td className="text-start">
+                          {formatDate(p.created_on)}
+                        </td>
+                        <td>
+                          <Button
+                            size="sm"
+                            variant={
+                              isHandledByMe
+                                ? "warning"
+                                : isReceived
+                                ? "secondary"
+                                : "danger"
+                            }
+                            disabled={
+                              receiveLoading && lastReceived?.id === p.id
+                            }
+                            onClick={() => handleReceiveAndOCR(p)}
+                          >
+                            {receiveLoading && lastReceived?.id === p.id
+                              ? "Processing..."
+                              : isHandledByMe
+                              ? "Continue Scan"
+                              : "Receive & Scan"}
+                          </Button>{" "}
+                          <Button
+                            size="sm"
+                            variant="outline-danger"
+                            className="delete-btn"
+                            onClick={() => handleDeletePrescription(p)}
+                          >
+                            <i className="bi bi-trash delete-icon"></i>
+                          </Button>
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            )}
+          </table>
+        </div>
+
+        {/* ================= PREVIEW MODAL ================= */}
+        <Modal
+          show={showHistory}
+          onHide={() => setShowHistory(false)}
+          size="lg"
+          centered
+        >
+          <Modal.Header closeButton>
+            <Modal.Title>Prescription Preview</Modal.Title>
+          </Modal.Header>
+
+          <Modal.Body className="position-relative">
+            {/* 🔥 MODAL LOADER */}
+            {previewLoading && (
+              <div
+                className="position-absolute top-0 start-0 w-100 h-100 d-flex justify-content-center align-ps-center"
+                style={{
+                  background: "rgba(255,255,255,0.75)",
+                  backdropFilter: "blur(2px)",
+                  zIndex: 20,
+                }}
+              >
+                <TncLoader />
+              </div>
+            )}
+
+            {selectedPrescription &&
+              list
+                .filter((p) => p.id === selectedPrescription)
+                .map((p) => {
                   const fileUrl = p.prescription_pic.startsWith("http")
                     ? p.prescription_pic
                     : `${prescriptionMediaBase}${p.prescription_pic}`;
                   const ext = fileUrl.split(".").pop()?.toLowerCase();
-                  const isHandledByMe = p.handle_by === Number(pharmacistId);
-                  const isReceived = p.handle_by !== null && p.handle_by !== 0;
 
-                  return (
-                    <tr key={p.id}>
-                      <td>{p.id}</td>
-                      <td>
-                        {ext === "pdf" ? (
-                          <i
-                            className="bi bi-file-earmark-pdf text-danger"
-                            style={{ fontSize: 22, cursor: "pointer" }}
-                            onClick={() => handlePrescriptionView(p.id)}
-                          />
-                        ) : (
-                          <Image
-                            src={fileUrl}
-                            style={{
-                              width: 50,
-                              height: 50,
-                              objectFit: "cover",
-                              cursor: "pointer",
-                            }}
-                            onClick={() => handlePrescriptionView(p.id)}
-                          />
-                        )}
-                      </td>
-                      <td>{p.buyer_name}</td>
-                      <td>{p.buyer_number}</td>
-                      <td>{formatDate(p.created_on)}</td>
-                      <td>
-                        <Button
-                          size="sm"
-                          variant={
-                            isHandledByMe
-                              ? "warning"
-                              : isReceived
-                              ? "secondary"
-                              : "danger"
-                          }
-                          disabled={receiveLoading && lastReceived?.id === p.id}
-                          onClick={() => handleReceiveAndOCR(p)}
-                        >
-                          {receiveLoading && lastReceived?.id === p.id
-                            ? "Processing..."
-                            : isHandledByMe
-                            ? "Continue Scan"
-                            : "Receive & Scan"}
-                        </Button>{" "}
-                        <Button
-                          size="sm"
-                          variant="outline-danger"
-                          className="delete-btn"
-                          onClick={() => handleDeletePrescription(p)}
-                        >
-                          <i className="bi bi-trash delete-icon"></i>
-                        </Button>
-                      </td>
-                    </tr>
+                  return ext === "pdf" ? (
+                    <iframe
+                      key={p.id}
+                      src={fileUrl}
+                      width="100%"
+                      height="500"
+                      onLoad={() => setPreviewLoading(false)}
+                    />
+                  ) : (
+                    <Image
+                      key={p.id}
+                      src={fileUrl}
+                      fluid
+                      onLoad={() => setPreviewLoading(false)}
+                      onError={() => setPreviewLoading(false)}
+                    />
                   );
-                })
-              )}
-            </tbody>
-          )}
-        </table>
+                })}
+          </Modal.Body>
+        </Modal>
       </div>
-
-      {/* ================= PREVIEW MODAL ================= */}
-      <Modal
-        show={showHistory}
-        onHide={() => setShowHistory(false)}
-        size="lg"
-        centered
-      >
-        <Modal.Header closeButton>
-          <Modal.Title>Prescription Preview</Modal.Title>
-        </Modal.Header>
-
-        <Modal.Body className="position-relative">
-          {/* 🔥 MODAL LOADER */}
-          {previewLoading && (
-            <div
-              className="position-absolute top-0 start-0 w-100 h-100 d-flex justify-content-center align-ps-center"
-              style={{
-                background: "rgba(255,255,255,0.75)",
-                backdropFilter: "blur(2px)",
-                zIndex: 20,
-              }}
-            >
-              <TncLoader />
-            </div>
-          )}
-
-          {selectedPrescription &&
-            list
-              .filter((p) => p.id === selectedPrescription)
-              .map((p) => {
-                const fileUrl = p.prescription_pic.startsWith("http")
-                  ? p.prescription_pic
-                  : `${prescriptionMediaBase}${p.prescription_pic}`;
-                const ext = fileUrl.split(".").pop()?.toLowerCase();
-
-                return ext === "pdf" ? (
-                  <iframe
-                    key={p.id}
-                    src={fileUrl}
-                    width="100%"
-                    height="500"
-                    onLoad={() => setPreviewLoading(false)}
-                  />
-                ) : (
-                  <Image
-                    key={p.id}
-                    src={fileUrl}
-                    fluid
-                    onLoad={() => setPreviewLoading(false)}
-                    onError={() => setPreviewLoading(false)}
-                  />
-                );
-              })}
-        </Modal.Body>
-      </Modal>
     </>
   );
 }

@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import "../../css/site-style.css";
 import "../../css/user-style.css";
 import "slick-carousel/slick/slick.css";
@@ -82,7 +82,7 @@ export default function ProductDetailsClient({ product }: { product: any }) {
     (m) => m.id_manufacturer === manufId
   )?.manufacturer_name;
 
-  const data = product || otherMedicines;
+  const data = product ?? otherMedicines ?? {};
   const {
     id,
     medicine_name,
@@ -128,14 +128,23 @@ export default function ProductDetailsClient({ product }: { product: any }) {
   ];
   const [isMobile, setIsMobile] = useState(false);
 
+  const hasMergedRef = useRef(false);
+
+  useEffect(() => {
+    if (buyer?.id && !hasMergedRef.current) {
+      hasMergedRef.current = true;
+      mergeGuestCart();
+    }
+  }, [buyer?.id]);
+
   if (!decodedId) {
     notFound();
   }
   useEffect(() => {
     dispatch(getCategories());
     dispatch(getSubcategories());
-    dispatch(getGenericsAllList());
-    dispatch(getManufacturersAllList());
+    // dispatch(getGenericsAllList());
+    // dispatch(getManufacturersAllList());
     dispatch(getGroupCare());
   }, [dispatch]);
 
@@ -223,11 +232,11 @@ export default function ProductDetailsClient({ product }: { product: any }) {
     bagItem.some((i) => i.productid === id || i.product_id === id);
 
   // Merge guest cart into logged-in cart once
-  useEffect(() => {
-    if (buyer?.id) {
-      mergeGuestCart();
-    }
-  }, [buyer?.id, mergeGuestCart]);
+  // useEffect(() => {
+  //   if (buyer?.id) {
+  //     mergeGuestCart();
+  //   }
+  // }, [buyer?.id, mergeGuestCart]);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [guestItems, setGuestItems] = useState<any[]>([]);
@@ -704,31 +713,34 @@ export default function ProductDetailsClient({ product }: { product: any }) {
                                   onClick={() => openModal(index)}
                                   className="product-image-box"
                                 >
-                                  <img
+                                  <Image
                                     src={fullUrl}
                                     alt={`Product ${index + 1}`}
+                                    width={300}
+                                    height={300}
                                     className="product-image"
                                     loading="lazy"
                                     onError={(e) => {
-                                      // show fallback if image load fails
-                                      e.currentTarget.onerror = null;
-                                      e.currentTarget.src =
-                                        "/images/tnc-default.png";
-                                      // eslint-disable-next-line no-console
+                                      const target =
+                                        e.currentTarget as HTMLImageElement;
+                                      target.src = "/images/tnc-default.png";
                                       console.warn(
                                         "[PRODUCT IMAGE] failed to load:",
                                         fullUrl
                                       );
                                     }}
+                                    unoptimized
                                   />
                                 </div>
                               );
                             })
                           ) : (
                             <div className="product-image-box">
-                              <img
+                              <Image
                                 src="/images/tnc-default.png"
                                 alt=""
+                                width={300}
+                                height={300}
                                 className="product-image"
                                 style={{ opacity: "0.3" }}
                               />
@@ -745,25 +757,37 @@ export default function ProductDetailsClient({ product }: { product: any }) {
                         centered
                       >
                         <Modal.Body>
-                          <Slider {...modalSliderSettings}>
-                            {imageList.map((src, index) => (
-                              <div key={index}>
-                                <Image
-                                  src={`${mediaBase}${src}`}
-                                  alt={`Modal Image ${index + 1}`}
-                                  width={800} // required
-                                  height={600} // required
-                                  className="w-100"
-                                  style={{
-                                    maxHeight: "80vh",
-                                    objectFit: "contain",
-                                    width: "100%",
-                                    height: "auto",
-                                  }}
-                                  priority={index === 0} // first image loads fast
-                                />
-                              </div>
-                            ))}
+                          <Slider key={selectedIndex} {...modalSliderSettings}>
+                            {imageList.map((src, index) => {
+                              const cleanedBase = (mediaBase || "").replace(
+                                /\/+$/,
+                                ""
+                              );
+                              const cleanedSrc = (src || "").replace(
+                                /^\/+/,
+                                ""
+                              );
+                              const fullUrl = cleanedBase
+                                ? `${cleanedBase}/${cleanedSrc}`
+                                : src;
+
+                              return (
+                                <div key={index}>
+                                  <Image
+                                    src={fullUrl}
+                                    alt={`Modal Image ${index + 1}`}
+                                    width={800}
+                                    height={600}
+                                    className="w-100"
+                                    style={{
+                                      maxHeight: "80vh",
+                                      objectFit: "contain",
+                                    }}
+                                    unoptimized
+                                  />
+                                </div>
+                              );
+                            })}
                           </Slider>
                         </Modal.Body>
                       </Modal>

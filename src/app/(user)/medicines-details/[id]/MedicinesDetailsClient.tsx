@@ -988,31 +988,34 @@ export default function MedicinesDetailsClient({
                                   onClick={() => openModal(index)}
                                   className="product-image-box"
                                 >
-                                  <img
+                                  <Image
                                     src={fullUrl}
                                     alt={`Product ${index + 1}`}
+                                    width={300}
+                                    height={300}
                                     className="product-image"
                                     loading="lazy"
                                     onError={(e) => {
-                                      // show fallback if image load fails
-                                      e.currentTarget.onerror = null;
-                                      e.currentTarget.src =
-                                        "/images/tnc-default.png";
-                                      // eslint-disable-next-line no-console
+                                      const target =
+                                        e.currentTarget as HTMLImageElement;
+                                      target.src = "/images/tnc-default.png";
                                       console.warn(
                                         "[PRODUCT IMAGE] failed to load:",
                                         fullUrl
                                       );
                                     }}
+                                    unoptimized
                                   />
                                 </div>
                               );
                             })
                           ) : (
                             <div className="product-image-box">
-                              <img
+                              <Image
                                 src="/images/tnc-default.png"
-                                alt="No Image Available"
+                                alt=""
+                                width={300}
+                                height={300}
                                 className="product-image"
                                 style={{ opacity: "0.3" }}
                               />
@@ -1027,26 +1030,38 @@ export default function MedicinesDetailsClient({
                         size="lg"
                         centered
                       >
-                        <Modal.Body className="product-modal-body">
-                          <Slider {...modalSliderSettings}>
-                            {imageList.map((src, index) => (
-                              <div key={index}>
-                                <Image
-                                  src={`${mediaBase}${src}`}
-                                  alt={`Modal Image ${index + 1}`}
-                                  width={800} // required
-                                  height={600} // required
-                                  className="product-modal-img"
-                                  style={{
-                                    maxHeight: "80vh",
-                                    objectFit: "contain",
-                                    width: "100%",
-                                    height: "auto",
-                                  }}
-                                  priority={index === 0} // first image loads fast
-                                />
-                              </div>
-                            ))}
+                        <Modal.Body>
+                          <Slider key={selectedIndex} {...modalSliderSettings}>
+                            {imageList.map((src, index) => {
+                              const cleanedBase = (mediaBase || "").replace(
+                                /\/+$/,
+                                ""
+                              );
+                              const cleanedSrc = (src || "").replace(
+                                /^\/+/,
+                                ""
+                              );
+                              const fullUrl = cleanedBase
+                                ? `${cleanedBase}/${cleanedSrc}`
+                                : src;
+
+                              return (
+                                <div key={index}>
+                                  <Image
+                                    src={fullUrl}
+                                    alt={`Modal Image ${index + 1}`}
+                                    width={800}
+                                    height={600}
+                                    className="w-100"
+                                    style={{
+                                      maxHeight: "80vh",
+                                      objectFit: "contain",
+                                    }}
+                                    unoptimized
+                                  />
+                                </div>
+                              );
+                            })}
                           </Slider>
                         </Modal.Body>
                       </Modal>

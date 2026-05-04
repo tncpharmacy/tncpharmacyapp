@@ -1942,3 +1942,28 @@ width: 33%;
   50% { opacity: 1; }
   100% { opacity: 0.6; }
 }
+.address-bar {
+  gap: 10px;
+}
+
+.address-bar > div:first-child {
+  flex: 1;
+  min-width: 0;
+}
+
+.address-btn {
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+@media (max-width: 576px) {
+  .address-bar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .address-btn {
+    width: 100%;
+    margin-top: 8px;
+    text-align: center;
+  }
+}

@@ -38,10 +38,7 @@ const AddressBar: React.FC<AddressBarProps> = ({ address }) => {
   }
 
   return (
-    <div
-      className="bg-white border rounded d-flex justify-content-between align-items-center p-3 mb-3"
-      style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.1)" }}
-    >
+    <div className="bg-white border rounded d-flex justify-content-between align-items-start p-3 mb-3 address-bar">
       <div>
         <div className="fw-semibold d-flex align-items-center gap-1 flex-wrap">
           Deliver to:{" "}
@@ -78,7 +75,10 @@ const AddressBar: React.FC<AddressBarProps> = ({ address }) => {
         </div>
       </div>
 
-      <Link href="/address" className="btn btn-outline-primary btn-sm">
+      <Link
+        href="/address"
+        className="btn btn-outline-primary btn-sm address-btn"
+      >
         {address ? (
           <>
             <i className="bi bi-pencil me-1"></i> Change Address

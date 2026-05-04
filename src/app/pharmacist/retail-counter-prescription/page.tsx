@@ -946,7 +946,7 @@ export default function RetailCounter() {
                               key={m.product_id}
                               onClick={() =>
                                 handleMedicineClick({
-                                  id: m.product_id,
+                                  id: m.id,
                                   name: m.medicine_name,
                                   category_id: m.category_id,
                                 })

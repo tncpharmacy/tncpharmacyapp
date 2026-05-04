@@ -2,14 +2,12 @@ import { fetchMenuMedicinesByOtherIdSeo } from "@/lib/api/medicine";
 import ProductDetailsClient from "./ProductDetailsClient";
 import { decodeId } from "@/lib/utils/encodeDecode";
 
-type Props = {
-  params: {
-    id: string;
-  };
-};
-
-export async function generateMetadata({ params }: Props) {
-  const { id } = params;
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { id } = await params;
 
   const baseUrl = "https://tncpharmacy.in";
   const decodedId = decodeId(id);
@@ -73,8 +71,12 @@ export async function generateMetadata({ params }: Props) {
   }
 }
 
-export default async function Page({ params }: Props) {
-  const { id } = params;
+export default async function Page({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { id } = await params;
 
   const baseUrl = "https://tncpharmacy.in";
   const decodedId = decodeId(id);

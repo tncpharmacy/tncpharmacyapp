@@ -421,35 +421,6 @@ export default function OcrExtractionLogic({
     <Row>
       {/* TOP: Manual Select Dropdown */}
       <div className="col-md-6">
-        {/* <SingleSelectDropdown
-          medicines={productList}
-          selected={
-            selectedProduct
-              ? {
-                  label: selectedProduct.medicine_name,
-                  value: selectedProduct.id,
-                }
-              : null
-          }
-          onChange={(opt: OptionType | null) => {
-            if (!opt) return;
-
-            const selected = productList.find((m) => m.id === opt.value);
-
-            if (!selected) return;
-
-            const categoryId = selected.category_id;
-
-            setSelectedProduct(selected);
-
-            if (categoryId === 1) {
-              dispatch(getProductByGenericId(Number(selected.id)));
-              setIsModalOpen(true);
-            } else {
-              handleSkipGenericModal(selected);
-            }
-          }}
-        /> */}
         <GlobalProductSearchBox
           placeholder="Search product..."
           onSelect={(item) => {
@@ -458,7 +429,7 @@ export default function OcrExtractionLogic({
             if (med.category_id === 1) {
               setIsFromGenericFlow(true);
               dispatch(getProductByGenericId(Number(med.id)));
-              setIsModalOpen(true); // 🔥 IMPORTANT
+              setIsModalOpen(true);
             } else {
               setIsFromGenericFlow(false);
               handleSkipGenericModal(med);
@@ -467,7 +438,7 @@ export default function OcrExtractionLogic({
           onKeyDown={(e) => {
             if (e.key === "Tab") {
               e.preventDefault();
-              healthBagRef.current?.focus(); // 🔥 direct jump
+              healthBagRef.current?.focus();
             }
           }}
         />
@@ -504,7 +475,7 @@ export default function OcrExtractionLogic({
           <ListGroup>
             {backendMeds.map((item) => (
               <ListGroup.Item
-                key={item.product_id}
+                key={item.id}
                 action
                 onClick={() => handleMedicineClick(item.medicine_name)}
               >

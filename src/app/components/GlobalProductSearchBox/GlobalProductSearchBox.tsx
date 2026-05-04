@@ -170,7 +170,7 @@ export default function GlobalProductSearchBox({
 
   return (
     <div ref={wrapperRef} className="search_query header_search_query">
-      <a className="query_search_btn" href="javascript:void(0)">
+      <a className="query_search_btn" href="#">
         <i className="bi bi-search"></i>
       </a>
       <input
@@ -331,7 +331,7 @@ export default function GlobalProductSearchBox({
         </ul>
       )}
 
-      {showList &&
+      {/* {showList &&
         hasSearched &&
         !searchProductLoading &&
         results.length === 0 && (
@@ -355,7 +355,7 @@ export default function GlobalProductSearchBox({
           >
             No products found
           </div>
-        )}
+        )} */}
     </div>
   );
 }

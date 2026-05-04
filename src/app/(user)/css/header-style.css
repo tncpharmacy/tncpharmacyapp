@@ -762,3 +762,14 @@ span.user_p i .count {
     color: #6c757d;
   }
 }
+
+.logo_img {
+  width: 180px;
+  height: auto;
+}
+
+@media (max-width: 768px) {
+  .logo_img {
+    width: 110px;
+  }
+}

@@ -436,6 +436,7 @@ const SiteHeader = ({ initialCategories, initialSubcategories }: Props) => {
                 alt="Logo"
                 width={180}
                 height={40}
+                className="logo_img"
                 priority
               />
             </Link>
@@ -638,14 +639,9 @@ const SiteHeader = ({ initialCategories, initialSubcategories }: Props) => {
                     </i>
 
                     {/* 🔥 TEXT CHANGE */}
-                    <span>
-                      <span>
-                        <span
-                          style={{ minWidth: "60px", display: "inline-block" }}
-                        >
-                          {!mounted ? "Login" : buyer ? "Account" : "Login"}
-                        </span>
-                      </span>
+
+                    <span className="user_p">
+                      {!mounted ? "Login" : buyer ? "Account" : "Login"}
                     </span>
                   </span>
 
