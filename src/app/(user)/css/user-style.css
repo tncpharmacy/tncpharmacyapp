@@ -1904,44 +1904,37 @@ width: 33%;
   color: #111;
 }
 
-.skl {
+.skeleton {
   background: #e5e7eb;
   border-radius: 6px;
   animation: pulse 1.5s infinite;
 }
 
-.skeleton-title {
-  height: 30px;
-  width: 70%;
-  margin-bottom: 15px;
-}
-
-.skeleton-text {
-  height: 15px;
-  width: 90%;
-  margin-bottom: 10px;
-}
-
-.skeleton-text-lg {
-  height: 20px;
+.title-skeleton {
+  height: 28px;
   width: 60%;
-  margin-bottom: 15px;
 }
 
-.skeleton-image {
+.text-skeleton {
+  height: 14px;
+  width: 70%;
+}
+
+.price-skeleton {
+  height: 20px;
+  width: 120px;
+}
+
+.big-text-skeleton {
+  height: 80px;
+  width: 100%;
+}
+
+.image-skeleton {
   height: 250px;
   width: 100%;
-}
-
-.skeleton-price {
-  height: 25px;
-  width: 60%;
-  margin-bottom: 15px;
-}
-
-.skeleton-btn {
-  height: 40px;
-  width: 100%;
+  border-radius: 10px;
+  background: #e5e7eb;
 }
 
 @keyframes pulse {

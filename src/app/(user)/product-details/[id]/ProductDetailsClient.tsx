@@ -46,9 +46,7 @@ export default function ProductDetailsClient({ product }: { product: any }) {
   const { id: params } = useParams();
   const dispatch = useAppDispatch();
   const decodedId = decodeId(params);
-  const reduxProduct = useAppSelector(
-    (state) => state.medicine.otherMedicines
-  ) as unknown as Medicine;
+  const { otherMedicines, loading } = useAppSelector((state) => state.medicine);
 
   const catParam = searchParams.get("cat");
   const subParam = searchParams.get("sub");
@@ -84,7 +82,7 @@ export default function ProductDetailsClient({ product }: { product: any }) {
     (m) => m.id_manufacturer === manufId
   )?.manufacturer_name;
 
-  const data = product || reduxProduct;
+  const data = product || otherMedicines;
   const {
     id,
     medicine_name,
@@ -620,7 +618,13 @@ export default function ProductDetailsClient({ product }: { product: any }) {
                       !hasImages && isMobile ? "col-12" : ""
                     }`}
                   >
-                    <h3 className="fw-bold">{medicine_name}</h3>
+                    <h1 className="fs-3 fw-bold">
+                      {loading ? (
+                        <div className="skeleton title-skeleton" />
+                      ) : (
+                        medicine_name
+                      )}
+                    </h1>
                     <div className="mb-4">
                       {typeof prescription_required === "number" ? (
                         prescription_required === 1 ? (
@@ -644,14 +648,24 @@ export default function ProductDetailsClient({ product }: { product: any }) {
                         </div>
                       )}
                     </div>
-                    <div className="mb-2">
+                    <div className="mb-3">
                       <div className="title">Manufacturer</div>
-                      <div className="descr">{manufacturer_name}</div>
+                      <div className="descr">
+                        {loading ? (
+                          <div className="skeleton text-skeleton" />
+                        ) : (
+                          manufacturer_name
+                        )}
+                      </div>
                     </div>
-                    <div className="mb-2">
+                    <div className="mb-3">
                       <div className="title">Pack Size</div>
                       <div className="descr">
-                        <Link href="#">{pack_size}</Link>
+                        {loading ? (
+                          <div className="skeleton text-skeleton" />
+                        ) : (
+                          pack_size
+                        )}
                       </div>
                     </div>
                     {/* <div className="mb-4">
@@ -665,59 +679,63 @@ export default function ProductDetailsClient({ product }: { product: any }) {
                   </div>
                   {(hasImages || !isMobile) && (
                     <div className="col-md-4 pb-4 justify-content-center align-items-center product-image-col">
-                      <Slider {...singleImageSlider}>
-                        {imageList && imageList.length > 0 ? (
-                          imageList.map((rawSrc, index) => {
-                            // normalize mediaBase + rawSrc into a full URL safely
-                            const cleanedBase = (mediaBase || "").replace(
-                              /\/+$/,
-                              ""
-                            );
-                            const cleanedSrc = (rawSrc || "").replace(
-                              /^\/+/,
-                              ""
-                            );
-                            const fullUrl = cleanedBase
-                              ? `${cleanedBase}/${cleanedSrc}`
-                              : rawSrc;
+                      {loading ? (
+                        <div className="image-skeleton" />
+                      ) : (
+                        <Slider {...singleImageSlider}>
+                          {imageList && imageList.length > 0 ? (
+                            imageList.map((rawSrc, index) => {
+                              // normalize mediaBase + rawSrc into a full URL safely
+                              const cleanedBase = (mediaBase || "").replace(
+                                /\/+$/,
+                                ""
+                              );
+                              const cleanedSrc = (rawSrc || "").replace(
+                                /^\/+/,
+                                ""
+                              );
+                              const fullUrl = cleanedBase
+                                ? `${cleanedBase}/${cleanedSrc}`
+                                : rawSrc;
 
-                            return (
-                              <div
-                                key={index}
-                                onClick={() => openModal(index)}
-                                className="product-image-box"
-                              >
-                                <img
-                                  src={fullUrl}
-                                  alt={`Product ${index + 1}`}
-                                  className="product-image"
-                                  loading="lazy"
-                                  onError={(e) => {
-                                    // show fallback if image load fails
-                                    e.currentTarget.onerror = null;
-                                    e.currentTarget.src =
-                                      "/images/tnc-default.png";
-                                    // eslint-disable-next-line no-console
-                                    console.warn(
-                                      "[PRODUCT IMAGE] failed to load:",
-                                      fullUrl
-                                    );
-                                  }}
-                                />
-                              </div>
-                            );
-                          })
-                        ) : (
-                          <div className="product-image-box">
-                            <img
-                              src="/images/tnc-default.png"
-                              alt=""
-                              className="product-image"
-                              style={{ opacity: "0.3" }}
-                            />
-                          </div>
-                        )}
-                      </Slider>
+                              return (
+                                <div
+                                  key={index}
+                                  onClick={() => openModal(index)}
+                                  className="product-image-box"
+                                >
+                                  <img
+                                    src={fullUrl}
+                                    alt={`Product ${index + 1}`}
+                                    className="product-image"
+                                    loading="lazy"
+                                    onError={(e) => {
+                                      // show fallback if image load fails
+                                      e.currentTarget.onerror = null;
+                                      e.currentTarget.src =
+                                        "/images/tnc-default.png";
+                                      // eslint-disable-next-line no-console
+                                      console.warn(
+                                        "[PRODUCT IMAGE] failed to load:",
+                                        fullUrl
+                                      );
+                                    }}
+                                  />
+                                </div>
+                              );
+                            })
+                          ) : (
+                            <div className="product-image-box">
+                              <img
+                                src="/images/tnc-default.png"
+                                alt=""
+                                className="product-image"
+                                style={{ opacity: "0.3" }}
+                              />
+                            </div>
+                          )}
+                        </Slider>
+                      )}
 
                       {/* 🪟 Modal with Fullscreen Slider */}
                       <Modal
@@ -783,10 +801,17 @@ export default function ProductDetailsClient({ product }: { product: any }) {
                   <div className="col-12">
                     <div className="mb-3">
                       <div className="sec_title">Description</div>
-                      <div
-                        className="descr"
-                        dangerouslySetInnerHTML={{ __html: description || "" }}
-                      ></div>
+                      <div className="descr">
+                        {loading ? (
+                          <div className="skeleton big-text-skeleton" />
+                        ) : (
+                          <div
+                            dangerouslySetInnerHTML={{
+                              __html: description || "",
+                            }}
+                          />
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -810,17 +835,19 @@ export default function ProductDetailsClient({ product }: { product: any }) {
                 <div className="view_box">
                   {/* MRP and Discount */}
                   <div className="pd_price">
-                    <span className="old_price">
-                      <del>MRP ₹{formatPrice(mrp ?? 0)}</del> {discount}% off
-                    </span>
-                  </div>
-
-                  {/* Discounted (final) price */}
-                  <div className="pd_price">
-                    <span className="new_price">
-                      {" "}
-                      ₹{formatPrice(totalPrice ?? 0)}
-                    </span>
+                    {loading ? (
+                      <div className="skeleton price-skeleton" />
+                    ) : (
+                      <>
+                        <span className="old_price">
+                          <del>MRP ₹{formatPrice(mrp ?? 0)}</del> {discount}%
+                          off
+                        </span>
+                        <span className="new_price">
+                          ₹{formatPrice(totalPrice ?? 0)}
+                        </span>
+                      </>
+                    )}
                   </div>
                   <small>Inclusive of all taxes</small>
 

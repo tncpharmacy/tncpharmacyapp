@@ -60,9 +60,10 @@ export default function MedicinesDetailsClient({
   const { id: params } = useParams();
   const dispatch = useAppDispatch();
   const decodedId = decodeId(params);
-  const reduxProduct = useAppSelector(
-    (state) => state.medicine.medicinesList
-  ) as unknown as Medicine;
+  // const reduxProduct = useAppSelector(
+  //   (state) => state.medicine.medicinesList
+  // ) as unknown as Medicine;
+  const { medicinesList, loading } = useAppSelector((state) => state.medicine);
 
   const source = searchParams.get("src");
   const catParam = searchParams.get("cat");
@@ -99,7 +100,7 @@ export default function MedicinesDetailsClient({
     (m) => m.id_manufacturer === manufId
   )?.manufacturer_name;
 
-  const data = medicine || reduxProduct;
+  const data = medicine || medicinesList;
   const {
     id,
     medicine_name,
@@ -776,6 +777,7 @@ export default function MedicinesDetailsClient({
     if (count === 2) return undefined; // 👈 default = md feel
     return "sm";
   };
+
   return (
     <>
       {/* <SiteHeader /> */}
@@ -888,7 +890,13 @@ export default function MedicinesDetailsClient({
                       !hasImages && isMobile ? "col-12" : ""
                     }`}
                   >
-                    <h1 className="fs-3 fw-bold">{medicine_name}</h1>
+                    <h1 className="fs-3 fw-bold">
+                      {loading ? (
+                        <div className="skeleton title-skeleton" />
+                      ) : (
+                        medicine_name
+                      )}
+                    </h1>
                     <div className="mb-4">
                       {typeof prescription_required === "number" ? (
                         prescription_required === 1 ? (
@@ -914,76 +922,104 @@ export default function MedicinesDetailsClient({
                     </div>
                     <div className="mb-3">
                       <div className="title">Generic Strength</div>
-                      <div className="descr">{generic_name}</div>
+                      <div className="descr">
+                        {loading ? (
+                          <div className="skeleton text-skeleton" />
+                        ) : (
+                          generic_name
+                        )}
+                      </div>
                     </div>
                     <div className="mb-3">
                       <div className="title">Manufacturer</div>
-                      <div className="descr">{manufacturer_name}</div>
+                      <div className="descr">
+                        {loading ? (
+                          <div className="skeleton text-skeleton" />
+                        ) : (
+                          manufacturer_name
+                        )}
+                      </div>
                     </div>
                     <div className="mb-3">
                       <div className="title">Pack Size</div>
-                      <div className="descr">{pack_size}</div>
+                      <div className="descr">
+                        {loading ? (
+                          <div className="skeleton text-skeleton" />
+                        ) : (
+                          pack_size
+                        )}
+                      </div>
                     </div>
                     <div className="mb-3">
                       <div className="title">Storage</div>
-                      <div className="descr">{storage}</div>
+                      <div className="descr">
+                        {loading ? (
+                          <div className="skeleton text-skeleton" />
+                        ) : (
+                          storage
+                        )}
+                      </div>
                     </div>
                   </div>
                   {(hasImages || !isMobile) && (
                     <div className="col-md-4 pb-4 justify-content-center align-items-center product-image-col">
-                      <Slider {...singleImageSlider}>
-                        {imageList && imageList.length > 0 ? (
-                          imageList.map((rawSrc, index) => {
-                            // normalize mediaBase + rawSrc into a full URL safely
-                            const cleanedBase = (mediaBase || "").replace(
-                              /\/+$/,
-                              ""
-                            );
-                            const cleanedSrc = (rawSrc || "").replace(
-                              /^\/+/,
-                              ""
-                            );
-                            const fullUrl = cleanedBase
-                              ? `${cleanedBase}/${cleanedSrc}`
-                              : rawSrc;
+                      {loading ? (
+                        <div className="image-skeleton" />
+                      ) : (
+                        <Slider {...singleImageSlider}>
+                          {imageList && imageList.length > 0 ? (
+                            imageList.map((rawSrc, index) => {
+                              // normalize mediaBase + rawSrc into a full URL safely
+                              const cleanedBase = (mediaBase || "").replace(
+                                /\/+$/,
+                                ""
+                              );
+                              const cleanedSrc = (rawSrc || "").replace(
+                                /^\/+/,
+                                ""
+                              );
+                              const fullUrl = cleanedBase
+                                ? `${cleanedBase}/${cleanedSrc}`
+                                : rawSrc;
 
-                            return (
-                              <div
-                                key={index}
-                                onClick={() => openModal(index)}
-                                className="product-image-box"
-                              >
-                                <img
-                                  src={fullUrl}
-                                  alt={`Product ${index + 1}`}
-                                  className="product-image"
-                                  loading="lazy"
-                                  onError={(e) => {
-                                    // show fallback if image load fails
-                                    e.currentTarget.onerror = null;
-                                    e.currentTarget.src =
-                                      "/images/tnc-default.png";
-                                    // eslint-disable-next-line no-console
-                                    console.warn(
-                                      "[PRODUCT IMAGE] failed to load:",
-                                      fullUrl
-                                    );
-                                  }}
-                                />
-                              </div>
-                            );
-                          })
-                        ) : (
-                          <div className="product-image-box">
-                            <img
-                              src="/images/tnc-default.png"
-                              alt="No Image Available"
-                              className="product-image"
-                              style={{ opacity: "0.3" }}
-                            />
-                          </div>
-                        )}
-                      </Slider>
+                              return (
+                                <div
+                                  key={index}
+                                  onClick={() => openModal(index)}
+                                  className="product-image-box"
+                                >
+                                  <img
+                                    src={fullUrl}
+                                    alt={`Product ${index + 1}`}
+                                    className="product-image"
+                                    loading="lazy"
+                                    onError={(e) => {
+                                      // show fallback if image load fails
+                                      e.currentTarget.onerror = null;
+                                      e.currentTarget.src =
+                                        "/images/tnc-default.png";
+                                      // eslint-disable-next-line no-console
+                                      console.warn(
+                                        "[PRODUCT IMAGE] failed to load:",
+                                        fullUrl
+                                      );
+                                    }}
+                                  />
+                                </div>
+                              );
+                            })
+                          ) : (
+                            <div className="product-image-box">
+                              <img
+                                src="/images/tnc-default.png"
+                                alt="No Image Available"
+                                className="product-image"
+                                style={{ opacity: "0.3" }}
+                              />
+                            </div>
+                          )}
+                        </Slider>
+                      )}
                       {/* 🪟 Modal with Fullscreen Slider */}
                       <Modal
                         show={showModal}
@@ -1067,10 +1103,17 @@ export default function MedicinesDetailsClient({
                   <div className="col-12">
                     <div className="mb-3">
                       <div className="sec_title">Description</div>
-                      <div
-                        className="descr"
-                        dangerouslySetInnerHTML={{ __html: description || "" }}
-                      ></div>
+                      <div className="descr">
+                        {loading ? (
+                          <div className="skeleton big-text-skeleton" />
+                        ) : (
+                          <div
+                            dangerouslySetInnerHTML={{
+                              __html: description || "",
+                            }}
+                          />
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -1198,17 +1241,19 @@ export default function MedicinesDetailsClient({
                 <div className="view_box">
                   {/* MRP and Discount */}
                   <div className="pd_price">
-                    <span className="old_price">
-                      <del>MRP ₹{formatPrice(mrp ?? 0)}</del> {discount}% off
-                    </span>
-                  </div>
-
-                  {/* Discounted (final) price */}
-                  <div className="pd_price">
-                    <span className="new_price">
-                      {" "}
-                      ₹{formatPrice(totalPrice ?? 0)}
-                    </span>
+                    {loading ? (
+                      <div className="skeleton price-skeleton" />
+                    ) : (
+                      <>
+                        <span className="old_price">
+                          <del>MRP ₹{formatPrice(mrp ?? 0)}</del> {discount}%
+                          off
+                        </span>
+                        <span className="new_price">
+                          ₹{formatPrice(totalPrice ?? 0)}
+                        </span>
+                      </>
+                    )}
                   </div>
                   <small>Inclusive of all taxes</small>
 
