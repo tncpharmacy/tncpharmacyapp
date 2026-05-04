@@ -143,8 +143,8 @@ export default function ProductDetailsClient({ product }: { product: any }) {
   useEffect(() => {
     dispatch(getCategories());
     dispatch(getSubcategories());
-    // dispatch(getGenericsAllList());
-    // dispatch(getManufacturersAllList());
+    dispatch(getGenericsAllList());
+    dispatch(getManufacturersAllList());
     dispatch(getGroupCare());
   }, [dispatch]);
 
