@@ -58,21 +58,7 @@ export const uploadPrescriptionByPharmacist = async (
     ENDPOINTS.PRESCRIPTION_UPLOAD.PRESCRIPTION_UPLOAD_BY_PHARMACIST(
       pharmacistId
     ),
-    payload,
-    {
-      headers: {
-        "Content-Type": undefined,
-      },
-      transformResponse: [
-        (data, headers) => {
-          if (!data && headers && headers["content-length"] === "0") {
-            return { data: { id: 0 } };
-          }
-          return JSON.parse(data);
-        },
-      ],
-      validateStatus: (status) => status >= 200 && status < 300,
-    }
+    payload
   );
   return response.data;
 };

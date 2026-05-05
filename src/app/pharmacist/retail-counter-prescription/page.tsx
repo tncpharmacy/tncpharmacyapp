@@ -72,7 +72,7 @@ interface BillPreviewData {
 }
 
 export interface OCRMedicine {
-  product_id: number;
+  id: number;
   medicine_name: string;
   category_id: number;
   matched_with?: string;
@@ -276,11 +276,7 @@ export default function RetailCounter() {
       // The REAL CORRECT form-data
       const formData = new FormData();
       formData.append("buyer_id", String(buyer_id));
-      formData.append(
-        "prescription_pic",
-        prescriptionFile,
-        prescriptionFile.name
-      );
+      formData.append("prescription_pic", prescriptionFile);
 
       const uploadRes = await dispatch(
         uploadPrescriptionPharmacistThunk({
@@ -305,7 +301,7 @@ export default function RetailCounter() {
       if (uploadRes?.product_list?.medicines) {
         const meds: MatchedMedicine[] = uploadRes.product_list.medicines.map(
           (m: OCRMedicine): MatchedMedicine => ({
-            id: m.product_id,
+            id: m.id,
             name: m.medicine_name,
             category_id: m.category_id,
           })
@@ -395,48 +391,21 @@ export default function RetailCounter() {
     setIsQtyModalOpen(true);
   };
 
-  const handleMedicineClick = async (med: {
-    id: number;
-    name: string;
-    category_id: number;
-  }) => {
-    // med is from matchedMedicines (OCR). store small object
-    setSelectedMedicine(med); // store selected object (OCR)
-
-    const medNameLower = med.name.toString().toLowerCase();
-
-    // Find product from DB
-    const matched = productList.find((item) =>
-      (item.medicine_name?.toString().toLowerCase() ?? "").includes(
-        medNameLower
-      )
-    );
-
-    // console.log("matched (from OCR click)", matched);
-
-    if (!matched) {
-      alert(`No matching product found for ${med.name}`);
+  // Handle click on detected backend medicine
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const handleMedicineClick = async (product: any) => {
+    if (!product.id) {
+      alert(`No matching product found for ${product.medicine_name}`);
       return;
     }
 
-    // store actual DB product
-    setSelectedProduct(matched);
+    setSelectedProduct(product);
 
-    const categoryId = matched.category_id;
-    const productId = matched.id;
-
-    if (categoryId === 1) {
-      // Category 1 → Generic modal
-      if (productId) {
-        dispatch(getProductByGenericId(Number(productId)));
-        setIsModalOpen(true);
-      } else {
-        console.error("Product ID missing:", matched);
-        alert("Error: Product ID missing for fetching alternatives.");
-      }
+    if (product.category_id === 1) {
+      dispatch(getProductByGenericId(Number(product.id)));
+      setIsModalOpen(true);
     } else {
-      // Other categories → billing / qty modal
-      handleSkipGenericModal(matched);
+      handleSkipGenericModal(product);
     }
   };
 
@@ -943,14 +912,8 @@ export default function RetailCounter() {
                           {backendMedicines.map((m) => (
                             <ListGroup.Item
                               action
-                              key={m.product_id}
-                              onClick={() =>
-                                handleMedicineClick({
-                                  id: m.id,
-                                  name: m.medicine_name,
-                                  category_id: m.category_id,
-                                })
-                              }
+                              key={m.id}
+                              onClick={() => handleMedicineClick(m)}
                             >
                               {m.medicine_name}
                             </ListGroup.Item>

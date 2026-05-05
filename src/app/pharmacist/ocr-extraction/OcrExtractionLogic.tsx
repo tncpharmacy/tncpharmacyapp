@@ -153,23 +153,20 @@ export default function OcrExtractionLogic({
   // -------------------------------------------------------------------
 
   // Handle click on detected backend medicine
-  const handleMedicineClick = async (medName: string) => {
-    const matched = productList.find((item) =>
-      item.medicine_name?.toLowerCase().includes(medName.toLowerCase())
-    );
-
-    if (!matched) {
-      alert(`No matching product found for ${medName}`);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const handleMedicineClick = async (product: any) => {
+    if (!product.id) {
+      alert(`No matching product found for ${product.medicine_name}`);
       return;
     }
 
-    setSelectedProduct(matched);
+    setSelectedProduct(product);
 
-    if (matched.category_id === 1) {
-      dispatch(getProductByGenericId(Number(matched.id)));
+    if (product.category_id === 1) {
+      dispatch(getProductByGenericId(Number(product.id)));
       setIsModalOpen(true);
     } else {
-      handleSkipGenericModal(matched);
+      handleSkipGenericModal(product);
     }
   };
 
@@ -477,7 +474,7 @@ export default function OcrExtractionLogic({
               <ListGroup.Item
                 key={item.id}
                 action
-                onClick={() => handleMedicineClick(item.medicine_name)}
+                onClick={() => handleMedicineClick(item)}
               >
                 <strong>{item.medicine_name}</strong>
                 {/* <div className="text-muted small">
