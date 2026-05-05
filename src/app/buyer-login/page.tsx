@@ -57,7 +57,7 @@ export default function BuyerLoginModal({
   // Step 1: Login
   const handleLoginCheck = async () => {
     if (!loginId.trim()) {
-      setError("Please enter email or mobile number");
+      setError("Please enter valid mobile number");
       return;
     }
     const mobileRegex = /^\d{10}$/;

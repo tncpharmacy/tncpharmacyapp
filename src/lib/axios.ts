@@ -38,6 +38,8 @@ api.interceptors.request.use(
       "/masterapp/subcategory/",
       "/masterapp/category/list/",
       "/masterapp/subcategory/list/",
+      "/masterapp/generic/list/",
+      "/masterapp/manufacturer/list/",
       "/website/other/medicine/list/",
       "/website/other/medicine/",
       "/website/medicine/",
