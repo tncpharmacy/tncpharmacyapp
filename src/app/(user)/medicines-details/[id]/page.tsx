@@ -128,6 +128,38 @@ export default async function Page({ params }: Props) {
           }),
         }}
       />
+      {/* ✅ BREADCRUMB SCHEMA */}
+      {medicine && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "BreadcrumbList",
+              itemListElement: [
+                {
+                  "@type": "ListItem",
+                  position: 1,
+                  name: "Home",
+                  item: "https://tncpharmacy.in",
+                },
+                {
+                  "@type": "ListItem",
+                  position: 2,
+                  name: "Medicines",
+                  item: "https://tncpharmacy.in/all-medicine",
+                },
+                {
+                  "@type": "ListItem",
+                  position: 3,
+                  name: name,
+                  item: `https://tncpharmacy.in/medicines-details/${id}`,
+                },
+              ],
+            }),
+          }}
+        />
+      )}
 
       {/* ✅ PASS DATA TO CLIENT */}
       <MedicinesDetailsClient medicine={medicine} />

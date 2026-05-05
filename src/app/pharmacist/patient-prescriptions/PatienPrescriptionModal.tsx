@@ -279,7 +279,7 @@ export default function PatientPrescriptionModal({
                     const isHandledByMe = p.handle_by === Number(pharmacistId);
                     const isReceived =
                       p.handle_by !== null && p.handle_by !== 0;
-
+                    console.log("p", p);
                     return (
                       <tr key={p.id}>
                         <td className="text-start">{p.id}</td>

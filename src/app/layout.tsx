@@ -15,12 +15,28 @@ export default function RootLayout({
   return (
     <html lang="en" data-scroll-behavior="smooth">
       <head>
+        <link rel="canonical" href="https://tncpharmacy.in/" />
         <link
           rel="stylesheet"
           href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
         />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "Pharmacy",
+              name: "TNC Pharmacy",
+              url: "https://tncpharmacy.in",
+              telephone: "+91-XXXXXXXXXX",
+              address: {
+                "@type": "PostalAddress",
+                addressCountry: "IN",
+              },
+            }),
+          }}
+        />
       </head>
-
       <body>
         <a href="#main" className="skip-link">
           Skip to content

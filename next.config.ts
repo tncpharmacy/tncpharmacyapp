@@ -19,6 +19,7 @@ const nextConfig: NextConfig = {
   experimental: {
     optimizeCss: true,
   },
+  poweredByHeader: false,
 
   eslint: {
     // Allow production builds even if ESLint errors are present
@@ -159,7 +160,7 @@ const nextConfig: NextConfig = {
       },
       {
         source: "/blog",
-        destination: "/Blog-health-articles-hub",
+        destination: "/blog-health-articles-hub",
       },
       {
         source: "/licence",
