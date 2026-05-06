@@ -1,17 +1,41 @@
 export default async function sitemap() {
-  const res = await fetch(
-    "https://api.tncpharmacy.in/api/medicine/category/1/"
-  );
+  const baseUrl = "https://tncpharmacy.in";
 
-  const data = await res.json();
+  let productUrls: { url: string; lastModified: Date }[] = [];
 
-  // 🔥 limit 500
-  const limitedProducts = data.slice(0, 500);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const productUrls = limitedProducts.map((p: any) => ({
-    url: `https://tncpharmacy.in/medicines-details/${btoa(p.id.toString())}`,
-    lastModified: new Date(),
-  }));
+  try {
+    const res = await fetch(
+      "https://api.tncpharmacy.in/api/medicine/category/1/",
+      { cache: "no-store" } // important for fresh data
+    );
+    if (!res.ok) {
+      throw new Error(`API failed with status ${res.status}`);
+    }
+    // 👇 SAFE JSON PARSE
+    const text = await res.text();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let data: any = [];
+    try {
+      data = JSON.parse(text);
+    } catch (err) {
+      console.error("❌ Invalid JSON response:", text);
+      data = [];
+    }
+
+    // 👇 handle array OR paginated response
+    const products = Array.isArray(data) ? data : data.results || [];
+
+    // 🔥 limit 500
+    const limitedProducts = products.slice(0, 500);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    productUrls = limitedProducts.map((p: any) => ({
+      url: `${baseUrl}/medicines-details/${btoa(p.id.toString())}?src=all`,
+      lastModified: new Date(),
+    }));
+  } catch (err) {
+    console.error("❌ Sitemap fetch error:", err);
+    productUrls = []; // fallback so build doesn't break
+  }
   return [
     {
       url: "https://tncpharmacy.in",
