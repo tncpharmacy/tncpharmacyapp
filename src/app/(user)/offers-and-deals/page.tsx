@@ -3,6 +3,7 @@ import "../css/site-style.css";
 import "../css/user-style.css";
 import "bootstrap/dist/css/bootstrap.min.css";
 import Footer from "@/app/(user)/components/footer/footer";
+import Link from "next/link";
 
 export const metadata = {
   title: "Offers & Deals | TnC Pharmacy – Up to 70% Off on Medicines",
@@ -46,8 +47,24 @@ export const metadata = {
 export default function OffersAndDeals() {
   return (
     <div className="bg-light">
-      <section className="container my-5">
-        <div className="col-lg-10 mx-auto bg-white p-4 p-md-5 shadow-sm rounded-3">
+      <div className="container py-4">
+        <nav aria-label="breadcrumb" style={{ fontSize: "13px" }}>
+          <ol className="breadcrumb">
+            <nav aria-label="breadcrumb" style={{ fontSize: "13px" }}>
+              <ol className="breadcrumb">
+                <li className="breadcrumb-item">
+                  <Link href="/" style={{ textDecoration: "none" }}>
+                    Home
+                  </Link>
+                </li>
+                <li className="breadcrumb-item text-muted">
+                  <span>Offers & Deals</span>
+                </li>
+              </ol>
+            </nav>
+          </ol>
+        </nav>
+        <div className="col-lg-12 mx-auto bg-white p-4 p-md-5 shadow-sm rounded-3">
           <h1 className="fw-bold text-primary mb-4">Offers & Deals</h1>
 
           <p>
@@ -80,7 +97,7 @@ export default function OffersAndDeals() {
             Offers are updated regularly. Check back frequently for new deals.
           </div>
         </div>
-      </section>
+      </div>
       <Footer />
     </div>
   );

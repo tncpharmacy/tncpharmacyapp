@@ -40,8 +40,24 @@ export default function FAQsClient() {
         }}
       />
 
-      <section className="container my-5">
-        <div className="col-lg-10 mx-auto bg-white p-4 p-md-5 shadow-sm rounded-3">
+      <div className="container py-4">
+        <nav aria-label="breadcrumb" style={{ fontSize: "13px" }}>
+          <ol className="breadcrumb">
+            <nav aria-label="breadcrumb" style={{ fontSize: "13px" }}>
+              <ol className="breadcrumb">
+                <li className="breadcrumb-item">
+                  <Link href="/" style={{ textDecoration: "none" }}>
+                    Home
+                  </Link>
+                </li>
+                <li className="breadcrumb-item text-muted">
+                  <span>FAQs</span>
+                </li>
+              </ol>
+            </nav>
+          </ol>
+        </nav>
+        <div className="col-lg-12 mx-auto bg-white p-4 p-md-5 shadow-sm rounded-3">
           <h1 className="fw-bold text-primary mb-4">
             FAQs – Online Pharmacy in Noida | TnC Pharmacy Help & Support
           </h1>
@@ -332,7 +348,7 @@ export default function FAQsClient() {
             Ghaziabad, and Delhi NCR.
           </p>
         </div>
-      </section>
+      </div>
 
       <Footer />
     </div>

@@ -363,6 +363,7 @@ export default function SearchTextClient() {
                               opacity:
                                 img === "/images/tnc-default.png" ? 0.3 : 1,
                             }}
+                            onClick={() => handleCombinedSelect(item)}
                           />
                         </div>
 

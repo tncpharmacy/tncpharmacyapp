@@ -6,6 +6,7 @@ import "../css/user-style.css";
 import "bootstrap/dist/css/bootstrap.min.css";
 import SiteHeader from "@/app/(user)/components/header/header";
 import Footer from "@/app/(user)/components/footer/footer";
+import Link from "next/link";
 
 export const metadata = {
   title: "Privacy Policy | TnC Pharmacy – Your Data is Safe With Us",
@@ -52,8 +53,24 @@ export default function PrivacyPolicy() {
       <div className="page-wrapper bg-light">
         {/* <SiteHeader /> */}
 
-        <section className="container my-5">
-          <div className="col-lg-10 mx-auto bg-white p-4 p-md-5 shadow-sm rounded-3">
+        <div className="container py-4">
+          <nav aria-label="breadcrumb" style={{ fontSize: "13px" }}>
+            <ol className="breadcrumb">
+              <nav aria-label="breadcrumb" style={{ fontSize: "13px" }}>
+                <ol className="breadcrumb">
+                  <li className="breadcrumb-item">
+                    <Link href="/" style={{ textDecoration: "none" }}>
+                      Home
+                    </Link>
+                  </li>
+                  <li className="breadcrumb-item text-muted">
+                    <span>Privacy Policy</span>
+                  </li>
+                </ol>
+              </nav>
+            </ol>
+          </nav>
+          <div className="col-lg-12 mx-auto bg-white p-4 p-md-5 shadow-sm rounded-3">
             {/* H1 */}
             <h1 className="fw-bold text-primary mb-4">Privacy Policy</h1>
 
@@ -179,7 +196,7 @@ export default function PrivacyPolicy() {
               Noida, Uttar Pradesh – 201301.
             </p>
           </div>
-        </section>
+        </div>
 
         <Footer />
       </div>

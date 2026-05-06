@@ -6,6 +6,7 @@ import "../css/user-style.css";
 import "bootstrap/dist/css/bootstrap.min.css";
 import SiteHeader from "@/app/(user)/components/header/header";
 import Footer from "@/app/(user)/components/footer/footer";
+import Link from "next/link";
 
 export const metadata = {
   title: "Return Policy | TnC Pharmacy -- Easy Returns & Exchanges",
@@ -50,11 +51,25 @@ export const metadata = {
 export default function ReturnPolicy() {
   return (
     <div className="page-wrapper">
-      {/* <SiteHeader /> */}
-
-      <section className="container my-5">
+      <div className="container py-4">
+        <nav aria-label="breadcrumb" style={{ fontSize: "13px" }}>
+          <ol className="breadcrumb">
+            <nav aria-label="breadcrumb" style={{ fontSize: "13px" }}>
+              <ol className="breadcrumb">
+                <li className="breadcrumb-item">
+                  <Link href="/" style={{ textDecoration: "none" }}>
+                    Home
+                  </Link>
+                </li>
+                <li className="breadcrumb-item text-muted">
+                  <span>Return Policy</span>
+                </li>
+              </ol>
+            </nav>
+          </ol>
+        </nav>
         <div className="row justify-content-center">
-          <div className="col-lg-10">
+          <div className="col-lg-12">
             <div className="bg-white shadow-sm rounded-3 p-4 p-md-5">
               {/* H1 */}
               <h1 className="fw-bold text-primary mb-4">Return Policy</h1>
@@ -159,7 +174,7 @@ export default function ReturnPolicy() {
             </div>
           </div>
         </div>
-      </section>
+      </div>
 
       <Footer />
     </div>

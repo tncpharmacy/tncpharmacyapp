@@ -35,7 +35,10 @@ type Props = {
   initialSubcategories: any[];
 };
 
-const SiteHeader = ({ initialCategories, initialSubcategories }: Props) => {
+const SiteHeader = ({
+  initialCategories = [],
+  initialSubcategories = [],
+}: Props) => {
   const dispatch = useAppDispatch();
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
@@ -69,11 +72,6 @@ const SiteHeader = ({ initialCategories, initialSubcategories }: Props) => {
   const [loadingSearch, setLoadingSearch] = useState(false);
   const [showList, setShowList] = useState(false);
   const [highlightIndex, setHighlightIndex] = useState(-1);
-
-  const reduxCategories = useAppSelector((state) => state.category.list);
-  const reduxSubcategories = useAppSelector(
-    (state) => state.subcategory.listAll
-  );
 
   const categories = initialCategories || [];
   const subcategories = initialSubcategories || [];
@@ -165,12 +163,6 @@ const SiteHeader = ({ initialCategories, initialSubcategories }: Props) => {
     return () => clearTimeout(timer);
   }, [headerSearch, dispatch]);
 
-  // ---------- INITIAL LOAD ----------
-  // useEffect(() => {
-  //   setMounted(true);
-  //   dispatch(getCategoriesList());
-  //   dispatch(getSubcategoriesList());
-  // }, [dispatch]);
   useEffect(() => {
     setMounted(true);
   }, []);
@@ -283,18 +275,7 @@ const SiteHeader = ({ initialCategories, initialSubcategories }: Props) => {
 
     router.replace("/");
   };
-  const handleProductSelect = (item: Medicine) => {
-    setShowList(false);
-    setHeaderSearch("");
-    setHighlightIndex(-1);
 
-    const path =
-      item.category_id === 1
-        ? `/medicines-details/${encodeId(item.id)}`
-        : `/product-details/${encodeId(item.id)}`;
-
-    router.push(path);
-  };
   const handleSearchSelect = (item: SearchMatch) => {
     setShowList(false);
     setHeaderSearch("");
@@ -412,10 +393,7 @@ const SiteHeader = ({ initialCategories, initialSubcategories }: Props) => {
   const filteredCategories = categories.filter(
     (cat) => cat.category_name !== "Medicines" && cat.status === "Active"
   );
-  // const topCategories = topMenuNames
-  //   .map((name) => filteredCategories.find((cat) => cat.category_name === name))
-  //   .filter(Boolean);
-  // 👉 TOP MENU
+
   const topCategories = filteredCategories.filter((cat) =>
     topMenuNames.includes(cat.category_name)
   );

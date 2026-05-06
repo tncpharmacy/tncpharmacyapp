@@ -2,24 +2,46 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { loadAnalytics, disableAnalytics } from "@/lib/analytics";
 
 export default function CookieBanner() {
   const [show, setShow] = useState(false);
 
   useEffect(() => {
     const consent = localStorage.getItem("cookie_consent");
-    if (!consent) setShow(true);
+
+    if (!consent) {
+      setShow(true);
+    }
+
+    if (consent === "accepted") {
+      loadAnalytics();
+    }
+
+    if (consent === "rejected") {
+      disableAnalytics();
+    }
   }, []);
 
   const handleAccept = () => {
     localStorage.setItem("cookie_consent", "accepted");
-    document.cookie = "cookie_consent=accepted; path=/; max-age=31536000";
+
+    document.cookie =
+      "cookie_consent=accepted; path=/; max-age=31536000; SameSite=Lax";
+
+    loadAnalytics(); // 🔥 immediately load
+
     setShow(false);
   };
 
   const handleReject = () => {
     localStorage.setItem("cookie_consent", "rejected");
-    document.cookie = "cookie_consent=rejected; path=/; max-age=31536000";
+
+    document.cookie =
+      "cookie_consent=rejected; path=/; max-age=31536000; SameSite=Lax";
+
+    disableAnalytics(); // 🔥 block tracking
+
     setShow(false);
   };
 
@@ -27,6 +49,8 @@ export default function CookieBanner() {
 
   return (
     <div
+      role="dialog"
+      aria-live="polite"
       style={{
         position: "fixed",
         bottom: "20px",

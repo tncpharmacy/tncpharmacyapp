@@ -73,11 +73,26 @@ export default function AboutUs() {
           }),
         }}
       />
-      {/* <SiteHeader /> */}
 
-      <section className="container my-5">
+      <div className="container py-4">
+        <nav aria-label="breadcrumb" style={{ fontSize: "13px" }}>
+          <ol className="breadcrumb">
+            <nav aria-label="breadcrumb" style={{ fontSize: "13px" }}>
+              <ol className="breadcrumb">
+                <li className="breadcrumb-item">
+                  <Link href="/" style={{ textDecoration: "none" }}>
+                    Home
+                  </Link>
+                </li>
+                <li className="breadcrumb-item text-muted">
+                  <span>About Us</span>
+                </li>
+              </ol>
+            </nav>
+          </ol>
+        </nav>
         <div className="row justify-content-center">
-          <div className="col-lg-10">
+          <div className="col-lg-12">
             <div className="bg-white shadow-sm rounded-3 p-4 p-md-5">
               {/* TITLE */}
               <h1 className="fw-bold text-primary mb-4">About TnC Pharmacy</h1>
@@ -215,7 +230,7 @@ export default function AboutUs() {
             </div>
           </div>
         </div>
-      </section>
+      </div>
 
       <Footer />
     </div>

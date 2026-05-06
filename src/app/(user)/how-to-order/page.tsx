@@ -3,6 +3,7 @@ import "../css/site-style.css";
 import "../css/user-style.css";
 import "bootstrap/dist/css/bootstrap.min.css";
 import Footer from "@/app/(user)/components/footer/footer";
+import Link from "next/link";
 
 export const metadata = {
   title: "How to Order Medicines Online | TnC Pharmacy",
@@ -13,8 +14,24 @@ export const metadata = {
 export default function HowToOrder() {
   return (
     <div className="bg-light">
-      <section className="container my-5">
-        <div className="col-lg-10 mx-auto bg-white p-4 p-md-5 shadow-sm rounded-3">
+      <div className="container py-4">
+        <nav aria-label="breadcrumb" style={{ fontSize: "13px" }}>
+          <ol className="breadcrumb">
+            <nav aria-label="breadcrumb" style={{ fontSize: "13px" }}>
+              <ol className="breadcrumb">
+                <li className="breadcrumb-item">
+                  <Link href="/" style={{ textDecoration: "none" }}>
+                    Home
+                  </Link>
+                </li>
+                <li className="breadcrumb-item text-muted">
+                  <span>How to Order</span>
+                </li>
+              </ol>
+            </nav>
+          </ol>
+        </nav>
+        <div className="col-lg-12 mx-auto bg-white p-4 p-md-5 shadow-sm rounded-3">
           {/* H1 */}
           <h1 className="fw-bold text-primary mb-4">How to Order</h1>
 
@@ -67,7 +84,7 @@ export default function HowToOrder() {
             Tip: Keep your prescription ready for faster order processing.
           </div>
         </div>
-      </section>
+      </div>
       <Footer />
     </div>
   );

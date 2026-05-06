@@ -3,6 +3,7 @@ import "../css/site-style.css";
 import "../css/user-style.css";
 import "bootstrap/dist/css/bootstrap.min.css";
 import Footer from "@/app/(user)/components/footer/footer";
+import Link from "next/link";
 
 export const metadata = {
   title: "Partner with TnC Pharmacy | Business Opportunities",
@@ -13,8 +14,24 @@ export const metadata = {
 export default function Partner() {
   return (
     <div className="bg-light">
-      <section className="container my-5">
-        <div className="col-lg-10 mx-auto bg-white p-4 p-md-5 shadow-sm rounded-3">
+      <div className="container py-4">
+        <nav aria-label="breadcrumb" style={{ fontSize: "13px" }}>
+          <ol className="breadcrumb">
+            <nav aria-label="breadcrumb" style={{ fontSize: "13px" }}>
+              <ol className="breadcrumb">
+                <li className="breadcrumb-item">
+                  <Link href="/" style={{ textDecoration: "none" }}>
+                    Home
+                  </Link>
+                </li>
+                <li className="breadcrumb-item text-muted">
+                  <span>Partner With Us</span>
+                </li>
+              </ol>
+            </nav>
+          </ol>
+        </nav>
+        <div className="col-lg-12 mx-auto bg-white p-4 p-md-5 shadow-sm rounded-3">
           <h1 className="fw-bold text-primary mb-4">Partner With Us</h1>
 
           <p>
@@ -51,7 +68,7 @@ export default function Partner() {
             <strong>Contact:</strong> business@tncpharmacy.in
           </div>
         </div>
-      </section>
+      </div>
       <Footer />
     </div>
   );
