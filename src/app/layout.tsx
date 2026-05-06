@@ -6,6 +6,8 @@ import Providers from "./Provider";
 import AuthInitializer from "@/components/AuthInitializer/AuthInitializer";
 import LayoutFix from "@/components/LayoutFix/LayoutFix";
 import CookieBanner from "@/app/components/CookieBanner/CookieBanner";
+import AnalyticsProvider from "@/components/AnalyticsProvider/AnalyticsProvider";
+import Script from "next/script";
 
 export default function RootLayout({
   children,
@@ -36,12 +38,29 @@ export default function RootLayout({
             }),
           }}
         />
+        <Script id="gtm-script" strategy="afterInteractive">
+          {`
+            (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+            new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+            j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+            'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+            })(window,document,'script','dataLayer','GTM-KH3SXDFT');
+          `}
+        </Script>
       </head>
       <body>
+        <noscript>
+          <iframe
+            src="https://www.googletagmanager.com/ns.html?id=GTM-KH3SXDFT"
+            height="0"
+            width="0"
+            style={{ display: "none", visibility: "hidden" }}
+          />
+        </noscript>
         <a href="#main" className="skip-link">
           Skip to content
         </a>
-
+        <AnalyticsProvider />
         <LayoutFix />
 
         <Providers>

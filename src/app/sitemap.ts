@@ -1,9 +1,23 @@
 export default async function sitemap() {
+  const res = await fetch(
+    "https://api.tncpharmacy.in/api/medicine/category/1/"
+  );
+
+  const data = await res.json();
+
+  // 🔥 limit 500
+  const limitedProducts = data.slice(0, 500);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const productUrls = limitedProducts.map((p: any) => ({
+    url: `https://tncpharmacy.in/medicines-details/${btoa(p.id.toString())}`,
+    lastModified: new Date(),
+  }));
   return [
     {
       url: "https://tncpharmacy.in",
       lastModified: new Date(),
     },
+    ...productUrls,
     {
       url: "https://tncpharmacy.in/all-medicine",
       lastModified: new Date(),

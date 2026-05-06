@@ -27,7 +27,7 @@ export default function CookieBanner() {
     localStorage.setItem("cookie_consent", "accepted");
 
     document.cookie =
-      "cookie_consent=accepted; path=/; max-age=31536000; SameSite=Lax";
+      "cookie_consent=accepted; path=/; max-age=31536000; SameSite=Lax; Secure";
 
     loadAnalytics(); // 🔥 immediately load
 
