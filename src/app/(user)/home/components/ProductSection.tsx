@@ -153,7 +153,7 @@ export default function ProductSection({
                   <div className="pd_img">
                     <Image
                       src={item.imageUrl}
-                      alt=""
+                      alt={item.ProductName}
                       width={200}
                       height={200}
                       sizes="(max-width: 768px) 50vw, 200px"

@@ -21,6 +21,7 @@ export default function Banner() {
           height={350}
           sizes="(max-width: 768px) 100vw, 1200px"
           priority
+          loading="eager"
         />
         <div className="hero-banner">
           <div className="container">
@@ -39,6 +40,8 @@ export default function Banner() {
           width={1200}
           height={350}
           sizes="(max-width: 768px) 100vw, 1200px"
+          priority
+          loading="eager"
         />
         <div className="hero-banner">
           <div className="container">
@@ -57,6 +60,8 @@ export default function Banner() {
           width={1200}
           height={350}
           sizes="(max-width: 768px) 100vw, 1200px"
+          priority
+          loading="eager"
         />
         <div className="hero-banner">
           <div className="container">

@@ -589,6 +589,7 @@ ul.no-subcategories li {
     font-size: 12px;
     overflow: scroll;
     height: 100%;
+    scrollbar-width: none;
 }
 
 .mobile-menu-list > li {
@@ -773,3 +774,85 @@ span.user_p i .count {
     width: 110px;
   }
 }
+
+.header-search-ul {
+    position: absolute;
+    top: 70%;
+    left: 0;
+    right: 0;
+    background: #fff;
+    max-height: 250px;
+    overflow-y: auto;
+    margin-top: 5px;
+    z-index: 1000;
+    list-style: none;
+    padding: 0;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+.header-search-li {
+    padding: 10px 12px;
+    cursor: pointer;
+    border-bottom: 1px solid #eee;
+}
+
+.header-search-span-left-side {
+    font-weight: 600;
+    font-size: 14px;
+    color: #000;
+    margin-right: 10px;
+    flex: 1;
+    line-height: 1.3;
+    margin-bottom: 4px;
+}
+
+.header-search-div-right-second {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 6px;
+}
+.header-search-div-right-first {
+    display: flex; 
+    flex-direction: column;
+}
+
+.header-search-right-span-second {
+    color: green;
+    font-weight: 600;
+    font-size: 14px;
+}
+.header-search-right-span-first {
+    white-space: nowrap;
+}
+.header-search-right-span-third {
+    margin-left: 6;
+    text-decoration: line-through;
+    color: #777;
+    font-size: 12px;
+}
+.header-search-right-span-forth {
+    color: red;
+    font-weight: 600;
+    font-size: 12px;
+    white-space: nowrap;
+}
+.header-search-right-span-fifth {
+    color: red; font-weight: 600; 
+}
+.header-search-right-div-third {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    color: #555;
+    margin-bottom: 10px;
+    margin-top: 2px;
+}
+.header-search-right-div-forth {
+    font-size: 12px;
+    font-weight: 600;
+    color: green;
+    line-height: 1.3;
+    margin-top: 2px;
+}
+

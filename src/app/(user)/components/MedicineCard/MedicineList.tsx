@@ -123,7 +123,12 @@ const MedicineList: React.FC<MedicineListProps> = ({
       <div className="row align-items-center mb-3">
         <div className="col-md-9">
           <div className="pageTitle mt-3 mb-3">
-            <Image src={"/images/favicon.png"} alt="" width={30} height={30} />{" "}
+            <Image
+              src={"/images/favicon.png"}
+              alt="All Medicine"
+              width={30}
+              height={30}
+            />{" "}
             Medicine
           </div>
         </div>

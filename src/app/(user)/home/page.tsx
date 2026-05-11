@@ -56,6 +56,78 @@ export default async function HomePage() {
   const { groupCare, category5, category7, category9, categories } =
     await getHomeData();
 
+  const schema = {
+    "@context": "https://schema.org",
+    "@type": "Pharmacy",
+
+    name: "TnC Pharmacy",
+    url: "https://tncpharmacy.in",
+    "@id": "https://tncpharmacy.in",
+
+    logo: "https://tncpharmacy.in/og-image.png",
+    image: "https://tncpharmacy.in/og-image.png",
+
+    telephone: "+918062521280",
+
+    address: {
+      "@type": "PostalAddress",
+      streetAddress: "Sector 29",
+      addressLocality: "Noida",
+      addressRegion: "UP",
+      postalCode: "201301",
+      addressCountry: "IN",
+    },
+
+    geo: {
+      "@type": "GeoCoordinates",
+      latitude: 28.5708,
+      longitude: 77.326,
+    },
+
+    openingHoursSpecification: [
+      {
+        "@type": "OpeningHoursSpecification",
+        dayOfWeek: [
+          "Monday",
+          "Tuesday",
+          "Wednesday",
+          "Thursday",
+          "Friday",
+          "Saturday",
+          "Sunday",
+        ],
+        opens: "09:00",
+        closes: "22:00",
+      },
+    ],
+
+    sameAs: [
+      "https://www.facebook.com/people/TnC-Pharmacy-and-Labs/6158386771534/",
+      "https://www.instagram.com/",
+    ],
+
+    priceRange: "₹₹",
+
+    aggregateRating: {
+      "@type": "AggregateRating",
+      ratingValue: "4.5",
+      reviewCount: "100",
+    },
+  };
+
+  const breadcrumbSchema = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      {
+        "@type": "ListItem",
+        position: 1,
+        name: "Home",
+        item: "https://tncpharmacy.in/",
+      },
+    ],
+  };
+
   return (
     <>
       <script
@@ -69,6 +141,20 @@ export default async function HomePage() {
             logo: "https://tncpharmacy.in/og-image.png",
             sameAs: ["https://www.facebook.com/", "https://www.instagram.com/"],
           }),
+        }}
+      />
+
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(schema),
+        }}
+      />
+
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(breadcrumbSchema),
         }}
       />
 

@@ -66,7 +66,9 @@ export default function RootLayout({
         <Providers>
           <AuthInitializer />
           {/* ✅ Main content wrapper (IMPORTANT) */}
-          <main id="main">{children}</main>
+          <main id="main" role="main">
+            {children}
+          </main>
         </Providers>
         <CookieBanner />
         <ToastProvider />

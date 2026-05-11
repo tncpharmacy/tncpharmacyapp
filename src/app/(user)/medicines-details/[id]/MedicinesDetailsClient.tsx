@@ -1013,7 +1013,7 @@ export default function MedicinesDetailsClient({
                             <div className="product-image-box">
                               <Image
                                 src="/images/tnc-default.png"
-                                alt=""
+                                alt="Medicine Default Image"
                                 width={300}
                                 height={300}
                                 className="product-image"

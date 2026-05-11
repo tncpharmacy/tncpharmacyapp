@@ -404,7 +404,7 @@ const SiteHeader = ({
   );
 
   return (
-    <header id="header">
+    <header id="header" role="banner">
       <div className="mid_header">
         <div className="container">
           <div className="header_wrap">
@@ -439,62 +439,26 @@ const SiteHeader = ({
               />
 
               {showList && groupedResults.length > 0 && (
-                <ul
-                  ref={listRef}
-                  style={{
-                    position: "absolute",
-                    top: "70%",
-                    left: 0,
-                    right: 0,
-                    background: "#fff",
-                    maxHeight: "250px",
-                    overflowY: "auto",
-                    marginTop: "5px",
-                    zIndex: 1000,
-                    listStyle: "none",
-                    padding: 0,
-                    border: "1px solid #ddd",
-                    borderRadius: "4px",
-                  }}
-                >
+                <ul ref={listRef} className="header-search-ul">
                   {groupedResults.map((item, index) => (
                     <li
                       key={`${item.data.id}-${index}`}
-                      //onClick={() => handleProductSelect(item.data)}
+                      className="header-search-li"
                       onClick={() => handleSearchSelect(item)}
                       onMouseDown={(e) => e.preventDefault()}
                       onMouseEnter={() => setHighlightIndex(index)}
                       style={{
-                        padding: "10px 12px",
-                        cursor: "pointer",
-                        borderBottom: "1px solid #eee",
                         backgroundColor:
                           index === highlightIndex
                             ? "rgb(237 240 243)"
                             : "#fff",
                       }}
                     >
-                      <div style={{ display: "flex", flexDirection: "column" }}>
+                      <div className="header-search-div-right-first">
                         {/* --- ROW 1: Title + Right Label --- */}
-                        <div
-                          style={{
-                            display: "flex",
-                            justifyContent: "space-between",
-                            marginBottom: "6px",
-                          }}
-                        >
+                        <div className="header-search-div-right-second">
                           {/* LEFT SIDE TEXT */}
-                          <span
-                            style={{
-                              fontWeight: 600,
-                              fontSize: "14px",
-                              color: "#000",
-                              marginRight: "10px",
-                              flex: 1,
-                              lineHeight: "1.3",
-                              marginBottom: "4px", // 👈 ADD THIS
-                            }}
-                          >
+                          <span className="header-search-span-left-side">
                             {item._matchType === "medicine" &&
                               item.data.medicine_name}
                             {item._matchType === "generic" &&
@@ -505,14 +469,8 @@ const SiteHeader = ({
 
                           {/* RIGHT SIDE CONTENT */}
                           {item._matchType === "medicine" ? (
-                            <span style={{ whiteSpace: "nowrap" }}>
-                              <span
-                                style={{
-                                  color: "green",
-                                  fontWeight: 600,
-                                  fontSize: "14px",
-                                }}
-                              >
+                            <span className="header-search-right-span-first">
+                              <span className="header-search-right-span-second">
                                 ₹
                                 {(
                                   (item.data.mrp ?? 0) -
@@ -522,26 +480,12 @@ const SiteHeader = ({
                                 ).toFixed(2)}
                               </span>
 
-                              <span
-                                style={{
-                                  marginLeft: 6,
-                                  textDecoration: "line-through",
-                                  color: "#777",
-                                  fontSize: "12px",
-                                }}
-                              >
+                              <span className="header-search-right-span-third">
                                 MRP ₹{Number(item?.data?.mrp || 0).toFixed(2)}
                               </span>
                             </span>
                           ) : (
-                            <span
-                              style={{
-                                color: "red",
-                                fontWeight: 600,
-                                fontSize: "12px",
-                                whiteSpace: "nowrap",
-                              }}
-                            >
+                            <span className="header-search-right-span-forth">
                               {item._matchType === "generic"
                                 ? "in Salt Composition"
                                 : "in Manufacturer"}
@@ -551,19 +495,10 @@ const SiteHeader = ({
 
                         {/* --- ROW 2 (ONLY FOR MEDICINE) --- */}
                         {item._matchType === "medicine" && (
-                          <div
-                            style={{
-                              display: "flex",
-                              justifyContent: "space-between",
-                              fontSize: "12px",
-                              color: "#555",
-                              marginBottom: "10px",
-                              marginTop: "2px", // 👈 ADD THIS
-                            }}
-                          >
+                          <div className="header-search-right-div-third">
                             <span>{item.data.pack_size}</span>
 
-                            <span style={{ color: "red", fontWeight: 600 }}>
+                            <span className="header-search-right-span-fifth">
                               {item.data.discount}% OFF
                             </span>
                           </div>
@@ -571,15 +506,7 @@ const SiteHeader = ({
 
                         {/* --- ROW 3 (ONLY FOR MEDICINE) --- */}
                         {item._matchType === "medicine" && (
-                          <div
-                            style={{
-                              fontSize: "12px",
-                              fontWeight: 600,
-                              color: "green",
-                              lineHeight: "1.3",
-                              marginTop: "2px", // 👈 ADD THIS
-                            }}
-                          >
+                          <div className="header-search-right-div-forth">
                             {item.data.manufacturer_name}
                           </div>
                         )}
@@ -688,7 +615,7 @@ const SiteHeader = ({
       </div>
 
       {/* ---------- MENU ---------- */}
-      <nav className="menu_header">
+      <nav className="menu_header" role="navigation">
         <div className="container">
           {categories?.length > 0 && (
             <ul className="main_menu">
@@ -799,7 +726,7 @@ const SiteHeader = ({
               </button>
             </div>
 
-            <ul className="mobile-menu-list" style={{ scrollbarWidth: "none" }}>
+            <ul className="mobile-menu-list">
               {/* {!buyer && (
                 <li onClick={() => setShowBuyerLogin(true)}>Login / Sign Up</li>
               )} */}

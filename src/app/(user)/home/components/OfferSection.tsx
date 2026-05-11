@@ -9,7 +9,7 @@ export default function OfferSection() {
             <div className="pd_offer">
               <Image
                 src="/images/banner-h3-01.jpg"
-                alt=""
+                alt="Banner Image First"
                 width={400}
                 height={220}
                 style={{ width: "100%", height: "auto", objectFit: "cover" }}
@@ -29,7 +29,7 @@ export default function OfferSection() {
             <div className="pd_offer">
               <Image
                 src="/images/banner-h3-02.jpg"
-                alt=""
+                alt="Banner Image Second"
                 width={400}
                 height={220}
                 style={{ width: "100%", height: "auto", objectFit: "cover" }}
@@ -49,7 +49,7 @@ export default function OfferSection() {
             <div className="pd_offer">
               <Image
                 src="/images/banner-h3-03.jpg"
-                alt=""
+                alt="Banner Image Third"
                 width={400}
                 height={220}
                 style={{ width: "100%", height: "auto", objectFit: "cover" }}

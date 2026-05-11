@@ -275,7 +275,7 @@ export default function AllManufacturerClient() {
                   <div className="pageTitle mt-3 mb-3">
                     <Image
                       src={"/images/favicon.png"}
-                      alt=""
+                      alt="ManuFacturer"
                       width={30}
                       height={30}
                     />{" "}
@@ -379,7 +379,7 @@ export default function AllManufacturerClient() {
                         <div className="pd_img">
                           <Image
                             src={imageUrl}
-                            alt=""
+                            alt={item.medicine_name}
                             width={200}
                             height={200}
                             sizes="(max-width: 768px) 50vw, 200px"

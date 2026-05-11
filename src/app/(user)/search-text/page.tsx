@@ -9,6 +9,22 @@ type Props = {
 
 export const dynamic = "force-dynamic";
 
+// ✅ server fetch
+async function getSearchProducts(text: string) {
+  if (!text) return [];
+
+  const res = await fetch(
+    `https://api.tncpharmacy.in/api/search?text=${encodeURIComponent(text)}`,
+    { cache: "no-store" }
+  );
+
+  try {
+    return await res.json();
+  } catch {
+    return [];
+  }
+}
+
 export async function generateMetadata({ searchParams }: Props) {
   const { text } = searchParams;
 
@@ -76,24 +92,49 @@ export async function generateMetadata({ searchParams }: Props) {
   };
 }
 
-export default function Page({ searchParams }: Props) {
+export default async function Page({ searchParams }: Props) {
   const searchText = searchParams?.text || "";
+
+  const products = await getSearchProducts(searchText);
+
+  // ✅ Product schema
+  const productSchema =
+    searchText && products.length
+      ? {
+          "@context": "https://schema.org",
+          "@type": "ItemList",
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          itemListElement: products.slice(0, 20).map((p: any, i: number) => ({
+            "@type": "ListItem",
+            position: i + 1,
+            item: {
+              "@type": "Product",
+              name: p.name,
+              image: p.image,
+              description: p.short_description || p.name,
+              sku: p.id.toString(),
+              offers: {
+                "@type": "Offer",
+                priceCurrency: "INR",
+                price: p.price,
+                availability: "https://schema.org/InStock",
+                url: `https://tncpharmacy.in/medicines-details/${btoa(
+                  p.id.toString()
+                )}`,
+              },
+            },
+          })),
+        }
+      : null;
 
   return (
     <>
-      {/* ⚠️ Optional Schema */}
-      {searchText && (
+      {/* ✅ REAL FIX */}
+      {productSchema && (
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
-            __html: JSON.stringify({
-              "@context": "https://schema.org",
-              "@type": "SearchResultsPage",
-              name: `Search results for ${searchText}`,
-              url: `https://tncpharmacy.in/search?text=${encodeURIComponent(
-                searchText
-              )}`,
-            }),
+            __html: JSON.stringify(productSchema),
           }}
         />
       )}

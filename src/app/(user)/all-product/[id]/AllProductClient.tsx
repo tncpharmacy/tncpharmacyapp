@@ -261,7 +261,7 @@ export default function AllProductClient() {
                   <div className="pageTitle mt-3 mb-3">
                     <Image
                       src={"/images/favicon.png"}
-                      alt=""
+                      alt="Product Category"
                       width={30}
                       height={30}
                     />{" "}
@@ -368,7 +368,7 @@ export default function AllProductClient() {
                         <div className="pd_img">
                           <Image
                             src={imageUrl}
-                            alt=""
+                            alt={item.ProductName}
                             width={200}
                             height={200}
                             sizes="(max-width: 768px) 50vw, 200px"

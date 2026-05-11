@@ -200,7 +200,7 @@ export default function PrescriptionUploadModal({ show, handleClose }: Props) {
                 ) : (
                   <Image
                     src={preview}
-                    alt=""
+                    alt="Prescription Upload"
                     width={300}
                     height={250}
                     className="rounded-3 img-fluid"

@@ -45,7 +45,7 @@ export default function ProductCardUI({
               src={image}
               width={70}
               height={60}
-              alt=""
+              alt={name}
               style={{
                 opacity: image === "/images/tnc-default.png" ? 0.3 : 1,
               }}

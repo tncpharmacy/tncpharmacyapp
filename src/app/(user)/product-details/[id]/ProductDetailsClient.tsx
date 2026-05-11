@@ -738,7 +738,7 @@ export default function ProductDetailsClient({ product }: { product: any }) {
                             <div className="product-image-box">
                               <Image
                                 src="/images/tnc-default.png"
-                                alt=""
+                                alt="Product Default Image"
                                 width={300}
                                 height={300}
                                 className="product-image"

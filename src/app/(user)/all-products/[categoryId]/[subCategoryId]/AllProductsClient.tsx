@@ -338,7 +338,7 @@ export default function AllProductsClient() {
                     {/* LEFT: ICON */}
                     <Image
                       src={"/images/favicon.png"}
-                      alt=""
+                      alt="Product Sub Category"
                       width={30}
                       height={30}
                     />
@@ -461,7 +461,7 @@ export default function AllProductsClient() {
                         <div className="pd_img">
                           <Image
                             src={imageUrl}
-                            alt=""
+                            alt={item.ProductName}
                             width={200}
                             height={200}
                             sizes="(max-width: 768px) 50vw, 200px"

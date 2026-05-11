@@ -1,3 +1,4 @@
+import { faqs } from "@/lib/faqsData";
 import FAQsClient from "./FAQsClient";
 
 export const metadata = {
@@ -41,5 +42,30 @@ export const metadata = {
 };
 
 export default function Page() {
-  return <FAQsClient />;
+  const faqSchema = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: faqs.map((f) => ({
+      "@type": "Question",
+      name: f.question,
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: f.answer,
+      },
+    })),
+  };
+
+  return (
+    <>
+      {/* ✅ Server-side rendered schema */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(faqSchema),
+        }}
+      />
+
+      <FAQsClient />
+    </>
+  );
 }

@@ -5,7 +5,7 @@ import Link from "next/link";
 
 const Footer = () => {
   return (
-    <footer>
+    <footer role="contentinfo">
       {/* ======= Top Section ======= */}
       <div className="container">
         <div
