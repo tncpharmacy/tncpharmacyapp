@@ -20,12 +20,12 @@ export const metadata = {
     title: "Refund Policy | TnC Pharmacy",
     description:
       "Learn about refund eligibility, timelines, payment methods, and cancellation refunds at TnC Pharmacy.",
-    url: "https://tncpharmacy.in/refund-policy",
+    url: "https://tncpharmacy.com/refund-policy",
     siteName: "TnC Pharmacy",
     type: "website",
     images: [
       {
-        url: "https://tncpharmacy.in/og-image.png",
+        url: "https://tncpharmacy.com/og-image.png",
         width: 1200,
         height: 630,
         alt: "Refund Policy TnC Pharmacy",
@@ -38,7 +38,7 @@ export const metadata = {
     title: "Refund Policy | TnC Pharmacy",
     description:
       "Refund process, timelines, and eligibility explained clearly.",
-    images: ["https://tncpharmacy.in/og-image.png"],
+    images: ["https://tncpharmacy.com/og-image.png"],
   },
 
   robots: {

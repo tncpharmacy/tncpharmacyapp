@@ -18,12 +18,12 @@ export const metadata = {
     title: "About TnC Pharmacy | Trusted Online Pharmacy",
     description:
       "Know more about TnC Pharmacy and our mission to make healthcare affordable and accessible.",
-    url: "https://tncpharmacy.in/about-us",
+    url: "https://tncpharmacy.com/about-us",
     siteName: "TnC Pharmacy",
     type: "website",
     images: [
       {
-        url: "https://tncpharmacy.in/og-image.png",
+        url: "https://tncpharmacy.com/og-image.png",
         width: 1200,
         height: 630,
         alt: "About TnC Pharmacy",
@@ -35,7 +35,7 @@ export const metadata = {
     card: "summary_large_image",
     title: "About TnC Pharmacy",
     description: "Trusted online pharmacy delivering genuine medicines.",
-    images: ["https://tncpharmacy.in/og-image.png"],
+    images: ["https://tncpharmacy.com/og-image.png"],
   },
 
   robots: {
@@ -53,8 +53,8 @@ export default function AboutUs() {
             "@context": "https://schema.org",
             "@type": "Organization",
             name: "TnC Pharmacy",
-            url: "https://tncpharmacy.in",
-            logo: "https://tncpharmacy.in/og-image.png",
+            url: "https://tncpharmacy.com",
+            logo: "https://tncpharmacy.com/og-image.png",
             contactPoint: {
               "@type": "ContactPoint",
               telephone: "+91-7042079595",
@@ -225,7 +225,7 @@ export default function AboutUs() {
                 <br />
                 <strong>Phone:</strong> +91 8062521280 (24x7)
                 <br />
-                <strong>Email:</strong> support@tncpharmacy.in
+                <strong>Email:</strong> support@tncpharmacy.com
               </p>
             </div>
           </div>

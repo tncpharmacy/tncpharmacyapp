@@ -11,7 +11,7 @@ type Props = {
 export async function generateMetadata({ params }: Props) {
   const { id } = params;
 
-  const baseUrl = "https://tncpharmacy.in";
+  const baseUrl = "https://tncpharmacy.com";
   const decodedId = decodeId(id);
   const groupId = Number(decodedId);
 
@@ -121,7 +121,7 @@ export default async function Page({ params }: Props) {
     }
   } catch (e) {}
 
-  const pageUrl = `https://tncpharmacy.in/all-group-care/${id}`;
+  const pageUrl = `https://tncpharmacy.com/all-group-care/${id}`;
 
   return (
     <>
@@ -150,13 +150,13 @@ export default async function Page({ params }: Props) {
                 "@type": "ListItem",
                 position: 1,
                 name: "Home",
-                item: "https://tncpharmacy.in",
+                item: "https://tncpharmacy.com",
               },
               {
                 "@type": "ListItem",
                 position: 2,
                 name: "Group Care",
-                item: "https://tncpharmacy.in/all-group-care",
+                item: "https://tncpharmacy.com/all-group-care",
               },
               {
                 "@type": "ListItem",

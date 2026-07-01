@@ -311,7 +311,7 @@ export default function FAQsClient() {
           <p className="mt-4 fw-bold">
             Still have questions? Visit our{" "}
             <Link href="/contact-us">Contact Us</Link> or call +91 8062521280
-            (24x7). or email support@tncpharmacy.in.
+            (24x7). or email support@tncpharmacy.com.
           </p>
           <p className="mt-4 text-muted small">
             TnC Pharmacy is a trusted online pharmacy in Noida Sector 29

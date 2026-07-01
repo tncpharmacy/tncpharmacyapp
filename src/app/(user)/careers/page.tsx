@@ -17,12 +17,12 @@ export const metadata = {
     title: "Careers at TnC Pharmacy",
     description:
       "Join TnC Pharmacy and grow your career in healthcare, logistics, marketing, and support roles.",
-    url: "https://tncpharmacy.in/careers",
+    url: "https://tncpharmacy.com/careers",
     siteName: "TnC Pharmacy",
     type: "website",
     images: [
       {
-        url: "https://tncpharmacy.in/og-image.png",
+        url: "https://tncpharmacy.com/og-image.png",
         width: 1200,
         height: 630,
         alt: "Careers at TnC Pharmacy",
@@ -35,7 +35,7 @@ export const metadata = {
     title: "Careers at TnC Pharmacy",
     description:
       "Apply for jobs at TnC Pharmacy and grow your career in healthcare.",
-    images: ["https://tncpharmacy.in/og-image.png"],
+    images: ["https://tncpharmacy.com/og-image.png"],
   },
 
   robots: {
@@ -154,7 +154,7 @@ export default function Careers() {
           <p className="mt-3">
             <strong>How to Apply:</strong> Send your resume with the subject
             line {'"Application for [Position Name]"'} to
-            careers@tncpharmacy.in. We typically respond within 5–7 business
+            careers@tncpharmacy.com. We typically respond within 5–7 business
             days.
           </p>
         </div>

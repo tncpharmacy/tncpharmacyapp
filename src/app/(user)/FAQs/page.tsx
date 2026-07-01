@@ -14,12 +14,12 @@ export const metadata = {
     title: "Frequently Asked Questions | TnC Pharmacy",
     description:
       "Find answers about orders, prescriptions, delivery, payments, returns, and refunds at TnC Pharmacy.",
-    url: "https://tncpharmacy.in/faqs",
+    url: "https://tncpharmacy.com/faqs",
     siteName: "TnC Pharmacy",
     type: "website",
     images: [
       {
-        url: "https://tncpharmacy.in/og-image.png",
+        url: "https://tncpharmacy.com/og-image.png",
         width: 1200,
         height: 630,
         alt: "TnC Pharmacy FAQs",
@@ -32,7 +32,7 @@ export const metadata = {
     title: "TnC Pharmacy FAQs",
     description:
       "Answers to common questions about medicines, delivery, payments, and returns.",
-    images: ["https://tncpharmacy.in/og-image.png"],
+    images: ["https://tncpharmacy.com/og-image.png"],
   },
 
   robots: {

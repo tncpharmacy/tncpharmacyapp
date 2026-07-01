@@ -65,7 +65,7 @@ export default function Partner() {
           </ul>
 
           <div className="mt-4 p-3 bg-light border rounded">
-            <strong>Contact:</strong> business@tncpharmacy.in
+            <strong>Contact:</strong> business@tncpharmacy.com
           </div>
         </div>
       </div>

@@ -11,7 +11,7 @@ type Props = {
 export async function generateMetadata({ params }: Props) {
   const { id } = params;
 
-  const baseUrl = "https://tncpharmacy.in";
+  const baseUrl = "https://tncpharmacy.com";
   const decodedId = decodeId(id);
   const medicineId = Number(decodedId);
 
@@ -119,7 +119,7 @@ export default async function Page({ params }: Props) {
 
             offers: {
               "@type": "Offer",
-              url: `https://tncpharmacy.in/medicines-details/${id}`,
+              url: `https://tncpharmacy.com/medicines-details/${id}`,
               priceCurrency: "INR",
               price: finalPrice,
               availability: "https://schema.org/InStock",
@@ -141,19 +141,19 @@ export default async function Page({ params }: Props) {
                   "@type": "ListItem",
                   position: 1,
                   name: "Home",
-                  item: "https://tncpharmacy.in",
+                  item: "https://tncpharmacy.com",
                 },
                 {
                   "@type": "ListItem",
                   position: 2,
                   name: "Medicines",
-                  item: "https://tncpharmacy.in/all-medicine",
+                  item: "https://tncpharmacy.com/all-medicine",
                 },
                 {
                   "@type": "ListItem",
                   position: 3,
                   name: name,
-                  item: `https://tncpharmacy.in/medicines-details/${id}`,
+                  item: `https://tncpharmacy.com/medicines-details/${id}`,
                 },
               ],
             }),

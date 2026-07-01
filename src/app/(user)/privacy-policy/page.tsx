@@ -21,12 +21,12 @@ export const metadata = {
     title: "Privacy Policy | TnC Pharmacy",
     description:
       "Your personal and prescription data is protected with secure and compliant practices.",
-    url: "https://tncpharmacy.in/privacy-policy",
+    url: "https://tncpharmacy.com/privacy-policy",
     siteName: "TnC Pharmacy",
     type: "website",
     images: [
       {
-        url: "https://tncpharmacy.in/og-image.png",
+        url: "https://tncpharmacy.com/og-image.png",
         width: 1200,
         height: 630,
         alt: "Privacy Policy TnC Pharmacy",
@@ -38,7 +38,7 @@ export const metadata = {
     card: "summary_large_image",
     title: "Privacy Policy | TnC Pharmacy",
     description: "Learn how your data is securely handled and protected.",
-    images: ["https://tncpharmacy.in/og-image.png"],
+    images: ["https://tncpharmacy.com/og-image.png"],
   },
 
   robots: {
@@ -83,7 +83,7 @@ export default function PrivacyPolicy() {
               committed to protecting the privacy and security of your personal
               information. This Privacy Policy explains how we collect, use,
               disclose, and safeguard your information when you visit our
-              website www.tncpharmacy.in or use our services.
+              website www.tncpharmacy.com or use our services.
             </p>
 
             {/* INFO WE COLLECT */}
@@ -187,7 +187,7 @@ export default function PrivacyPolicy() {
             <p>
               For privacy-related queries or requests, contact us at:
               <br />
-              <strong>Email:</strong> privacy@tncpharmacy.in
+              <strong>Email:</strong> privacy@tncpharmacy.com
               <br />
               <strong>Phone:</strong> +91 7042079595
               <br />

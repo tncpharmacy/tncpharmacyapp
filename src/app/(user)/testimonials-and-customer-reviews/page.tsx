@@ -18,12 +18,12 @@ export const metadata = {
     title: "Customer Reviews | TnC Pharmacy Testimonials",
     description:
       "Read real customer reviews and testimonials of TnC Pharmacy. Trusted online pharmacy delivering genuine medicines, fast delivery, and verified services across India.",
-    url: "https://tncpharmacy.in/reviews",
+    url: "https://tncpharmacy.com/reviews",
     siteName: "TnC Pharmacy",
     type: "website",
     images: [
       {
-        url: "https://tncpharmacy.in/og-image.png",
+        url: "https://tncpharmacy.com/og-image.png",
         width: 1200,
         height: 630,
         alt: "TnC Pharmacy Reviews",
@@ -36,7 +36,7 @@ export const metadata = {
     title: "Customer Reviews | TnC Pharmacy Testimonials",
     description:
       "Read real customer reviews and testimonials of TnC Pharmacy. Trusted online pharmacy delivering genuine medicines across India.",
-    images: ["https://tncpharmacy.in/og-image.png"],
+    images: ["https://tncpharmacy.com/og-image.png"],
   },
 
   robots: {

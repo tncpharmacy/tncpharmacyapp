@@ -19,12 +19,12 @@ export const metadata = {
     title: "Licence & Registration | TnC Pharmacy",
     description:
       "View licence details including drug licence, GSTIN, and pharmacist registration.",
-    url: "https://tncpharmacy.in/licence",
+    url: "https://tncpharmacy.com/licence",
     siteName: "TnC Pharmacy",
     type: "website",
     images: [
       {
-        url: "https://tncpharmacy.in/og-image.png",
+        url: "https://tncpharmacy.com/og-image.png",
         width: 1200,
         height: 630,
         alt: "Licence TnC Pharmacy",
@@ -36,7 +36,7 @@ export const metadata = {
     card: "summary_large_image",
     title: "Licence & Registration | TnC Pharmacy",
     description: "Fully licensed and compliant online pharmacy.",
-    images: ["https://tncpharmacy.in/og-image.png"],
+    images: ["https://tncpharmacy.com/og-image.png"],
   },
 
   robots: {
@@ -90,12 +90,12 @@ export default function Licence() {
               <tbody>
                 <tr>
                   <td>Drug Licence No. (Retail)</td>
-                  <td>UP/25B/XXXX</td>
+                  <td>RLF20UP2125015388</td>
                 </tr>
 
                 <tr>
                   <td>Drug Licence No. (Wholesale)</td>
-                  <td>UP/20B/XXXX</td>
+                  <td>RLF20UP2025015451</td>
                 </tr>
 
                 <tr>
@@ -105,7 +105,7 @@ export default function Licence() {
 
                 <tr>
                   <td>GST Registration No.</td>
-                  <td>09XXXXXXXXXXXX</td>
+                  <td>09AALCT9310Q1ZI</td>
                 </tr>
 
                 <tr>
@@ -120,14 +120,14 @@ export default function Licence() {
 
                 <tr>
                   <td>Registered Pharmacist Name</td>
-                  <td>[Insert Pharmacist Name]</td>
+                  <td>TNC PHARMACY AND LABS PRIVATE LIMITED</td>
                 </tr>
 
                 <tr>
                   <td>Registered Address</td>
                   <td>
-                    Shop No. 61, Ground Floor, Ganga Shopping Complex, Block 1,
-                    Sector 29, Noida, Uttar Pradesh – 201301
+                    Shop No. 61, Ground Floor, G.F , Ganga Shopping Complex,
+                    Block 1, Gautambuddha Nagar, Noida, Uttar Pradesh – 201301
                   </td>
                 </tr>
               </tbody>

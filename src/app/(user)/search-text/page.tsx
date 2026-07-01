@@ -14,7 +14,7 @@ async function getSearchProducts(text: string) {
   if (!text) return [];
 
   const res = await fetch(
-    `https://api.tncpharmacy.in/api/search?text=${encodeURIComponent(text)}`,
+    `https://api.tncpharmacy.com/api/search?text=${encodeURIComponent(text)}`,
     { cache: "no-store" }
   );
 
@@ -28,7 +28,7 @@ async function getSearchProducts(text: string) {
 export async function generateMetadata({ searchParams }: Props) {
   const { text } = searchParams;
 
-  const baseUrl = "https://tncpharmacy.in";
+  const baseUrl = "https://tncpharmacy.com";
   const searchText = text || "";
 
   const url = `/search?text=${encodeURIComponent(searchText)}`;
@@ -118,7 +118,7 @@ export default async function Page({ searchParams }: Props) {
                 priceCurrency: "INR",
                 price: p.price,
                 availability: "https://schema.org/InStock",
-                url: `https://tncpharmacy.in/medicines-details/${btoa(
+                url: `https://tncpharmacy.com/medicines-details/${btoa(
                   p.id.toString()
                 )}`,
               },

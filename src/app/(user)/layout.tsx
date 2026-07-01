@@ -6,7 +6,7 @@ import SiteHeader from "@/app/(user)/components/header/header";
 export const revalidate = 60;
 
 export const metadata = {
-  metadataBase: new URL("https://tncpharmacy.in"),
+  metadataBase: new URL("https://tncpharmacy.com"),
 
   title: {
     default: "Online Pharmacy | Medicine Delivery | TnC Pharmacy",
@@ -32,13 +32,13 @@ export const metadata = {
     title: "Online Pharmacy | Medicine Delivery | TnC Pharmacy",
     description:
       "Buy medicines online from TnC Pharmacy with fast delivery, genuine products, and best prices.",
-    url: "https://tncpharmacy.in",
+    url: "https://tncpharmacy.com",
     siteName: "TnC Pharmacy",
     locale: "en_IN",
     type: "website",
     images: [
       {
-        url: "https://tncpharmacy.in/og-image.png",
+        url: "https://tncpharmacy.com/og-image.png",
         width: 1200,
         height: 630,
         alt: "TnC Pharmacy",
@@ -50,7 +50,7 @@ export const metadata = {
     card: "summary_large_image",
     title: "Online Pharmacy | TnC Pharmacy",
     description: "Buy medicines online with fast delivery and best prices.",
-    images: ["https://tncpharmacy.in/og-image.png"],
+    images: ["https://tncpharmacy.com/og-image.png"],
   },
 };
 

@@ -187,6 +187,12 @@ export default function PurchaseInvoice() {
                   <div className="col-md-4 text-end">
                     <div className="txt_col">
                       <Link
+                        href={"/pharmacist/add"}
+                        className="btn-style2 me-2"
+                      >
+                        <i className="bi bi-plus"></i> Add
+                      </Link>
+                      <Link
                         href={"/pharmacist/import"}
                         className="btn-style2 me-2"
                       >

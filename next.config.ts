@@ -5,7 +5,7 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       {
         protocol: "https",
-        hostname: "api.tncpharmacy.in",
+        hostname: "api.tncpharmacy.com",
         pathname: "/media/**",
       },
       {
@@ -31,7 +31,7 @@ const nextConfig: NextConfig = {
     return [
       {
         source: "/media/:path*",
-        destination: "https://api.tncpharmacy.in/media/:path*",
+        destination: "https://api.tncpharmacy.com/media/:path*",
       },
       //User routes
       {
@@ -519,12 +519,16 @@ const nextConfig: NextConfig = {
         destination: "/pharmacist/purchase-invoice",
       },
       {
-        source: "/pharmacist/export",
-        destination: "/pharmacist/purchase-invoice/export",
+        source: "/pharmacist/add",
+        destination: "/pharmacist/purchase-invoice/add",
       },
       {
         source: "/pharmacist/import",
         destination: "/pharmacist/purchase-invoice/import",
+      },
+      {
+        source: "/pharmacist/export",
+        destination: "/pharmacist/purchase-invoice/export",
       },
       {
         source: "/pharmacist-dashboard",

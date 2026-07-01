@@ -18,12 +18,12 @@ export const metadata = {
   openGraph: {
     title: "Your Health Bag | TnC Pharmacy",
     description: "Review your selected medicines and proceed to checkout.",
-    url: "https://tncpharmacy.in/health-bag",
+    url: "https://tncpharmacy.com/health-bag",
     siteName: "TnC Pharmacy",
     type: "website",
     images: [
       {
-        url: "https://tncpharmacy.in/og-image.png",
+        url: "https://tncpharmacy.com/og-image.png",
         width: 1200,
         height: 630,
         alt: "TnC Pharmacy Cart",
@@ -35,7 +35,7 @@ export const metadata = {
     card: "summary_large_image",
     title: "Your Cart | TnC Pharmacy",
     description: "Review your cart and proceed to checkout",
-    images: ["https://tncpharmacy.in/og-image.png"],
+    images: ["https://tncpharmacy.com/og-image.png"],
   },
 };
 

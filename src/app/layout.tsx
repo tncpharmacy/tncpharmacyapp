@@ -17,7 +17,7 @@ export default function RootLayout({
   return (
     <html lang="en" data-scroll-behavior="smooth">
       <head>
-        <link rel="canonical" href="https://tncpharmacy.in/" />
+        <link rel="canonical" href="https://tncpharmacy.com/" />
         <link
           rel="stylesheet"
           href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
@@ -29,7 +29,7 @@ export default function RootLayout({
               "@context": "https://schema.org",
               "@type": "Pharmacy",
               name: "TNC Pharmacy",
-              url: "https://tncpharmacy.in",
+              url: "https://tncpharmacy.com",
               telephone: "+91-XXXXXXXXXX",
               address: {
                 "@type": "PostalAddress",

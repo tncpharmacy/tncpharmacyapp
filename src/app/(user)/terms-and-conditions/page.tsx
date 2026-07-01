@@ -20,12 +20,12 @@ export const metadata = {
     title: "Terms & Conditions | TnC Pharmacy",
     description:
       "Understand the rules, responsibilities, and policies for using our services.",
-    url: "https://tncpharmacy.in/terms-and-conditions",
+    url: "https://tncpharmacy.com/terms-and-conditions",
     siteName: "TnC Pharmacy",
     type: "website",
     images: [
       {
-        url: "https://tncpharmacy.in/og-image.png",
+        url: "https://tncpharmacy.com/og-image.png",
         width: 1200,
         height: 630,
         alt: "Terms and Conditions TnC Pharmacy",
@@ -38,7 +38,7 @@ export const metadata = {
     title: "Terms & Conditions | TnC Pharmacy",
     description:
       "Know the terms for ordering medicines and using our services.",
-    images: ["https://tncpharmacy.in/og-image.png"],
+    images: ["https://tncpharmacy.com/og-image.png"],
   },
 
   robots: {
@@ -80,7 +80,7 @@ export default function TermsAndConditions() {
 
             <p>
               Please read these Terms & Conditions ({'"Terms"'}) carefully
-              before using the TnC Pharmacy website (www.tncpharmacy.in) and
+              before using the TnC Pharmacy website (www.tncpharmacy.com) and
               services. By accessing or using our website, you agree to be bound
               by these Terms.
             </p>
@@ -176,7 +176,7 @@ export default function TermsAndConditions() {
             <p>
               For questions about these Terms, contact:
               <br />
-              <strong>Email:</strong> legal@tncpharmacy.in
+              <strong>Email:</strong> legal@tncpharmacy.com
               <br />
               <strong>Phone:</strong> +91 7042079595
             </p>

@@ -21,12 +21,12 @@ export const metadata = {
     title: "Return Policy | TnC Pharmacy",
     description:
       "Understand return eligibility, process, timelines, and replacement conditions at TnC Pharmacy.",
-    url: "https://tncpharmacy.in/return-policy",
+    url: "https://tncpharmacy.com/return-policy",
     siteName: "TnC Pharmacy",
     type: "website",
     images: [
       {
-        url: "https://tncpharmacy.in/og-image.png",
+        url: "https://tncpharmacy.com/og-image.png",
         width: 1200,
         height: 630,
         alt: "Return Policy TnC Pharmacy",
@@ -39,7 +39,7 @@ export const metadata = {
     title: "Return Policy | TnC Pharmacy",
     description:
       "Return eligibility, process, and timelines explained clearly.",
-    images: ["https://tncpharmacy.in/og-image.png"],
+    images: ["https://tncpharmacy.com/og-image.png"],
   },
 
   robots: {
@@ -139,7 +139,7 @@ export default function ReturnPolicy() {
 
               <p>
                 <strong>Step 1:</strong> Contact our customer support within 24
-                hours of delivery at +91 8062521280 or support@tncpharmacy.in.
+                hours of delivery at +91 8062521280 or support@tncpharmacy.com.
               </p>
 
               <p>

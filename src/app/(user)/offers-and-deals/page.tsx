@@ -18,12 +18,12 @@ export const metadata = {
     title: "Offers & Deals | TnC Pharmacy – Up to 70% Off on Medicines",
     description:
       "Latest discounts and deals on medicines and healthcare products at TnC Pharmacy.",
-    url: "https://tncpharmacy.in/offers",
+    url: "https://tncpharmacy.com/offers",
     siteName: "TnC Pharmacy",
     type: "website",
     images: [
       {
-        url: "https://tncpharmacy.in/og-image.png",
+        url: "https://tncpharmacy.com/og-image.png",
         width: 1200,
         height: 630,
         alt: "TnC Pharmacy Offers & Deals",
@@ -35,7 +35,7 @@ export const metadata = {
     card: "summary_large_image",
     title: "Offers & Deals | TnC Pharmacy",
     description: "Get up to 70% off on medicines and healthcare products.",
-    images: ["https://tncpharmacy.in/og-image.png"],
+    images: ["https://tncpharmacy.com/og-image.png"],
   },
 
   robots: {

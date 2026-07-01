@@ -12,7 +12,7 @@ export const metadata = {
     "TnC Pharmacy – India's trusted online pharmacy. Buy genuine medicines, healthcare products & ayurvedic supplements at up to 70% off. Pharmacist verified. Free delivery. COD available.",
 
   alternates: {
-    canonical: "https://tncpharmacy.in/",
+    canonical: "https://tncpharmacy.com/",
   },
 
   openGraph: {
@@ -21,13 +21,13 @@ export const metadata = {
     description:
       "Buy medicines online with up to 70% off. Genuine products, fast delivery, and pharmacist verified orders.",
 
-    url: "https://tncpharmacy.in/",
+    url: "https://tncpharmacy.com/",
     siteName: "TnC Pharmacy",
     type: "website",
 
     images: [
       {
-        url: "https://tncpharmacy.in/og-image.png",
+        url: "https://tncpharmacy.com/og-image.png",
         width: 1200,
         height: 630,
         alt: "Online Pharmacy India - TnC Pharmacy",
@@ -43,7 +43,7 @@ export const metadata = {
     description:
       "Order medicines online with fast delivery, genuine products, and best prices.",
 
-    images: ["https://tncpharmacy.in/og-image.png"],
+    images: ["https://tncpharmacy.com/og-image.png"],
   },
 
   robots: {
@@ -61,11 +61,11 @@ export default async function HomePage() {
     "@type": "Pharmacy",
 
     name: "TnC Pharmacy",
-    url: "https://tncpharmacy.in",
-    "@id": "https://tncpharmacy.in",
+    url: "https://tncpharmacy.com",
+    "@id": "https://tncpharmacy.com",
 
-    logo: "https://tncpharmacy.in/og-image.png",
-    image: "https://tncpharmacy.in/og-image.png",
+    logo: "https://tncpharmacy.com/og-image.png",
+    image: "https://tncpharmacy.com/og-image.png",
 
     telephone: "+918062521280",
 
@@ -123,7 +123,7 @@ export default async function HomePage() {
         "@type": "ListItem",
         position: 1,
         name: "Home",
-        item: "https://tncpharmacy.in/",
+        item: "https://tncpharmacy.com/",
       },
     ],
   };
@@ -137,8 +137,8 @@ export default async function HomePage() {
             "@context": "https://schema.org",
             "@type": "Organization",
             name: "TnC Pharmacy",
-            url: "https://tncpharmacy.in",
-            logo: "https://tncpharmacy.in/og-image.png",
+            url: "https://tncpharmacy.com",
+            logo: "https://tncpharmacy.com/og-image.png",
             sameAs: ["https://www.facebook.com/", "https://www.instagram.com/"],
           }),
         }}

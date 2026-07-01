@@ -20,12 +20,12 @@ export const metadata = {
     title: "Shipping Policy | TnC Pharmacy",
     description:
       "Delivery timelines, shipping charges, coverage, tracking, and packaging details at TnC Pharmacy.",
-    url: "https://tncpharmacy.in/shipping-policy",
+    url: "https://tncpharmacy.com/shipping-policy",
     siteName: "TnC Pharmacy",
     type: "website",
     images: [
       {
-        url: "https://tncpharmacy.in/og-image.png",
+        url: "https://tncpharmacy.com/og-image.png",
         width: 1200,
         height: 630,
         alt: "Shipping Policy TnC Pharmacy",
@@ -38,7 +38,7 @@ export const metadata = {
     title: "Shipping Policy | TnC Pharmacy",
     description:
       "Know delivery timelines, shipping charges, and tracking details.",
-    images: ["https://tncpharmacy.in/og-image.png"],
+    images: ["https://tncpharmacy.com/og-image.png"],
   },
 
   robots: {

@@ -17,12 +17,12 @@ export const metadata = {
     title: "All Medicines | TnC Pharmacy",
     description:
       "Buy all types of medicines online at best prices with fast delivery.",
-    url: "https://tncpharmacy.in/all-medicine",
+    url: "https://tncpharmacy.com/all-medicine",
     siteName: "TnC Pharmacy",
     type: "website",
     images: [
       {
-        url: "https://tncpharmacy.in/og-image.png",
+        url: "https://tncpharmacy.com/og-image.png",
         width: 1200,
         height: 630,
         alt: "All Medicines - TnC Pharmacy",
@@ -34,7 +34,7 @@ export const metadata = {
     card: "summary_large_image",
     title: "All Medicines | TnC Pharmacy",
     description: "Buy all types of medicines online with fast delivery.",
-    images: ["https://tncpharmacy.in/og-image.png"],
+    images: ["https://tncpharmacy.com/og-image.png"],
   },
 
   robots: {
@@ -65,7 +65,7 @@ export default async function Page() {
         "@context": "https://schema.org",
         "@type": "CollectionPage",
         name: "All Medicines Online",
-        url: "https://tncpharmacy.in/all-medicine",
+        url: "https://tncpharmacy.com/all-medicine",
       }),
     }}
   />;
@@ -79,7 +79,7 @@ export default async function Page() {
             "@context": "https://schema.org",
             "@type": "CollectionPage",
             name: "All Medicines Online",
-            url: "https://tncpharmacy.in/all-medicine",
+            url: "https://tncpharmacy.com/all-medicine",
           }),
         }}
       />
@@ -96,13 +96,13 @@ export default async function Page() {
                 "@type": "ListItem",
                 position: 1,
                 name: "Home",
-                item: "https://tncpharmacy.in",
+                item: "https://tncpharmacy.com",
               },
               {
                 "@type": "ListItem",
                 position: 2,
                 name: "All Medicines",
-                item: "https://tncpharmacy.in/all-medicine",
+                item: "https://tncpharmacy.com/all-medicine",
               },
             ],
           }),

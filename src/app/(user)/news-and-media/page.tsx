@@ -16,12 +16,12 @@ export const metadata = {
   openGraph: {
     title: "TnC Pharmacy News & Media",
     description: "Latest news, announcements, and updates from TnC Pharmacy.",
-    url: "https://tncpharmacy.in/news-and-media",
+    url: "https://tncpharmacy.com/news-and-media",
     siteName: "TnC Pharmacy",
     type: "website",
     images: [
       {
-        url: "https://tncpharmacy.in/og-image.png",
+        url: "https://tncpharmacy.com/og-image.png",
         width: 1200,
         height: 630,
         alt: "TnC Pharmacy News & Media",
@@ -33,7 +33,7 @@ export const metadata = {
     card: "summary_large_image",
     title: "News & Media | TnC Pharmacy",
     description: "Read the latest updates and announcements from TnC Pharmacy.",
-    images: ["https://tncpharmacy.in/og-image.png"],
+    images: ["https://tncpharmacy.com/og-image.png"],
   },
 
   robots: {
@@ -79,7 +79,7 @@ export default function NewsMedia() {
 
           <p>
             TnC Pharmacy and Labs Pvt. Ltd. has launched its full-featured
-            online pharmacy platform at www.tncpharmacy.in, offering genuine
+            online pharmacy platform at www.tncpharmacy.com, offering genuine
             medicines, healthcare devices, ayurvedic products, and nutrition
             supplements with delivery across India.
           </p>
@@ -119,7 +119,7 @@ export default function NewsMedia() {
 
           <p>
             For press releases, interviews, or media partnership enquiries,
-            please contact us at media@tncpharmacy.in or call +91 7042079595.
+            please contact us at media@tncpharmacy.com or call +91 7042079595.
           </p>
         </div>
       </div>

@@ -9,7 +9,7 @@ export async function generateMetadata({
 }) {
   const { id } = await params;
 
-  const baseUrl = "https://tncpharmacy.in";
+  const baseUrl = "https://tncpharmacy.com";
   const decodedId = decodeId(id);
   const productId = Number(decodedId);
 
@@ -78,7 +78,7 @@ export default async function Page({
 }) {
   const { id } = await params;
 
-  const baseUrl = "https://tncpharmacy.in";
+  const baseUrl = "https://tncpharmacy.com";
   const decodedId = decodeId(id);
   const productId = Number(decodedId);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -170,13 +170,13 @@ export default async function Page({
                   "@type": "ListItem",
                   position: 1,
                   name: "Home",
-                  item: "https://tncpharmacy.in",
+                  item: "https://tncpharmacy.com",
                 },
                 {
                   "@type": "ListItem",
                   position: 2,
                   name: "Medicines",
-                  item: "https://tncpharmacy.in/all-medicine",
+                  item: "https://tncpharmacy.com/all-medicine",
                 },
                 {
                   "@type": "ListItem",

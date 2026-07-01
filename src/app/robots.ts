@@ -7,6 +7,6 @@ export default function robots(): MetadataRoute.Robots {
       allow: "/",
       disallow: ["/admin", "/api", "/checkout", "/profile"],
     },
-    sitemap: "https://tncpharmacy.in/sitemap.xml",
+    sitemap: "https://tncpharmacy.com/sitemap.xml",
   };
 }

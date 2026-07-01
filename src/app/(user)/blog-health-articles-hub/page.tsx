@@ -18,12 +18,12 @@ export const metadata = {
       "Health Blog | TnC Pharmacy – Medicine Tips, Wellness & Health Articles",
     description:
       "Read expert health articles, medicine guides, wellness tips, and healthcare advice on the TnC Pharmacy blog.",
-    url: "https://tncpharmacy.in/blog",
+    url: "https://tncpharmacy.com/blog",
     siteName: "TnC Pharmacy",
     type: "website",
     images: [
       {
-        url: "https://tncpharmacy.in/og-image.png",
+        url: "https://tncpharmacy.com/og-image.png",
         width: 1200,
         height: 630,
         alt: "TnC Pharmacy Health Blog",
@@ -36,7 +36,7 @@ export const metadata = {
       "Health Blog | TnC Pharmacy – Medicine Tips, Wellness & Health Articles",
     description:
       "Read expert health articles and wellness tips on TnC Pharmacy blog.",
-    images: ["https://tncpharmacy.in/og-image.png"],
+    images: ["https://tncpharmacy.com/og-image.png"],
   },
   robots: {
     index: true,

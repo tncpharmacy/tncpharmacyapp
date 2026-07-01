@@ -192,10 +192,10 @@ export default function ContactUs() {
                     <p className="mb-2">
                       <i className="bi bi-envelope-fill text-primary me-2"></i>{" "}
                       <Link
-                        href="mailto:support@tncpharmacy.in"
+                        href="mailto:support@tncpharmacy.com"
                         className="contact-link text-primary"
                       >
-                        support@tncpharmacy.in
+                        support@tncpharmacy.com
                       </Link>
                     </p>
 
@@ -216,10 +216,10 @@ export default function ContactUs() {
                     <p>
                       <i className="bi bi-envelope-fill text-primary me-2"></i>{" "}
                       <Link
-                        href="mailto:business@tncpharmacy.in"
+                        href="mailto:business@tncpharmacy.com"
                         className="contact-link text-primary"
                       >
-                        business@tncpharmacy.in
+                        business@tncpharmacy.com
                       </Link>
                     </p>
                   </div>

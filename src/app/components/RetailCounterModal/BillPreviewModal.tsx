@@ -746,7 +746,7 @@ const BillPreviewModal: React.FC<BillPreviewModalProps> = ({
                         />
 
                         {/* footer compact & centered */}
-                        <p className="footer-website">www.tncpharmacy.in</p>
+                        <p className="footer-website">www.tncpharmacy.com</p>
                         <p className="footer-support">
                           24×7 Support: 7042079595
                         </p>

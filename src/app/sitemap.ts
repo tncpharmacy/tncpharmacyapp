@@ -1,11 +1,11 @@
 export default async function sitemap() {
-  const baseUrl = "https://tncpharmacy.in";
+  const baseUrl = "https://tncpharmacy.com";
 
   let productUrls: { url: string; lastModified: Date }[] = [];
 
   try {
     const res = await fetch(
-      "https://api.tncpharmacy.in/api/medicine/category/1/",
+      "https://api.tncpharmacy.com/api/medicine/category/1/",
       { cache: "no-store" } // important for fresh data
     );
     if (!res.ok) {
@@ -38,108 +38,108 @@ export default async function sitemap() {
   }
   return [
     {
-      url: "https://tncpharmacy.in",
+      url: "https://tncpharmacy.com",
       lastModified: new Date(),
     },
     ...productUrls,
     {
-      url: "https://tncpharmacy.in/all-medicine",
+      url: "https://tncpharmacy.com/all-medicine",
       lastModified: new Date(),
     },
     {
-      url: "https://tncpharmacy.in/about-us",
+      url: "https://tncpharmacy.com/about-us",
       lastModified: new Date(),
     },
     {
-      url: "https://tncpharmacy.in/contact-us",
+      url: "https://tncpharmacy.com/contact-us",
       lastModified: new Date(),
     },
     {
-      url: "https://tncpharmacy.in/return-policy",
+      url: "https://tncpharmacy.com/return-policy",
       lastModified: new Date(),
     },
     {
-      url: "https://tncpharmacy.in/refund-policy",
+      url: "https://tncpharmacy.com/refund-policy",
       lastModified: new Date(),
     },
     {
-      url: "https://tncpharmacy.in/privacy-policy",
+      url: "https://tncpharmacy.com/privacy-policy",
       lastModified: new Date(),
     },
     {
-      url: "https://tncpharmacy.in/shipping-policy",
+      url: "https://tncpharmacy.com/shipping-policy",
       lastModified: new Date(),
     },
     {
-      url: "https://tncpharmacy.in/terms-conditions",
+      url: "https://tncpharmacy.com/terms-conditions",
       lastModified: new Date(),
     },
     {
-      url: "https://tncpharmacy.in/faqs",
+      url: "https://tncpharmacy.com/faqs",
       lastModified: new Date(),
     },
     {
-      url: "https://tncpharmacy.in/careers",
+      url: "https://tncpharmacy.com/careers",
       lastModified: new Date(),
     },
     {
-      url: "https://tncpharmacy.in/news-and-media",
+      url: "https://tncpharmacy.com/news-and-media",
       lastModified: new Date(),
     },
     {
-      url: "https://tncpharmacy.in/licence",
+      url: "https://tncpharmacy.com/licence",
       lastModified: new Date(),
     },
     {
-      url: "https://tncpharmacy.in/how-to-order",
+      url: "https://tncpharmacy.com/how-to-order",
       lastModified: new Date(),
     },
     {
-      url: "https://tncpharmacy.in/blog",
+      url: "https://tncpharmacy.com/blog",
       lastModified: new Date(),
     },
     {
-      url: "https://tncpharmacy.in/partner",
+      url: "https://tncpharmacy.com/partner",
       lastModified: new Date(),
     },
     {
-      url: "https://tncpharmacy.in/prescription-guide",
+      url: "https://tncpharmacy.com/prescription-guide",
       lastModified: new Date(),
     },
     {
-      url: "https://tncpharmacy.in/offers",
+      url: "https://tncpharmacy.com/offers",
       lastModified: new Date(),
     },
     {
-      url: "https://tncpharmacy.in/reviews",
+      url: "https://tncpharmacy.com/reviews",
       lastModified: new Date(),
     },
     {
-      url: "https://tncpharmacy.in/all-product/OQ",
+      url: "https://tncpharmacy.com/all-product/OQ",
       lastModified: new Date(),
     },
     {
-      url: "https://tncpharmacy.in/all-products/OQ/MTU2",
+      url: "https://tncpharmacy.com/all-products/OQ/MTU2",
       lastModified: new Date(),
     },
     {
-      url: "https://tncpharmacy.in/all-group-care/NA",
+      url: "https://tncpharmacy.com/all-group-care/NA",
       lastModified: new Date(),
     },
     {
-      url: "https://tncpharmacy.in/all-generic/OQ",
+      url: "https://tncpharmacy.com/all-generic/OQ",
       lastModified: new Date(),
     },
     {
-      url: "https://tncpharmacy.in/all-manufacturer/Mzkz",
+      url: "https://tncpharmacy.com/all-manufacturer/Mzkz",
       lastModified: new Date(),
     },
     {
-      url: "https://tncpharmacy.in/medicines-details/MjE5MTA",
+      url: "https://tncpharmacy.com/medicines-details/MjE5MTA",
       lastModified: new Date(),
     },
     {
-      url: "https://tncpharmacy.in/product-details/MzY4MTMw",
+      url: "https://tncpharmacy.com/product-details/MzY4MTMw",
       lastModified: new Date(),
     },
   ];

@@ -112,7 +112,7 @@ const Footer = () => {
                 </li>
                 <li>
                   <i className="bi bi-envelope"></i>
-                  <Link href="#">care@tncpharmacy.in</Link>
+                  <Link href="#">care@tncpharmacy.com</Link>
                 </li>
                 <li>
                   <span>

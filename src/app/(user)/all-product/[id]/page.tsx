@@ -14,7 +14,7 @@ export async function generateMetadata({ params }: Props) {
   const decodedId = decodeId(id);
   const categoryIdNum = Number(decodedId);
 
-  const baseUrl = "https://tncpharmacy.in";
+  const baseUrl = "https://tncpharmacy.com";
 
   // ❌ invalid case fallback
   if (isNaN(categoryIdNum)) {
@@ -132,7 +132,7 @@ export default async function Page({ params }: Props) {
     }
   } catch (e) {}
 
-  const pageUrl = `https://tncpharmacy.in/all-product/${id}`;
+  const pageUrl = `https://tncpharmacy.com/all-product/${id}`;
 
   return (
     <>
@@ -161,7 +161,7 @@ export default async function Page({ params }: Props) {
                 "@type": "ListItem",
                 position: 1,
                 name: "Home",
-                item: "https://tncpharmacy.in",
+                item: "https://tncpharmacy.com",
               },
               {
                 "@type": "ListItem",
