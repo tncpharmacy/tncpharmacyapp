@@ -144,7 +144,6 @@ export default function RetailCounter() {
   // Initial product list fetch
   useEffect(() => {
     dispatch(getProductList(null));
-    //dispatch(getPharmacy());
   }, [dispatch]);
 
   const checkMobileInDB = async (value: string) => {

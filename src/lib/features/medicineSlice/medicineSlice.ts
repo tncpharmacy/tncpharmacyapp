@@ -62,6 +62,7 @@ interface MedicineState {
   suggestions: Medicine[];
   searchProductBased: Medicine[];
   next: string | null;
+  previous: string | null;
   currentKey: string;
 }
 
@@ -89,6 +90,7 @@ const initialState: MedicineState = {
   suggestions: [],
   searchProductBased: [],
   next: null,
+  previous: null,
   currentKey: "",
 };
 
@@ -636,19 +638,12 @@ const medicineSlice = createSlice({
       .addCase(getProductList.fulfilled, (state, action) => {
         state.loading = false;
 
-        const safeCurrent = Array.isArray(state.medicines)
-          ? state.medicines
-          : [];
-
-        const safeIncoming = Array.isArray(action.payload.data)
+        state.medicines = Array.isArray(action.payload.data)
           ? action.payload.data
           : [];
 
-        state.medicines = !action.meta.arg
-          ? safeIncoming
-          : [...safeCurrent, ...safeIncoming];
-
-        state.next = action.payload.next; // ⭐ important
+        state.next = action.payload.next;
+        state.previous = action.payload.previous;
         state.count = action.payload.count;
         state.error = null;
       })

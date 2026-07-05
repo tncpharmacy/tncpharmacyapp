@@ -64,8 +64,9 @@ export default function SelectMedicineDropdown({
         {label}
       </label>
 
-      <Select<OptionType, true, GroupBase<OptionType>>
-        inputId={id}
+      <Select<OptionType, true>
+        instanceId="medicine-select"
+        inputId="medicine-select"
         isMulti
         options={options}
         value={hideSelectedText ? [] : selected}

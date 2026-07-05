@@ -190,7 +190,7 @@ export default function PurchaseInvoice() {
                         href={"/pharmacist/add"}
                         className="btn-style2 me-2"
                       >
-                        <i className="bi bi-plus"></i> Add
+                        <i className="bi bi-plus"></i> Add Stock
                       </Link>
                       <Link
                         href={"/pharmacist/import"}

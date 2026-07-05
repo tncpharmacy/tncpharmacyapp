@@ -1,3 +1,4 @@
+export const revalidate = 3600;
 export default async function sitemap() {
   const baseUrl = "https://tncpharmacy.com";
 
@@ -6,7 +7,11 @@ export default async function sitemap() {
   try {
     const res = await fetch(
       "https://api.tncpharmacy.com/api/medicine/category/1/",
-      { cache: "no-store" } // important for fresh data
+      {
+        next: {
+          revalidate: 3600,
+        },
+      }
     );
     if (!res.ok) {
       throw new Error(`API failed with status ${res.status}`);

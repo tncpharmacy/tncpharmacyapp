@@ -71,6 +71,7 @@ export default function PurchaseInvoiceImport() {
     amount: "",
     location: "",
     additional_discount: "",
+    brand_category: "",
   });
 
   // filtered records by search box + status filter
@@ -279,6 +280,7 @@ export default function PurchaseInvoiceImport() {
       const purchaseDetails = excelData.map((row, i) => ({
         pharmacy_id: Number(pharmacy_id),
         product_id: Number(row["Id"]),
+        brand_category: String(Number(row["Brand Category"] || 0)),
         quantity: String(Number(row["Required QTY"] || 0)),
         batch: row["Batch"]?.toString() || `BATCH-${i + 1}`,
         expiry_date: row["Expiry Date"]
@@ -346,6 +348,7 @@ export default function PurchaseInvoiceImport() {
         amount: "",
         location: "",
         additional_discount: "",
+        brand_category: "",
       });
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {

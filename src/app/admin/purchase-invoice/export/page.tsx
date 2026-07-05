@@ -5,16 +5,16 @@ import "../../css/admin-style.css";
 import SideNav from "@/app/admin/components/SideNav/page";
 import Header from "@/app/admin/components/Header/page";
 import { useAppDispatch, useAppSelector } from "@/lib/hooks";
-import { getMedicinesList } from "@/lib/features/medicineSlice/medicineSlice";
+import { getSearchProductBased } from "@/lib/features/medicineSlice/medicineSlice";
 import type { Medicine } from "@/types/medicine";
 import InfiniteScroll from "@/app/components/InfiniteScroll/InfiniteScroll";
 import TableLoader from "@/app/components/TableLoader/TableLoader";
-import SelectMedicineDropdown from "@/app/components/Input/SelectMedicineDropdown";
 import { useExportExcel } from "@/lib/hooks/useExportExcel";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { fetchSupplier } from "@/lib/features/supplierSlice/supplierSlice";
 import CenterSpinner from "@/app/components/CenterSppiner/CenterSppiner";
+import SelectMedicineDropdownForExport from "@/app/components/Input/SelectMedicineDropdownForExport";
 interface Supplier {
   id: number;
   name: string;
@@ -23,7 +23,7 @@ export default function PurchaseInvoiceExport() {
   const dispatch = useAppDispatch();
   const router = useRouter();
   const { exportToExcel } = useExportExcel();
-  const { medicines: getMedicine } = useAppSelector((state) => state.medicine);
+  // const { medicines: getMedicine } = useAppSelector((state) => state.medicine);
   const { list: supplierList } = useAppSelector((state) => state.supplier);
   const [visibleCount, setVisibleCount] = useState(10);
   const [loadings, setLoadings] = useState(false);
@@ -33,21 +33,46 @@ export default function PurchaseInvoiceExport() {
   const [selectAll, setSelectAll] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
+  const [searchMedicines, setSearchMedicines] = useState<Medicine[]>([]);
+  const [searchText, setSearchText] = useState("");
+  const [selectedProduct, setSelectedProduct] = useState<Medicine | null>(null);
+
   // ⭐ Supplier dropdown
   const [selectedSupplier, setSelectedSupplier] = useState("");
   const today = new Date().toISOString().split("T")[0];
   const fileName = `${selectedSupplier || "NoSupplier"}_${today}`;
 
+  // useEffect(() => {
+  //   dispatch(getMedicinesList());
+  // }, [dispatch]);
+
   useEffect(() => {
-    dispatch(getMedicinesList());
-  }, [dispatch]);
+    console.log("searchText =", searchText);
+
+    const timer = setTimeout(async () => {
+      if (!searchText.trim()) {
+        setSearchMedicines([]);
+        return;
+      }
+
+      console.log("Calling API:", searchText);
+
+      const res = await dispatch(getSearchProductBased(searchText)).unwrap();
+
+      console.log(res);
+
+      setSearchMedicines(res.data ?? []);
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [dispatch, searchText]);
 
   useEffect(() => {
     dispatch(fetchSupplier());
   }, [dispatch]);
 
   const loadMore = () => {
-    if (loadings || visibleCount >= getMedicine.length) return;
+    if (loadings || visibleCount >= searchMedicines.length) return;
     setLoadings(true);
     setTimeout(() => {
       setVisibleCount((prev) => prev + 5);
@@ -60,7 +85,9 @@ export default function PurchaseInvoiceExport() {
     selected: { label: string; value: number }[]
   ) => {
     const selectedIds = selected.map((s) => s.value);
-    const newSelected = getMedicine.filter((m) => selectedIds.includes(m.id));
+    const newSelected = searchMedicines.filter((m) =>
+      selectedIds.includes(m.id)
+    );
     setSelectedMedicines((prev) => {
       const merged = [...prev];
       newSelected.forEach((m) => {
@@ -96,7 +123,7 @@ export default function PurchaseInvoiceExport() {
     setSelectAll(checked);
     if (checked) {
       // Select entire medicine list (not just visible)
-      setSelectedMedicines(getMedicine);
+      setSelectedMedicines(searchMedicines);
     } else {
       // Deselect all
       setSelectedMedicines([]);
@@ -119,51 +146,6 @@ export default function PurchaseInvoiceExport() {
       prev.map((m) => (m.id === id ? { ...m, qty: value } : m))
     );
   };
-
-  // ✅ Export Function
-  // const handleExportToExcel = () => {
-  //   if (!selectedSupplier) {
-  //     toast.error("⚠ Please select Supplier!");
-  //     return;
-  //   }
-
-  //   if (selectedMedicines.length === 0) {
-  //     alert("⚠ Please select at least 1 product!");
-  //     return;
-  //   }
-
-  //   // if (selectedMedicines.some((m) => !m.qty || m.qty.trim() === "")) {
-  //   //   alert("⚠ Please fill Qty for all selected products!");
-  //   //   return;
-  //   // }
-  //   setIsLoading(true); // 🔥 Loading Start
-
-  //   const exportData = [...selectedMedicines]
-  //     .sort((a, b) =>
-  //       a.medicine_name.localeCompare(b.medicine_name, undefined, {
-  //         sensitivity: "base",
-  //       })
-  //     )
-  //     .map((item) => ({
-  //       Id: item.id ?? "-",
-  //       Product: item.medicine_name ?? "-",
-  //       "Pack Size": item.pack_size ?? "-",
-  //       Manufacture: item.manufacturer_name ?? "-",
-  //       "Required QTY": item.qty ?? "",
-  //       Batch: "",
-  //       "Expiry Date": "",
-  //       MRP: "",
-  //       "Discount (%)": "",
-  //       "Purchase Rate": "",
-  //       Amount: "",
-  //       Location: "",
-  //     }));
-  //   exportToExcel(exportData, fileName, "Medicines", selectedSupplier || "N/A");
-  //   // ⭐⭐ EXPORT COMPLETE → CLEAR RIGHT SIDE TABLE & UNCHECK ALL
-  //   setIsLoading(false); // 🔥 Loading Close
-  //   setSelectedMedicines([]);
-  //   setSelectAll(false);
-  // };
 
   const handleExportToExcel = async () => {
     if (!selectedSupplier) {
@@ -189,6 +171,7 @@ export default function PurchaseInvoiceExport() {
         Product: item.medicine_name ?? "-",
         "Pack Size": item.pack_size ?? "-",
         Manufacture: item.manufacturer_name ?? "-",
+        "Brand Category": item.brand_category ?? "-",
         "Required QTY": item.qty ?? "",
         Batch: "",
         "Expiry Date": "",
@@ -219,10 +202,10 @@ export default function PurchaseInvoiceExport() {
   };
 
   useEffect(() => {
-    if (getMedicine.length > 0) {
-      setSelectAll(selectedMedicines.length === getMedicine.length);
+    if (searchMedicines.length > 0) {
+      setSelectAll(selectedMedicines.length === searchMedicines.length);
     }
-  }, [selectedMedicines, getMedicine]);
+  }, [selectedMedicines, searchMedicines]);
 
   return (
     <>
@@ -233,7 +216,7 @@ export default function PurchaseInvoiceExport() {
           {isLoading && <CenterSpinner />}
           <InfiniteScroll
             loadMore={loadMore}
-            hasMore={visibleCount < getMedicine.length}
+            hasMore={visibleCount < searchMedicines.length}
             className="body_content"
           >
             <div className="pageTitle">
@@ -251,14 +234,11 @@ export default function PurchaseInvoiceExport() {
                 <div className="row align-items-center">
                   <div className="col-md-6">
                     <div className="txt_col">
-                      <SelectMedicineDropdown
-                        medicines={getMedicine}
-                        selected={selectedMedicines.map((m) => ({
-                          label: m.medicine_name,
-                          value: m.id,
-                        }))}
-                        onChange={handleSelectMedicine}
-                        hideSelectedText
+                      <SelectMedicineDropdownForExport
+                        value={selectedProduct}
+                        onChange={(item) => {
+                          setSelectedProduct(item);
+                        }}
                       />
                     </div>
                   </div>
@@ -318,7 +298,7 @@ export default function PurchaseInvoiceExport() {
                           </tr>
                         </thead>
                         <tbody>
-                          {[...getMedicine]
+                          {[...searchMedicines]
                             .sort((a, b) =>
                               a.medicine_name.localeCompare(
                                 b.medicine_name,

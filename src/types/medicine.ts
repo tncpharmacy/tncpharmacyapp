@@ -53,6 +53,7 @@ export interface Medicine {
   H1_Restricted: number;
   prescription_required: number;
   manufacturer_name?: string;
+  brand_category: string;
   Manufacturer?: string;
   AvailableQTY?: number | null;
   AvailableQty?: number | null;
@@ -111,6 +112,7 @@ export interface MedicineResponse {
   data: Medicine[];
   group_name: string;
   next: string;
+  previous: string;
 }
 
 export interface MedicineResponseSeo {
@@ -122,6 +124,7 @@ export interface MedicineResponseSeo {
   data: Medicine;
   group_name: string;
   next: string;
+  previous: string;
 }
 
 export interface MedicineMenuResponse {
@@ -150,6 +153,7 @@ export interface Product {
   location: string;
   applied_discount: string;
   additional_discount: string;
+  brand_category: string;
 }
 
 export type SafetyLabel = {

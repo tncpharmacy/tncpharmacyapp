@@ -5,16 +5,19 @@ import "../../css/pharmacy-style.css";
 import SideNav from "@/app/pharmacist/components/SideNav/page";
 import Header from "@/app/pharmacist/components/Header/page";
 import { useAppDispatch, useAppSelector } from "@/lib/hooks";
-import { getMedicinesList } from "@/lib/features/medicineSlice/medicineSlice";
+import {
+  getProductList,
+  getSearchProductBased,
+} from "@/lib/features/medicineSlice/medicineSlice";
 import type { Medicine } from "@/types/medicine";
-import InfiniteScroll from "@/app/components/InfiniteScroll/InfiniteScroll";
 import TableLoader from "@/app/components/TableLoader/TableLoader";
-import SelectMedicineDropdown from "@/app/components/Input/SelectMedicineDropdown";
 import { useExportExcel } from "@/lib/hooks/useExportExcel";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { fetchSupplier } from "@/lib/features/supplierSlice/supplierSlice";
 import CenterSpinner from "@/app/components/CenterSppiner/CenterSppiner";
+import SelectMedicineDropdownForExport from "@/app/components/Input/SelectMedicineDropdownForExport";
+import Pagination from "@/app/components/Pagination/Pagination";
 interface Supplier {
   id: number;
   name: string;
@@ -23,7 +26,9 @@ export default function PurchaseInvoiceExport() {
   const dispatch = useAppDispatch();
   const router = useRouter();
   const { exportToExcel } = useExportExcel();
-  const { medicines: getMedicine } = useAppSelector((state) => state.medicine);
+  const { medicines, next, previous, loading } = useAppSelector(
+    (state) => state.medicine
+  );
   const { list: supplierList } = useAppSelector((state) => state.supplier);
   const [visibleCount, setVisibleCount] = useState(10);
   const [loadings, setLoadings] = useState(false);
@@ -38,37 +43,40 @@ export default function PurchaseInvoiceExport() {
   const today = new Date().toISOString().split("T")[0];
   const fileName = `${selectedSupplier || "NoSupplier"}_${today}`;
 
-  useEffect(() => {
-    dispatch(getMedicinesList());
-  }, [dispatch]);
+  const [page, setPage] = useState(1);
+  const [currentUrl, setCurrentUrl] = useState<string | null>(null);
+  const [prevStack, setPrevStack] = useState<string[]>([]);
+  const [pageLoading, setPageLoading] = useState(false);
 
   useEffect(() => {
     dispatch(fetchSupplier());
+    dispatch(getProductList(null));
   }, [dispatch]);
 
-  const loadMore = () => {
-    if (loadings || visibleCount >= getMedicine.length) return;
-    setLoadings(true);
-    setTimeout(() => {
-      setVisibleCount((prev) => prev + 5);
-      setLoadings(false);
-    }, 3000);
-  };
+  useEffect(() => {
+    if (currentUrl === null && page === 1) return;
+    setPageLoading(true);
+    dispatch(getProductList(currentUrl)).finally(() => setPageLoading(false));
+  }, [currentUrl]);
 
   // ✅ Selected product from the dropdown
-  const handleSelectMedicine = (
-    selected: { label: string; value: number }[]
-  ) => {
-    const selectedIds = selected.map((s) => s.value);
-    const newSelected = getMedicine.filter((m) => selectedIds.includes(m.id));
+  const handleSelectMedicine = (medicine: Medicine) => {
     setSelectedMedicines((prev) => {
-      const merged = [...prev];
-      newSelected.forEach((m) => {
-        if (!merged.some((x) => x.id === m.id)) {
-          merged.push({ ...m, qty: "" });
-        }
-      });
-      return merged;
+      const exists = prev.some((x) => x.id === medicine.id);
+
+      if (exists) {
+        // remove
+        return prev.filter((x) => x.id !== medicine.id);
+      }
+
+      // add
+      return [
+        ...prev,
+        {
+          ...medicine,
+          qty: "",
+        },
+      ];
     });
   };
 
@@ -96,7 +104,7 @@ export default function PurchaseInvoiceExport() {
     setSelectAll(checked);
     if (checked) {
       // Select entire medicine list (not just visible)
-      setSelectedMedicines(getMedicine);
+      setSelectedMedicines(medicines);
     } else {
       // Deselect all
       setSelectedMedicines([]);
@@ -120,51 +128,6 @@ export default function PurchaseInvoiceExport() {
     );
   };
 
-  // ✅ Export Function
-  // const handleExportToExcel = () => {
-  //   if (!selectedSupplier) {
-  //     toast.error("⚠ Please select Supplier!");
-  //     return;
-  //   }
-
-  //   if (selectedMedicines.length === 0) {
-  //     alert("⚠ Please select at least 1 product!");
-  //     return;
-  //   }
-
-  //   // if (selectedMedicines.some((m) => !m.qty || m.qty.trim() === "")) {
-  //   //   alert("⚠ Please fill Qty for all selected products!");
-  //   //   return;
-  //   // }
-  //   setIsLoading(true); // 🔥 Loading Start
-
-  //   const exportData = [...selectedMedicines]
-  //     .sort((a, b) =>
-  //       a.medicine_name.localeCompare(b.medicine_name, undefined, {
-  //         sensitivity: "base",
-  //       })
-  //     )
-  //     .map((item) => ({
-  //       Id: item.id ?? "-",
-  //       Product: item.medicine_name ?? "-",
-  //       "Pack Size": item.pack_size ?? "-",
-  //       Manufacture: item.manufacturer_name ?? "-",
-  //       "Required QTY": item.qty ?? "",
-  //       Batch: "",
-  //       "Expiry Date": "",
-  //       MRP: "",
-  //       "Discount (%)": "",
-  //       "Purchase Rate": "",
-  //       Amount: "",
-  //       Location: "",
-  //     }));
-  //   exportToExcel(exportData, fileName, "Medicines", selectedSupplier || "N/A");
-  //   // ⭐⭐ EXPORT COMPLETE → CLEAR RIGHT SIDE TABLE & UNCHECK ALL
-  //   setIsLoading(false); // 🔥 Loading Close
-  //   setSelectedMedicines([]);
-  //   setSelectAll(false);
-  // };
-
   const handleExportToExcel = async () => {
     if (!selectedSupplier) {
       toast.error("⚠ Please select Supplier!");
@@ -186,10 +149,10 @@ export default function PurchaseInvoiceExport() {
       )
       .map((item) => ({
         Id: item.id ?? "-",
-        "Medicine Code": item.medicine_code ?? "-",
         Product: item.medicine_name ?? "-",
         "Pack Size": item.pack_size ?? "-",
         Manufacture: item.manufacturer_name ?? "-",
+        "Brand Category": item.brand_category ?? "-",
         "Required QTY": item.qty ?? "",
         Batch: "",
         "Expiry Date": "",
@@ -220,10 +183,10 @@ export default function PurchaseInvoiceExport() {
   };
 
   useEffect(() => {
-    if (getMedicine.length > 0) {
-      setSelectAll(selectedMedicines.length === getMedicine.length);
+    if (medicines.length > 0) {
+      setSelectAll(selectedMedicines.length === medicines.length);
     }
-  }, [selectedMedicines, getMedicine]);
+  }, [selectedMedicines, medicines]);
 
   return (
     <>
@@ -232,97 +195,176 @@ export default function PurchaseInvoiceExport() {
         <SideNav />
         <div className="body_right">
           {isLoading && <CenterSpinner />}
-          <InfiniteScroll
-            loadMore={loadMore}
-            hasMore={visibleCount < getMedicine.length}
-            className="body_content"
-          >
-            <div className="pageTitle">
-              <i className="bi bi-receipt-cutoff"></i> Purchase Invoice Export
-              <button
-                onClick={() => router.push("/pharmacist/purchase-invoice")}
-                className="btn-style2 float-end pe-4 ps-4"
-              >
-                ← Back
-              </button>
-            </div>
 
-            <div className="main_content">
-              <div className="col-sm-12">
-                <div className="row align-items-center">
-                  <div className="col-md-6">
-                    <div className="txt_col">
-                      <SelectMedicineDropdown
-                        medicines={getMedicine}
-                        selected={selectedMedicines.map((m) => ({
-                          label: m.medicine_name,
-                          value: m.id,
-                        }))}
-                        onChange={handleSelectMedicine}
-                        hideSelectedText
-                      />
-                    </div>
-                  </div>
-                  {/* ⭐ SUPPLIER DROPDOWN */}
-                  <div className="col-md-3">
-                    <div className="txt_col">
-                      <select
-                        className="form-select"
-                        style={{ borderRadius: "0px" }}
-                        value={selectedSupplier}
-                        onChange={(e) => setSelectedSupplier(e.target.value)}
-                      >
-                        <option value="">Select Supplier</option>
-                        {supplierList.map((s) => (
-                          <option key={s.id} value={s.supplier_name}>
-                            {s.supplier_name}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  </div>
+          <div className="pageTitle">
+            <i className="bi bi-receipt-cutoff"></i> Purchase Invoice Export
+            <button
+              onClick={() => router.push("/pharmacist/purchase-invoice")}
+              className="btn-style2 float-end pe-4 ps-4"
+            >
+              ← Back
+            </button>
+          </div>
 
-                  <div className="col-md-3 text-end">
-                    <button
-                      className="btn-style1"
-                      onClick={handleExportToExcel}
-                      disabled={selectedMedicines.length === 0}
+          <div className="main_content">
+            <div className="col-sm-12">
+              <div className="row align-items-center">
+                <div className="col-md-6">
+                  <div className="txt_col">
+                    <SelectMedicineDropdownForExport
+                      label="Product"
+                      selectedMedicines={selectedMedicines}
+                      onSelect={handleSelectMedicine}
+                    />
+                  </div>
+                </div>
+                {/* ⭐ SUPPLIER DROPDOWN */}
+                <div className="col-md-3">
+                  <div className="txt_col">
+                    <span className="lbl1">Supplier</span>
+                    <select
+                      className="form-select"
+                      style={{ borderRadius: "0px" }}
+                      value={selectedSupplier}
+                      onChange={(e) => setSelectedSupplier(e.target.value)}
                     >
-                      <i className="bi bi-download"></i> Export Format
-                    </button>
+                      <option value="">Select Supplier</option>
+                      {supplierList.map((s) => (
+                        <option key={s.id} value={s.supplier_name}>
+                          {s.supplier_name}
+                        </option>
+                      ))}
+                    </select>
                   </div>
                 </div>
 
-                <div className="row mt-4">
-                  {/* LEFT SIDE - ALL RECORDS */}
-                  <div className="col-md-6">
-                    <h6 className="fw-bold mb-2">All Products</h6>
+                <div className="col-md-3 text-end">
+                  <button
+                    className="btn-style1"
+                    onClick={handleExportToExcel}
+                    disabled={selectedMedicines.length === 0}
+                  >
+                    <i className="bi bi-download"></i> Export Format
+                  </button>
+                </div>
+              </div>
+
+              <div className="row mt-4">
+                {/* LEFT SIDE - ALL RECORDS */}
+                <div className="col-md-6">
+                  <h6 className="fw-bold mb-2">All Products</h6>
+                  <div className="scroll_table">
+                    <table className="table cust_table1">
+                      <thead>
+                        <tr>
+                          <th className="fw-bold text-center">
+                            <input
+                              type="checkbox"
+                              checked={selectAll}
+                              onChange={(e) =>
+                                handleSelectAll(e.target.checked)
+                              }
+                              title="Select All Product"
+                            />{" "}
+                            {/* Select All */}
+                          </th>
+                          {/* <th className="fw-bold text-start">ID</th> */}
+                          <th className="fw-bold text-start">Product</th>
+                          <th className="fw-bold text-start">Pack Size</th>
+                          <th className="fw-bold text-start">Manufacture</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {[...medicines]
+                          .sort((a, b) =>
+                            a.medicine_name.localeCompare(
+                              b.medicine_name,
+                              undefined,
+                              {
+                                sensitivity: "base",
+                              }
+                            )
+                          )
+                          .map((m) => {
+                            const isChecked = selectedMedicines.some(
+                              (x) => x.id === m.id
+                            );
+                            return (
+                              <tr key={m.id}>
+                                <td className="text-center">
+                                  <input
+                                    type="checkbox"
+                                    checked={isChecked}
+                                    onChange={(e) =>
+                                      handleLeftCheckbox(m, e.target.checked)
+                                    }
+                                  />
+                                </td>
+                                {/* <td className="text-start">{m.id}</td> */}
+                                <td className="text-start">
+                                  {m.medicine_name}
+                                </td>
+                                <td className="text-start">{m.pack_size}</td>
+                                <td className="text-start">
+                                  {m.manufacturer_name}
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        {loadings && (
+                          <TableLoader colSpan={5} text="Loading more..." />
+                        )}
+                      </tbody>
+                    </table>
+                    <div className="d-flex justify-content-center mt-4">
+                      <Pagination
+                        currentPage={page}
+                        hasNext={!!next}
+                        hasPrev={!!previous}
+                        onPageChange={(newPage) => {
+                          setPageLoading(true);
+
+                          if (newPage > page && next) {
+                            setCurrentUrl(next);
+                            setPage(newPage);
+                            return;
+                          }
+
+                          if (newPage < page && previous) {
+                            setCurrentUrl(previous);
+                            setPage(newPage);
+                            return;
+                          }
+
+                          setPageLoading(false);
+                        }}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* RIGHT SIDE - SELECTED RECORDS */}
+                <div className="col-md-6">
+                  <h6 className="fw-bold mb-2">
+                    {selectedMedicines.length > 0
+                      ? "Selected Products"
+                      : "No Selection"}
+                  </h6>
+                  {selectedMedicines.length > 0 ? (
                     <div className="scroll_table">
                       <table className="table cust_table1">
                         <thead>
                           <tr>
-                            <th className="fw-bold text-center">
-                              <input
-                                type="checkbox"
-                                checked={selectAll}
-                                onChange={(e) =>
-                                  handleSelectAll(e.target.checked)
-                                }
-                                title="Select All Product"
-                              />{" "}
-                              {/* Select All */}
-                            </th>
+                            <th className="fw-bold text-center">Select</th>
                             {/* <th className="fw-bold text-start">ID</th> */}
-                            <th className="fw-bold text-start">
-                              Medicine Code
-                            </th>
                             <th className="fw-bold text-start">Product</th>
                             <th className="fw-bold text-start">Pack Size</th>
                             <th className="fw-bold text-start">Manufacture</th>
+                            <th className="fw-bold text-start">Required Qty</th>
                           </tr>
                         </thead>
                         <tbody>
-                          {[...getMedicine]
+                          {[...selectedMedicines]
                             .sort((a, b) =>
                               a.medicine_name.localeCompare(
                                 b.medicine_name,
@@ -332,130 +374,50 @@ export default function PurchaseInvoiceExport() {
                                 }
                               )
                             )
-                            .slice(0, visibleCount)
-                            .map((m) => {
-                              const isChecked = selectedMedicines.some(
-                                (x) => x.id === m.id
-                              );
-                              return (
-                                <tr key={m.id}>
-                                  <td className="text-center">
-                                    <input
-                                      type="checkbox"
-                                      checked={isChecked}
-                                      onChange={(e) =>
-                                        handleLeftCheckbox(m, e.target.checked)
-                                      }
-                                    />
-                                  </td>
-                                  <td className="text-start">
-                                    {m.medicine_code || "-"}
-                                  </td>
-                                  {/* <td className="text-start">{m.id}</td> */}
-                                  <td className="text-start">
-                                    {m.medicine_name}
-                                  </td>
-                                  <td className="text-start">{m.pack_size}</td>
-                                  <td className="text-start">
-                                    {m.manufacturer_name}
-                                  </td>
-                                </tr>
-                              );
-                            })}
-                          {loadings && (
-                            <TableLoader colSpan={5} text="Loading more..." />
-                          )}
+                            .map((m) => (
+                              <tr key={m.id}>
+                                <td className="text-center">
+                                  <input
+                                    type="checkbox"
+                                    checked
+                                    onChange={() => toggleCheckbox(m.id)}
+                                  />
+                                </td>
+                                {/* <td className="text-start">{m.id}</td> */}
+                                <td className="text-start">
+                                  {m.medicine_name}
+                                </td>
+                                <td className="text-start">{m.pack_size}</td>
+                                <td className="text-start">
+                                  {m.manufacturer_name}
+                                </td>
+                                {/* ⭐ Qty Input Box */}
+                                <td>
+                                  <input
+                                    type="number"
+                                    className="form-control"
+                                    value={m.qty ?? 0}
+                                    onChange={(e) =>
+                                      handleQtyChange(m.id, e.target.value)
+                                    }
+                                    placeholder="Required Qty"
+                                    style={{ borderRadius: "0px" }}
+                                  />
+                                </td>
+                              </tr>
+                            ))}
                         </tbody>
                       </table>
                     </div>
-                  </div>
-
-                  {/* RIGHT SIDE - SELECTED RECORDS */}
-                  <div className="col-md-6">
-                    <h6 className="fw-bold mb-2">
-                      {selectedMedicines.length > 0
-                        ? "Selected Products"
-                        : "No Selection"}
-                    </h6>
-                    {selectedMedicines.length > 0 ? (
-                      <div className="scroll_table">
-                        <table className="table cust_table1">
-                          <thead>
-                            <tr>
-                              <th className="fw-bold text-center">Select</th>
-                              {/* <th className="fw-bold text-start">ID</th> */}
-                              <th className="fw-bold text-start">
-                                Medicine Code
-                              </th>
-                              <th className="fw-bold text-start">Product</th>
-                              <th className="fw-bold text-start">Pack Size</th>
-                              <th className="fw-bold text-start">
-                                Manufacture
-                              </th>
-                              <th className="fw-bold text-start">
-                                Required Qty
-                              </th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {[...selectedMedicines]
-                              .sort((a, b) =>
-                                a.medicine_name.localeCompare(
-                                  b.medicine_name,
-                                  undefined,
-                                  {
-                                    sensitivity: "base",
-                                  }
-                                )
-                              )
-                              .map((m) => (
-                                <tr key={m.id}>
-                                  <td className="text-center">
-                                    <input
-                                      type="checkbox"
-                                      checked
-                                      onChange={() => toggleCheckbox(m.id)}
-                                    />
-                                  </td>
-                                  {/* <td className="text-start">{m.id}</td> */}
-                                  <td className="text-start">
-                                    {m.medicine_code || "-"}
-                                  </td>
-                                  <td className="text-start">
-                                    {m.medicine_name}
-                                  </td>
-                                  <td className="text-start">{m.pack_size}</td>
-                                  <td className="text-start">
-                                    {m.manufacturer_name}
-                                  </td>
-                                  {/* ⭐ Qty Input Box */}
-                                  <td>
-                                    <input
-                                      type="number"
-                                      className="form-control"
-                                      value={m.qty ?? 0}
-                                      onChange={(e) =>
-                                        handleQtyChange(m.id, e.target.value)
-                                      }
-                                      placeholder="Required Qty"
-                                      style={{ borderRadius: "0px" }}
-                                    />
-                                  </td>
-                                </tr>
-                              ))}
-                          </tbody>
-                        </table>
-                      </div>
-                    ) : (
-                      <div className="text-center text-muted mt-3">
-                        Please select products from left list or dropdown.
-                      </div>
-                    )}
-                  </div>
+                  ) : (
+                    <div className="text-center text-muted mt-3">
+                      Please select products from left list or dropdown.
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
-          </InfiniteScroll>
+          </div>
         </div>
       </div>
     </>
