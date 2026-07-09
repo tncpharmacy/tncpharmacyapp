@@ -70,7 +70,7 @@ export default function PurchaseInvoiceImport() {
     purchase_rate: "",
     amount: "",
     location: "",
-    additional_discount: "",
+    applied_discount: "",
     brand_category: "",
   });
 
@@ -293,7 +293,7 @@ export default function PurchaseInvoiceImport() {
           Number(row["Purchase Rate"] || 0) * Number(row["Required QTY"] || 0)
         ),
         location: row["Location"]?.toString() || "",
-        additional_discount: String(Number(row["Applied Discount"] || 0)),
+        applied_discount: String(Number(row["Applied Discount"] || 0)),
       }));
 
       const basePayload = {
@@ -347,7 +347,7 @@ export default function PurchaseInvoiceImport() {
         purchase_rate: "",
         amount: "",
         location: "",
-        additional_discount: "",
+        applied_discount: "",
         brand_category: "",
       });
       // eslint-disable-next-line @typescript-eslint/no-explicit-any

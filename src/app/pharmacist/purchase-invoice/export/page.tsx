@@ -152,7 +152,7 @@ export default function PurchaseInvoiceExport() {
         Product: item.medicine_name ?? "-",
         "Pack Size": item.pack_size ?? "-",
         Manufacture: item.manufacturer_name ?? "-",
-        "Brand Category": item.brand_category ?? "-",
+        "Brand Category": item.brand_category ?? "",
         "Required QTY": item.qty ?? "",
         Batch: "",
         "Expiry Date": "",
