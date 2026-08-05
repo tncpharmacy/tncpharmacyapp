@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Button, Image, Modal } from "react-bootstrap";
 import "../css/admin-style.css";
 import SideNav from "../components/SideNav/page";
@@ -37,35 +37,34 @@ export default function Pharmacy() {
 
   // filtered records by search box
   const [searchTerm, setSearchTerm] = useState("");
-  const [filteredData, setFilteredData] = useState<Pharmacy[]>(list);
+  // const [filteredData, setFilteredData] = useState<Pharmacy[]>(list);
 
   //status
   const [records, setRecords] = useState<Pharmacy[]>([]);
   const [status, setStatus] = useState<string>("");
 
   // filtered records by search box + status filter
-  useEffect(() => {
-    let data = list || [];
+  const filteredData = useMemo(() => {
+    let data = [...list];
 
-    // 🔹 Search filter
     if (searchTerm) {
       const lower = searchTerm.toLowerCase();
-      data = data.filter((item: Pharmacy) =>
-        (Object.keys(item) as (keyof Pharmacy)[]).some((key) =>
-          String(item[key] ?? "")
+
+      data = data.filter((item) =>
+        Object.values(item).some((value) =>
+          String(value ?? "")
             .toLowerCase()
             .includes(lower)
         )
       );
     }
 
-    // 🔹 Status filter
     if (status) {
-      data = data.filter((item: Pharmacy) => item.status === status);
+      data = data.filter((item) => item.status === status);
     }
 
-    setFilteredData(data);
-  }, [searchTerm, status, list.length]); // ✅ only length (primitive)
+    return data;
+  }, [list, searchTerm, status]); // ✅ only length (primitive)
 
   // Fetch all pharmacies once
   useEffect(() => {
@@ -82,10 +81,10 @@ export default function Pharmacy() {
     }, 3000); // spinner for 3 sec
   };
 
-  const handleDelete = (id: number) => {
-    if (confirm("Are you sure you want to change status of this pharmacy?")) {
-      dispatch(togglePharmacyStatus(id));
-    }
+  const handleDelete = async (id: number) => {
+    if (!confirm("Are you sure?")) return;
+
+    await dispatch(togglePharmacyStatus(id)).unwrap();
   };
 
   const handleView = (pharmacy: Pharmacy | PharmacySuperAdminForm) => {
@@ -144,9 +143,9 @@ export default function Pharmacy() {
                       <Link href={"/add-pharmacy"} className="btn-style2 me-2">
                         <i className="bi bi-plus"></i> Add Pharmacy
                       </Link>
-                      <button className="btn-style1">
+                      {/* <button className="btn-style1">
                         <i className="bi bi-download"></i> Export Statement
-                      </button>
+                      </button> */}
                     </div>
                   </div>
                 </div>

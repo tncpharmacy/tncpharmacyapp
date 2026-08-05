@@ -113,11 +113,11 @@ export default function SideNav() {
             <i className="bi bi-file-earmark-text"></i> Billing & Sales
           </div>
         </li> */}
-        {/* <li>
+        <li>
           <Link href="/pharmacist/supplier" className="link">
             <i className="bi bi-truck"></i> Supplier
           </Link>
-        </li> */}
+        </li>
         <li>
           <div
             onClick={() => toggleMenu("settings")}

@@ -179,7 +179,7 @@ export default function PurchaseInvoice() {
                       </select>
                     </div>
                   </div> */}
-                  <div className="col-md-4 text-end">
+                  {/* <div className="col-md-4 text-end">
                     <div className="txt_col">
                       <Link
                         href={"/pharmacy/import"}
@@ -194,7 +194,7 @@ export default function PurchaseInvoice() {
                         <i className="bi bi-download"></i> Export
                       </Link>
                     </div>
-                  </div>
+                  </div> */}
                 </div>
 
                 <div className="scroll_table">

@@ -53,7 +53,7 @@ const AddBillingItemModal: React.FC<AddBillingItemModalProps> = ({
   const submitRef = useRef<HTMLButtonElement | null>(null);
 
   // AvailableQty Validation
-  // const availableQty = item?.AvailableQty || 0; // 🚨 Assuming your Medicine type has 'AvailableQty'
+  const availableQty = item?.AvailableQty || 0; // 🚨 Assuming your Medicine type has 'AvailableQty'
   const { list: durationList } = useAppSelector(
     (state) => state.productDuration
   );
@@ -244,9 +244,9 @@ const AddBillingItemModal: React.FC<AddBillingItemModalProps> = ({
                 <p>
                   <strong>MRP:</strong> ₹{formatAmount(item.MRP || 0)}
                 </p>
-                {/* <p className="text-success color-green fw-bold">
+                <p className="text-success color-green fw-bold">
                   Available Stock: {availableQty}
-                </p> */}
+                </p>
                 <hr />
 
                 {/* Qty Input */}

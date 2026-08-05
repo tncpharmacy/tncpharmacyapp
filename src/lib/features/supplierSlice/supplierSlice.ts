@@ -77,34 +77,73 @@ export const toggleSupplierStatus = createAsyncThunk<
 });
 
 export const addSupplier = createAsyncThunk<
-  Supplier, // return type
-  FormData // argument type
+  Supplier,
+  FormData,
+  { rejectValue: string }
 >("supplier/add", async (formData, { rejectWithValue }) => {
   try {
-    // ⬇️ Directly returns Supplier object (NO res.data needed)
     const supplier = await createSupplierApi(formData);
     return supplier;
   } catch (err: unknown) {
-    const error = err as AxiosError<{ message?: string }>;
-    return rejectWithValue(
-      error.response?.data?.message ?? "Failed to add supplier"
-    );
+    const error = err as AxiosError<{
+      message?: string;
+      errors?: string;
+    }>;
+
+    const raw =
+      error.response?.data?.errors ||
+      error.response?.data?.message ||
+      "Failed to add supplier";
+
+    let errorMessage = raw;
+
+    if (raw.includes("gst_number")) {
+      errorMessage = "GST Number already exists.";
+    } else if (raw.includes("login_id")) {
+      errorMessage = "Mobile Number already exists.";
+    } else if (raw.includes("email")) {
+      errorMessage = "Email already exists.";
+    } else if (raw.includes("license")) {
+      errorMessage = "License Number already exists.";
+    }
+
+    return rejectWithValue(errorMessage);
   }
 });
 
 // ✅ Update/Supplier thunk
 export const editSupplier = createAsyncThunk<
   Supplier,
-  { id: number; data: FormData }
+  { id: number; data: FormData },
+  { rejectValue: string }
 >("supplier/edit", async ({ id, data }, { rejectWithValue }) => {
   try {
     const supplier = await updateSupplierApi(id, data);
     return supplier;
   } catch (err: unknown) {
-    const error = err as AxiosError<{ message?: string }>;
-    return rejectWithValue(
-      error.response?.data?.message ?? "Failed to update supplier"
-    );
+    const error = err as AxiosError<{
+      message?: string;
+      errors?: string;
+    }>;
+
+    const raw =
+      error.response?.data?.errors ||
+      error.response?.data?.message ||
+      "Failed to update supplier";
+
+    let errorMessage = raw;
+
+    if (raw.includes("gst_number")) {
+      errorMessage = "GST Number already exists.";
+    } else if (raw.includes("login_id")) {
+      errorMessage = "Mobile Number already exists.";
+    } else if (raw.includes("email")) {
+      errorMessage = "Email already exists.";
+    } else if (raw.includes("license")) {
+      errorMessage = "License Number already exists.";
+    }
+
+    return rejectWithValue(errorMessage);
   }
 });
 

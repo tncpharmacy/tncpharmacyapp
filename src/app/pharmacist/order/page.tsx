@@ -238,7 +238,15 @@ export default function OrderList() {
             ? Number(paymentMode)
             : undefined,
       });
+      console.log("Payload =>", {
+        startDate,
+        endDate,
+        orderType,
+        paymentMode,
+        reportType,
+      });
 
+      console.log("API Response =>", res.data);
       const apiData = res?.data?.data;
 
       if (!Array.isArray(apiData) || apiData.length === 0) {

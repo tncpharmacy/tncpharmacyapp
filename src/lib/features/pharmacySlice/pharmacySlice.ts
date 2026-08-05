@@ -120,9 +120,14 @@ const pharmacySlice = createSlice({
       .addCase(togglePharmacyStatus.fulfilled, (state, action) => {
         state.loading = false;
         const updated = action.payload;
-        state.list = state.list.map((p) =>
-          p.id === updated.id ? { ...p, status: updated.status } : p
-        );
+        const index = state.list.findIndex((p) => p.id === updated.id);
+
+        if (index !== -1) {
+          state.list[index] = {
+            ...state.list[index],
+            status: updated.status,
+          };
+        }
       })
       .addCase(togglePharmacyStatus.pending, (state) => {
         state.loading = true;

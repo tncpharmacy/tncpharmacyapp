@@ -20,6 +20,7 @@ import { FaArrowLeft } from "react-icons/fa";
 import MinimumStockModal from "@/app/components/MinimumStockModal/MinimumStockModal";
 import { saveAs } from "file-saver";
 import * as XLSX from "xlsx-js-style";
+import { fetchSupplier } from "@/lib/features/supplierSlice/supplierSlice";
 const mediaBase = process.env.NEXT_PUBLIC_MEDIA_BASE_URL;
 
 type FilterType = "All" | "LowStock" | "AvailableStock";
@@ -101,7 +102,11 @@ export default function StockList() {
   const [status, setStatus] = useState<string>("");
 
   const [showMinimumModal, setShowMinimumModal] = useState(false);
-  const suppliers = [{ id: 1, name: "Ganga Pharmacy" }];
+  const { list: suppliers } = useAppSelector((state) => state.supplier);
+
+  useEffect(() => {
+    dispatch(fetchSupplier());
+  }, [dispatch]);
 
   // Fetch all pharmacies once
   useEffect(() => {

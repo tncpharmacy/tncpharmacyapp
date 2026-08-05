@@ -4,10 +4,12 @@ import { useExportExcel } from "@/lib/hooks/useExportExcel";
 import { Medicine } from "@/types/medicine";
 import { useEffect, useState } from "react";
 import { Modal, Button } from "react-bootstrap";
+import toast from "react-hot-toast";
 
 interface Supplier {
   id: number;
-  name: string;
+  supplier_name: string;
+  status: string;
 }
 
 export interface MinimumStockItem {
@@ -78,6 +80,17 @@ export default function MinimumStockModal({
   // Export Excel with Header + Checkbox + Colors
   // =====================================================
   const handleExportToExcel = () => {
+    // ✅ Supplier validation
+    if (!selectedSupplier) {
+      toast.error("Please select a supplier.");
+      return;
+    }
+
+    // ✅ Checkbox validation
+    if (selectedRows.length === 0) {
+      toast.error("Please select at least one medicine.");
+      return;
+    }
     const today = new Date().toISOString().split("T")[0];
     const fileName = `${selectedSupplier || "NoSupplier"}_${today}`;
 
@@ -116,11 +129,13 @@ export default function MinimumStockModal({
             onChange={(e) => setSelectedSupplier(e.target.value)}
           >
             <option value="">Select Supplier</option>
-            {suppliers.map((s) => (
-              <option key={s.id} value={s.name}>
-                {s.name}
-              </option>
-            ))}
+            {suppliers
+              .filter((s) => s.status === "Active")
+              .map((s) => (
+                <option key={s.id} value={s.supplier_name}>
+                  {s.supplier_name}
+                </option>
+              ))}
           </select>
 
           {/* Export Excel */}

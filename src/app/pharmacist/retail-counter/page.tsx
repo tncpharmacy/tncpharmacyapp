@@ -399,7 +399,8 @@ export default function RetailCounter() {
           payload: orderPayload,
         })
       ).unwrap();
-
+      // ✅ Success Toast
+      toast.success("Order created successfully!");
       // ✅ RETURN DATA (MOST IMPORTANT)
       return {
         success: true,
@@ -407,9 +408,18 @@ export default function RetailCounter() {
         mobile: finalMobile,
         uhid: finalUhid,
       };
-    } catch (err) {
-      toast.error("Order Creation Failed!");
-      return { success: false };
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (err: any) {
+      console.log(err);
+
+      const errorMessage =
+        err?.errors?.[0] || err?.message || "Order Creation Failed!";
+
+      toast.error(errorMessage);
+
+      return {
+        success: false,
+      };
     }
   };
 

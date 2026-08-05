@@ -579,6 +579,8 @@ export default function RetailCounter() {
           payload: orderPayload,
         })
       ).unwrap();
+      // ✅ Success Toast
+      toast.success("Order created successfully!");
       return true;
     } catch (err) {
       // console.log(err);

@@ -455,51 +455,57 @@ export default function BuyerProfile() {
                   {activeTab === "profile" && (
                     <div className="p-3 position-relative border rounded bg-white shadow-sm">
                       <h5 className="fw-bold mb-3 text-primary">Hi there!</h5>
-                      <div className="mb-3 d-flex align-items-center">
-                        <Image
-                          src="/images/person-icon.png"
-                          width={45}
-                          height={45}
-                          className="me-4 opacity-75"
-                          alt="person"
-                        />
-                        <div>
-                          <label className="text-muted d-block">
-                            Patient Name
-                          </label>
-                          <strong>{buyer?.name || "Guest"}</strong>
+                      {buyer?.name && (
+                        <div className="mb-3 d-flex align-items-center">
+                          <Image
+                            src="/images/person-icon.png"
+                            width={45}
+                            height={45}
+                            className="me-4 opacity-75"
+                            alt="person"
+                          />
+                          <div>
+                            <label className="text-muted d-block">
+                              Patient Name
+                            </label>
+                            <strong>{buyer?.name || "Guest"}</strong>
+                          </div>
                         </div>
-                      </div>
-                      <div className="mb-3 d-flex align-items-center">
-                        <Image
-                          src="/images/mobile-icon.png"
-                          width={45}
-                          height={45}
-                          className="me-4 opacity-75"
-                          alt="phone"
-                        />
-                        <div>
-                          <label className="text-muted d-block">
-                            Mobile Number
-                          </label>
-                          <strong>{buyer?.number || "-"}</strong>
+                      )}
+                      {buyer?.number && (
+                        <div className="mb-3 d-flex align-items-center">
+                          <Image
+                            src="/images/mobile-icon.png"
+                            width={45}
+                            height={45}
+                            className="me-4 opacity-75"
+                            alt="phone"
+                          />
+                          <div>
+                            <label className="text-muted d-block">
+                              Mobile Number
+                            </label>
+                            <strong>{buyer?.number || "-"}</strong>
+                          </div>
                         </div>
-                      </div>
-                      <div className="mb-3 d-flex align-items-center">
-                        <Image
-                          src="/images/email-icon.png"
-                          width={45}
-                          height={45}
-                          className="me-4 opacity-75"
-                          alt="email"
-                        />
-                        <div>
-                          <label className="text-muted d-block">
-                            Primary Email address
-                          </label>
-                          <strong>{buyer?.email || "--est"}</strong>
+                      )}
+                      {buyer?.email && (
+                        <div className="mb-3 d-flex align-items-center">
+                          <Image
+                            src="/images/email-icon.png"
+                            width={45}
+                            height={45}
+                            className="me-4 opacity-75"
+                            alt="email"
+                          />
+                          <div>
+                            <label className="text-muted d-block">
+                              Primary Email address
+                            </label>
+                            <strong>{buyer?.email || "-"}</strong>
+                          </div>
                         </div>
-                      </div>
+                      )}
                     </div>
                   )}
 

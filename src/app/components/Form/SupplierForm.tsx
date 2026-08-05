@@ -247,16 +247,7 @@ export default function SupplierForm({ id }: Props) {
       router.push("/pharmacist/supplier");
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
-      // console.log("🔥 FULL ERROR OBJECT:", error?.response?.data || error);
-
-      const errorMsg =
-        error?.response?.data?.message ||
-        error?.response?.data?.detail ||
-        error?.response?.data?.error ||
-        error?.message ||
-        "Unknown error occurred";
-
-      toast.error(errorMsg);
+      toast.error(error || "Unknown error occurred");
     } finally {
       setSubmitLoading(false);
     }

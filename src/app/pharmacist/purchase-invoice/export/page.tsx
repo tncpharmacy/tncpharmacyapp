@@ -229,11 +229,13 @@ export default function PurchaseInvoiceExport() {
                       onChange={(e) => setSelectedSupplier(e.target.value)}
                     >
                       <option value="">Select Supplier</option>
-                      {supplierList.map((s) => (
-                        <option key={s.id} value={s.supplier_name}>
-                          {s.supplier_name}
-                        </option>
-                      ))}
+                      {supplierList
+                        .filter((s) => s.status === "Active")
+                        .map((s) => (
+                          <option key={s.id} value={s.supplier_name}>
+                            {s.supplier_name}
+                          </option>
+                        ))}
                     </select>
                   </div>
                 </div>

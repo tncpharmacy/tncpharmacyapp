@@ -59,5 +59,5 @@ export const togglePharmacyStatusApi = async (
   const res = await api.delete<{ data: Pharmacy }>(
     ENDPOINTS.DELETE_PHARMACY(id)
   );
-  return res.data.data; // 👈 backend updated pharmacy object return karta hai
+  return res.data.data;
 };

@@ -57,7 +57,6 @@ api.interceptors.request.use(
       config.headers["X-CSRFToken"] = csrfToken;
     }
     const isPublic =
-      url.includes("/medicine") ||
       url.includes("/masterapp/care-group/") ||
       url.includes("/website") ||
       url.includes("search-suggestion") ||

@@ -542,8 +542,7 @@ export default function MedicineForm({ id }: Props) {
                   onChange={handleChange}
                   options={[
                     { value: 1, label: "Top Brand" },
-                    { value: 2, label: "Medium Brand" },
-                    { value: 3, label: "Low Brand" },
+                    { value: 2, label: "TnC Trusted Brand" },
                   ]}
                 />
 

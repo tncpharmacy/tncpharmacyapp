@@ -211,7 +211,8 @@ const GenericOptionsModal: React.FC<GenericOptionsModalProps> = ({
                         <th>Product</th>
                         <th>Manufacturer</th>
                         {/* <th>Stock</th> */}
-                        <th>Pack Size</th>
+                        <th>Brand Category</th>
+                        <th>Available Qty</th>
                         <th>MRP</th>
                         <th>Action</th>
                       </tr>
@@ -273,7 +274,10 @@ const GenericOptionsModal: React.FC<GenericOptionsModalProps> = ({
                               </td>
                               <td>{item.Manufacturer || "N/A"}</td>
                               {/* <td>{item.AvailableQty || "N/A"}</td> */}
-                              <td>{item.pack_size || "N/A"}</td>
+                              <td>{item.brand_category || "N/A"}</td>
+                              <td style={{ textAlign: "center" }}>
+                                {item.AvailableQty || "0"}
+                              </td>
                               <td>
                                 ₹ {formatPrice(Number(item.MRP)) || "N/A"}
                               </td>

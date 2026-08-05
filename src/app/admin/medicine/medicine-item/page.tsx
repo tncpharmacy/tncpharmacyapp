@@ -23,16 +23,25 @@ import {
   getMedicinesList,
   getMedicineViewByIdThunk,
   getMenuMedicinesList,
+  getProductList,
 } from "@/lib/features/medicineSlice/medicineSlice";
 import { encodeId } from "@/lib/utils/encodeDecode";
+import Pagination from "@/app/components/Pagination/Pagination";
+import api from "@/lib/axios";
+
+const baseURL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
 export default function MedicineList() {
   const dispatch = useAppDispatch();
   const router = useRouter();
+  const latestSearch = useRef("");
   const { list: getCategoryList } = useAppSelector((state) => state.category);
-  const { medicines: medicineList, loading } = useAppSelector(
-    (state) => state.medicine
-  );
+  const {
+    medicines: medicineList,
+    loading,
+    next,
+    previous,
+  } = useAppSelector((state) => state.medicine);
   // filter directly
   // ✅ Base list (without category_id = 1)
   const filteredMedicines = useMemo(() => {
@@ -46,9 +55,10 @@ export default function MedicineList() {
   // 🆕 Category filter state
   const [selectedCategoryId, setSelectedCategoryId] = useState<number | "">("");
 
-  // Infinite scroll state
-  const [visibleCount, setVisibleCount] = useState(10);
-  const [loadings, setLoadings] = useState(false);
+  // Pagination state
+  const [page, setPage] = useState(1);
+  const [pageLoading, setPageLoading] = useState(false);
+  const [currentUrl, setCurrentUrl] = useState<string | null>(null);
 
   // Modal state
   const [showModal, setShowModal] = useState(false);
@@ -72,61 +82,70 @@ export default function MedicineList() {
 
   // Fetch all pharmacies once
   useEffect(() => {
-    dispatch(getMedicinesList());
+    dispatch(getProductList(currentUrl));
+  }, [dispatch, currentUrl]);
+
+  useEffect(() => {
     dispatch(getCategoriesList());
   }, [dispatch]);
+
+  useEffect(() => {
+    if (!loading) {
+      setPageLoading(false);
+    }
+  }, [loading]);
 
   const categoryOptions = (getCategoryList || []).map((c: Category) => ({
     label: c.category_name,
     value: c.id,
   }));
 
-  // filtered records by search box + status filter
-  // 🧠 Master filter logic
+  // search box logic
   useEffect(() => {
-    setSearchLoading(true); // 🔥 spinner ON
+    const timer = setTimeout(async () => {
+      try {
+        setSearchLoading(true);
 
-    const timeout = setTimeout(() => {
-      let data = filteredMedicines;
-
-      // Category filter
-      if (selectedCategoryId) {
-        data = data.filter((item) => item.category_id === selectedCategoryId);
-      }
-
-      // Search filter (Name + ID)
-      if (searchTerm) {
-        const term = searchTerm.toLowerCase();
-
-        data = data.filter(
-          (item) =>
-            item.medicine_name.toLowerCase().includes(term) ||
-            item.id.toString().includes(term)
+        // 🔥 Agar search empty hai to original list dikhao
+        if (!searchTerm.trim()) {
+          setFilteredData(filteredMedicines);
+          return;
+        }
+        const keyword = latestSearch.current;
+        const res = await api.get(
+          `/website/product/search/?text=${encodeURIComponent(searchTerm)}`
         );
+        if (keyword !== latestSearch.current) return;
+        // API response ke according change karna agar data key alag ho
+        setFilteredData(res.data.data || []);
+      } catch (error) {
+        console.error("Search Error:", error);
+        setFilteredData([]);
+      } finally {
+        setSearchLoading(false);
       }
+    }, 500);
 
-      // Status filter
-      if (status !== "all") {
-        data = data.filter((item) => item.status === status);
-      }
+    return () => clearTimeout(timer);
+  }, [searchTerm, filteredMedicines]);
+  // filtered records by category + status filter
+  useEffect(() => {
+    let data = [...filteredMedicines];
 
-      setFilteredData(data);
-      setVisibleCount(10); // 🔥 reset infinite scroll
-      setSearchLoading(false); // 🔥 spinner OFF
-    }, 500); // ⏳ debounce (0.5 sec)
+    if (searchTerm.trim()) {
+      data = [...filteredData];
+    }
 
-    return () => clearTimeout(timeout);
-  }, [filteredMedicines, selectedCategoryId, searchTerm, status]);
+    if (selectedCategoryId) {
+      data = data.filter((item) => item.category_id === selectedCategoryId);
+    }
 
-  // ✅ only length (primitive)
-  const loadMore = () => {
-    if (loadings || visibleCount >= filteredMedicines.length) return;
-    setLoadings(true);
-    setTimeout(() => {
-      setVisibleCount((prev) => prev + 5);
-      setLoadings(false);
-    }, 800); // spinner for 3 sec
-  };
+    if (status) {
+      data = data.filter((item) => item.status === status);
+    }
+
+    setFilteredData(data);
+  }, [selectedCategoryId, status]);
 
   // const handleView = (medicine: Medicine) => {
   //   setSelectedMedicine(medicine);
@@ -209,11 +228,7 @@ export default function MedicineList() {
       <div className="body_wrap">
         <SideNav />
         <div className="body_right">
-          <InfiniteScroll
-            loadMore={loadMore}
-            hasMore={visibleCount < filteredData.length}
-            className="body_content"
-          >
+          <div className="body_content">
             <div className="pageTitle">
               <i className="bi bi-shop-window"></i> Product List
             </div>
@@ -229,7 +244,10 @@ export default function MedicineList() {
                         // className="border px-3 py-2 w-full rounded-md" // Tailwind
                         placeholder="Search medicine..."
                         value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
+                        onChange={(e) => {
+                          latestSearch.current = e.target.value;
+                          setSearchTerm(e.target.value);
+                        }}
                       />
                     </div>
                   </div>
@@ -288,15 +306,15 @@ export default function MedicineList() {
                   </div>
                 </div>
                 {/* Table */}
-                <div className="scroll_table mt-4 w-full">
+                <div className="scroll_table">
                   <table className="table cust_table1">
                     <thead>
                       <tr>
                         {/* <th className="fw-bold text-start"></th> */}
-                        <th className="fw-bold text-start">ID</th>
+                        {/* <th className="fw-bold text-start">ID</th> */}
                         <th className="fw-bold text-start">Medicine Name</th>
                         <th className="fw-bold text-start">Pack Size</th>
-                        <th className="fw-bold text-start">Unit</th>
+                        {/* <th className="fw-bold text-start">Unit</th> */}
                         <th className="fw-bold text-start">Manufacture</th>
                         <th className="fw-bold text-start">Discount %</th>
                         <th className="fw-bold text-center">Status</th>
@@ -309,63 +327,62 @@ export default function MedicineList() {
                       )}
 
                       {!loading &&
-                        filteredData
-                          .slice(0, visibleCount)
-                          .map((p: Medicine, index) => {
-                            return (
-                              <tr key={p.id}>
-                                {/* <td>{index + 1}</td> */}
-                                <td className="text-start">{p.id ?? "-"}</td>
-                                <td className="text-start">
-                                  {p.medicine_name ?? "-"}
-                                </td>
-                                <td className="text-start">
-                                  {p.pack_size ?? "-"}
-                                </td>
-                                <td className="text-start">{p.unit ?? "-"}</td>
-                                <td className="text-start">
-                                  {p.manufacturer_name ?? "-"}
-                                </td>
-                                <td className="text-start">
-                                  {p.discount ?? "-"}
-                                </td>
-                                {/* <td>{p.discount ?? "-"}</td>
+                        filteredData.map((p: Medicine, index) => {
+                          return (
+                            <tr key={p.id}>
+                              {/* <td>{index + 1}</td> */}
+                              {/* <td className="text-start">{p.id ?? "-"}</td> */}
+                              <td className="text-start">
+                                {p.medicine_name ?? "-"}
+                              </td>
+                              <td className="text-start">
+                                {p.pack_size ?? "-"}
+                              </td>
+                              {/* <td className="text-start">{p.unit ?? "-"}</td> */}
+                              <td className="text-start">
+                                {p.Manufacturer ?? p.manufacturer_name ?? "-"}
+                              </td>
+                              <td className="text-start">
+                                {p.discount ?? "-"}
+                              </td>
+                              {/* <td>{p.discount ?? "-"}</td>
                               <td>{p.mrp ?? "-"}</td> */}
-                                <td className="text-center">
-                                  <span
-                                    onClick={() => handleToggleStatus(p)}
-                                    className={`status ${
-                                      p.status === "Active"
-                                        ? "status-active"
-                                        : "status-inactive"
-                                    } cursor-pointer`}
-                                    title="Click to change status"
-                                  >
-                                    {p.status === "Active"
-                                      ? "Active"
-                                      : "Inactive"}
-                                  </span>
-                                </td>
-                                <td className="text-center">
-                                  {/* Edit */}
-                                  <button
-                                    className="btn btn-light btn-sm me-2"
-                                    onClick={() =>
-                                      handleEdit(p.id, p.category_id)
-                                    }
-                                  >
-                                    <i className="bi bi-pencil"></i>
-                                  </button>
-                                  {/* View */}
-                                  <button
-                                    className="btn btn-light btn-sm"
-                                    onClick={() => handleView(p.id)}
-                                  >
-                                    <i className="bi bi-eye-fill"></i>
-                                  </button>
+                              <td className="text-center">
+                                <span
+                                  onClick={() => handleToggleStatus(p)}
+                                  className={`status ${
+                                    p.status === "Active"
+                                      ? "status-active"
+                                      : "status-inactive"
+                                  } cursor-pointer`}
+                                  title="Click to change status"
+                                >
+                                  {p.status === "Active"
+                                    ? "Active"
+                                    : "Inactive"}
+                                </span>
+                              </td>
+                              <td className="text-center">
+                                {/* Edit */}
+                                <button
+                                  className="btn btn-light btn-sm me-2"
+                                  onClick={() =>
+                                    handleEdit(p.id, p.category_id)
+                                  }
+                                >
+                                  <i className="bi bi-pencil"></i>
+                                </button>
+                                {/* View */}
+                                <button
+                                  className="btn btn-light btn-sm"
+                                  onClick={() => handleView(p.id)}
+                                >
+                                  <i className="bi bi-eye-fill"></i>
+                                </button>
 
-                                  {/* Safety Advice */}
-                                  {p.category_id === 1 ? (
+                                {/* Safety Advice */}
+                                {
+                                  p.category_id === 1 ? (
                                     /* Safety Advice */
                                     <button
                                       className="btn btn-light btn-sm me-2"
@@ -374,40 +391,35 @@ export default function MedicineList() {
                                     >
                                       <i className="bi bi-shield-check text-warning"></i>
                                     </button>
-                                  ) : (
-                                    /* Category / Subcategory Update */
-                                    <button
-                                      className="btn btn-light btn-sm me-2"
-                                      title="Update Category / Subcategory"
-                                      // onClick={() => handleCategoryUpdate(p.id)}
-                                    >
-                                      <i className="bi bi-diagram-3 text-success"></i>
-                                    </button>
-                                  )}
+                                  ) : null
+                                  /* Category / Subcategory Update */
+                                  // <button
+                                  //   className="btn btn-light btn-sm me-2"
+                                  //   title="Update Category / Subcategory"
+                                  //   // onClick={() => handleCategoryUpdate(p.id)}
+                                  // >
+                                  //   <i className="bi bi-diagram-3 text-success"></i>
+                                  // </button>
+                                }
 
-                                  {/* Upload Image */}
-                                  <button
-                                    type="button"
-                                    className="btn btn-light btn-sm"
-                                    title="Upload Medicine Image"
-                                    onClick={() => handleUploadImage(p.id)}
-                                  >
-                                    <i className="bi bi-image text-primary"></i>
-                                  </button>
-                                </td>
-                              </tr>
-                            );
-                          })}
-
-                      {/* Spinner row */}
-                      {loadings && (
-                        <TableLoader colSpan={9} text="Loading more..." />
-                      )}
+                                {/* Upload Image */}
+                                <button
+                                  type="button"
+                                  className="btn btn-light btn-sm"
+                                  title="Upload Medicine Image"
+                                  onClick={() => handleUploadImage(p.id)}
+                                >
+                                  <i className="bi bi-image text-primary"></i>
+                                </button>
+                              </td>
+                            </tr>
+                          );
+                        })}
 
                       {/* No more records */}
                       {!loading &&
                         !searchLoading &&
-                        !loadings &&
+                        !loading &&
                         filteredData.length === 0 && (
                           <tr>
                             <td
@@ -420,10 +432,34 @@ export default function MedicineList() {
                         )}
                     </tbody>
                   </table>
+                  <div className="d-flex justify-content-center mt-4">
+                    <Pagination
+                      currentPage={page}
+                      hasNext={!!next}
+                      hasPrev={!!previous}
+                      onPageChange={(newPage) => {
+                        setPageLoading(true);
+
+                        if (newPage > page && next) {
+                          setCurrentUrl(next);
+                          setPage(newPage);
+                          return;
+                        }
+
+                        if (newPage < page && previous) {
+                          setCurrentUrl(previous);
+                          setPage(newPage);
+                          return;
+                        }
+
+                        setPageLoading(false);
+                      }}
+                    />
+                  </div>
                 </div>
               </div>
             </div>
-          </InfiniteScroll>
+          </div>
         </div>
       </div>
 

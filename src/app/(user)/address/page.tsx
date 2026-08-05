@@ -42,6 +42,8 @@ export default function AddressList() {
   );
   const [pendingDefaultId, setPendingDefaultId] = useState<number | null>(null);
 
+  const [isUpdatingDefault, setIsUpdatingDefault] = useState(false);
+
   const activeAddresses = useAppSelector((state) => state.address.addresses);
   // ✅ Filter only active addresses
   const billingAddresses = activeAddresses?.filter(
@@ -71,17 +73,17 @@ export default function AddressList() {
     }
   }, [dispatch, userId]);
 
-  // Set selected only on FIRST load, not after every update
   useEffect(() => {
-    if (sortedBillingAddresses.length > 0 && selectedAddressId === null) {
-      const defaultAddr = sortedBillingAddresses.find(
-        (addr) => addr.default_address === 1
-      );
-      if (defaultAddr?.id) {
-        setSelectedAddressId(defaultAddr.id);
-      }
+    if (pendingDefaultId !== null) return;
+
+    const defaultAddr = sortedBillingAddresses.find(
+      (addr) => addr.default_address === 1
+    );
+
+    if (defaultAddr?.id !== undefined && defaultAddr.id !== selectedAddressId) {
+      setSelectedAddressId(defaultAddr.id);
     }
-  }, [sortedBillingAddresses, selectedAddressId]);
+  }, [sortedBillingAddresses, pendingDefaultId]);
 
   // ✅ Prevent hydration mismatch
   if (!isClient || !buyer?.id) return null;
@@ -119,27 +121,23 @@ export default function AddressList() {
 
   const handleSetDefaultAddress = async (address: Address) => {
     if (!address.id) return;
+    if (!userId) return;
+    if (selectedAddressId === address.id) return;
+
+    setIsUpdatingDefault(true);
+
+    setPendingDefaultId(address.id);
+    setSelectedAddressId(address.id);
 
     try {
-      // UI instantly updates
-      setSelectedAddressId(address.id);
-      setPendingDefaultId(address.id);
-
       await dispatch(makeDefaultAddress({ addressId: address.id })).unwrap();
 
+      await dispatch(getAddress(userId)).unwrap();
+
       toast.success("Default address updated!");
-
-      // STOP causing flicker (NO RELOAD HERE)
-      // if (userId) dispatch(getAddress(userId));
-
-      // After update, allow UI to stay stable
-      setTimeout(() => {
-        setPendingDefaultId(null);
-        router.push("/health-bag");
-      }, 500);
-    } catch (error) {
-      console.error(error);
-      toast.error("Failed to set default address");
+    } finally {
+      setPendingDefaultId(null); // 👈 ye bhi add kar
+      setIsUpdatingDefault(false);
     }
   };
 
@@ -174,15 +172,14 @@ export default function AddressList() {
           {sortedBillingAddresses.map((addr, index) => {
             const isSelected =
               selectedAddressId === addr.id || pendingDefaultId === addr.id;
-            const isDefault =
-              selectedAddressId === addr.id || pendingDefaultId === addr.id;
+
             return (
               <div className="col-md-4 mb-4" key={index}>
                 <div
                   className={`card ${
                     isSelected ? "border-danger" : "border-light"
                   } shadow-sm`}
-                  onClick={() => setSelectedAddressId(addr.id!)}
+                  onClick={() => handleSetDefaultAddress(addr)}
                   style={{
                     cursor: "pointer",
                     borderWidth: "2px",
@@ -195,9 +192,8 @@ export default function AddressList() {
                     <div className="d-flex align-items-center mb-2">
                       <input
                         type="radio"
-                        name="billingAddress"
                         checked={isSelected}
-                        onChange={() => handleSetDefaultAddress(addr)}
+                        readOnly
                         className="form-check-input me-2"
                       />
 
@@ -269,23 +265,24 @@ export default function AddressList() {
                       </button> */}
                         <button
                           className="btn btn-link p-0 fw-semibold"
+                          type="button"
+                          disabled={isSelected}
                           style={{
                             fontSize: "13px",
-                            color:
-                              addr.default_address === 1 ? "#999" : "#e53935",
+                            color: isSelected ? "#999" : "#e53935",
                             textDecoration: "none",
-                            cursor: isDefault ? "not-allowed" : "pointer",
+                            cursor: isSelected ? "not-allowed" : "pointer",
                           }}
-                          type="button"
-                          disabled={isDefault}
                           onClick={(e) => {
                             e.stopPropagation();
-                            if (addr.default_address === 1) return; // safety
+
+                            if (isSelected) return;
 
                             if (!addr.id) {
                               toast.error("Invalid address ID");
                               return;
                             }
+
                             handleRemove(addr.id);
                           }}
                         >
@@ -293,10 +290,9 @@ export default function AddressList() {
                             className="bi bi-trash"
                             style={{
                               fontSize: "16px",
-                              color:
-                                addr.default_address === 1 ? "#999" : "red",
+                              color: isSelected ? "#999" : "#e53935",
                             }}
-                          ></i>
+                          />
                         </button>
                       </div>
                     </div>
@@ -305,6 +301,22 @@ export default function AddressList() {
               </div>
             );
           })}
+        </div>
+        <div className="d-flex justify-content-end mt-3">
+          <button
+            className="btn btn-primary px-4"
+            disabled={!selectedAddressId}
+            onClick={() => {
+              if (!selectedAddressId) {
+                toast.error("Please select an address.");
+                return;
+              }
+
+              router.push("/health-bag");
+            }}
+          >
+            Click To Go
+          </button>
         </div>
       </div>
     </>

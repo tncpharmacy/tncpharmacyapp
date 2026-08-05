@@ -1,7 +1,7 @@
 export const ENDPOINTS = {
   // 🔐 Auth
   LOGIN: "/user/login/",
-  // REFRESH: "/user/token/refresh/", // 👉 agar backend se mile tab yaha add karna
+  // REFRESH: "/user/token/refresh/", //
 
   // 📍 Master Data
   GET_STATES: "/masterapp/state/",

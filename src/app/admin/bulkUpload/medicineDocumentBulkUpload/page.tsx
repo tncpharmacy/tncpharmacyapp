@@ -129,7 +129,7 @@ export default function MedicineDocumentBulkUpload() {
         <div className="body_right">
           <div className="body_content">
             <div className="pageTitle">
-              <i className="bi bi-file-earmark-arrow-up"></i> Medicine Document
+              <i className="bi bi-file-earmark-arrow-up"></i> Medicine Image
               Bulk Upload
             </div>
 

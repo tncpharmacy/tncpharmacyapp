@@ -197,9 +197,9 @@ export default function Pharmacist() {
                       >
                         <i className="bi bi-plus"></i> Add Pharmacist
                       </Link>
-                      <button className="btn-style1">
+                      {/* <button className="btn-style1">
                         <i className="bi bi-download"></i> Export Statement
-                      </button>
+                      </button> */}
                     </div>
                   </div>
                 </div>

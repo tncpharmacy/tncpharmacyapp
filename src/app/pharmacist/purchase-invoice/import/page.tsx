@@ -107,10 +107,12 @@ export default function PurchaseInvoiceImport() {
   }, [dispatch]);
 
   // Convert suppliers into dropdown options
-  const supplierOptions = (supplierList || []).map((s) => ({
-    label: s.supplier_name,
-    value: s.id, // always use id
-  }));
+  const supplierOptions = (supplierList || [])
+    .filter((s) => s.status === "Active")
+    .map((s) => ({
+      label: s.supplier_name,
+      value: s.id,
+    }));
 
   //infinte scroll records
   const loadMore = () => {

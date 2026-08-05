@@ -465,7 +465,7 @@ export default function OrderList() {
                         <th className="fw-bold text-start">Amount</th>
                         <th className="fw-bold text-start">Type</th>
                         <th className="fw-bold text-start">Mode</th>
-                        <th className="fw-bold text-start">Status</th>
+                        {/* <th className="fw-bold text-start">Status</th> */}
                         <th className="fw-bold text-start">Date</th>
                         <th className="fw-bold text-center">Action</th>
                       </tr>
@@ -508,9 +508,9 @@ export default function OrderList() {
                                   <td className="text-start">
                                     {p.paymentMode ?? ""}
                                   </td>
-                                  <td className="text-start">
+                                  {/* <td className="text-start">
                                     {p.paymentStatus ?? ""}
-                                  </td>
+                                  </td> */}
                                   <td className="text-start">
                                     {formatDate(p.orderDate ?? "")}
                                   </td>
@@ -522,7 +522,7 @@ export default function OrderList() {
                                     >
                                       <i className="bi bi-eye-fill"></i>
                                     </button>
-                                    <button
+                                    {/* <button
                                       className="btn btn-light btn-sm ms-2"
                                       title="Order Reprint"
                                       onClick={() =>
@@ -530,7 +530,7 @@ export default function OrderList() {
                                       }
                                     >
                                       <i className="bi bi-printer-fill"></i>
-                                    </button>
+                                    </button> */}
                                   </td>
                                 </tr>
                               );
