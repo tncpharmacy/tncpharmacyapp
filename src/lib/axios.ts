@@ -52,18 +52,23 @@ api.interceptors.request.use(
     ];
 
     const url = config.url || "";
+
     const csrfToken = getCookie("csrftoken");
     if (csrfToken && config.headers) {
       config.headers["X-CSRFToken"] = csrfToken;
     }
+    const normalizedUrl = url.startsWith("/") ? url : `/${url}`;
+
     const isPublic =
-      url.includes("/masterapp/care-group/") ||
-      url.includes("/website") ||
-      url.includes("search-suggestion") ||
-      publicEndpoints.some((endpoint) => url.includes(endpoint));
+      normalizedUrl.includes("/masterapp/care-group/") ||
+      normalizedUrl.includes("/website") ||
+      normalizedUrl.includes("search-suggestion") ||
+      publicEndpoints.some((endpoint) => normalizedUrl.startsWith(endpoint));
 
     if (!isPublic && token && config.headers) {
       config.headers["Authorization"] = `Bearer ${token}`;
+    } else if (config.headers) {
+      delete config.headers["Authorization"];
     }
 
     // if (isPublic && config.headers) {
@@ -114,26 +119,27 @@ api.interceptors.request.use(
 // export default api;
 api.interceptors.response.use(
   (response: AxiosResponse) => response,
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   (error: AxiosError<any>) => {
-    const status = error.response?.status;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const data: any = error.response?.data;
     const url = error.config?.url || "";
-    const message = data?.detail || data?.message || data?.error || "";
-    // 🔥 ✅ ADD THIS BLOCK HERE (TOP PE)
-    if (url.includes("manufacturer/search")) {
-      // console.log("🚫 Ignoring manufacturer API error");
-      return Promise.reject(error);
-    }
-    /**
-     * 🚨 TOKEN INVALID CASES
-     * - 401 Unauthorized
-     * - 403 Forbidden
-     * - Backend custom "token expired" messages
-     */
+
+    // 🚫 APIs jinke 401 pe logout nahi karna hai
+    const ignore401Endpoints = [
+      "website/generic/medicine",
+      "manufacturer/search",
+    ];
+
+    const shouldIgnore401 = ignore401Endpoints.some((endpoint) =>
+      url.includes(endpoint)
+    );
+
     if (error.response?.status === 401) {
-      onUnauthorized?.(error.config?.url);
+      if (!shouldIgnore401) {
+        onUnauthorized?.(url);
+      }
+
+      return Promise.reject(error);
     }
 
     return Promise.reject(error);

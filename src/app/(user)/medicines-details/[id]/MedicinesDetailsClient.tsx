@@ -45,6 +45,7 @@ const Footer = dynamic(() => import("@/app/(user)/components/footer/footer"), {
 type CompareMedicine = Medicine & {
   finalPrice: number;
   isCurrent: boolean;
+  compareType?: "current" | "top-brand" | "tnc-brand" | "cheapest";
 };
 
 const mediaBase = process.env.NEXT_PUBLIC_MEDIA_BASE_URL;
@@ -536,50 +537,93 @@ export default function MedicinesDetailsClient({
       finalPrice: getFinalPrice(g.mrp, g.discount),
       isCurrent: false,
     }));
-  const sortedGenerics = topCheaperGenerics;
-  // Take TOP 2 cheaper ones
-  // const top2Cheaper = cheaperGenerics;
-  // ---- Build Generic List (sorted by price)
-  // const sortedGenerics = (genericList || [])
-  //   .filter((g) => g.id !== id)
-  //   .map((g) => ({
-  //     ...g,
-  //     finalPrice: getFinalPrice(g.mrp, g.discount),
-  //   }))
-  //   .filter((g) => g.finalPrice > 0)
-  //   .sort((a, b) => a.finalPrice - b.finalPrice)
-  //   .slice(0, 2); // only 2 alternatives
+
+  // ---- Inject Current Medicine at Top
+  const currentMedicine: CompareMedicine = {
+    ...data,
+    finalPrice: currentPrice,
+    isCurrent: true,
+    compareType:
+      Number(data.brand_category) === 1
+        ? "top-brand"
+        : Number(data.brand_category) === 2
+        ? "tnc-brand"
+        : "current",
+  };
+
+  // Top Brand
+  const topBrand = allGenericsWithPrice
+    .filter((g) => Number(g.brand_category) === 1)
+    .sort((a, b) => b.finalPrice - a.finalPrice)[0];
+
+  // TnC Trusted Brand
+  const trustedBrand = allGenericsWithPrice
+    .filter((g) => Number(g.brand_category) === 2)
+    .sort((a, b) => b.finalPrice - a.finalPrice)[0];
+
+  // cheapest
+  const cheapest = [...allGenericsWithPrice].sort(
+    (a, b) => a.finalPrice - b.finalPrice
+  )[0];
 
   // ---- Calculate Saving % vs Current Medicine ----
-  const savingPercents = topCheaperGenerics.map((g) => {
-    const diff = currentPrice - g.finalPrice;
-    return diff > 0 ? Math.round((diff / currentPrice) * 100) : 0;
-  });
+  const savingPercents = cheapest
+    ? [Math.round(((currentPrice - cheapest.finalPrice) / currentPrice) * 100)]
+    : [];
 
   const minSaving = savingPercents.length ? Math.min(...savingPercents) : 0;
 
   const maxSaving = savingPercents.length ? Math.max(...savingPercents) : 0;
 
-  // Show banner only if real cheaper exists
-  const showSavingBanner = topCheaperGenerics.length > 0;
+  const compareList: CompareMedicine[] = [];
 
-  // ---- Inject Current Medicine at Top
-  const currentMedicine: CompareMedicine = {
-    ...data, // full medicine object from API
-    finalPrice: currentPrice,
-    isCurrent: true,
-  };
-  const finalCompareList: CompareMedicine[] = [
-    currentMedicine,
-    ...topCheaperGenerics,
-  ];
-  const isScrollable = finalCompareList.length > 3;
-  const savingPercent =
-    sortedGenerics.length > 0
-      ? Math.round(
-          ((currentPrice - sortedGenerics[0].finalPrice) / currentPrice) * 100
-        )
-      : 0;
+  compareList.push(currentMedicine);
+
+  // Current Top Brand nahi hai
+  if (Number(currentMedicine.brand_category) !== 1 && topBrand) {
+    compareList.push({
+      ...topBrand,
+      isCurrent: false,
+      compareType: "top-brand",
+    });
+  }
+
+  // Current Trusted Brand nahi hai
+  if (
+    Number(currentMedicine.brand_category) !== 2 &&
+    trustedBrand &&
+    trustedBrand.id !== topBrand?.id
+  ) {
+    compareList.push({
+      ...trustedBrand,
+      isCurrent: false,
+      compareType: "tnc-brand",
+    });
+  }
+
+  // Cheapest duplicate na aaye
+  if (
+    cheapest &&
+    cheapest.id !== topBrand?.id &&
+    cheapest.id !== trustedBrand?.id
+  ) {
+    compareList.push({
+      ...cheapest,
+      isCurrent: false,
+      compareType: "cheapest",
+    });
+  }
+  const finalCompareList = compareList;
+
+  // Show banner only if real cheaper exists
+  const showSavingBanner = finalCompareList.length > 1;
+  // const isScrollable = finalCompareList.length > 3;
+  // const savingPercent =
+  //   sortedGenerics.length > 0
+  //     ? Math.round(
+  //         ((currentPrice - sortedGenerics[0].finalPrice) / currentPrice) * 100
+  //       )
+  //     : 0;
 
   const totalPrice = Number(discountedPrice.toFixed(2));
 
@@ -1080,9 +1124,9 @@ export default function MedicinesDetailsClient({
                       </span>
 
                       <span className="generic-text">
-                        {minSaving === maxSaving
+                        {cheapest && cheapest.id !== id
                           ? `${maxSaving}% cheaper alternative available with same salt composition`
-                          : `${minSaving}% to ${maxSaving}% cheaper alternatives available`}
+                          : "Compare with Top Brand & TnC Trusted Brand"}
                       </span>
 
                       <span className="generic-arrow">
@@ -1493,7 +1537,29 @@ export default function MedicinesDetailsClient({
                             router.push(`/medicines-details/${encodeId(g.id)}`);
                           }
                         }}
+                        style={{
+                          textAlign: "center",
+                          fontWeight: 700,
+                          fontSize: "14px",
+                          marginBottom: "12px",
+                          minHeight: "22px",
+                          color:
+                            g.compareType === "top-brand"
+                              ? "#0d6efd"
+                              : g.compareType === "tnc-brand"
+                              ? "#198754"
+                              : g.compareType === "cheapest"
+                              ? "#fd7e14"
+                              : "#2563eb",
+                        }}
                       >
+                        {g.compareType === "top-brand"
+                          ? "Top Brand"
+                          : g.compareType === "tnc-brand"
+                          ? "TnC Trusted Brand"
+                          : g.compareType === "cheapest"
+                          ? "Cheapest"
+                          : "Currently Viewing"}
                         {/* RADIO INDICATOR */}
                         <div
                           className={`radio-indicator ${
@@ -1561,11 +1627,11 @@ export default function MedicinesDetailsClient({
                           )}
                         </div>
 
-                        {!g.isCurrent && compareSaving > 0 && (
+                        {/* {!g.isCurrent && compareSaving > 0 && (
                           <div className="save-badge">
                             {compareSaving}% lower than current
                           </div>
-                        )}
+                        )} */}
                       </div>
                     </div>
                   </div>
@@ -1588,7 +1654,7 @@ export default function MedicinesDetailsClient({
                   : {}
               }
             >
-              <button
+              {/* <button
                 style={
                   isMobile
                     ? {
@@ -1603,14 +1669,14 @@ export default function MedicinesDetailsClient({
                     : {}
                 }
                 className="switch-btn mt-2"
-                onClick={() =>
-                  router.push(
-                    `/medicines-details/${encodeId(topCheaperGenerics[0].id)}`
-                  )
-                }
+                onClick={() => {
+                  if (!cheapest) return;
+
+                  router.push(`/medicines-details/${encodeId(cheapest.id)}`);
+                }}
               >
                 Switch to cheapest
-              </button>
+              </button> */}
             </div>
           </div>
         </Modal.Body>

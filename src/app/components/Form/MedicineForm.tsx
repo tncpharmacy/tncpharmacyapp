@@ -231,7 +231,7 @@ export default function MedicineForm({ id }: Props) {
       // ✅ Pack Size (alpha + digit, max 10)
       case "pack_size":
         if (/^[a-zA-Z0-9 ]*$/.test(value)) {
-          updatedValue = value.slice(0, 10);
+          updatedValue = value.slice(0, 30);
         } else return;
         break;
 
@@ -291,8 +291,8 @@ export default function MedicineForm({ id }: Props) {
       return toast.error("Product Name max 50 characters");
     }
 
-    if (formData.pack_size && formData.pack_size.length > 20) {
-      return toast.error("Pack Size max 20 characters");
+    if (formData.pack_size && formData.pack_size.length > 30) {
+      return toast.error("Pack Size max 30 characters");
     }
 
     if (formData.HSN_Code && formData.HSN_Code.length > 10) {
@@ -359,7 +359,7 @@ export default function MedicineForm({ id }: Props) {
     formDataToSend.append("discount", String(formData.discount || 0));
     formDataToSend.append("H1_Restricted", String(formData.H1_Restricted ?? 0));
     formDataToSend.append("HSN_Code", formData.HSN_Code || "");
-    // formDataToSend.append("brand_category", formData.brand_category || "");
+    formDataToSend.append("brand_category", formData.brand_category || "");
     // formDataToSend.append("mrp", formData.mrp || "");
     formDataToSend.append("status", formData.status || "Active");
 
