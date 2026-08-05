@@ -235,7 +235,7 @@ export default function MedicineList() {
             <div className="main_content">
               <div className="col-sm-12">
                 <div className="row">
-                  <div className="col-md-3">
+                  <div className="col-md-5">
                     <div className="txt_col">
                       <span className="lbl1">Search</span>
                       <input
@@ -251,7 +251,7 @@ export default function MedicineList() {
                       />
                     </div>
                   </div>
-                  <div className="col-md-3">
+                  {/* <div className="col-md-3">
                     <div className="txt_col">
                       <span className="lbl1">Category</span>
                       <select
@@ -271,8 +271,8 @@ export default function MedicineList() {
                         ))}
                       </select>
                     </div>
-                  </div>
-                  <div className="col-md-2">
+                  </div> */}
+                  <div className="col-md-3">
                     <div className="txt_col">
                       <span className="lbl1">Status</span>
                       <select
@@ -286,6 +286,7 @@ export default function MedicineList() {
                       </select>
                     </div>
                   </div>
+                  {/* <div className="col-md-2"></div> */}
                   <div className="col-md-4 text-end">
                     <div className="txt_col">
                       <Link
