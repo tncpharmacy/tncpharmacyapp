@@ -361,7 +361,7 @@ export default function StockList() {
                       <span>Minimum Stock ({lowStockCount})</span>
                     </button>
 
-                    <MinimumStockModal
+                    {/* <MinimumStockModal
                       show={showMinimumModal}
                       onHide={() => setShowMinimumModal(false)}
                       data={filteredData
@@ -375,8 +375,8 @@ export default function StockList() {
                           MinStockLevel: Number(x.MinStockLevel),
                           location: x.location,
                         }))}
-                      suppliers={suppliers}
-                    />
+                      // suppliers={suppliers}
+                    /> */}
                   </div>
                 </div>
                 {/* Table */}
