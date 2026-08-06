@@ -161,10 +161,10 @@ const AddBillingItemModal: React.FC<AddBillingItemModalProps> = ({
       return;
     }
 
-    if (!selectedDoseValue) {
-      toast.error("Please select a dose instruction.");
-      return;
-    }
+    // if (!selectedDoseValue) {
+    //   toast.error("Please select a dose instruction.");
+    //   return;
+    // }
 
     onConfirmAdd(
       {

@@ -105,8 +105,8 @@ const OcrExtractionClient: React.FC = () => {
             <DynamicOcrLogic
               imageUrl={imageUrl}
               prescriptionId={prescriptionId}
-              buyerName={buyerName || ""}
-              buyerMobile={Number(buyerMobile || 0)}
+              buyerName={pharmacyBuyersById?.data?.name || ""}
+              buyerMobile={Number(pharmacyBuyersById?.data?.number || 0)}
               buyerId={Number(buyerId || 0)}
             />
           </div>

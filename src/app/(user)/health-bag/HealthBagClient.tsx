@@ -128,6 +128,7 @@ export default function HealthBagClient() {
   const [prescriptionFile, setPrescriptionFile] = useState<File | null>(null);
   const dispatch = useAppDispatch();
   const router = useRouter();
+  const mergedRef = useRef(false);
   const isSelecting = useRef(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   // start for increse header count code
@@ -243,14 +244,22 @@ export default function HealthBagClient() {
 
   // Merge guest cart into logged-in cart once
   useEffect(() => {
-    if (buyer?.id) {
-      mergeGuestCart();
+    if (!buyer?.id) {
+      mergedRef.current = false;
+      return;
     }
-  }, [buyer?.id, mergeGuestCart]);
 
-  useEffect(() => {
-    fetchCart(); // ensures cart is synced after any add/remove
-  }, [fetchCart]);
+    if (mergedRef.current) return;
+
+    mergedRef.current = true;
+
+    console.log("MERGING...");
+    mergeGuestCart();
+  }, [buyer?.id]);
+
+  // useEffect(() => {
+  //   fetchCart(); // ensures cart is synced after any add/remove
+  // }, [fetchCart]);
 
   //Sync quantities from cart API
   // ✅ FIXED: Convert qty to number ALWAYS

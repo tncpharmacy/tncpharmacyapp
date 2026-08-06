@@ -67,6 +67,7 @@ export const useHealthBag = ({ userId }: { userId: number | null }) => {
   // 🔹 Add item
   const addItem = useCallback(
     async (item: HealthBag) => {
+      console.log("🟢 addItem called", item.product_id);
       if (!mounted) return;
       const already = normalizedItems.find(
         (i) =>
@@ -163,9 +164,11 @@ export const useHealthBag = ({ userId }: { userId: number | null }) => {
 
   // 🔹 Merge guest → user cart
   const mergeGuestCart = useCallback(async () => {
+    console.log("🔥 mergeGuestCart called");
     if (!userId) return;
 
     const guest = localStorage.getItem(GUEST_KEY);
+    console.log("Guest Cart:", guest);
     if (!guest) return;
 
     const guestItems: HealthBag[] = JSON.parse(guest);
@@ -174,10 +177,14 @@ export const useHealthBag = ({ userId }: { userId: number | null }) => {
     try {
       // 👇 First loop: Send each guest item to backend
       for (const item of guestItems) {
+        console.log("Creating:", {
+          product: item.product_id || item.productid || item.id,
+          qty: item.qty || item.quantity || 1,
+        });
         const payload = {
           buyer_id: userId,
           product_id: item.product_id || item.productid || item.id,
-          quantity: item.quantity || 1,
+          quantity: item.qty || item.quantity || 1,
         };
         // console.log("📦 Payload being sent to API:", payload); // 👈 add this
         await createHealthBag(payload);
@@ -208,14 +215,14 @@ export const useHealthBag = ({ userId }: { userId: number | null }) => {
     localStorage.setItem("healthbag", JSON.stringify(updated));
   };
 
-  // 🔹 Merge guest cart automatically after login
-  useEffect(() => {
-    if (userId) {
-      mergeGuestCart().then(() => {
-        // console.log("🧩 LS after merge:", localStorage.getItem(GUEST_KEY));
-      });
-    }
-  }, [userId, mergeGuestCart]);
+  // // 🔹 Merge guest cart automatically after login
+  // useEffect(() => {
+  //   if (userId) {
+  //     mergeGuestCart().then(() => {
+  //       // console.log("🧩 LS after merge:", localStorage.getItem(GUEST_KEY));
+  //     });
+  //   }
+  // }, [userId, mergeGuestCart]);
 
   return {
     items: normalizedItems,

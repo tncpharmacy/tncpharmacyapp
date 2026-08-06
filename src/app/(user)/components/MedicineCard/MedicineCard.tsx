@@ -75,9 +75,9 @@ export default function MedicineCard({
   });
 
   // ---------- MERGE GUEST CART ----------
-  useEffect(() => {
-    if (buyer?.id) mergeGuestCart();
-  }, [buyer?.id, mergeGuestCart]);
+  // useEffect(() => {
+  //   if (buyer?.id) mergeGuestCart();
+  // }, [buyer?.id, mergeGuestCart]);
 
   // --- Handlers ---
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

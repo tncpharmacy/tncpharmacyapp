@@ -206,7 +206,11 @@ export default function PurchaseInvoiceImport() {
       }
 
       toast.success("Purchase Invoice Imported Successfully!");
+      // Clear table
+      setPurchaseItems([]);
 
+      // Reset selected product
+      setSelectedProduct(null);
       // Reset
       setExcelData([]);
       if (fileInputRef.current) fileInputRef.current.value = "";
@@ -229,6 +233,9 @@ export default function PurchaseInvoiceImport() {
         location: "",
         applied_discount: "",
       });
+      setTimeout(() => {
+        router.push("/pharmacist/purchase-invoice");
+      }, 1000);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       toast.error(err?.response?.data?.message || "Failed to create purchase.");
@@ -247,6 +254,21 @@ export default function PurchaseInvoiceImport() {
     setFormData({ ...formData, [name]: value });
   };
 
+  // const handleNumberInput = (
+  //   e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  // ) => {
+  //   const { name, value } = e.target;
+
+  //   const numericValue = value
+  //     .replace(/[^0-9.]/g, "")
+  //     .replace(/^(\d*\.?\d*).*$/, "$1");
+
+  //   setFormData((prev) => ({
+  //     ...prev,
+  //     [name]: numericValue,
+  //   }));
+  // };
+
   const handleNumberInput = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
@@ -256,10 +278,28 @@ export default function PurchaseInvoiceImport() {
       .replace(/[^0-9.]/g, "")
       .replace(/^(\d*\.?\d*).*$/, "$1");
 
-    setFormData((prev) => ({
-      ...prev,
-      [name]: numericValue,
-    }));
+    setFormData((prev) => {
+      const updated = {
+        ...prev,
+        [name]: numericValue,
+      };
+
+      const mrp = Number(updated.mrp || 0);
+      const discount = Number(updated.discount || 0);
+      const qty = Number(updated.qty || 0);
+
+      // Purchase Rate = MRP - Discount%
+      const purchaseRate = mrp - (mrp * discount) / 100;
+
+      updated.purchase_rate = purchaseRate > 0 ? purchaseRate.toFixed(2) : "";
+
+      // Amount = Qty × Purchase Rate
+      const amount = qty * purchaseRate;
+
+      updated.amount = amount > 0 ? amount.toFixed(2) : "";
+
+      return updated;
+    });
   };
 
   const handleAddItem = () => {
@@ -280,31 +320,27 @@ export default function PurchaseInvoiceImport() {
       return;
     }
     if (!formData.purchase_date) {
-      toast.error("Please enter batch");
-      return;
-    }
-    if (!formData.mrp) {
-      toast.error("Please enter batch");
-      return;
-    }
-    if (!formData.discount) {
-      toast.error("Please enter batch");
+      toast.error("Please enter purchase date");
       return;
     }
     if (!formData.purchase_rate) {
-      toast.error("Please enter batch");
+      toast.error("Please enter purchase rate");
+      return;
+    }
+    if (!formData.mrp) {
+      toast.error("Please enter mrp");
+      return;
+    }
+    if (!formData.discount) {
+      toast.error("Please enter discount");
       return;
     }
     if (!formData.amount) {
-      toast.error("Please enter batch");
+      toast.error("Please enter amount");
       return;
     }
     if (!formData.location) {
-      toast.error("Please enter batch");
-      return;
-    }
-    if (!formData.applied_discount) {
-      toast.error("Please enter batch");
+      toast.error("Please enter location");
       return;
     }
 
@@ -505,18 +541,16 @@ export default function PurchaseInvoiceImport() {
                           type="text"
                           name="purchase_rate"
                           value={formData.purchase_rate}
-                          onChange={handleNumberInput}
+                          readOnly
                           colSm={2}
-                          maxLength={8}
                         />
                         <Input
                           label="Amount"
                           type="text"
                           name="amount"
                           value={formData.amount}
-                          onChange={handleNumberInput}
+                          readOnly
                           colSm={2}
-                          maxLength={8}
                         />
                         <Input
                           label="Location"
