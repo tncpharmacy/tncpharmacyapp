@@ -2,7 +2,10 @@ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import { PrescriptionItem } from "@/types/prescription";
 import {
   deletePrescriptionByPharmacist,
+  extractPrescriptionMedicines,
   fetchPrescriptionListPharmacist,
+  OcrExtractedMedicine,
+  OcrExtractResponse,
   receivePrescriptionByPharmacist,
   ReceivePrescriptionResponse,
   updatePrescriptionStatusPharmacist,
@@ -31,6 +34,12 @@ interface PharmacistPrescriptionState {
 
   statusUpdateLoading?: boolean;
   statusUpdateError?: string | null;
+
+  // 🔍 NEW OCR (ocrnew) extraction
+  extractLoading: boolean;
+  extractError: string | null;
+  extractedMedicines: OcrExtractedMedicine[];
+  totalExtractedMedicines: number;
 }
 
 const initialState: PharmacistPrescriptionState = {
@@ -55,6 +64,11 @@ const initialState: PharmacistPrescriptionState = {
   statusUpdateError: null,
 
   totalMedicinesFound: 0,
+
+  extractLoading: false,
+  extractError: null,
+  extractedMedicines: [],
+  totalExtractedMedicines: 0,
 };
 
 // 🔹 Thunks
@@ -138,6 +152,28 @@ export const updatePrescriptionStatusPharmacistThunk = createAsyncThunk<
     } catch (err: any) {
       return rejectWithValue(
         err.response?.data?.message || "Failed to update prescription status"
+      );
+    }
+  }
+);
+
+// 🔍 NEW OCR — extract medicines from prescription file via /ocrnew/ API
+export const extractPrescriptionMedicinesThunk = createAsyncThunk<
+  OcrExtractResponse,
+  { fileUrl: string },
+  { rejectValue: string }
+>(
+  "pharmacistPrescription/extractMedicines",
+  async ({ fileUrl }, { rejectWithValue }) => {
+    try {
+      const res = await extractPrescriptionMedicines(fileUrl);
+      return res;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (err: any) {
+      return rejectWithValue(
+        err.response?.data?.message ||
+          err.message ||
+          "Failed to extract medicines from prescription"
       );
     }
   }
@@ -261,6 +297,34 @@ const pharmacistPrescriptionSlice = createSlice({
             action.payload || "Failed to update prescription status";
         }
       );
+    // 🔍 NEW OCR extraction
+    builder
+      .addCase(extractPrescriptionMedicinesThunk.pending, (state) => {
+        state.extractLoading = true;
+        state.extractError = null;
+        state.extractedMedicines = [];
+        state.totalExtractedMedicines = 0;
+      })
+      .addCase(
+        extractPrescriptionMedicinesThunk.fulfilled,
+        (state, action) => {
+          state.extractLoading = false;
+          state.extractedMedicines = action.payload.medicines || [];
+          state.totalExtractedMedicines =
+            action.payload.total_medicines_found || 0;
+
+          if (!action.payload.success) {
+            state.extractError =
+              action.payload.message || "OCR extraction failed";
+          }
+        }
+      )
+      .addCase(extractPrescriptionMedicinesThunk.rejected, (state, action) => {
+        state.extractLoading = false;
+        state.extractError =
+          action.payload || "Failed to extract medicines from prescription";
+      });
+
     builder
       .addCase(deletePrescriptionPharmacistThunk.fulfilled, (state, action) => {
         const deletedId = action.payload;

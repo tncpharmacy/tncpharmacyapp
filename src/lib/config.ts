@@ -124,6 +124,11 @@ export const ENDPOINTS = {
       `/order/buyer/reorder-cart/view/${buyerId}/`,
   },
 
+  // 🔍 New OCR (ocrnew) — Gemini based prescription extraction
+  OCR_NEW: {
+    EXTRACT_PRESCRIPTION: "/ocrnew/prescription/extract/",
+  },
+
   // Prescription Upload
   PRESCRIPTION_UPLOAD: {
     LOGIN_UPDATE: "/ocr/prescription/update-buyer/",

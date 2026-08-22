@@ -18,17 +18,29 @@ import { createHealthBagItem } from "@/lib/features/healthBagPharmacistSlice/hea
 import {
   getProductByGenericId,
   getProductList,
+  getSearchProductBased,
 } from "@/lib/features/medicineSlice/medicineSlice";
 import { updateBuyerForPharmacistThunk } from "@/lib/features/pharmacistBuyerListSlice/pharmacistBuyerListSlice";
 import { createPharmacistOrder } from "@/lib/features/pharmacistOrderSlice/pharmacistOrderSlice";
-import { updatePrescriptionStatusPharmacistThunk } from "@/lib/features/pharmacistPrescriptionSlice/pharmacistPrescriptionSlice";
+import {
+  extractPrescriptionMedicinesThunk,
+  updatePrescriptionStatusPharmacistThunk,
+} from "@/lib/features/pharmacistPrescriptionSlice/pharmacistPrescriptionSlice";
+import { OcrExtractedMedicine } from "@/lib/api/pharmacistPrescription";
 
 import { useAppDispatch, useAppSelector } from "@/lib/hooks";
 import { OptionType } from "@/types/input";
 import { Medicine } from "@/types/medicine";
 
 import { useState, useEffect, useRef } from "react";
-import { Row, Col, Alert, ListGroup, Image } from "react-bootstrap";
+import {
+  Row,
+  Col,
+  Alert,
+  ListGroup,
+  Spinner,
+  Badge,
+} from "react-bootstrap";
 import toast from "react-hot-toast";
 
 interface OcrLogicProps {
@@ -87,13 +99,23 @@ export default function OcrExtractionLogic({
   const pharmacist_id = Number(userPharmacy?.id) || 0;
   const pharmacy_id = Number(userPharmacy?.pharmacy_id) || 0;
 
-  // 🧿 BACKEND PREDICTED MEDICINES
+  // 🧿 OLD BACKEND PREDICTED MEDICINES (fallback if new OCR fails)
   const backendMeds = useAppSelector(
     (state) => state.pharmacistPrescription.productList
   );
 
-  const totalBackendMeds = useAppSelector(
-    (state) => state.pharmacistPrescription.totalMedicinesFound
+  // 🔍 NEW OCR (ocrnew) EXTRACTED MEDICINES
+  const extractedMedicines = useAppSelector(
+    (state) => state.pharmacistPrescription.extractedMedicines
+  );
+  const extractLoading = useAppSelector(
+    (state) => state.pharmacistPrescription.extractLoading
+  );
+  const extractError = useAppSelector(
+    (state) => state.pharmacistPrescription.extractError
+  );
+  const totalExtractedMedicines = useAppSelector(
+    (state) => state.pharmacistPrescription.totalExtractedMedicines
   );
 
   const {
@@ -149,8 +171,13 @@ export default function OcrExtractionLogic({
   }, [prescriptionId]);
 
   // -------------------------------------------------------------------
-  // ❌ OCR *REMOVED COMPLETELY*
+  // 🔍 NEW OCR — extract medicines via /ocrnew/prescription/extract/
   // -------------------------------------------------------------------
+  useEffect(() => {
+    if (imageUrl) {
+      dispatch(extractPrescriptionMedicinesThunk({ fileUrl: imageUrl }));
+    }
+  }, [dispatch, imageUrl]);
 
   // Handle click on detected backend medicine
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -167,6 +194,44 @@ export default function OcrExtractionLogic({
       setIsModalOpen(true);
     } else {
       handleSkipGenericModal(product);
+    }
+  };
+
+  // Handle click on a NEW OCR extracted medicine.
+  // NOTE: /medicine/product/list/ is cursor-paginated (50/page), so the
+  // Redux productList only holds the first page — we can't rely on it.
+  // Instead resolve the full product via the same server-side search the
+  // manual search box uses, matching by medicine_id.
+  const handleExtractedMedicineClick = async (med: OcrExtractedMedicine) => {
+    // Fast path: product happens to be in the already-loaded list
+    const local = productList.find(
+      (p) => Number(p.id) === Number(med.medicine_id)
+    );
+    if (local) {
+      handleMedicineClick(local);
+      return;
+    }
+
+    // Server-side lookup by name, then pin to the exact medicine_id
+    try {
+      const res = await dispatch(
+        getSearchProductBased(med.medicine_name)
+      ).unwrap();
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const list: any[] = Array.isArray(res?.data) ? res.data : [];
+
+      const fullProduct =
+        list.find((p) => Number(p.id) === Number(med.medicine_id)) || list[0];
+
+      if (!fullProduct) {
+        toast.error(`No matching product found for ${med.medicine_name}`);
+        return;
+      }
+
+      handleMedicineClick(fullProduct);
+    } catch {
+      toast.error(`Failed to load product details for ${med.medicine_name}`);
     }
   };
 
@@ -461,25 +526,69 @@ export default function OcrExtractionLogic({
           🛒 Health Bag ({cart.length})
         </button>
       </div>
-      {/* LEFT SECTION: BACKEND DETECTED MEDICINES */}
+      {/* LEFT SECTION: NEW OCR DETECTED MEDICINES */}
       <Col md={6}>
         <br />
-        <h6>Detected Medicines ({totalBackendMeds})</h6>
+        <h6>Detected Medicines ({totalExtractedMedicines})</h6>
 
-        {backendMeds.length === 0 ? (
-          <Alert variant="warning">No medicines detected from backend.</Alert>
+        {extractLoading ? (
+          <div className="text-center py-4">
+            <Spinner animation="border" size="sm" className="me-2" />
+            Extracting medicines from prescription...
+          </div>
+        ) : extractError && extractedMedicines.length === 0 ? (
+          <>
+            <Alert variant="danger">OCR extraction failed: {extractError}</Alert>
+
+            {/* Fallback: old backend detected medicines (if any) */}
+            {backendMeds.length > 0 && (
+              <ListGroup>
+                {backendMeds.map((item) => (
+                  <ListGroup.Item
+                    key={item.id}
+                    action
+                    onClick={() => handleMedicineClick(item)}
+                  >
+                    <strong>{item.medicine_name}</strong>
+                  </ListGroup.Item>
+                ))}
+              </ListGroup>
+            )}
+          </>
+        ) : extractedMedicines.length === 0 ? (
+          <Alert variant="warning">
+            No medicines detected in this prescription.
+          </Alert>
         ) : (
           <ListGroup>
-            {backendMeds.map((item) => (
+            {extractedMedicines.map((med) => (
               <ListGroup.Item
-                key={item.id}
+                key={`${med.medicine_id}-${med.extracted_name}`}
                 action
-                onClick={() => handleMedicineClick(item)}
+                onClick={() => handleExtractedMedicineClick(med)}
+                className={med.needs_review ? "bg-warning-subtle" : ""}
               >
-                <strong>{item.medicine_name}</strong>
-                {/* <div className="text-muted small">
-                  Confidence: {item.confidence}%
-                </div> */}
+                <div className="d-flex justify-content-between align-items-start">
+                  <div>
+                    <strong>{med.medicine_name}</strong>
+                    {med.needs_review && (
+                      <Badge bg="warning" text="dark" className="ms-2">
+                        Needs review
+                      </Badge>
+                    )}
+
+                    {med.needs_review && (
+                      <div className="text-muted small">
+                        Read as: <em>{med.extracted_name}</em> · Confidence:{" "}
+                        {med.confidence}%
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="text-end text-nowrap ms-2">
+                    <span className="fw-semibold">₹{med.mrp}</span>
+                  </div>
+                </div>
               </ListGroup.Item>
             ))}
           </ListGroup>
