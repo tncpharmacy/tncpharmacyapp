@@ -1,11 +1,34 @@
 import axios from "axios";
 import axiosInstance from "@/lib/axios";
 import { ENDPOINTS } from "@/lib/config";
+import { OcrExtractResponse } from "@/types/ocr";
 const mediaBase = process.env.NEXT_PUBLIC_API_BASE_URL;
 
 const publicAxios = axios.create({
   baseURL: mediaBase,
 });
+
+// 🔍 Read the prescription with the new OCR API and get matched medicines.
+// The endpoint is public (AllowAny, no auth), so guests can use it too.
+// We send the File the buyer just picked directly — no storage round-trip.
+export const extractMedicinesFromPrescriptionFile = async (
+  file: File
+): Promise<OcrExtractResponse> => {
+  const formData = new FormData();
+  // Filename is preserved: the backend detects PDF vs image by extension.
+  formData.append("file", file, file.name);
+
+  const res = await publicAxios.post<OcrExtractResponse>(
+    ENDPOINTS.OCR_NEW.EXTRACT_PRESCRIPTION,
+    formData,
+    {
+      // OCR + Gemini matching can take a while on large prescriptions
+      timeout: 180000,
+    }
+  );
+
+  return res.data;
+};
 
 export const uploadPrescriptionFromBuyerCart = async ({
   formData,

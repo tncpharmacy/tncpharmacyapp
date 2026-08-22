@@ -7,11 +7,18 @@ import { useAppDispatch, useAppSelector } from "@/lib/hooks";
 import {
   uploadPrescriptionThunk,
   linkBuyerThunk,
+  extractPrescriptionMedicinesThunk,
+  clearExtractedMedicines,
 } from "@/lib/features/prescriptionSlice/prescriptionSlice";
+import { createHealthBagItem } from "@/lib/features/healthBagSlice/healthBagSlice";
 import toast from "react-hot-toast";
 import PrescriptionStatusModal from "@/app/components/PrescriptionStatusModal/PrescriptionStatusModal";
 import { store } from "@/lib/store";
 import BuyerLoginModal from "@/app/buyer-login/page";
+import { useRouter } from "next/navigation";
+import PrescriptionMedicinesStep, {
+  SelectedMedicine,
+} from "./PrescriptionMedicinesStep";
 
 interface Props {
   show: boolean;
@@ -33,8 +40,22 @@ export default function PrescriptionUploadModal({ show, handleClose }: Props) {
   >("guest-upload");
   const [showBuyerLogin, setShowBuyerLogin] = useState(false);
   const dispatch = useAppDispatch();
-  const { loading } = useAppSelector((state) => state.prescription);
+  const router = useRouter();
+  const {
+    loading,
+    extractLoading,
+    extractError,
+    extractedMedicines,
+  } = useAppSelector((state) => state.prescription);
   const buyer = useAppSelector((state) => state.buyer.buyer);
+
+  // 🔍 OCR results step
+  const [step, setStep] = useState<"upload" | "results">("upload");
+  const [addingToBag, setAddingToBag] = useState(false);
+  // Items a guest picked before logging in — added once login completes
+  const [pendingItems, setPendingItems] = useState<SelectedMedicine[] | null>(
+    null
+  );
 
   // // ✅ Logged-in user details (jaha se buyerId milega)
   // const buyerId =
@@ -74,6 +95,10 @@ export default function PrescriptionUploadModal({ show, handleClose }: Props) {
 
     const token = localStorage.getItem("buyerAccessToken");
 
+    // 🔍 Start reading the prescription right away, in parallel with the
+    // upload, so results are ready as soon as the buyer reaches that step.
+    dispatch(extractPrescriptionMedicinesThunk({ file }));
+
     try {
       if (!token) {
         // Guest upload
@@ -83,9 +108,8 @@ export default function PrescriptionUploadModal({ show, handleClose }: Props) {
         localStorage.setItem("PRESCRIPTION_SESSION", result.session_id);
         localStorage.setItem("PRESCRIPTION_ID", String(result.data?.id || ""));
         setModalMode("guest-upload");
-        setShowModal(true);
-        // ✅ Close upload modal
-        handleClose();
+        // ➡️ Show detected medicines instead of closing right away
+        setStep("results");
       } else {
         // Logged-in user upload
         const result = await dispatch(
@@ -105,18 +129,109 @@ export default function PrescriptionUploadModal({ show, handleClose }: Props) {
         ).unwrap();
 
         setModalMode("loggedin-upload");
-        setShowModal(true);
 
         localStorage.removeItem("PRESCRIPTION_SESSION");
         localStorage.removeItem("PRESCRIPTION_ID");
-        // ✅ Close upload modal
-        handleClose();
+        // ➡️ Show detected medicines instead of closing right away
+        setStep("results");
       }
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       console.error("Upload failed:", err);
       alert(err?.message || "Prescription upload failed");
     }
+  };
+
+  // 🛒 Add the medicines the buyer picked to their Health Bag
+  const addItemsToBag = async (items: SelectedMedicine[], buyerId: number) => {
+    setAddingToBag(true);
+    let added = 0;
+
+    try {
+      for (const item of items) {
+        try {
+          await dispatch(
+            createHealthBagItem({
+              buyer_id: buyerId,
+              product_id: item.medicine_id,
+              quantity: item.quantity,
+            })
+          ).unwrap();
+          added += 1;
+        } catch {
+          toast.error(`Could not add ${item.medicine_name}`);
+        }
+      }
+
+      if (added > 0) {
+        toast.success(
+          `${added} medicine${added > 1 ? "s" : ""} added to your Health Bag`
+        );
+        finishFlow();
+        router.push("/health-bag");
+      }
+    } finally {
+      setAddingToBag(false);
+    }
+  };
+
+  const handleAddSelected = async (items: SelectedMedicine[]) => {
+    const token = localStorage.getItem("buyerAccessToken");
+    const buyerId = buyer?.id;
+
+    // Guest → ask them to log in first, then add what they picked
+    if (!token || !buyerId) {
+      setPendingItems(items);
+      setShowBuyerLogin(true);
+      return;
+    }
+
+    await addItemsToBag(items, buyerId);
+  };
+
+  // After a guest logs in: link their prescription and add pending items
+  useEffect(() => {
+    const run = async () => {
+      if (!pendingItems || !buyer?.id) return;
+
+      const token = localStorage.getItem("buyerAccessToken");
+      if (!token) return;
+
+      const items = pendingItems;
+      setPendingItems(null);
+      setShowBuyerLogin(false);
+
+      // Attach the prescription they uploaded as a guest to their account
+      const sessionId = localStorage.getItem("PRESCRIPTION_SESSION");
+      if (sessionId) {
+        try {
+          await dispatch(
+            linkBuyerThunk({ sessionId, buyerId: buyer.id, token })
+          ).unwrap();
+        } catch {
+          // Non-fatal: the pharmacist can still see the prescription
+        }
+      }
+
+      await addItemsToBag(items, buyer.id);
+    };
+
+    run();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [buyer?.id, pendingItems]);
+
+  // Close everything and reset back to the upload step
+  const finishFlow = () => {
+    setStep("upload");
+    setPendingItems(null);
+    dispatch(clearExtractedMedicines());
+    handleClose();
+  };
+
+  // "Skip for now" / "Done" — keep the old confirmation modal behaviour
+  const handleSkipMedicines = () => {
+    finishFlow();
+    setShowModal(true);
   };
 
   // ✅ Reset modal on close
@@ -127,6 +242,7 @@ export default function PrescriptionUploadModal({ show, handleClose }: Props) {
       setFileName(null);
       setFileType(null);
       setShowPdfPreview(false);
+      setStep("upload");
 
       if (fileInputRef.current) fileInputRef.current.value = "";
     }
@@ -145,10 +261,32 @@ export default function PrescriptionUploadModal({ show, handleClose }: Props) {
       <div className="modal-dialog modal-dialog-centered">
         <div className="modal-content rounded-4 shadow-lg">
           <div className="modal-header">
-            <h5 className="modal-title fw-semibold">Upload Prescription</h5>
-            <button type="button" className="btn-close" onClick={handleClose} />
+            <h5 className="modal-title fw-semibold">
+              {step === "results"
+                ? "Medicines in your prescription"
+                : "Upload Prescription"}
+            </h5>
+            <button
+              type="button"
+              className="btn-close"
+              onClick={step === "results" ? finishFlow : handleClose}
+            />
           </div>
 
+          {/* ---------------- STEP 2: OCR RESULTS ---------------- */}
+          {step === "results" ? (
+            <div className="modal-body">
+              <PrescriptionMedicinesStep
+                medicines={extractedMedicines}
+                loading={extractLoading}
+                error={extractError}
+                adding={addingToBag}
+                onAddSelected={handleAddSelected}
+                onSkip={handleSkipMedicines}
+              />
+            </div>
+          ) : (
+            <>
           <div className="modal-body text-center">
             <label
               className="border border-2 border-secondary-subtle p-5 rounded-3 w-100 d-block mb-3"
@@ -222,6 +360,8 @@ export default function PrescriptionUploadModal({ show, handleClose }: Props) {
               {loading ? "Uploading..." : "Upload Now"}
             </button>
           </div>
+            </>
+          )}
         </div>
       </div>
       <PrescriptionStatusModal

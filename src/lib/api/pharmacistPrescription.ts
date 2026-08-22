@@ -2,6 +2,7 @@
 import api from "@/lib/axios";
 import { PrescriptionItem } from "@/types/prescription";
 import { ENDPOINTS } from "../config";
+import type { OcrExtractedMedicine, OcrExtractResponse } from "@/types/ocr";
 
 // ✅ Fetch active prescriptions
 export const fetchPrescriptionListPharmacist = async (): Promise<
@@ -63,25 +64,9 @@ export const uploadPrescriptionByPharmacist = async (
   return response.data;
 };
 
-// 🔍 NEW OCR (ocrnew) — extracted medicine shape
-export interface OcrExtractedMedicine {
-  medicine_id: number;
-  medicine_name: string;
-  generic_id: number;
-  master_mrp: string;
-  confidence: number;
-  review_score: number;
-  needs_review: boolean;
-  extracted_name: string;
-  mrp: string;
-}
-
-export interface OcrExtractResponse {
-  success: boolean;
-  message: string;
-  total_medicines_found: number;
-  medicines: OcrExtractedMedicine[];
-}
+// 🔍 NEW OCR (ocrnew) — shapes live in @/types/ocr so the buyer and
+// pharmacist flows share one definition. Re-exported for existing imports.
+export type { OcrExtractedMedicine, OcrExtractResponse };
 
 // 🔍 NEW OCR — download the prescription file and send it to the
 // /ocrnew/prescription/extract/ API (multipart form field: "file")
