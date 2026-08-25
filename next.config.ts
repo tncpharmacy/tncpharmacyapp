@@ -35,6 +35,14 @@ const nextConfig: NextConfig = {
     ],
   },
 
+  /**
+   * Standalone output bundles the server and only the dependencies it
+   * actually uses into .next/standalone. CI builds it and ships that folder;
+   * the server runs `node server.js` and never installs or compiles anything.
+   * That is what lets a small droplet host the app.
+   */
+  output: "standalone",
+
   experimental: {
     optimizeCss: true,
   },
