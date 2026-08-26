@@ -60,9 +60,19 @@ jobs:
 
       - name: Assemble standalone bundle
         run: |
-          cp -r .next/static .next/standalone/.next/static
-          if [ -d public ]; then cp -r public .next/standalone/public; fi
-          ls -la .next/standalone/server.js
+          # Next's standalone output deliberately omits static assets and
+          # public/. Copy CONTENTS (src/. -> dst/) so the result is the same
+          # whether or not the destination already exists.
+          mkdir -p .next/standalone/.next/static
+          cp -a .next/static/. .next/standalone/.next/static/
+
+          if [ -d public ]; then
+            mkdir -p .next/standalone/public
+            cp -a public/. .next/standalone/public/
+          fi
+
+          test -f .next/standalone/server.js
+          echo "public/ contains $(find .next/standalone/public -type f | wc -l) files"
 
       - name: Set up SSH
         run: |
