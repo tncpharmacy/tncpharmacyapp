@@ -657,7 +657,7 @@ export default function OtherMedicineForm({ id }: Props) {
                   // existing={formData.documents.map((d) => ({
                   //   url: d.document.startsWith("http")
                   //     ? d.document
-                  //     : `http://68.183.174.17:8081${d.document}`,
+                  //     : resolveMediaUrl(d.document),
                   //   name: d.document.split("/").pop() || "file",
                   //   id: d.id,
                   // }))}

@@ -341,7 +341,7 @@ export default function Pharmacy() {
                       selectedPharmacy.documents.map((doc) => (
                         <img
                           key={doc.id}
-                          src={`http://68.183.174.17:8081${doc.document}`}
+                          src={resolveMediaUrl(doc.document)}
                           alt="Pharmacy Document"
                           style={{
                             width: "150px",

@@ -2,25 +2,43 @@
 #
 # One copy per environment. Replace the placeholders and install:
 #
-#   PRODUCTION                      DEV
-#   __ENV__     = prod              dev
-#   __DOMAIN__  = tncpharmacy.com   dev.tncpharmacy.com
-#   __PORT__    = 3000              3001
+#   PRODUCTION                                    DEV
+#   __ENV__     = prod                            dev
+#   __DOMAIN__  = tncpharmacy.com                 dev.tncpharmacy.com
+#   __PORT__    = 3000                            3001
 #
 #   sudo cp app.conf.example /etc/nginx/sites-available/tnc-app-prod
 #   sudo sed -i 's/__ENV__/prod/g; s/__DOMAIN__/tncpharmacy.com/g; s/__PORT__/3000/g' \
 #       /etc/nginx/sites-available/tnc-app-prod
 #   sudo ln -s /etc/nginx/sites-available/tnc-app-prod /etc/nginx/sites-enabled/
 #   sudo nginx -t && sudo systemctl reload nginx
-#   sudo certbot --nginx -d __DOMAIN__
+#   sudo certbot --nginx -d __DOMAIN__ -d www.__DOMAIN__      # www only on prod
+#
+# Requires the same map blocks in nginx.conf that the API config documents
+# ($connection_upgrade and $client_ip).
 
 server {
     listen 80;
     listen [::]:80;
-    server_name __DOMAIN__;
+    server_name __DOMAIN__ www.__DOMAIN__;
 
     location /.well-known/acme-challenge/ { root /var/www/html; }
     location / { return 301 https://$host$request_uri; }
+}
+
+# Send www to the bare domain, so there is one canonical hostname.
+server {
+    listen 443 ssl;
+    listen [::]:443 ssl;
+    http2 on;
+    server_name www.__DOMAIN__;
+
+    ssl_certificate     /etc/letsencrypt/live/__DOMAIN__/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/__DOMAIN__/privkey.pem;
+    include /etc/letsencrypt/options-ssl-nginx.conf;
+    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
+
+    return 301 https://__DOMAIN__$request_uri;
 }
 
 server {
@@ -34,24 +52,33 @@ server {
     include /etc/letsencrypt/options-ssl-nginx.conf;
     ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
 
+    server_tokens off;
+    proxy_hide_header X-Powered-By;
+
     client_max_body_size 50M;
 
     access_log /var/log/nginx/tnc-app-__ENV__.access.log;
     error_log  /var/log/nginx/tnc-app-__ENV__.error.log;
 
-    # KEEP SEARCH ENGINES OUT OF DEV.
-    # Uncomment this block in the DEV server block only — without it Google
-    # will index dev.tncpharmacy.com and compete with the real site.
-    # add_header X-Robots-Tag "noindex, nofollow" always;
-    # location = /robots.txt {
-    #     add_header Content-Type text/plain;
-    #     return 200 "User-agent: *\nDisallow: /\n";
-    # }
+    # ---- Security headers ----
+    # NOTE: no X-Frame-Options DENY here -- unlike the API, this serves pages
+    # a browser renders. SAMEORIGIN still blocks clickjacking from other sites.
+    add_header X-Frame-Options        "SAMEORIGIN"                            always;
+    add_header X-Content-Type-Options "nosniff"                               always;
+    add_header Referrer-Policy        "strict-origin-when-cross-origin"       always;
+    add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
+    add_header Permissions-Policy "geolocation=(), microphone=(), camera=()"  always;
 
-    # Hashed build assets are immutable — cache them hard.
+    # ---- KEEP SEARCH ENGINES OUT OF NON-PRODUCTION ----
+    # Uncomment BOTH lines in the DEV copy only. Without this Google indexes
+    # the dev site and it competes with the real one in search results.
+    # add_header X-Robots-Tag "noindex, nofollow" always;
+    # location = /robots.txt { add_header Content-Type text/plain; return 200 "User-agent: *\nDisallow: /\n"; }
+
+    # Hashed build assets are immutable -- cache them hard.
     location /_next/static/ {
         proxy_pass http://127.0.0.1:__PORT__;
-        proxy_cache_valid 200 60m;
+        proxy_set_header Host $host;
         add_header Cache-Control "public, max-age=31536000, immutable";
         access_log off;
     }
@@ -64,7 +91,7 @@ server {
         proxy_set_header Connection $connection_upgrade;
 
         proxy_set_header Host              $host;
-        proxy_set_header X-Real-IP         $remote_addr;
+        proxy_set_header X-Real-IP         $client_ip;
         proxy_set_header X-Forwarded-For   $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
         proxy_redirect off;

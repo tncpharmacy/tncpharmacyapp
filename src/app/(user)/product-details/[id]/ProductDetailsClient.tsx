@@ -31,6 +31,7 @@ import { getSubcategories } from "@/lib/features/subCategorySlice/subCategorySli
 import { fetchGenericAllList } from "@/lib/api/generic";
 import { getGenericsAllList } from "@/lib/features/genericSlice/genericSlice";
 import { getManufacturersAllList } from "@/lib/features/manufacturerSlice/manufacturerSlice";
+import { resolveMediaUrl } from "@/lib/media";
 
 const Slider = dynamic(() => import("react-slick"), {
   ssr: false,
@@ -154,15 +155,6 @@ export default function ProductDetailsClient({ product }: { product: any }) {
     window.addEventListener("resize", checkScreen);
     return () => window.removeEventListener("resize", checkScreen);
   }, []);
-  // 🧩 Utility function — remove domain
-  const getRelativePath = (url: string) => {
-    try {
-      const domain = "http://68.183.174.17";
-      return url.replace(domain, "");
-    } catch {
-      return url;
-    }
-  };
   // 🧩 Find default image safely
   const primaryImage =
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -177,9 +169,9 @@ export default function ProductDetailsClient({ product }: { product: any }) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       ?.filter((img: any) => img.id !== primaryImage?.id)
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      ?.map((img: any) => getRelativePath(img.document));
+      ?.map((img: any) => resolveMediaUrl(img.document));
     return [
-      ...(primaryImage ? [getRelativePath(primaryImage.document)] : []),
+      ...(primaryImage ? [resolveMediaUrl(primaryImage.document)] : []),
       ...(others ?? []),
     ];
   }, [images, primaryImage]);
