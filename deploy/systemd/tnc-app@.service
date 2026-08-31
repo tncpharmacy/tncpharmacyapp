@@ -1,0 +1,60 @@
+# TnC Pharmacy frontend (Next.js) — systemd template unit
+#
+# The bit after @ is the environment name, substituted for %i:
+#
+#     systemctl start tnc-app@prod
+#     systemctl start tnc-app@dev
+#
+# Install:
+#     sudo cp tnc-app@.service /etc/systemd/system/
+#     sudo systemctl daemon-reload
+#     sudo systemctl enable --now tnc-app@prod
+#
+[Unit]
+Description=TnC Pharmacy frontend (%i)
+Documentation=https://github.com/tncpharmacy/tncpharmacyapp
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=tnc
+Group=www-data
+
+WorkingDirectory=/srv/tncpharmacy/%i/app
+
+# PORT and any runtime-only vars. NEXT_PUBLIC_* values are baked in at build
+# time by CI, so they are NOT read from here.
+#   prod -> PORT=3000
+#   dev  -> PORT=3001
+EnvironmentFile=/etc/tncpharmacy/app.%i.env
+
+# Next.js standalone output: CI builds the app and ships a self-contained
+# server.js, so the server never runs `npm install` or `next build` — which
+# is what keeps a 2GB box viable.
+ExecStart=/usr/bin/node server.js
+
+KillMode=mixed
+TimeoutStopSec=20
+Restart=always
+RestartSec=5
+
+# --- Resource limits -------------------------------------------------------
+# Not needed: dev and production run on separate droplets. Kept for the case
+# where two services ever share a box again.
+# MemoryMax=512M
+# CPUQuota=50%
+
+# --- Hardening -------------------------------------------------------------
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=true
+ReadWritePaths=/srv/tncpharmacy/%i/app
+
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=tnc-app-%i
+
+[Install]
+WantedBy=multi-user.target

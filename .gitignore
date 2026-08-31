@@ -43,3 +43,7 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
+
+# Claude/Cowork bridge scratch (git lock files it cannot delete)
+_to_delete/
+.claude/

@@ -1,20 +1,47 @@
 import type { NextConfig } from "next";
 
+/**
+ * API origin for this environment, derived from NEXT_PUBLIC_API_BASE_URL.
+ *
+ *   production : https://api.tncpharmacy.com/api  -> api.tncpharmacy.com
+ *   dev        : https://api-dev.tncpharmacy.com/api
+ *   local      : http://localhost:8000/api
+ *
+ * Nothing here may hardcode a hostname: a dev build that points at the
+ * production API is exactly the mix-up separate environments exist to stop.
+ */
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000/api";
+
+const apiOrigin = new URL(API_BASE_URL).origin;
+const apiProtocol = new URL(API_BASE_URL).protocol.replace(":", "") as
+  | "http"
+  | "https";
+const apiHostname = new URL(API_BASE_URL).hostname;
+
 const nextConfig: NextConfig = {
   images: {
     remotePatterns: [
       {
-        protocol: "https",
-        hostname: "api.tncpharmacy.com",
+        protocol: apiProtocol,
+        hostname: apiHostname,
         pathname: "/media/**",
       },
       {
         protocol: "https",
-        hostname: "storage.googleapis.com", // 🔥 ADD THIS
-        pathname: "/**", // 🔥 IMPORTANT
+        hostname: "storage.googleapis.com",
+        pathname: "/**",
       },
     ],
   },
+
+  /**
+   * Standalone output bundles the server and only the dependencies it
+   * actually uses into .next/standalone. CI builds it and ships that folder;
+   * the server runs `node server.js` and never installs or compiles anything.
+   * That is what lets a small droplet host the app.
+   */
+  output: "standalone",
 
   experimental: {
     optimizeCss: true,
@@ -31,7 +58,7 @@ const nextConfig: NextConfig = {
     return [
       {
         source: "/media/:path*",
-        destination: "https://api.tncpharmacy.com/media/:path*",
+        destination: `${apiOrigin}/media/:path*`,
       },
       //User routes
       {

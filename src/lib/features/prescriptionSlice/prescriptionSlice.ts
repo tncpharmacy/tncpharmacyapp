@@ -3,8 +3,10 @@ import {
   uploadPrescription,
   linkPrescriptionToBuyer,
   uploadPrescriptionFromBuyerCart,
+  extractMedicinesFromPrescriptionFile,
 } from "@/lib/api/prescription";
 import { PrescriptionItem } from "@/types/prescription";
+import { OcrExtractedMedicine, OcrExtractResponse } from "@/types/ocr";
 
 interface PrescriptionState {
   loading: boolean;
@@ -12,6 +14,12 @@ interface PrescriptionState {
   error: string | null;
   sessionId: string | null;
   success: boolean;
+
+  // 🔍 New OCR: medicines detected in the buyer's prescription
+  extractLoading: boolean;
+  extractError: string | null;
+  extractedMedicines: OcrExtractedMedicine[];
+  totalExtractedMedicines: number;
 }
 
 const initialState: PrescriptionState = {
@@ -20,6 +28,11 @@ const initialState: PrescriptionState = {
   error: null,
   sessionId: null,
   success: false,
+
+  extractLoading: false,
+  extractError: null,
+  extractedMedicines: [],
+  totalExtractedMedicines: 0,
 };
 
 export const uploadPrescriptionFromBuyerCartThunk = createAsyncThunk<
@@ -60,6 +73,25 @@ export const uploadPrescriptionThunk = createAsyncThunk(
   }
 );
 
+// 🔍 Read prescription with the new OCR API (works for guests too)
+export const extractPrescriptionMedicinesThunk = createAsyncThunk<
+  OcrExtractResponse,
+  { file: File },
+  { rejectValue: string }
+>("prescription/extractMedicines", async ({ file }, { rejectWithValue }) => {
+  try {
+    const res = await extractMedicinesFromPrescriptionFile(file);
+    return res;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } catch (err: any) {
+    return rejectWithValue(
+      err?.response?.data?.message ||
+        err?.message ||
+        "Could not read medicines from the prescription"
+    );
+  }
+});
+
 // 🔐 Link logged-in user
 export const linkBuyerThunk = createAsyncThunk(
   "prescription/linkBuyer",
@@ -90,6 +122,12 @@ const prescriptionSlice = createSlice({
       state.data = [];
       state.error = null;
       state.sessionId = null;
+    },
+    clearExtractedMedicines: (state) => {
+      state.extractLoading = false;
+      state.extractError = null;
+      state.extractedMedicines = [];
+      state.totalExtractedMedicines = 0;
     },
   },
   extraReducers: (builder) => {
@@ -133,6 +171,31 @@ const prescriptionSlice = createSlice({
         state.loading = false;
         state.error = action.payload as string;
       })
+      // 🔍 new OCR extraction
+      .addCase(extractPrescriptionMedicinesThunk.pending, (state) => {
+        state.extractLoading = true;
+        state.extractError = null;
+        state.extractedMedicines = [];
+        state.totalExtractedMedicines = 0;
+      })
+      .addCase(extractPrescriptionMedicinesThunk.fulfilled, (state, action) => {
+        state.extractLoading = false;
+        state.extractedMedicines = action.payload?.medicines || [];
+        state.totalExtractedMedicines =
+          action.payload?.total_medicines_found || 0;
+
+        if (action.payload && action.payload.success === false) {
+          state.extractError =
+            action.payload.message ||
+            "Could not read medicines from the prescription";
+        }
+      })
+      .addCase(extractPrescriptionMedicinesThunk.rejected, (state, action) => {
+        state.extractLoading = false;
+        state.extractError =
+          (action.payload as string) ||
+          "Could not read medicines from the prescription";
+      })
       // update prescription after login
       .addCase(linkBuyerThunk.pending, (state) => {
         state.loading = true;
@@ -150,5 +213,6 @@ const prescriptionSlice = createSlice({
   },
 });
 
-export const { clearPrescriptionState } = prescriptionSlice.actions;
+export const { clearPrescriptionState, clearExtractedMedicines } =
+  prescriptionSlice.actions;
 export default prescriptionSlice.reducer;

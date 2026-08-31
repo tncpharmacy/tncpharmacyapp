@@ -1,0 +1,113 @@
+name: Deploy frontend
+
+on:
+  push:
+    branches: [main, "dev/mvp-1.0.0"]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Environment to deploy
+        required: true
+        type: choice
+        options: [dev, prod]
+
+concurrency:
+  group: deploy-app-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Deploy to ${{ github.ref == 'refs/heads/main' && 'production' || 'dev' }}
+    runs-on: ubuntu-latest
+
+    environment:
+      name: ${{ inputs.environment == 'prod' && 'production' || (github.ref == 'refs/heads/main' && 'production' || 'dev') }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Resolve target environment
+        id: target
+        run: |
+          if [ "${{ inputs.environment }}" = "prod" ] || [ "${{ github.ref }}" = "refs/heads/main" ]; then
+            echo "name=prod" >> "$GITHUB_OUTPUT"
+          else
+            echo "name=dev" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        env:
+          NEXT_PUBLIC_API_BASE_URL: ${{ vars.NEXT_PUBLIC_API_BASE_URL }}
+          NEXT_PUBLIC_MEDIA_BASE_URL: ${{ vars.NEXT_PUBLIC_MEDIA_BASE_URL }}
+          NEXT_PUBLIC_PRESCRIPTION_BASE_URL: ${{ vars.NEXT_PUBLIC_PRESCRIPTION_BASE_URL }}
+          NEXT_PUBLIC_DEPLOY_ENV: ${{ vars.NEXT_PUBLIC_DEPLOY_ENV }}
+        run: |
+          test -n "$NEXT_PUBLIC_API_BASE_URL" || {
+            echo "NEXT_PUBLIC_API_BASE_URL is not set for this environment." >&2
+            echo "Set it under Settings -> Environments before deploying." >&2
+            exit 1
+          }
+          echo "Building against $NEXT_PUBLIC_API_BASE_URL"
+          npm run build
+
+      - name: Assemble standalone bundle
+        run: |
+          # Next's standalone output deliberately omits static assets and
+          # public/. Copy CONTENTS (src/. -> dst/) so the result is the same
+          # whether or not the destination already exists.
+          mkdir -p .next/standalone/.next/static
+          cp -a .next/static/. .next/standalone/.next/static/
+
+          if [ -d public ]; then
+            mkdir -p .next/standalone/public
+            cp -a public/. .next/standalone/public/
+          fi
+
+          test -f .next/standalone/server.js
+          echo "public/ contains $(find .next/standalone/public -type f | wc -l) files"
+
+      - name: Set up SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -p "${{ secrets.SSH_PORT || 22 }}" -H "${{ secrets.SSH_HOST }}" >> ~/.ssh/known_hosts
+
+      - name: Ship build to server
+        env:
+          ENV_NAME: ${{ steps.target.outputs.name }}
+        run: |
+          rsync -az --delete \
+            -e "ssh -i ~/.ssh/deploy_key -p ${{ secrets.SSH_PORT || 22 }}" \
+            .next/standalone/ \
+            "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/srv/tncpharmacy/${ENV_NAME}/app/"
+
+      - name: Restart and verify
+        env:
+          ENV_NAME: ${{ steps.target.outputs.name }}
+        run: |
+          ssh -i ~/.ssh/deploy_key -p "${{ secrets.SSH_PORT || 22 }}" \
+            "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}" \
+            "sudo systemctl restart tnc-app@${ENV_NAME} && \
+             sleep 4 && systemctl is-active --quiet tnc-app@${ENV_NAME}"
+
+      - name: Smoke test
+        env:
+          ENV_NAME: ${{ steps.target.outputs.name }}
+        run: |
+          if [ "$ENV_NAME" = "prod" ]; then
+            URL="https://tncpharmacy.com/"
+          else
+            URL="https://dev.tncpharmacy.com/"
+          fi
+          echo "Checking $URL"
+          curl -fsS --max-time 30 "$URL" -o /dev/null
+          echo "Site is responding."
