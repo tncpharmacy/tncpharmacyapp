@@ -17,6 +17,11 @@
 # Requires the same map blocks in nginx.conf that the API config documents
 # ($connection_upgrade and $client_ip).
 
+# HTTP/2: the `listen ... ssl http2` form below works on nginx 1.24 (Ubuntu
+# 24.04, what both droplets run) and on 1.25+. The newer standalone
+# `http2 on;` directive is 1.25.1+ only and fails with
+# `unknown directive "http2"` on 24.04 -- so it is deliberately not used.
+
 server {
     listen 80;
     listen [::]:80;
@@ -28,9 +33,8 @@ server {
 
 # Send www to the bare domain, so there is one canonical hostname.
 server {
-    listen 443 ssl;
-    listen [::]:443 ssl;
-    http2 on;
+    listen 443 ssl http2;
+    listen [::]:443 ssl http2;
     server_name www.__DOMAIN__;
 
     ssl_certificate     /etc/letsencrypt/live/__DOMAIN__/fullchain.pem;
@@ -42,9 +46,8 @@ server {
 }
 
 server {
-    listen 443 ssl;
-    listen [::]:443 ssl;
-    http2 on;
+    listen 443 ssl http2;
+    listen [::]:443 ssl http2;
     server_name __DOMAIN__;
 
     ssl_certificate     /etc/letsencrypt/live/__DOMAIN__/fullchain.pem;
