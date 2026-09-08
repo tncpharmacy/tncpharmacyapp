@@ -67,7 +67,7 @@ export default async function HomePage() {
     logo: "https://tncpharmacy.com/og-image.png",
     image: "https://tncpharmacy.com/og-image.png",
 
-    telephone: "+918062521280",
+    telephone: "+917042079595",
 
     address: {
       "@type": "PostalAddress",

@@ -139,7 +139,7 @@ export default function ReturnPolicy() {
 
               <p>
                 <strong>Step 1:</strong> Contact our customer support within 24
-                hours of delivery at +91 8062521280 or support@tncpharmacy.com.
+                hours of delivery at +91 7042079595 or support@tncpharmacy.com.
               </p>
 
               <p>
