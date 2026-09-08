@@ -4,7 +4,7 @@ export const metadata = {
   title: "Contact TnC Pharmacy | 24x7 Support | Noida, Uttar Pradesh",
 
   description:
-    "Contact TnC Pharmacy at +91 8062521280 (24x7). Visit us at Sector 29, Noida. Email support@tncpharmacy.com. Fast response guaranteed.",
+    "Contact TnC Pharmacy at +91 7042079595 (24x7). Visit us at Sector 29, Noida. Email support@tncpharmacy.com. Fast response guaranteed.",
 
   alternates: {
     canonical: "/contact-us",

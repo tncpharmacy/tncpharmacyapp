@@ -223,7 +223,7 @@ export default function AboutUs() {
                 <br />
                 <strong>Phone:</strong> +91 7042079595 (10:00 AM - 6:00 PM)
                 <br />
-                <strong>Phone:</strong> +91 8062521280 (24x7)
+                <strong>Phone:</strong> +91 7042079595 (24x7)
                 <br />
                 <strong>Email:</strong> support@tncpharmacy.com
               </p>

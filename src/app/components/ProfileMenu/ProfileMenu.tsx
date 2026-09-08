@@ -96,7 +96,7 @@ export default function ProfileMenu() {
 
         {mobile && (
           <span style={{ fontSize: "14px", fontWeight: "600" }}>
-            Mobile: <span style={{ fontWeight: "400" }}>+91 8062521280</span>
+            Mobile: <span style={{ fontWeight: "400" }}>+91 7042079595</span>
           </span>
         )}
       </div>

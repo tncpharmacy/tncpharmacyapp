@@ -170,10 +170,10 @@ export default function ContactUs() {
                     <p className="mb-2">
                       <i className="bi bi-telephone-fill text-primary me-2"></i>
                       <Link
-                        href="tel:+918062521280"
+                        href="tel:+917042079595"
                         className="contact-link text-primary"
                       >
-                        +91 8062521280
+                        +91 7042079595
                       </Link>{" "}
                       (24x7)
                     </p>

@@ -98,7 +98,7 @@ const Footer = () => {
               <ul className="ftr_link">
                 <li>
                   <i className="bi bi-headphones"></i>
-                  <Link href="tel:+918062521280">+91 8062521280 </Link>
+                  <Link href="tel:+917042079595">+91 7042079595 </Link>
                   <span>(24x7)</span>
                 </li>
                 {/* <li>

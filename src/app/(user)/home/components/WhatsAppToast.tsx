@@ -8,7 +8,7 @@ function WhatsAppToast() {
   const [open, setOpen] = useState(false);
   const [isTouchDevice, setIsTouchDevice] = useState(false);
 
-  const WHATSAPP_NUMBER = "918062521280";
+  const WHATSAPP_NUMBER = "917042079595";
 
   useEffect(() => {
     const checkTouch = "ontouchstart" in window || navigator.maxTouchPoints > 0;
