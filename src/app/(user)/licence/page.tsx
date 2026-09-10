@@ -9,7 +9,7 @@ export const metadata = {
   title:
     "Licence & Registration | TnC Pharmacy – Fully Licensed Online Pharmacy",
   description:
-    "TnC Pharmacy is a fully licensed online pharmacy under the Drugs and Cosmetics Act. View our drug licence, pharmacist registration, GSTIN, and FSSAI details.",
+    "TnC Pharmacy is a fully licensed online pharmacy under the Drugs and Cosmetics Act. View our drug licence, pharmacist registration, GSTIN and company registration details.",
 
   alternates: {
     canonical: "/licence",
@@ -122,7 +122,7 @@ export default function Licence() {
 
                 <tr>
                   <td>Registered Pharmacist Name</td>
-                  <td>TNC PHARMACY AND LABS PRIVATE LIMITED</td>
+                  <td>Mr. Pradeep Nautiyal (D. Pharma)</td>
                 </tr>
 
                 <tr>
