@@ -51,18 +51,14 @@ export default function Licence() {
       <div className="container py-4">
         <nav aria-label="breadcrumb" style={{ fontSize: "13px" }}>
           <ol className="breadcrumb">
-            <nav aria-label="breadcrumb" style={{ fontSize: "13px" }}>
-              <ol className="breadcrumb">
-                <li className="breadcrumb-item">
-                  <Link href="/" style={{ textDecoration: "none" }}>
-                    Home
-                  </Link>
-                </li>
-                <li className="breadcrumb-item text-muted">
-                  <span>Licence Information</span>
-                </li>
-              </ol>
-            </nav>
+            <li className="breadcrumb-item">
+              <Link href="/" style={{ textDecoration: "none" }}>
+                Home
+              </Link>
+            </li>
+            <li className="breadcrumb-item text-muted">
+              <span>Licence Information</span>
+            </li>
           </ol>
         </nav>
         <div className="col-lg-12 mx-auto bg-white p-4 p-md-5 shadow-sm rounded-3">
@@ -100,7 +96,7 @@ export default function Licence() {
 
                 <tr>
                   <td>Pharmacist Registration No.</td>
-                  <td>[Insert Registered Pharmacist Number]</td>
+                  <td>20258242072</td>
                 </tr>
 
                 <tr>
@@ -110,13 +106,19 @@ export default function Licence() {
 
                 <tr>
                   <td>Company CIN</td>
-                  <td>[Insert CIN Number]</td>
+                  <td>U47721UP2025PTC224627</td>
                 </tr>
 
+                {/* FSSAI licence not yet issued. Deliberately hidden rather
+                    than rendered with an empty value -- a blank cell on a
+                    compliance page reads as incomplete to anyone reviewing it.
+                    Restore this row once the number is available. */}
+                {/*
                 <tr>
                   <td>FSSAI Licence No. (if applicable)</td>
-                  <td>[Insert FSSAI Number]</td>
+                  <td>REPLACE_WITH_FSSAI_NUMBER</td>
                 </tr>
+                */}
 
                 <tr>
                   <td>Registered Pharmacist Name</td>
