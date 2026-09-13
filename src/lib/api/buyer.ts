@@ -17,6 +17,14 @@ export const buyerRegisterApi = async (payload: {
   return axiosInstance.post(ENDPOINTS.BUYER.CREATE, payload);
 };
 
+// 🔹 VERIFY OTP (the server checks the code and only then returns tokens)
+export const buyerVerifyOtpApi = async (payload: {
+  login_id: string;
+  otp: string;
+}) => {
+  return axiosInstance.post(ENDPOINTS.BUYER.VERIFY_OTP, payload);
+};
+
 // 🔹 GET Buyer Profile
 export const buyerGetApi = async (id: number) => {
   return axiosInstance.get(ENDPOINTS.BUYER.GET(id));

@@ -103,6 +103,7 @@ export const ENDPOINTS = {
   BUYER: {
     LOGIN: "/buyer/validate/",
     CREATE: "/buyer/register/",
+    VERIFY_OTP: "/buyer/otp/verify/",
     DELETE: (id: number) => `/buyer/create/${id}/`,
     GET: (id: number) => `/buyer/profile/${id}/`,
     PUT: (id: number) => `/buyer/profile/${id}/`,

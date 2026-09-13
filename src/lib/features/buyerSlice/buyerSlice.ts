@@ -10,6 +10,7 @@ import {
   buyerReOrderApi,
   buyerReOrderCartApi,
   buyerUpdateApi,
+  buyerVerifyOtpApi,
 } from "@/lib/api/buyer";
 import {
   BuyerApiResponse,
@@ -50,7 +51,6 @@ const initialState: BuyerState = {
   userExists: null,
   registered: false,
   message: null,
-  otpCode: null,
   lastLoginResponse: null,
   orders: [],
   orderCreated: false,
@@ -152,41 +152,26 @@ export const buyerRegister = createAsyncThunk<
   }
 });
 
-// 3️⃣ OTP Verification (No API yet — use stored tokens)
+// 3️⃣ OTP Verification
+// The server checks the code and returns tokens only if it matches. The
+// browser never sees the real OTP, so it can't (and mustn't) compare it here.
 export const verifyBuyerOtp = createAsyncThunk<
   BuyerApiResponse,
-  { otp: string },
-  { state: { buyer: BuyerState }; rejectValue: string }
->("buyer/verifyOtp", async (payload, { getState, rejectWithValue }) => {
+  { login_id: string; otp: string },
+  { rejectValue: string }
+>("buyer/verifyOtp", async (payload, { rejectWithValue }) => {
   try {
-    const state = getState().buyer;
-
-    // Token pehle login/register response se aaya tha
-    const tokens = state.lastLoginResponse?.data?.tokens;
-    const serverOtp = state.lastLoginResponse?.data?.otp;
-
-    if (!tokens) {
-      return rejectWithValue("No tokens found in state");
-    }
-
-    if (serverOtp && serverOtp !== payload.otp) {
-      return rejectWithValue("Invalid OTP");
-    }
-
-    // ✅ Proper response structure
-    const verifiedResponse: BuyerApiResponse = {
-      success: true,
-      statusCode: 200,
-      message: "OTP verified successfully",
-      data: {
-        tokens,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      } as any,
-    };
-
-    return verifiedResponse;
-  } catch {
-    return rejectWithValue("OTP verification failed");
+    const res = await buyerVerifyOtpApi({
+      login_id: payload.login_id.trim(),
+      otp: payload.otp.trim(),
+    });
+    return res.data as BuyerApiResponse;
+  } catch (err: unknown) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const e = err as any;
+    return rejectWithValue(
+      e.response?.data?.message || "OTP verification failed"
+    );
   }
 });
 
@@ -309,7 +294,6 @@ const buyerSlice = createSlice({
       state.userExists = null;
       state.registered = false;
       state.message = null;
-      state.otpCode = null;
     },
   },
   extraReducers: (builder) => {
@@ -324,13 +308,8 @@ const buyerSlice = createSlice({
         const { data, message } = action.payload;
         state.userExists = data?.existing ?? false;
         state.message = message ?? null;
-        state.lastLoginResponse = action.payload; // ✅ store full response
-
-        if (data?.otp) {
-          state.otpCode = data.otp;
-          state.otpSent = true;
-          //toast.success(`OTP sent: ${data.otp}`);
-        }
+        state.lastLoginResponse = action.payload; // no code or tokens in here
+        state.otpSent = data?.otp_sent ?? false;
       })
       .addCase(buyerLogin.rejected, (state, action) => {
         state.loading = false;
@@ -347,13 +326,8 @@ const buyerSlice = createSlice({
         const { data, message } = action.payload;
         state.message = message ?? null;
         state.registered = true;
-        state.lastLoginResponse = action.payload; // ✅ store full response
-
-        if (data?.otp) {
-          state.otpCode = data.otp;
-          state.otpSent = true;
-          // toast.success(`OTP sent: ${data.otp}`);
-        }
+        state.lastLoginResponse = action.payload; // no code or tokens in here
+        state.otpSent = data?.otp_sent ?? false;
       })
       .addCase(buyerRegister.rejected, (state, action) => {
         state.loading = false;

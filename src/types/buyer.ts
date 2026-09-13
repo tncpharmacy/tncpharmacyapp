@@ -14,9 +14,14 @@ export interface BuyerData {
   email: string;
   profile_pic?: string;
   status?: string;
-  otp?: string;
-  tokens?: BuyerTokens;
+  tokens?: BuyerTokens; // only in the OTP verify response
   existing?: boolean;
+  // Returned by login/register when an OTP was sent. The code itself is never
+  // sent to the browser.
+  otp_sent?: boolean;
+  channel?: string;
+  expires_in?: number;
+  resend_after?: number;
   // buyer?: [];
 }
 
@@ -38,7 +43,6 @@ export interface BuyerState {
   registered: boolean;
   message: string | null;
   buyer: BuyerData | null;
-  otpCode: string | null;
   lastLoginResponse: BuyerApiResponse | null;
   orders: [];
   orderCreated: boolean;

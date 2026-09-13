@@ -38,7 +38,6 @@ export default function BuyerSignupModal({
 
   const [otp, setOtp] = useState("");
   const [formError, setFormError] = useState("");
-  const [serverOtp, setServerOtp] = useState<string | null>(null);
 
   // ⭐ Type-safe refs
   const nameRef = useRef<HTMLInputElement | null>(null);
@@ -97,19 +96,19 @@ export default function BuyerSignupModal({
         buyerRegister({ name, email, number: mobile, uhid: "" })
       ).unwrap();
 
-      // ✅ OTP aayi to OTP screen dikha do
-      if (payload?.data?.otp) {
-        setServerOtp(payload.data.otp);
-        toast.success(`OTP sent successfully your whatsapp}`);
+      // The server only says whether the OTP went out -- never the code.
+      if (payload?.data?.otp_sent) {
+        toast.success("OTP sent to your WhatsApp number");
         setStep("otp");
       } else {
-        toast.success(
-          "Signup successful, please verify OTP sent to your whatsapp number!"
+        setFormError(
+          payload?.message ||
+            "Account created, but the OTP wasn't sent. Please log in with your mobile number."
         );
-        setStep("otp");
       }
     } catch (err: unknown) {
-      if (err instanceof Error) setFormError(err.message);
+      if (typeof err === "string") setFormError(err);
+      else if (err instanceof Error) setFormError(err.message);
       else setFormError("Something went wrong during signup.");
     }
   };
@@ -140,7 +139,9 @@ export default function BuyerSignupModal({
     }
 
     try {
-      const result = await dispatch(verifyBuyerOtp({ otp })).unwrap();
+      const result = await dispatch(
+        verifyBuyerOtp({ login_id: mobile, otp })
+      ).unwrap();
 
       toast.success(result.message || "Signup successful!");
       // ✅ ✅ AFTER LOGIN - AUTO LINK PRESCRIPTION IF SESSION EXISTS
@@ -208,7 +209,6 @@ export default function BuyerSignupModal({
       setMobile("");
       setOtp("");
       setFormError("");
-      setServerOtp(null);
     }
   }, [show]);
 
@@ -327,8 +327,11 @@ export default function BuyerSignupModal({
                       type="text"
                       className="txtlogin"
                       value={otp}
-                      onChange={(e) => setOtp(e.target.value)}
-                      maxLength={4}
+                      placeholder="Enter 6-digit OTP"
+                      inputMode="numeric"
+                      autoComplete="one-time-code"
+                      onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
+                      maxLength={6}
                       onKeyDown={handleKeyDownOtp}
                     />
                   </div>
@@ -347,11 +350,6 @@ export default function BuyerSignupModal({
               {formError && <p style={{ color: "red" }}>{formError}</p>}
               {error && <p style={{ color: "red" }}>{error}</p>}
               {/* {message && <p style={{ color: "green" }}>{message}</p>} */}
-              {serverOtp && (
-                <p className="text-muted mt-2" style={{ fontSize: "13px" }}>
-                  (Debug OTP: {serverOtp})
-                </p>
-              )}
             </div>
           </div>
         </div>
