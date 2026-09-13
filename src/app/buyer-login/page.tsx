@@ -41,7 +41,7 @@ export default function BuyerLoginModal({
   const [prefillEmail, setPrefillEmail] = useState("");
   const [prefillMobile, setPrefillMobile] = useState("");
 
-  const { loading, otpCode } = useAppSelector((state) => state.buyer);
+  const { loading } = useAppSelector((state) => state.buyer);
 
   const loginInputRef = useRef<HTMLInputElement>(null);
   const otpInputRef = useRef<HTMLInputElement>(null);
@@ -103,7 +103,7 @@ export default function BuyerLoginModal({
     setError("");
 
     try {
-      const res = await dispatch(verifyBuyerOtp({ otp })).unwrap();
+      await dispatch(verifyBuyerOtp({ login_id: loginId, otp })).unwrap();
       //toast.success(res.message || "Login successful!");
 
       // ✅ Auto link prescription if guest session exists
@@ -249,9 +249,11 @@ export default function BuyerLoginModal({
                         type="text"
                         className="txtlogin"
                         value={otp}
-                        placeholder="Enter 4-digit OTP"
-                        onChange={(e) => setOtp(e.target.value)}
-                        maxLength={4}
+                        placeholder="Enter 6-digit OTP"
+                        inputMode="numeric"
+                        autoComplete="one-time-code"
+                        onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
+                        maxLength={6}
                         onKeyDown={handleKeyDownOtp}
                       />
                     </div>
@@ -268,12 +270,6 @@ export default function BuyerLoginModal({
                 {error && (
                   <p className="mt-2" style={{ color: "red" }}>
                     {error}
-                  </p>
-                )}
-
-                {otpCode && step === 2 && (
-                  <p className="text-muted mt-2" style={{ fontSize: "13px" }}>
-                    (Debug OTP: {otpCode})
                   </p>
                 )}
               </div>
