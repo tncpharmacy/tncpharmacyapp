@@ -113,6 +113,7 @@ export default function MedicinesDetailsClient({
     prescription_required,
     discount,
     status,
+    in_stock,
     category_id,
     created_by,
     mrp,
@@ -1350,12 +1351,17 @@ export default function MedicinesDetailsClient({
                         });
                       }
                     }}
-                    disabled={processingIds.includes(id)}
+                    disabled={
+                      processingIds.includes(id) ||
+                      (in_stock === false && !isInBag)
+                    }
                   >
                     {processingIds.includes(id)
                       ? "Processing..."
                       : isInBag
                       ? "Go To Health Bag"
+                      : in_stock === false
+                      ? "Out of Stock"
                       : "Add to Health Bag"}
                   </button>
                   {renderGenericCompare()}
@@ -1404,12 +1410,17 @@ export default function MedicinesDetailsClient({
                       image: images?.[0]?.document || null,
                     });
                 }}
-                disabled={processingIds.includes(id)}
+                disabled={
+                  processingIds.includes(id) ||
+                  (in_stock === false && !isInBag)
+                }
               >
                 {processingIds.includes(id)
                   ? "Processing..."
                   : isInBag
                   ? "Go To Bag"
+                  : in_stock === false
+                  ? "Out of Stock"
                   : "Add to Bag"}
               </button>
             </div>

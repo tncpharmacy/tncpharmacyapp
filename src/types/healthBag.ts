@@ -6,6 +6,8 @@ export interface HealthBag {
   productname: string;
   quantity: number;
   qty: number;
+  /** false when no non-expired batch has units (TNC-18) */
+  in_stock?: boolean;
   mrp: number | null;
   discount: number;
   manufacturer: string;

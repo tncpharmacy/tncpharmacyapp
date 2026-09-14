@@ -428,6 +428,7 @@ export default function HealthBagClient() {
       prescription_required: item.prescription_required || 0,
 
       qty: Number(item.qty) || 1,
+      in_stock: item.in_stock,
 
       // 👉 RAW values (for calculations)
       mrp,
@@ -545,6 +546,15 @@ export default function HealthBagClient() {
   const handleContinue = () => {
     if (!buyer?.id) {
       setShowBuyerLogin(true);
+      return;
+    }
+    const unavailable = mergedItems.filter((i) => i.in_stock === false);
+    if (unavailable.length) {
+      toast.error(
+        `Out of stock, please remove to continue: ${unavailable
+          .map((i) => i.name)
+          .join(", ")}`
+      );
       return;
     }
     if (!billingAddress) {
@@ -781,6 +791,15 @@ export default function HealthBagClient() {
                               </div>
                             </div>
 
+                            {item.in_stock === false && (
+                              <span
+                                className="badge bg-secondary position-absolute"
+                                style={{ bottom: 0, right: 0 }}
+                                title="This item cannot be ordered right now"
+                              >
+                                Out of stock
+                              </span>
+                            )}
                             {/* 🔥 RX BADGE OUTSIDE */}
                             {item.prescription_required === 1 && (
                               <Image

@@ -84,6 +84,19 @@ export default function Checkout() {
       toast.error("Login required!");
       return;
     }
+    // TNC-18: the server refuses the whole order if any line is out of
+    // stock; say which one here so the buyer can fix the bag instead.
+    const unavailable = (healthBagItems || []).filter(
+      (i) => i.in_stock === false
+    );
+    if (unavailable.length) {
+      toast.error(
+        `Out of stock, please remove from your bag: ${unavailable
+          .map((i) => i.productname)
+          .join(", ")}`
+      );
+      return;
+    }
 
     if (!checkoutData) return;
 
