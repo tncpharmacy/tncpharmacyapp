@@ -438,6 +438,7 @@ export default function AllProductsClient() {
                       // 💻 DESKTOP/TABLET → CARD DESIGN (Reusable Component 🔥)
                       <ProductCardUI
                         key={`${item.product_id}-${index}`}
+                        inStock={item.in_stock}
                         image={imageUrl}
                         name={item.ProductName}
                         manufacturer={item.Manufacturer}

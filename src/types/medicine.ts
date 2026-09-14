@@ -58,6 +58,8 @@ export interface Medicine {
   AvailableQTY?: number | null;
   AvailableQty?: number | null;
   MRP?: number | null;
+  /** false when no non-expired batch has units left (TNC-18) */
+  in_stock?: boolean;
   unitPrice?: number | null;
   generic_name?: string;
   GenericName?: string;

@@ -389,6 +389,7 @@ export default function AllGroupCareClient() {
                       // 💻 DESKTOP/TABLET → CARD DESIGN (Reusable Component 🔥)
                       <ProductCardUI
                         key={`${item.id}-${index}`}
+                        inStock={item.in_stock}
                         image={imageUrl}
                         name={item.medicine_name}
                         manufacturer={item.manufacturer_name}

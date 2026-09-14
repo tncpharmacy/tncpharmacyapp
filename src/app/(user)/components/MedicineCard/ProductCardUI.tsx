@@ -13,6 +13,8 @@ type Props = {
   discount?: number;
   showRx?: boolean;
   isInCart?: boolean;
+  /** undefined = unknown (treated as available); false = out of stock */
+  inStock?: boolean;
   loading?: boolean;
   onAdd?: () => void;
   onRemove?: () => void;
@@ -30,11 +32,13 @@ export default function ProductCardUI({
   discount,
   showRx,
   isInCart,
+  inStock,
   loading,
   onAdd,
   onRemove,
   onClick,
 }: Props) {
+  const outOfStock = inStock === false;
   return (
     <div className="medicine-card mb-3">
       <div className="medicine-content">
@@ -104,13 +108,26 @@ export default function ProductCardUI({
             <button
               className="btn-1 btn-HO"
               style={{
-                backgroundColor: isInCart ? "#0b5ed7" : "#ff7b00",
+                backgroundColor: isInCart
+                  ? "#0b5ed7"
+                  : outOfStock
+                  ? "#adb5bd"
+                  : "#ff7b00",
                 color: "#fff",
+                cursor: outOfStock && !isInCart ? "not-allowed" : "pointer",
               }}
               onClick={isInCart ? onRemove : onAdd}
-              disabled={loading}
+              disabled={loading || (outOfStock && !isInCart)}
+              aria-disabled={outOfStock && !isInCart}
+              title={outOfStock && !isInCart ? "Currently out of stock" : undefined}
             >
-              {loading ? "Processing..." : isInCart ? "REMOVE" : "ADD"}
+              {loading
+                ? "Processing..."
+                : isInCart
+                ? "REMOVE"
+                : outOfStock
+                ? "OUT OF STOCK"
+                : "ADD"}
             </button>
           </div>
         </div>

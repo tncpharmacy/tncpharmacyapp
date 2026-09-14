@@ -129,6 +129,7 @@ export default function ProductSection({
               return (
                 <ProductCardUI
                   key={item.product_id}
+                  inStock={item.in_stock}
                   image={item.imageUrl}
                   name={item.ProductName}
                   manufacturer={item.Manufacturer}

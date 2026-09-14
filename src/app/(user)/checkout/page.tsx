@@ -124,7 +124,9 @@ export default function Checkout() {
         toast.error(res?.message || "Order failed");
       }
     } catch (err) {
-      toast.error("Order creation failed");
+      // `unwrap()` rejects with the thunk's rejectValue -- the server's own
+      // reason (e.g. "Dolo 650 is out of stock."), so show that.
+      toast.error(typeof err === "string" && err ? err : "Order creation failed");
     }
   };
 

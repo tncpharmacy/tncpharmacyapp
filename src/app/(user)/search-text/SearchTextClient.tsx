@@ -331,6 +331,7 @@ export default function SearchTextClient() {
                       // 💻 DESKTOP/TABLET → CARD DESIGN (Reusable Component 🔥)
                       <ProductCardUI
                         key={`${item.id}-${index}`}
+                        inStock={item.in_stock}
                         image={img}
                         name={item.medicine_name}
                         manufacturer={item.manufacturer_name}
