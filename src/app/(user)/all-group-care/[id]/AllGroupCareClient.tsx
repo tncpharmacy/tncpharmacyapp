@@ -457,23 +457,24 @@ export default function AllGroupCareClient() {
                           </div>
                           <div>
                             <button
+                              title={(item.in_stock === false && !isInBag) ? "Currently out of stock" : undefined}
                               className={`btn-1 btn-HO ${
                                 isInBag ? "remove" : "add"
-                              }`}
+                              } ${(item.in_stock === false && !isInBag) ? "oos" : ""}`}
                               disabled={processingIds.includes(
                                 item.medicine_id
-                              )}
+                              ) || (item.in_stock === false && !isInBag)}
                               onClick={() =>
                                 isInBag
                                   ? handleRemove(item.medicine_id)
                                   : handleAdd(item)
                               }
                             >
-                              {processingIds.includes(item.medicine_id)
+                              {(item.in_stock === false && !isInBag) ? "OUT OF STOCK" : (processingIds.includes(item.medicine_id)
                                 ? "Processing..."
                                 : isInBag
                                 ? "REMOVE"
-                                : "ADD"}
+                                : "ADD")}
                             </button>
                           </div>
                         </div>

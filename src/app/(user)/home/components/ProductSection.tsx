@@ -193,10 +193,11 @@ export default function ProductSection({
                     </div>
 
                     <Button
+                      title={(item.in_stock === false && !item.showRemove) ? "Currently out of stock" : undefined} disabled={(item.in_stock === false && !item.showRemove)}
                       size="sm"
                       className={`btn-1 btn-HO ${
                         item.showRemove ? "remove" : "add"
-                      }`}
+                      } ${(item.in_stock === false && !item.showRemove) ? "oos" : ""}`}
                       style={{ borderRadius: "35px" }}
                       onClick={() =>
                         item.showRemove
@@ -204,7 +205,7 @@ export default function ProductSection({
                           : handleAdd(item)
                       }
                     >
-                      {item.showRemove ? "REMOVE" : "ADD"}
+                      {(item.in_stock === false && !item.showRemove) ? "OUT OF STOCK" : (item.showRemove ? "REMOVE" : "ADD")}
                     </Button>
                   </div>
                 </div>

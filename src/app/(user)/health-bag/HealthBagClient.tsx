@@ -1067,10 +1067,11 @@ export default function HealthBagClient() {
                               ) : null}
                             </div>
                             <Button
+                              title={(item.in_stock === false && !showRemove) ? "Currently out of stock" : undefined} disabled={(item.in_stock === false && !showRemove)}
                               size="sm"
                               className={`btn-1 btn-HO ${
                                 isInBag ? "remove" : "add"
-                              }`}
+                              } ${(item.in_stock === false && !showRemove) ? "oos" : ""}`}
                               style={{ borderRadius: "35px" }}
                               onClick={() =>
                                 showRemove
@@ -1078,7 +1079,7 @@ export default function HealthBagClient() {
                                   : handleAdd(item)
                               }
                             >
-                              {showRemove ? "REMOVE" : "ADD"}
+                              {(item.in_stock === false && !showRemove) ? "OUT OF STOCK" : (showRemove ? "REMOVE" : "ADD")}
                             </Button>
                           </div>
                         </div>
@@ -1221,10 +1222,11 @@ export default function HealthBagClient() {
                               ) : null}
                             </div>
                             <Button
+                              title={(item.in_stock === false && !showRemove) ? "Currently out of stock" : undefined} disabled={(item.in_stock === false && !showRemove)}
                               size="sm"
                               className={`btn-1 btn-HO ${
                                 isInBag ? "remove" : "add"
-                              }`}
+                              } ${(item.in_stock === false && !showRemove) ? "oos" : ""}`}
                               style={{ borderRadius: "35px" }}
                               onClick={() =>
                                 showRemove
@@ -1232,7 +1234,7 @@ export default function HealthBagClient() {
                                   : handleAdd(item)
                               }
                             >
-                              {showRemove ? "REMOVE" : "ADD"}
+                              {(item.in_stock === false && !showRemove) ? "OUT OF STOCK" : (showRemove ? "REMOVE" : "ADD")}
                             </Button>
                           </div>
                         </div>
@@ -1376,10 +1378,11 @@ export default function HealthBagClient() {
                               ) : null}
                             </div>
                             <Button
+                              title={(item.in_stock === false && !showRemove) ? "Currently out of stock" : undefined} disabled={(item.in_stock === false && !showRemove)}
                               size="sm"
                               className={`btn-1 btn-HO ${
                                 isInBag ? "remove" : "add"
-                              }`}
+                              } ${(item.in_stock === false && !showRemove) ? "oos" : ""}`}
                               style={{ borderRadius: "35px" }}
                               onClick={() =>
                                 showRemove
@@ -1387,7 +1390,7 @@ export default function HealthBagClient() {
                                   : handleAdd(item)
                               }
                             >
-                              {showRemove ? "REMOVE" : "ADD"}
+                              {(item.in_stock === false && !showRemove) ? "OUT OF STOCK" : (showRemove ? "REMOVE" : "ADD")}
                             </Button>
                           </div>
                         </div>

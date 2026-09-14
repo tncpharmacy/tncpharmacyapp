@@ -392,15 +392,16 @@ export default function SearchTextClient() {
                           </div>
 
                           <button
+                            title={(item.in_stock === false && !isInBag) ? "Currently out of stock" : undefined}
                             className={`btn-1 btn-HO ${
                               isInBag ? "remove" : "add"
-                            }`}
-                            disabled={processingIds.includes(item.product_id)}
+                            } ${(item.in_stock === false && !isInBag) ? "oos" : ""}`}
+                            disabled={processingIds.includes(item.product_id) || (item.in_stock === false && !isInBag)}
                             onClick={() =>
                               isInBag ? handleRemove(pid) : handleAdd(item)
                             }
                           >
-                            {isInBag ? "REMOVE" : "ADD"}
+                            {(item.in_stock === false && !isInBag) ? "OUT OF STOCK" : (isInBag ? "REMOVE" : "ADD")}
                           </button>
                         </div>
                       </div>

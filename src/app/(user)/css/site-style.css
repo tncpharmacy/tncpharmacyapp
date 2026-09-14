@@ -807,6 +807,13 @@ footer .border-top {
   background-color: #0b5ed7;
 }
 
+/* OUT OF STOCK (TNC-18): no non-expired batch has units */
+.btn-HO.oos,
+.btn-HO.oos:hover {
+  background-color: #adb5bd;
+  cursor: not-allowed;
+}
+
 /* DESKTOP HOVER ONLY */
 @media (hover: hover) {
   .btn-HO.add:hover {
