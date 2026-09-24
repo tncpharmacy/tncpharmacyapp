@@ -201,11 +201,13 @@ export const createBuyerOrder = createAsyncThunk<
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       any
     >;
+    /** TNC-22: one per checkout attempt; reuse it when retrying. */
+    idempotencyKey?: string;
   },
   { rejectValue: string }
->("buyer/createOrder", async ({ buyerId, payload }, { rejectWithValue }) => {
+>("buyer/createOrder", async ({ buyerId, payload, idempotencyKey }, { rejectWithValue }) => {
   try {
-    const res = await buyerCreateOrderApi(buyerId, payload);
+    const res = await buyerCreateOrderApi(buyerId, payload, idempotencyKey);
     return res.data;
   } catch (err: unknown) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

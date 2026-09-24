@@ -1,5 +1,6 @@
 "use client";
 
+import { newIdempotencyKey } from "@/lib/utils/idempotencyKey";
 import GlobalProductSearchBox from "@/app/components/GlobalProductSearchBox/GlobalProductSearchBox";
 import GlobalSearchBox from "@/app/components/GlobalSearchBox/GlobalSearchBox";
 import SingleSelectDropdown from "@/app/components/Input/SingleSelectDropdown";
@@ -10,8 +11,6 @@ import HealthBagModal from "@/app/components/RetailCounterModal/HealthBagModal";
 import WhatsappWaitModal from "@/app/components/RetailCounterModal/WhatsappWaitModal";
 import { getUser } from "@/lib/auth/auth";
 import {
-  buyerLogin,
-  buyerRegister,
 } from "@/lib/features/buyerSlice/buyerSlice";
 
 import { createHealthBagItem } from "@/lib/features/healthBagPharmacistSlice/healthBagPharmacistSlice";
@@ -125,6 +124,8 @@ export default function OcrExtractionLogic({
   } = useAppSelector((s) => s.medicine);
   // ref for focus
   const healthBagRef = useRef<HTMLButtonElement | null>(null);
+  // TNC-22: one key per bill, reused on a retry/double click.
+  const counterOrderKey = useRef<string | null>(null);
   const [isUploadFocused, setIsUploadFocused] = useState(false);
 
   const [selectedProduct, setSelectedProduct] = useState<Medicine | null>(null);
@@ -462,12 +463,15 @@ export default function OcrExtractionLogic({
         products,
       };
 
+      if (!counterOrderKey.current) counterOrderKey.current = newIdempotencyKey("ctr");
       await dispatch(
         createPharmacistOrder({
           buyerId: Number(buyerId),
           payload: orderPayload,
+          idempotencyKey: counterOrderKey.current,
         })
       ).unwrap();
+      counterOrderKey.current = null;
 
       return true;
     } catch (err) {

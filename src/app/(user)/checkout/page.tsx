@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import "../css/site-style.css";
 import "../css/user-style.css";
 import "bootstrap/dist/css/bootstrap.min.css";
@@ -16,6 +16,12 @@ import type { OrderPayload } from "@/types/order";
 import { useHealthBag } from "@/lib/hooks/useHealthBag";
 import { formatAmount } from "@/lib/utils/formatAmount";
 import { formatPrice } from "@/lib/utils/formatPrice";
+import { newIdempotencyKey } from "@/lib/utils/idempotencyKey";
+import { payWithRazorpay } from "@/lib/utils/razorpayCheckout";
+import {
+  abandonRazorpayPaymentApi,
+  getPaymentConfigApi,
+} from "@/lib/api/payment";
 
 export default function Checkout() {
   const dispatch = useAppDispatch();
@@ -31,8 +37,18 @@ export default function Checkout() {
 
   const [isClient, setIsClient] = useState(false);
 
-  // Payment Selection: "qr" or "cod"
-  const [paymentType, setPaymentType] = useState<"qr" | "cod">("qr");
+  // Payment Selection. "online" (Razorpay) replaces the static "qr" image
+  // when the server has Razorpay keys; otherwise the old QR option stays.
+  const [paymentType, setPaymentType] = useState<"qr" | "online" | "cod">(
+    "qr"
+  );
+  const [onlineEnabled, setOnlineEnabled] = useState(false);
+
+  // TNC-22: one key per checkout attempt. A retry of the same attempt
+  // (double tap, network error) reuses it, so the server returns the order
+  // it already created instead of making a second one.
+  const attemptKey = useRef<string | null>(null);
+  const [placing, setPlacing] = useState(false);
 
   // COD Captcha states
   const [captchaQ, setCaptchaQ] = useState({ a: 0, b: 0 });
@@ -40,6 +56,18 @@ export default function Checkout() {
 
   useEffect(() => {
     setIsClient(true);
+  }, []);
+
+  // TNC-19: is online payment switched on for this environment?
+  useEffect(() => {
+    getPaymentConfigApi()
+      .then((cfg) => {
+        if (cfg?.razorpay_enabled) {
+          setOnlineEnabled(true);
+          setPaymentType((prev) => (prev === "qr" ? "online" : prev));
+        }
+      })
+      .catch(() => setOnlineEnabled(false));
   }, []);
 
   useEffect(() => {
@@ -78,8 +106,21 @@ export default function Checkout() {
     router.push("/health-bag");
   };
 
+  // Order placed (and, for online, paid): clear the bag and show success.
+  const finishOrder = async () => {
+    safeLocalStorage.removeItem("checkoutData");
+    attemptKey.current = null;
+    if (healthBagItems?.length > 0) {
+      for (const item of healthBagItems) {
+        await removeItem(item.productid || item.product_id);
+      }
+    }
+    setShowSuccess(true);
+  };
+
   // Continue → Order creation logic
   const handleContinue = async () => {
+    if (placing) return; // TNC-22: ignore taps while a request is in flight
     if (!buyer || !token) {
       toast.error("Login required!");
       return;
@@ -111,35 +152,60 @@ export default function Checkout() {
 
     const orderPayload: OrderPayload = {
       ...checkoutData,
-      //payment_mode: checkoutData.payment_mode || 1,
-      payment_mode: paymentType === "qr" ? 1 : 2, // 1 → QR, 2 → COD
+      payment_mode: paymentType === "cod" ? 2 : 1, // 1 → online/QR, 2 → COD
     };
+
+    if (!attemptKey.current) attemptKey.current = newIdempotencyKey();
+    setPlacing(true);
 
     try {
       const res = await dispatch(
         createBuyerOrder({
           buyerId: buyer.id,
           payload: orderPayload,
+          idempotencyKey: attemptKey.current,
         })
       ).unwrap();
 
-      if (res?.status === true || res?.success) {
-        safeLocalStorage.removeItem("checkoutData");
-
-        if (healthBagItems?.length > 0) {
-          for (const item of healthBagItems) {
-            await removeItem(item.productid || item.product_id);
-          }
-        }
-
-        setShowSuccess(true);
-      } else {
+      if (!(res?.status === true || res?.success)) {
         toast.error(res?.message || "Order failed");
+        return;
+      }
+
+      if (paymentType !== "online") {
+        await finishOrder();
+        return;
+      }
+
+      // TNC-19: the order exists and holds its stock; now take payment.
+      const orderId = Number(res?.data?.order_id);
+      const outcome = await payWithRazorpay(orderId, (msg) => toast.error(msg));
+
+      if (outcome === "paid") {
+        await finishOrder();
+      } else if (outcome === "unverified") {
+        // Razorpay took the money but our confirmation call failed; the
+        // webhook settles it. Never cancel here.
+        toast("Payment received — we are confirming it. Your order will update shortly.");
+        await finishOrder();
+      } else {
+        // Closed the window or it never opened: release the order and its
+        // stock so nothing is held for a payment that isn't coming.
+        await abandonRazorpayPaymentApi(orderId).catch(() => undefined);
+        attemptKey.current = null; // next try is a new order
+        toast.error(
+          outcome === "dismissed"
+            ? "Payment not completed. Your order was cancelled and nothing was charged."
+            : "Could not open the payment window. Please try again or choose Cash on Delivery."
+        );
       }
     } catch (err) {
       // `unwrap()` rejects with the thunk's rejectValue -- the server's own
-      // reason (e.g. "Dolo 650 is out of stock."), so show that.
+      // reason (e.g. "Dolo 650 is out of stock."), so show that. The key is
+      // kept: if the first request did get through, the retry returns it.
       toast.error(typeof err === "string" && err ? err : "Order creation failed");
+    } finally {
+      setPlacing(false);
     }
   };
 
@@ -167,14 +233,25 @@ export default function Checkout() {
 
         {/* Payment Type Selector */}
         <div className="d-flex justify-content-center gap-4 mb-4">
-          <button
-            className={`btn ${
-              paymentType === "qr" ? "btn-primary" : "btn-outline-primary"
-            }`}
-            onClick={() => setPaymentType("qr")}
-          >
-            QR Payment
-          </button>
+          {onlineEnabled ? (
+            <button
+              className={`btn ${
+                paymentType === "online" ? "btn-primary" : "btn-outline-primary"
+              }`}
+              onClick={() => setPaymentType("online")}
+            >
+              Pay Online
+            </button>
+          ) : (
+            <button
+              className={`btn ${
+                paymentType === "qr" ? "btn-primary" : "btn-outline-primary"
+              }`}
+              onClick={() => setPaymentType("qr")}
+            >
+              QR Payment
+            </button>
+          )}
 
           <button
             className={`btn ${
@@ -208,6 +285,25 @@ export default function Checkout() {
                   Amount: ₹{formatPrice(checkoutData?.amount || 0)}
                 </h6>
               </>
+            )}
+
+            {/* =============== ONLINE (RAZORPAY) UI =============== */}
+            {paymentType === "online" && (
+              <div className="text-center">
+                <i
+                  className="bi bi-shield-check text-success"
+                  style={{ fontSize: 48 }}
+                ></i>
+                <p className="text-muted mt-2 mb-1">
+                  UPI, cards, net banking and wallets via Razorpay
+                </p>
+                <h6 className="fw-semibold text-success">
+                  Amount: ₹{formatPrice(checkoutData?.amount || 0)}
+                </h6>
+                <p className="small text-muted mb-0">
+                  The final amount is confirmed by our server before payment.
+                </p>
+              </div>
             )}
 
             {/* =============== COD PAYMENT UI =============== */}
@@ -262,8 +358,16 @@ export default function Checkout() {
             ← Back
           </button>
 
-          <button className="btn btn-success px-5" onClick={handleContinue}>
-            {loading ? "Processing..." : "Place Order"}
+          <button
+            className="btn btn-success px-5"
+            onClick={handleContinue}
+            disabled={placing || loading}
+          >
+            {placing || loading
+              ? "Processing..."
+              : paymentType === "online"
+              ? "Place Order & Pay"
+              : "Place Order"}
           </button>
         </div>
       </div>

@@ -1,5 +1,10 @@
 "use client";
 
+import { newIdempotencyKey } from "@/lib/utils/idempotencyKey";
+import {
+  counterBuyerLookup,
+  counterBuyerCreate,
+} from "@/lib/features/counterBuyer";
 import "../css/pharmacy-style.css";
 import SideNav from "@/app/pharmacist/components/SideNav/page";
 import Header from "@/app/pharmacist/components/Header/page";
@@ -21,8 +26,6 @@ import { getUser } from "@/lib/auth/auth";
 import { getPharmacy } from "@/lib/api/pharmacySelf";
 import { useRouter } from "next/navigation";
 import {
-  buyerLogin,
-  buyerRegister,
 } from "@/lib/features/buyerSlice/buyerSlice";
 import { createPharmacistOrder } from "@/lib/features/pharmacistOrderSlice/pharmacistOrderSlice";
 import { updateBuyerForPharmacistThunk } from "@/lib/features/pharmacistBuyerListSlice/pharmacistBuyerListSlice";
@@ -77,6 +80,9 @@ export default function RetailCounter() {
   const durationRef = useRef<HTMLInputElement | null>(null);
   const submitRef = useRef<HTMLInputElement | null>(null);
   const uploadRef = useRef<HTMLButtonElement | null>(null);
+  // TNC-22: one key per bill; a double click or retry reuses it, so the
+  // server returns the first order instead of billing (and deducting) twice.
+  const counterOrderKey = useRef<string | null>(null);
   const userPharmacy = getUser();
   const pharmacy_id = Number(userPharmacy?.pharmacy_id) || 0;
   const dispatch = useAppDispatch();
@@ -153,7 +159,7 @@ export default function RetailCounter() {
     setMobileError("");
 
     try {
-      const res = await dispatch(buyerLogin({ login_id: value })).unwrap();
+      const res = await dispatch(counterBuyerLookup({ login_id: value })).unwrap();
 
       if (res?.data?.id) {
         // Buyer mil gaya
@@ -309,7 +315,7 @@ export default function RetailCounter() {
 
       // 1) Buyer Login
       const loginRes = await dispatch(
-        buyerLogin({ login_id: mobile })
+        counterBuyerLookup({ login_id: mobile })
       ).unwrap();
 
       if (loginRes?.data?.existing === true) {
@@ -333,7 +339,7 @@ export default function RetailCounter() {
       } else {
         // 🔥 REGISTER FLOW
         const regRes = await dispatch(
-          buyerRegister({
+          counterBuyerCreate({
             name: customerName,
             email: "",
             number: mobile,
@@ -393,12 +399,25 @@ export default function RetailCounter() {
         products,
       };
 
-      await dispatch(
+      if (!counterOrderKey.current) counterOrderKey.current = newIdempotencyKey("ctr");
+      const created = await dispatch(
         createPharmacistOrder({
           buyerId,
           payload: orderPayload,
+          idempotencyKey: counterOrderKey.current,
         })
       ).unwrap();
+      counterOrderKey.current = null; // next bill gets a new key
+
+      // TNC-27: the server prices the bill from the catalogue; the amount it
+      // saved is the final one. Say so if it differs from the screen.
+      const savedAmount = Number(created?.data?.amount);
+      if (!Number.isNaN(savedAmount) && Math.abs(savedAmount - finalAmount) >= 0.01) {
+        toast(
+          `Saved amount is ₹${savedAmount.toFixed(2)} (catalogue price). Screen showed ₹${finalAmount.toFixed(2)}.`,
+          { duration: 6000 }
+        );
+      }
       // ✅ Success Toast
       toast.success("Order created successfully!");
       // ✅ RETURN DATA (MOST IMPORTANT)

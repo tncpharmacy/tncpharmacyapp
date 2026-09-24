@@ -102,6 +102,8 @@ export const ENDPOINTS = {
   // buyer
   BUYER: {
     LOGIN: "/buyer/validate/",
+    // Staff-only counter lookup / create, no OTP (buyer/counter.py)
+    COUNTER: "/buyer/counter/",
     CREATE: "/buyer/register/",
     VERIFY_OTP: "/buyer/otp/verify/",
     DELETE: (id: number) => `/buyer/create/${id}/`,
@@ -120,6 +122,8 @@ export const ENDPOINTS = {
     POST_ORDER: (buyerId: number) => `/order/create-order/${buyerId}/`,
     GET_ORDER_LIST: (buyerId: number) => `/order/buyer/list/${buyerId}`,
     GET_ORDER_DETAIL: (orderId: number) => `/order/buyer/detail/${orderId}`,
+    // TNC-20: buyer cancels own order (until dispatched)
+    CANCEL_ORDER: (orderId: number) => `/order/${orderId}/cancel/`,
     RE_ORDER: (orderId: number) => `/order/buyer/reorder/${orderId}/`,
     RE_ORDER_CART: (buyerId: number) =>
       `/order/buyer/reorder-cart/view/${buyerId}/`,
@@ -228,6 +232,8 @@ export const ENDPOINTS = {
     GET_ORDER_BY_BUYER_ID: (buyerId: number) =>
       `/order/pharmacist/list/${buyerId}/`,
     GET_ORDER_BY_ORDERID: (orderId: number) => `/order/detail/${orderId}/`,
+    // TNC-20: staff cancel with a reason (until delivered)
+    CANCEL_ORDER: (orderId: number) => `/order/staff/${orderId}/cancel/`,
     GET_ORDER_LIST: "/order/list/",
     GET_REPORT_ORDER_WISE: ({
       startDate,
@@ -322,6 +328,14 @@ export const ENDPOINTS = {
       `/masterapp/update/instruction/${productInstructionId}/`,
     DELETE: (productInstructionId: number) =>
       `/masterapp/delete/instruction/${productInstructionId}/`,
+  },
+
+  // TNC-19: Razorpay online payment
+  PAYMENT: {
+    CONFIG: "/payment/config/",
+    RAZORPAY_ORDER: "/payment/razorpay/order/",
+    RAZORPAY_VERIFY: "/payment/razorpay/verify/",
+    RAZORPAY_ABANDON: "/payment/razorpay/abandon/",
   },
 
   PRODUCT_DURATION: {

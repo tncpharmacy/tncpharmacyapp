@@ -37,13 +37,13 @@ export const createPharmacistOrder = createAsyncThunk<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   any,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  { buyerId: number; payload: any },
+  { buyerId: number; payload: any; idempotencyKey?: string },
   { rejectValue: string }
 >(
   "pharmacistOrder/create",
-  async ({ buyerId, payload }, { rejectWithValue }) => {
+  async ({ buyerId, payload, idempotencyKey }, { rejectWithValue }) => {
     try {
-      const res = await createOrderApi(buyerId, payload);
+      const res = await createOrderApi(buyerId, payload, idempotencyKey);
       return res.data;
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {

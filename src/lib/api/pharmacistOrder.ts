@@ -1,13 +1,23 @@
 import api from "../axios";
 import { ENDPOINTS } from "../config";
+import { IDEMPOTENCY_HEADER } from "@/lib/utils/idempotencyKey";
 
 // create order by pharmacist
 export const createOrderApi = async (
   buyerId: number,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  payload: Record<string, any>
+  payload: Record<string, any>,
+  idempotencyKey?: string
 ) => {
-  return api.post(ENDPOINTS.PHARMACIST_ORDER.POST_ORDER(buyerId), payload);
+  // TNC-22: a double click at the counter must not bill twice.
+  return api.post(ENDPOINTS.PHARMACIST_ORDER.POST_ORDER(buyerId), payload, {
+    headers: idempotencyKey ? { [IDEMPOTENCY_HEADER]: idempotencyKey } : {},
+  });
+};
+
+// cancel an order with a reason (TNC-20) — pharmacy / pharmacist / admin
+export const staffCancelOrderApi = (orderId: number, reason: string) => {
+  return api.post(ENDPOINTS.PHARMACIST_ORDER.CANCEL_ORDER(orderId), { reason });
 };
 
 // get order by buyer id

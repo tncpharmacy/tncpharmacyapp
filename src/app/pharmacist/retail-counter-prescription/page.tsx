@@ -1,5 +1,10 @@
 "use client";
 
+import { newIdempotencyKey } from "@/lib/utils/idempotencyKey";
+import {
+  counterBuyerLookup,
+  counterBuyerCreate,
+} from "@/lib/features/counterBuyer";
 import "../css/pharmacy-style.css";
 import SideNav from "@/app/pharmacist/components/SideNav/page";
 import Header from "@/app/pharmacist/components/Header/page";
@@ -16,8 +21,6 @@ import dynamic from "next/dynamic";
 import { uploadPrescriptionPharmacistThunk } from "@/lib/features/pharmacistPrescriptionSlice/pharmacistPrescriptionSlice";
 import { useRouter } from "next/navigation";
 import {
-  buyerLogin,
-  buyerRegister,
 } from "@/lib/features/buyerSlice/buyerSlice";
 import {
   getProductByGenericId,
@@ -168,6 +171,8 @@ export default function RetailCounter() {
   const [shouldSubmit, setShouldSubmit] = useState(false);
   const [showBagModal, setShowBagModal] = useState(false);
   const [additionalDiscount, setAdditionalDiscount] = useState<string>("0");
+  // TNC-22: one key per bill, reused on a retry/double click.
+  const counterOrderKey = useRef<string | null>(null);
 
   const [buyerId, setBuyerId] = useState<number | null>(null);
 
@@ -182,7 +187,7 @@ export default function RetailCounter() {
     setMobileError("");
 
     try {
-      const res = await dispatch(buyerLogin({ login_id: value })).unwrap();
+      const res = await dispatch(counterBuyerLookup({ login_id: value })).unwrap();
 
       if (res?.data?.id) {
         // Buyer mil gaya
@@ -237,7 +242,7 @@ export default function RetailCounter() {
       let buyer_id: number | null = null;
 
       const loginRes = await dispatch(
-        buyerLogin({ login_id: mobile })
+        counterBuyerLookup({ login_id: mobile })
       ).unwrap();
 
       if (loginRes?.data?.id) {
@@ -263,7 +268,7 @@ export default function RetailCounter() {
           number: mobile,
           uhid: uhId,
         };
-        const regRes = await dispatch(buyerRegister(registerPayload)).unwrap();
+        const regRes = await dispatch(counterBuyerCreate(registerPayload)).unwrap();
         buyer_id = regRes?.data?.id;
         setBuyerId(buyer_id);
       }
@@ -512,14 +517,14 @@ export default function RetailCounter() {
       let buyerId = null;
 
       const loginRes = await dispatch(
-        buyerLogin({ login_id: mobile })
+        counterBuyerLookup({ login_id: mobile })
       ).unwrap();
 
       if (loginRes?.data?.existing === true) {
         buyerId = loginRes.data.id;
       } else {
         const regRes = await dispatch(
-          buyerRegister({
+          counterBuyerCreate({
             name: customerName,
             email: "",
             number: mobile,
@@ -567,24 +572,29 @@ export default function RetailCounter() {
         referred_by_doctor: referredByDoctor || null,
         referred_by_hospital: referredByHospital || null,
         prescription_id: prescriptionId,
-        additionalDiscount,
+        // The API field is additional_discount (a percentage). This used to
+        // send "additionalDiscount", which the server silently ignored.
+        additional_discount: Number(additionalDiscount) || 0,
         address_id: null,
         status: "1",
         products,
       };
       // console.log("orderPayload", orderPayload);
+      if (!counterOrderKey.current) counterOrderKey.current = newIdempotencyKey("ctr");
       await dispatch(
         createPharmacistOrder({
           buyerId,
           payload: orderPayload,
+          idempotencyKey: counterOrderKey.current,
         })
       ).unwrap();
+      counterOrderKey.current = null;
       // ✅ Success Toast
       toast.success("Order created successfully!");
       return true;
     } catch (err) {
-      // console.log(err);
-      toast.error("Order Creation Failed!");
+      // Show the server's reason (out of stock, discount above the limit...)
+      toast.error(typeof err === "string" && err ? err : "Order Creation Failed!");
       return false;
     }
   };

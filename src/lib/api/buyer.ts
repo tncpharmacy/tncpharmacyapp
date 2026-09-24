@@ -1,3 +1,4 @@
+import { IDEMPOTENCY_HEADER } from "@/lib/utils/idempotencyKey";
 // api/buyer.ts
 import axiosInstance from "@/lib/axios";
 import { ENDPOINTS } from "@/lib/config";
@@ -47,9 +48,20 @@ export const buyerDeleteApi = async (id: number) => {
 export const buyerCreateOrderApi = async (
   buyerId: number,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  payload: Record<string, any>
+  payload: Record<string, any>,
+  idempotencyKey?: string
 ) => {
-  return axiosInstance.post(ENDPOINTS.BUYER.POST_ORDER(buyerId), payload);
+  // TNC-22: same key on a retry -> the server returns the first order.
+  return axiosInstance.post(ENDPOINTS.BUYER.POST_ORDER(buyerId), payload, {
+    headers: idempotencyKey ? { [IDEMPOTENCY_HEADER]: idempotencyKey } : {},
+  });
+};
+
+// 🔹 CANCEL Order (TNC-20) — buyer, own order, until dispatched
+export const buyerCancelOrderApi = async (orderId: number, reason?: string) => {
+  return axiosInstance.post(ENDPOINTS.BUYER.CANCEL_ORDER(orderId), {
+    reason: reason || "",
+  });
 };
 
 // 🔹 GET Order List (new)
