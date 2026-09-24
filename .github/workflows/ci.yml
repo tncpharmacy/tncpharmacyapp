@@ -24,9 +24,11 @@ jobs:
       - name: Type-check
         run: npx tsc --noEmit
 
+      # TNC-23: blocking. `next lint` exits non-zero only on errors; the
+      # ~1,000 existing warnings (mostly unused vars) are reported but don't
+      # fail the build. There were 0 errors when this was switched on.
       - name: Lint
         run: npx next lint
-        continue-on-error: true
 
       - name: Build
         env:
