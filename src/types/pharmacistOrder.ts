@@ -105,6 +105,13 @@ export interface PharmacistOrder {
   pharmacy_address: string;
   prescription_url: string;
   products: OrderProduct[];
+
+  // TNC-20: cancellation state from the API
+  order_number?: string | null;
+  status?: string; // "1" active, "0" cancelled
+  orderStatus?: string; // "Buy" | "Cancelled"
+  cancel_reason?: string | null;
+  staff_can_cancel?: boolean;
 }
 
 // ===============================

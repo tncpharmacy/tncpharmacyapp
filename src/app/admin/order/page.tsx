@@ -1,6 +1,9 @@
 "use client";
 
 export const dynamic = "force-dynamic";
+import toast from "react-hot-toast";
+import { askCancelReason } from "@/lib/utils/orderStatus";
+import { staffCancelOrderApi } from "@/lib/api/pharmacistOrder";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Button, Modal, OverlayTrigger, Tooltip } from "react-bootstrap";
@@ -368,6 +371,26 @@ export default function OrderList() {
     handleReprint(order);
   };
 
+  // TNC-20: cancel with a reason; the API puts the stock back.
+  const handleCancelOrder = async (order: PharmacistOrder) => {
+    const reason = askCancelReason();
+    if (!reason) return;
+    try {
+      await staffCancelOrderApi(Number(order.orderId), reason);
+      setFilteredData((prev) =>
+        prev.map((item) =>
+          Number(item.orderId) === Number(order.orderId)
+            ? { ...item, status: "0", orderStatus: "Cancelled", cancel_reason: reason, staff_can_cancel: false }
+            : item
+        )
+      );
+      toast.success("Order cancelled and stock restored.");
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || "Could not cancel the order.");
+    }
+  };
+
   return (
     <>
       <Header />
@@ -522,6 +545,20 @@ export default function OrderList() {
                                     >
                                       <i className="bi bi-eye-fill"></i>
                                     </button>
+                                    {p.orderStatus === "Cancelled" && (
+                                      <span className="badge bg-secondary ms-2" title={p.cancel_reason || ""}>
+                                        Cancelled
+                                      </span>
+                                    )}
+                                    {p.staff_can_cancel && (
+                                      <button
+                                        className="btn btn-light btn-sm ms-2"
+                                        title="Cancel order (stock is restored)"
+                                        onClick={() => handleCancelOrder(p)}
+                                      >
+                                        <i className="bi bi-x-circle-fill text-danger"></i>
+                                      </button>
+                                    )}
                                     {/* <button
                                       className="btn btn-light btn-sm ms-2"
                                       title="Order Reprint"

@@ -1,5 +1,11 @@
 "use client";
 
+import toast from "react-hot-toast";
+import {
+  askCancelReason,
+  deliveryLabel,
+  nextDeliveryStatus,
+} from "@/lib/utils/orderStatus";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { Button, Modal, OverlayTrigger, Tooltip } from "react-bootstrap";
@@ -28,6 +34,7 @@ import {
   getReportOrderWiseApi,
   getReportProductWiseApi,
   updateDeliveryStatusApi,
+  staffCancelOrderApi,
 } from "@/lib/api/pharmacistOrder";
 import { formatPrice } from "@/lib/utils/formatPrice";
 import StatusConfirmModal from "@/app/components/StatusConfirmModal/StatusConfirmModal";
@@ -519,12 +526,12 @@ export default function OrderList() {
 
     try {
       setStatusLoading(true);
-      const currentStatus = Number(selectedOrder.delivery_status);
-      const newStatus = currentStatus === 1 ? 2 : 1;
+      // TNC-20: In Process -> Dispatched -> Delivered (-> In Process)
+      const newStatus = nextDeliveryStatus(selectedOrder.delivery_status);
       const orderId = Number(selectedOrder.orderId);
       await updateDeliveryStatusApi({
         orderId,
-        delivery_status: String(newStatus),
+        delivery_status: newStatus,
       });
       // ✅ UI UPDATE (IMPORTANT)
       setFilteredData((prev) =>
@@ -532,9 +539,9 @@ export default function OrderList() {
           Number(item.orderId) === orderId
             ? {
                 ...item,
-                delivery_status: String(newStatus),
-                deliveryStatusName:
-                  newStatus === 2 ? "Delivered" : "In Process",
+                delivery_status: newStatus,
+                deliveryStatusName: deliveryLabel(newStatus),
+                staff_can_cancel: newStatus !== "2" && item.status !== "0",
               }
             : item
         )
@@ -549,8 +556,35 @@ export default function OrderList() {
     }
   };
 
-  const nextStatus =
-    Number(selectedOrder?.delivery_status) === 1 ? "Delivered" : "In Process";
+  const nextStatus = deliveryLabel(
+    nextDeliveryStatus(selectedOrder?.delivery_status ?? "1")
+  );
+
+  // TNC-20: cancel with a reason; the API puts the stock back.
+  const handleCancelOrder = async (order: PharmacistOrder) => {
+    const reason = askCancelReason();
+    if (!reason) return;
+    try {
+      await staffCancelOrderApi(Number(order.orderId), reason);
+      setFilteredData((prev) =>
+        prev.map((item) =>
+          Number(item.orderId) === Number(order.orderId)
+            ? {
+                ...item,
+                status: "0",
+                orderStatus: "Cancelled",
+                cancel_reason: reason,
+                staff_can_cancel: false,
+              }
+            : item
+        )
+      );
+      toast.success("Order cancelled and stock restored.");
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || "Could not cancel the order.");
+    }
+  };
 
   return (
     <>
@@ -710,18 +744,25 @@ export default function OrderList() {
                                 </td>
                                 <td>
                                   <div className="status-toggle">
-                                    <button
-                                      className={`status-pill ${
-                                        Number(p.delivery_status) === 2
-                                          ? "delivered"
-                                          : "processing"
-                                      }`}
-                                      onClick={() => handleStatusClick(p)}
-                                    >
-                                      {Number(p.delivery_status) === 2
-                                        ? "Delivered"
-                                        : "In Process"}
-                                    </button>
+                                    {p.orderStatus === "Cancelled" ? (
+                                      <span
+                                        className="badge bg-secondary"
+                                        title={p.cancel_reason || ""}
+                                      >
+                                        Cancelled
+                                      </span>
+                                    ) : (
+                                      <button
+                                        className={`status-pill ${
+                                          Number(p.delivery_status) === 2
+                                            ? "delivered"
+                                            : "processing"
+                                        }`}
+                                        onClick={() => handleStatusClick(p)}
+                                      >
+                                        {deliveryLabel(p.delivery_status)}
+                                      </button>
+                                    )}
                                   </div>
                                 </td>
                                 <td className="text-center">
@@ -750,6 +791,15 @@ export default function OrderList() {
                                   >
                                     <i className="bi bi-printer-fill"></i>
                                   </button>
+                                  {p.staff_can_cancel && (
+                                    <button
+                                      className="btn btn-light btn-sm ms-2"
+                                      title="Cancel order (stock is restored)"
+                                      onClick={() => handleCancelOrder(p)}
+                                    >
+                                      <i className="bi bi-x-circle-fill text-danger"></i>
+                                    </button>
+                                  )}
                                 </td>
                               </tr>
                             );

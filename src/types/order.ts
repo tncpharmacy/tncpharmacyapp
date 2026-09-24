@@ -52,6 +52,15 @@ export interface OrderDetails {
   buyerNumber: string;
   buyer_uhid: string;
   prescription_url: string;
+
+  // TNC-20: cancellation
+  order_number?: string | null;
+  status?: string; // "1" active, "0" cancelled
+  orderStatus?: string; // "Buy" | "Cancelled"
+  cancel_reason?: string | null;
+  buyer_can_cancel?: boolean;
+  staff_can_cancel?: boolean;
+  deliveryStatusName?: string;
 }
 
 export interface BuyerAddress {

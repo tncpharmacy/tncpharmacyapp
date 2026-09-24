@@ -32,6 +32,7 @@ import OrderDetailsModal from "@/app/components/BuyerProfileModal/OrderDetailsMo
 import { Address } from "@/types/address";
 import TncLoader from "@/app/components/TncLoader/TncLoader";
 import { formatPrice } from "@/lib/utils/formatPrice";
+import { buyerCancelOrderApi } from "@/lib/api/buyer";
 
 // Mapped interface to fix type errors
 interface BuyerData {
@@ -146,6 +147,11 @@ export default function BuyerProfile() {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return (rawOrderList as unknown as any).map((o: any) => ({
       orderId: o.orderId,
+      order_number: o.order_number,
+      orderStatus: o.orderStatus,
+      cancel_reason: o.cancel_reason,
+      buyer_can_cancel: o.buyer_can_cancel,
+      deliveryStatusName: o.deliveryStatusName,
       buyerName: o.buyerName,
       orderDate: o.orderDate,
       paymentStatus: o.paymentStatus,
@@ -329,6 +335,30 @@ export default function BuyerProfile() {
     } catch (error) {
       toast.error("Failed to set default address");
       console.error(error);
+    }
+  };
+
+  // TNC-20: cancel my order (allowed until it is dispatched). Stock goes
+  // back to the pharmacy and a WhatsApp confirmation is sent.
+  const [cancellingId, setCancellingId] = useState<number | null>(null);
+  const handleCancelOrder = async (orderId: number) => {
+    if (cancellingId) return;
+    const reason = window.prompt(
+      "Cancel this order? You can tell us why (optional):",
+      ""
+    );
+    if (reason === null) return; // pressed Cancel on the prompt
+    setCancellingId(orderId);
+    try {
+      await buyerCancelOrderApi(orderId, reason);
+      toast.success("Order cancelled.");
+      if (userId !== null) await dispatch(getBuyerOrdersList(userId));
+    } catch (err: unknown) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const e = err as any;
+      toast.error(e?.response?.data?.message || "Could not cancel the order.");
+    } finally {
+      setCancellingId(null);
     }
   };
 
@@ -745,7 +775,13 @@ export default function BuyerProfile() {
                                     })()}
                                   <div>
                                     <h6 className="mb-2 text-primary fw-semibold">
-                                      Order Number: {order.orderId}
+                                      Order Number:{" "}
+                                      {order.order_number || order.orderId}
+                                      {order.orderStatus === "Cancelled" && (
+                                        <span className="badge bg-secondary ms-2">
+                                          Cancelled
+                                        </span>
+                                      )}
                                     </h6>
 
                                     <p className="mb-0 text-success">
@@ -788,6 +824,23 @@ export default function BuyerProfile() {
                                     >
                                       <i className="bi bi-eye-fill"></i> Details
                                     </button>
+
+                                    {/* 🔹 Cancel (TNC-20) — only while it can still be cancelled */}
+                                    {order.buyer_can_cancel && (
+                                      <button
+                                        className="btn btn-outline-danger btn-sm"
+                                        onClick={() =>
+                                          handleCancelOrder(order.orderId)
+                                        }
+                                        disabled={cancellingId === order.orderId}
+                                        title="Cancel order"
+                                      >
+                                        <i className="bi bi-x-circle"></i>{" "}
+                                        {cancellingId === order.orderId
+                                          ? "Cancelling..."
+                                          : "Cancel"}
+                                      </button>
+                                    )}
 
                                     {/* 🔹 Reorder */}
                                     <button
