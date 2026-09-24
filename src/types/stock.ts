@@ -4,8 +4,15 @@ export interface StockItem {
   MedicineName: string;
   Manufacturer: string;
   PharmacyName: string;
-  AvailableQty: string; // backend string me bhej raha hai, agar tu number chah raha hai to parse kar le
-  MinStockLevel: string;
+  /** Stock on hand: sum of non-expired batches (TNC-17). A number since TNC-16. */
+  AvailableQty: number | string;
+  MinStockLevel: number | string;
+  /** Units sitting in expired batches — not sellable, should be pulled. */
+  ExpiredQty?: number;
+  /** Everything ever received for this product (the old "stock" figure). */
+  TotalReceived?: number;
+  /** Server-computed: on hand is at or below the reorder level. */
+  IsLowStock?: boolean;
   price?: number; // optional agar pehle tha
   quantity?: number; // optional local UI use ke liye
   location: string;

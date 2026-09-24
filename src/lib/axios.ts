@@ -59,11 +59,23 @@ api.interceptors.request.use(
     }
     const normalizedUrl = url.startsWith("/") ? url : `/${url}`;
 
+    // A request is "public" (sent without a token, so an expired login can't
+    // turn a storefront read into a 401) only when it is a READ of a public
+    // path. TNC-21 closed the write side of several of these paths
+    // (/masterapp/category/create/, category PATCH/DELETE, ...): matching on
+    // the path alone stripped the admin's token from those writes. Contact-form
+    // submissions live under /website but are admin-only reads.
+    const method = (config.method || "get").toLowerCase();
+    const isRead = method === "get" || method === "head";
+    const isAdminOnlyRead = normalizedUrl.includes("/website/contact_form/");
+
     const isPublic =
-      normalizedUrl.includes("/masterapp/care-group/") ||
-      normalizedUrl.includes("/website") ||
-      normalizedUrl.includes("search-suggestion") ||
-      publicEndpoints.some((endpoint) => normalizedUrl.startsWith(endpoint));
+      isRead &&
+      !isAdminOnlyRead &&
+      (normalizedUrl.includes("/masterapp/care-group/") ||
+        normalizedUrl.includes("/website") ||
+        normalizedUrl.includes("search-suggestion") ||
+        publicEndpoints.some((endpoint) => normalizedUrl.startsWith(endpoint)));
 
     if (!isPublic && token && config.headers) {
       config.headers["Authorization"] = `Bearer ${token}`;

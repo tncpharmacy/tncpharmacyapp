@@ -115,6 +115,8 @@ export default function StockList() {
 
   // Helper function to check Low Stock status
   const isItemLowStock = (item: StockItem): boolean => {
+    // TNC-17: the API decides (on hand vs reorder level, in SQL).
+    if (typeof item.IsLowStock === "boolean") return item.IsLowStock;
     const available = Number(item.AvailableQty);
     const minimum = Number(item.MinStockLevel);
     if (isNaN(available) || isNaN(minimum)) return false;
@@ -391,7 +393,7 @@ export default function StockList() {
                           Medicine
                         </th>
                         <th className="fw-bold text-start">Manufacturer</th>
-                        <th className="fw-bold text-start">Stock</th>
+                        <th className="fw-bold text-start">On hand</th>
                         <th className="fw-bold text-start">Location</th>
                       </tr>
                     </thead>
@@ -399,8 +401,7 @@ export default function StockList() {
                       {filteredData
                         .slice(0, visibleCount)
                         .map((p: StockItem, index) => {
-                          const isLowStock =
-                            Number(p.AvailableQty) <= Number(p.MinStockLevel);
+                          const isLowStock = isItemLowStock(p);
                           return (
                             <tr key={index + 1}>
                               <td
@@ -436,6 +437,14 @@ export default function StockList() {
                                 >
                                   {p.AvailableQty ?? "-"}
                                 </span>
+                                {Number(p.ExpiredQty) > 0 && (
+                                  <div
+                                    className="small text-danger mt-1"
+                                    title="Units in expired batches. They are not sold; pull them from the shelf."
+                                  >
+                                    +{p.ExpiredQty} expired
+                                  </div>
+                                )}
                               </td>
                               <td className="text-start">
                                 {p.location ?? "N/A"}
