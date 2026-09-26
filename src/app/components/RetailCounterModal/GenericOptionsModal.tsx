@@ -139,7 +139,8 @@ const GenericOptionsModal: React.FC<GenericOptionsModalProps> = ({
       if (e.key === "Enter") {
         e.preventDefault();
         const selectedItem = processedList[selectedIndex];
-        if (selectedItem) {
+        // Same rule as the button: nothing sellable, nothing to add.
+        if (selectedItem && Number(selectedItem.AvailableQty || 0) > 0) {
           onAddToCart(selectedItem);
           onClose();
         }
@@ -282,6 +283,13 @@ const GenericOptionsModal: React.FC<GenericOptionsModalProps> = ({
                                 ₹ {formatPrice(Number(item.MRP)) || "N/A"}
                               </td>
                               <td>
+                                {/* Nothing sellable (all units sold or expired): a bill
+                                    for it would fail at the server, so don't offer it. */}
+                                {Number(item.AvailableQty || 0) <= 0 ? (
+                                  <span className="badge bg-secondary">
+                                    Out of stock
+                                  </span>
+                                ) : (
                                 <button
                                   ref={(el) => {
                                     buttonRefs.current[index] = el;
@@ -311,6 +319,7 @@ const GenericOptionsModal: React.FC<GenericOptionsModalProps> = ({
                                 >
                                   Add to Cart
                                 </button>
+                                )}
                               </td>
                             </tr>
                           );

@@ -476,6 +476,8 @@ export default function OcrExtractionLogic({
       return true;
     } catch (err) {
       console.error(err);
+      // The thunk rejects with the server's reason (stock, discount cap...).
+      toast.error(typeof err === "string" && err ? err : "Order Creation Failed!");
       return false;
     }
   };

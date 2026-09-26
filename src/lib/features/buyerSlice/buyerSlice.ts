@@ -24,6 +24,7 @@ import { loadBuyerFromToken } from "@/lib/utils/decodeToken";
 import { safeLocalStorage } from "@/lib/utils/safeLocalStorage";
 import toast from "react-hot-toast";
 import { decode } from "punycode";
+import { apiErrorMessage } from "@/lib/utils/apiErrorMessage";
 
 //
 // 🔹 Initial Setup
@@ -176,21 +177,6 @@ export const verifyBuyerOtp = createAsyncThunk<
 });
 
 // 7️⃣ Create Buyer Order
-/** First human-readable message in a DRF error body.
- *  Handles {message}, {detail}, and field errors like {products: ["..."]}. */
-function apiErrorMessage(data: unknown, fallback: string): string {
-  if (!data || typeof data !== "object") return fallback;
-  const d = data as Record<string, unknown>;
-  for (const key of ["message", "detail"]) {
-    if (typeof d[key] === "string" && d[key]) return d[key] as string;
-  }
-  for (const v of Object.values(d)) {
-    if (typeof v === "string" && v) return v;
-    if (Array.isArray(v) && typeof v[0] === "string" && v[0]) return v[0];
-  }
-  return fallback;
-}
-
 export const createBuyerOrder = createAsyncThunk<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   any,

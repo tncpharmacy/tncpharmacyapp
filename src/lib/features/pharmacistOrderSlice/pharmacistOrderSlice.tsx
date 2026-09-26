@@ -12,6 +12,7 @@ import {
 } from "@/lib/api/pharmacistOrder";
 
 import { PharmacistOrderState } from "@/types/pharmacistOrder";
+import { apiErrorMessage } from "@/lib/utils/apiErrorMessage";
 
 // ===============================
 // 🔹 Initial State
@@ -47,12 +48,11 @@ export const createPharmacistOrder = createAsyncThunk<
       return res.data;
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
-      const errorMessage =
-        err.response?.data?.errors?.[0] ||
-        err.response?.data?.message ||
-        "Failed to create order";
-
-      return rejectWithValue(errorMessage);
+      // Keep the server's reason (e.g. "Additional discount cannot exceed
+      // 20%.") -- it usually sits in a field error, not in `message`.
+      return rejectWithValue(
+        apiErrorMessage(err.response?.data, "Failed to create order")
+      );
     }
   }
 );

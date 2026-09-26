@@ -431,8 +431,11 @@ export default function RetailCounter() {
     } catch (err: any) {
       console.log(err);
 
+      // Thunks reject with the server's message as a plain string.
       const errorMessage =
-        err?.errors?.[0] || err?.message || "Order Creation Failed!";
+        typeof err === "string" && err
+          ? err
+          : err?.errors?.[0] || err?.message || "Order Creation Failed!";
 
       toast.error(errorMessage);
 
