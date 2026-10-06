@@ -27,6 +27,7 @@ export default function MedicineCard({
   discount,
   pack_size,
   primary_image,
+  in_stock,
 }: Medicine) {
   const router = useRouter();
   const dispatch = useAppDispatch();
@@ -47,8 +48,16 @@ export default function MedicineCard({
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
+  // The API sends the MRP of the batch on the shelf (or the catalogue MRP
+  // when nothing is in stock). A product with no price at all is not for
+  // sale: never invent one for it.
   const originalMrp =
-    mrp !== null && mrp !== undefined && Number(mrp) > 0 ? Number(mrp) : 275;
+    mrp !== null && mrp !== undefined && Number(mrp) > 0 ? Number(mrp) : 0;
+
+  // TNC-18: the list endpoints say whether a non-expired batch has units
+  // left. `undefined` means an older response without the flag, so only an
+  // explicit false counts as out of stock.
+  const outOfStock = in_stock === false;
 
   const hasValidMrp =
     originalMrp !== null &&
@@ -302,7 +311,8 @@ export default function MedicineCard({
               >
                 {medicine_name}
               </h3>
-              {prescription_required && (
+              {/* `0 && <x/>` renders a literal "0" in React, so compare, don't coerce. */}
+              {Number(prescription_required) === 1 && (
                 <div className="relative medicine-badge">
                   <Image
                     src="/images/RX-small.png"
@@ -355,8 +365,10 @@ export default function MedicineCard({
                   </span>
                 </p>
               </div>
+            ) : hasValidMrp ? (
+              <p className="medicine-mrp">₹{formatAmount(originalMrp)}</p>
             ) : (
-              <p className="medicine-mrp">₹{formatAmount(originalMrp || 0)}</p>
+              <p className="medicine-mrp text-muted">Price unavailable</p>
             )}
           </div>
           {/* <p className="medicine-mrp">MRP ₹{formatCurrency(mrp)}</p>; */}
@@ -377,18 +389,26 @@ export default function MedicineCard({
                 ? "REMOVE"
                 : "ADD"}
             </button> */}
-            <button
-              className={`btn-1 btn-HO ${showRemove ? "remove" : "add"}`}
-              style={{ borderRadius: "35px" }}
-              disabled={processingIds.includes(id)}
-              onClick={() => (showRemove ? handleRemove(id) : handleAdd(id))}
-            >
-              {processingIds.includes(id)
-                ? "Processing..."
-                : showRemove
-                ? "REMOVE"
-                : "ADD"}
-            </button>
+            {/* Out of stock (or no price): no ADD. An item already in the
+                bag can still be removed, same as the detail page. */}
+            {(outOfStock || !hasValidMrp) && !showRemove ? (
+              <span className="medicine-na">
+                {outOfStock ? "Out of stock" : "Unavailable"}
+              </span>
+            ) : (
+              <button
+                className={`btn-1 btn-HO ${showRemove ? "remove" : "add"}`}
+                style={{ borderRadius: "35px" }}
+                disabled={processingIds.includes(id)}
+                onClick={() => (showRemove ? handleRemove(id) : handleAdd(id))}
+              >
+                {processingIds.includes(id)
+                  ? "Processing..."
+                  : showRemove
+                  ? "REMOVE"
+                  : "ADD"}
+              </button>
+            )}
           </div>
 
           {/* {availability === "ADD" ? (
