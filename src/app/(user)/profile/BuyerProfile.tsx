@@ -777,10 +777,26 @@ export default function BuyerProfile() {
                                     <h6 className="mb-2 text-primary fw-semibold">
                                       Order Number:{" "}
                                       {order.order_number || order.orderId}
-                                      {order.orderStatus === "Cancelled" && (
+                                      {order.orderStatus === "Cancelled" ? (
                                         <span className="badge bg-secondary ms-2">
                                           Cancelled
                                         </span>
+                                      ) : (
+                                        /* TNC-34: the customer sees where the
+                                           order is, not only whether it is paid */
+                                        order.deliveryStatusName && (
+                                          <span
+                                            className={`badge ms-2 ${
+                                              order.deliveryStatusName === "Delivered"
+                                                ? "bg-success"
+                                                : order.deliveryStatusName === "Dispatched"
+                                                ? "bg-info text-dark"
+                                                : "bg-warning text-dark"
+                                            }`}
+                                          >
+                                            {order.deliveryStatusName}
+                                          </span>
+                                        )
                                       )}
                                     </h6>
 

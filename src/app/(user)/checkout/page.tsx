@@ -4,7 +4,7 @@ import React, { useEffect, useRef, useState } from "react";
 import "../css/site-style.css";
 import "../css/user-style.css";
 import "bootstrap/dist/css/bootstrap.min.css";
-import { Image, Modal } from "react-bootstrap";
+import { Modal } from "react-bootstrap";
 import SiteHeader from "@/app/(user)/components/header/header";
 import Footer from "@/app/(user)/components/footer/footer";
 import { useRouter } from "next/navigation";
@@ -37,11 +37,11 @@ export default function Checkout() {
 
   const [isClient, setIsClient] = useState(false);
 
-  // Payment Selection. "online" (Razorpay) replaces the static "qr" image
-  // when the server has Razorpay keys; otherwise the old QR option stays.
-  const [paymentType, setPaymentType] = useState<"qr" | "online" | "cod">(
-    "qr"
-  );
+  // Payment selection. Cash on Delivery is the default. "Pay Online"
+  // (Razorpay) is always listed so customers can see it is coming, but it
+  // can only be chosen once the server has Razorpay keys (TNC-19). The old
+  // static QR image is gone: it took money with no way to confirm it.
+  const [paymentType, setPaymentType] = useState<"online" | "cod">("cod");
   const [onlineEnabled, setOnlineEnabled] = useState(false);
 
   // TNC-22: one key per checkout attempt. A retry of the same attempt
@@ -64,7 +64,6 @@ export default function Checkout() {
       .then((cfg) => {
         if (cfg?.razorpay_enabled) {
           setOnlineEnabled(true);
-          setPaymentType((prev) => (prev === "qr" ? "online" : prev));
         }
       })
       .catch(() => setOnlineEnabled(false));
@@ -140,6 +139,15 @@ export default function Checkout() {
     }
 
     if (!checkoutData) return;
+
+    // Belt and braces: the button is disabled without keys, and the server
+    // answers 503 anyway, but say it plainly if we ever get here.
+    if (paymentType === "online" && !onlineEnabled) {
+      toast.error(
+        "Online payment is not available in this environment. Please use Cash on Delivery."
+      );
+      return;
+    }
 
     // If COD → verify captcha
     if (paymentType === "cod") {
@@ -233,25 +241,19 @@ export default function Checkout() {
 
         {/* Payment Type Selector */}
         <div className="d-flex justify-content-center gap-4 mb-4">
-          {onlineEnabled ? (
-            <button
-              className={`btn ${
-                paymentType === "online" ? "btn-primary" : "btn-outline-primary"
-              }`}
-              onClick={() => setPaymentType("online")}
-            >
-              Pay Online
-            </button>
-          ) : (
-            <button
-              className={`btn ${
-                paymentType === "qr" ? "btn-primary" : "btn-outline-primary"
-              }`}
-              onClick={() => setPaymentType("qr")}
-            >
-              QR Payment
-            </button>
-          )}
+          <button
+            className={`btn ${
+              paymentType === "online" ? "btn-primary" : "btn-outline-primary"
+            }`}
+            onClick={() => onlineEnabled && setPaymentType("online")}
+            disabled={!onlineEnabled}
+            title={onlineEnabled ? undefined : "Online payment is coming soon"}
+          >
+            Pay Online
+            {!onlineEnabled && (
+              <span className="badge bg-secondary ms-2">Coming soon</span>
+            )}
+          </button>
 
           <button
             className={`btn ${
@@ -262,6 +264,12 @@ export default function Checkout() {
             Cash on Delivery
           </button>
         </div>
+        {!onlineEnabled && (
+          <p className="text-center text-muted small mb-4">
+            Online payment is not available in this environment. Please use
+            Cash on Delivery.
+          </p>
+        )}
 
         {/* Payment Content */}
         <div className="d-flex justify-content-center">
@@ -269,24 +277,6 @@ export default function Checkout() {
             className="border rounded-4 p-4 shadow-sm"
             style={{ width: "100%", maxWidth: "420px", background: "#fff" }}
           >
-            {/* =============== QR PAYMENT UI =============== */}
-            {paymentType === "qr" && (
-              <>
-                <Image
-                  src="/images/payment-pr-buyer.jpeg"
-                  alt="UPI QR Code"
-                  className="img-fluid"
-                />
-
-                <p className="text-center text-muted mt-3 mb-1">
-                  Scan the QR to Pay
-                </p>
-                <h6 className="text-center fw-semibold text-success">
-                  Amount: ₹{formatPrice(checkoutData?.amount || 0)}
-                </h6>
-              </>
-            )}
-
             {/* =============== ONLINE (RAZORPAY) UI =============== */}
             {paymentType === "online" && (
               <div className="text-center">
@@ -309,6 +299,9 @@ export default function Checkout() {
             {/* =============== COD PAYMENT UI =============== */}
             {paymentType === "cod" && (
               <div className="text-center">
+                <h6 className="fw-semibold text-success">
+                  Pay on delivery: ₹{formatPrice(checkoutData?.amount || 0)}
+                </h6>
                 <h6 className="fw-bold mb-3 text-primary">Verify Captcha</h6>
 
                 <div className="bg-light p-3 rounded mb-3 d-flex justify-content-center align-items-center gap-3">
