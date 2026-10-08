@@ -19,25 +19,19 @@ import toast from "react-hot-toast";
 import ConfirmLocationModal from "@/app/components/address/ConfirmLocationModal";
 import { LocationDetails } from "@/types/address";
 import {
-  buyerLogout,
-  getBuyerOrderDetails,
   getBuyerOrdersList,
   getBuyerProfile,
-  reOrder,
 } from "@/lib/features/buyerSlice/buyerSlice";
-import { clearLocalHealthBag } from "@/lib/features/healthBagSlice/healthBagSlice";
 
 import { BuyerOrderItem, OrderDetails } from "@/types/order";
-import { OrderDetail } from "@/types/buyer";
-import OrderDetailsModal from "@/app/components/BuyerProfileModal/OrderDetailsModal";
 import { Address } from "@/types/address";
 import TncLoader from "@/app/components/TncLoader/TncLoader";
-import { buyerCancelOrderApi } from "@/lib/api/buyer";
 import PrescriptionUploadModal from "@/app/(user)/components/PrescriptionUploadModal/PrescriptionUploadModal";
 import AccountSidebar, { AccountTab } from "./components/AccountSidebar";
 import OrderCard from "./components/OrderCard";
 import EditProfileModal from "./components/EditProfileModal";
 import { OrderStage, STAGE_LABEL, orderStage } from "./orderView";
+import { useAccountActions } from "./useAccountActions";
 
 // Mapped interface to fix type errors
 interface BuyerData {
@@ -54,8 +48,7 @@ export default function BuyerProfile() {
   const searchParams = useSearchParams();
   const [activeTab, setActiveTab] = useState("profile");
   const [showModal, setShowModal] = useState(false);
-  const [showOrderModal, setShowOrderModal] = useState(false);
-  const [selectedOrder, setSelectedOrder] = useState<OrderDetail | null>(null);
+  const { logout: handleLogout, reorder: handleReOrder, cancelOrder, cancellingId } = useAccountActions();
   const [selectedAddressId, setSelectedAddressId] = useState<number | null>(
     null
   );
@@ -81,7 +74,6 @@ export default function BuyerProfile() {
     (state) => state.buyer.list
   ) as unknown as BuyerOrderItem[];
 
-  const { details: buyerOrderDetails } = useAppSelector((state) => state.buyer);
 
   // active addresses
   const activeAddresses =
@@ -105,17 +97,6 @@ export default function BuyerProfile() {
     }
   }, [billingAddresses.length, selectedAddressId, billingAddresses]);
 
-  useEffect(() => {
-    if (showOrderModal) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "auto";
-    }
-
-    return () => {
-      document.body.style.overflow = "auto";
-    };
-  }, [showOrderModal]);
 
   // const formatted: BuyerOrderDetail = {
   //   id: d.orderId,
@@ -210,7 +191,6 @@ export default function BuyerProfile() {
   }, [allOrders]);
 
   useEffect(() => {
-    if (showOrderModal) return; // ❌ modal open → no scroll
 
     const handleScroll = () => {
       if (
@@ -224,7 +204,7 @@ export default function BuyerProfile() {
     window.addEventListener("scroll", handleScroll, { passive: true });
 
     return () => window.removeEventListener("scroll", handleScroll);
-  }, [loadMoreOrders, showOrderModal]);
+  }, [loadMoreOrders]);
 
   // Fetch orders & addresses
   useEffect(() => {
@@ -320,17 +300,6 @@ export default function BuyerProfile() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  // Same steps as the header's Logout.
-  const handleLogout = () => {
-    dispatch(buyerLogout());
-    dispatch(clearLocalHealthBag());
-    localStorage.setItem("justLoggedOut", "true");
-    sessionStorage.setItem("justLoggedOut", "true");
-    localStorage.removeItem("redirectAfterLogin");
-    localStorage.removeItem("shouldOpenLogin");
-    localStorage.removeItem("loginModalOpened");
-    router.replace("/");
-  };
 
   const handleRemove = async (id: number) => {
     if (!window.confirm("Are you sure you want to remove this address?"))
@@ -344,25 +313,8 @@ export default function BuyerProfile() {
       console.error(err);
     }
   };
-  useEffect(() => {
-    if (buyerOrderDetails) {
-      setSelectedOrder(buyerOrderDetails);
-    }
-  }, [buyerOrderDetails]);
-
-  const handleViewOrder = async (orderId: number) => {
-    setSelectedOrder(null); // 🔥 loader state
-    setShowOrderModal(true); // 🔥 modal open FIRST
-
-    try {
-      const result = await dispatch(getBuyerOrderDetails(orderId)).unwrap();
-
-      setSelectedOrder(result);
-    } catch (e) {
-      toast.error("Failed to load order details");
-      setShowOrderModal(false);
-    }
-  };
+  // Track order / View details -> the order-details page.
+  const handleViewOrder = (orderId: number) => router.push(`/profile/orders/${orderId}`);
 
   const handleSetDefaultAddress = async (address: Address) => {
     if (!address.id) return;
@@ -380,39 +332,9 @@ export default function BuyerProfile() {
     }
   };
 
-  // TNC-20: cancel my order (allowed until it is dispatched). Stock goes
-  // back to the pharmacy and a WhatsApp confirmation is sent.
-  const [cancellingId, setCancellingId] = useState<number | null>(null);
   const handleCancelOrder = async (orderId: number) => {
-    if (cancellingId) return;
-    const reason = window.prompt(
-      "Cancel this order? You can tell us why (optional):",
-      ""
-    );
-    if (reason === null) return; // pressed Cancel on the prompt
-    setCancellingId(orderId);
-    try {
-      await buyerCancelOrderApi(orderId, reason);
-      toast.success("Order cancelled.");
+    if (await cancelOrder(orderId)) {
       if (userId !== null) await dispatch(getBuyerOrdersList(userId));
-    } catch (err: unknown) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const e = err as any;
-      toast.error(e?.response?.data?.message || "Could not cancel the order.");
-    } finally {
-      setCancellingId(null);
-    }
-  };
-
-  const handleReOrder = async (orderId: number) => {
-    try {
-      await dispatch(reOrder(orderId)).unwrap();
-      // toast.success("Reorder placed successfully!");
-      router.push("/reorder-bag");
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (err: any) {
-      console.error(err);
-      toast.error(err || "Reorder failed");
     }
   };
 
@@ -810,11 +732,6 @@ export default function BuyerProfile() {
         </div>
       </div>
 
-      <OrderDetailsModal
-        show={showOrderModal}
-        onClose={() => setShowOrderModal(false)}
-        order={selectedOrder}
-      />
       <PrescriptionUploadModal show={showRxModal} handleClose={() => setShowRxModal(false)} />
       {userId && (
         <EditProfileModal

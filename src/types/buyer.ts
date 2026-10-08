@@ -129,6 +129,29 @@ export interface OrderDetail {
   orderStatus?: string; // "Buy" | "Cancelled"
   deliveryStatusName?: string; // "In Process" | "Dispatched" | "Delivered"
   cancel_reason?: string | null;
+  // order-details page
+  order_number?: string | null;
+  cancelled_on?: string | null;
+  dispatched_on?: string | null;
+  delivered_on?: string | null;
+  buyer_can_cancel?: boolean;
+  pharmacyName?: string | null;
+  pharmacy?: {
+    name: string | null;
+    address: string | null;
+    district: string | null;
+    state: string | null;
+    pincode: string | null;
+    license_number: string | null;
+    gst_number: string | null;
+  } | null;
+  bill?: {
+    mrp_total: string;
+    discount: string;
+    items_total: string;
+    delivery_fee: string;
+    amount: string;
+  };
 
   products: Array<{
     id: number;
