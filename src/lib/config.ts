@@ -120,7 +120,7 @@ export const ENDPOINTS = {
 
     // 🔹 Added Order APIs
     POST_ORDER: (buyerId: number) => `/order/create-order/${buyerId}/`,
-    GET_ORDER_LIST: (buyerId: number) => `/order/buyer/list/${buyerId}`,
+    GET_ORDER_LIST: (buyerId: number) => `/order/buyer/list/${buyerId}/`,
     GET_ORDER_DETAIL: (orderId: number) => `/order/buyer/detail/${orderId}`,
     // TNC-20: buyer cancels own order (until dispatched)
     CANCEL_ORDER: (orderId: number) => `/order/${orderId}/cancel/`,

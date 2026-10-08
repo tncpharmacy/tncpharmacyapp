@@ -252,6 +252,45 @@ export default function BuyerProfile() {
     }
   }, [dispatch, userId]);
 
+  // The pharmacist moves an order In Process -> Dispatched -> Delivered from
+  // another screen; nothing pushes that change here. Re-read the list (quietly,
+  // no loader) when the customer comes back to this tab or opens My Orders,
+  // and offer a Refresh button, so the status badge is never stale.
+  const [refreshingOrders, setRefreshingOrders] = useState(false);
+  const refreshOrders = useCallback(async () => {
+    if (userId === null) return;
+    setRefreshingOrders(true);
+    try {
+      await dispatch(getBuyerOrdersList(userId)).unwrap();
+    } catch {
+      /* keep showing the last list; the next refresh will retry */
+    } finally {
+      setRefreshingOrders(false);
+    }
+  }, [dispatch, userId]);
+
+  // Opening My Orders later in the visit re-reads it too.
+  const [ordersTabSeen, setOrdersTabSeen] = useState(false);
+  useEffect(() => {
+    if (activeTab !== "order") return;
+    if (ordersTabSeen) refreshOrders();
+    else setOrdersTabSeen(true); // first view: the mount fetch is fresh
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab]);
+
+  useEffect(() => {
+    if (activeTab !== "order") return;
+    const onVisible = () => {
+      if (document.visibilityState === "visible") refreshOrders();
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    window.addEventListener("focus", onVisible);
+    return () => {
+      document.removeEventListener("visibilitychange", onVisible);
+      window.removeEventListener("focus", onVisible);
+    };
+  }, [activeTab, refreshOrders]);
+
   // Client check
   useEffect(() => setIsClient(true), []);
 
@@ -709,7 +748,18 @@ export default function BuyerProfile() {
 
                   {activeTab === "order" && (
                     <div>
-                      <h5 className="fw-bold mb-3 text-primary">My Orders</h5>
+                      <div className="d-flex justify-content-between align-items-center mb-3">
+                        <h5 className="fw-bold mb-0 text-primary">My Orders</h5>
+                        <button
+                          type="button"
+                          className="btn btn-sm btn-outline-primary"
+                          onClick={refreshOrders}
+                          disabled={refreshingOrders || ordersLoading}
+                          title="Get the latest order status"
+                        >
+                          {refreshingOrders ? "Refreshing…" : "Refresh"}
+                        </button>
+                      </div>
 
                       {ordersLoading ? (
                         <div className="d-flex justify-content-center align-items-center py-5">

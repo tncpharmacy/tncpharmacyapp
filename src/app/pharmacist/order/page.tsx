@@ -7,6 +7,7 @@ import {
   nextDeliveryStatus,
 } from "@/lib/utils/orderStatus";
 import Link from "next/link";
+import { apiErrorMessage } from "@/lib/utils/apiErrorMessage";
 import { useCallback, useEffect, useState } from "react";
 import { Button, Modal, OverlayTrigger, Tooltip } from "react-bootstrap";
 import "../css/pharmacy-style.css";
@@ -548,9 +549,15 @@ export default function OrderList() {
       );
 
       setConfirmModal(false);
+      // Re-read the list from the server so the store matches the database;
+      // otherwise the next search or filter rebuilds the table from the old
+      // list and the pill jumps back to the previous status.
+      dispatch(getPharmacistOrders());
     } catch (err) {
       console.error(err);
-      alert("Status update failed");
+      // Show the server's reason, e.g. "You are not allowed to update this order."
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      alert(apiErrorMessage((err as any)?.response?.data, "Status update failed"));
     } finally {
       setStatusLoading(false);
     }

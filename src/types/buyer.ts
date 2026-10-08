@@ -126,6 +126,9 @@ export interface OrderDetail {
   paymentMode: string;
   additional_discount?: string;
   prescription_url: string;
+  orderStatus?: string; // "Buy" | "Cancelled"
+  deliveryStatusName?: string; // "In Process" | "Dispatched" | "Delivered"
+  cancel_reason?: string | null;
 
   products: Array<{
     id: number;

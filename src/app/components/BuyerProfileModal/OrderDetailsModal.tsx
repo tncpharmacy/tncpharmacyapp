@@ -219,6 +219,25 @@ export default function OrderDetailsModal({
 
                 {/* Right */}
                 <div className="col-6">
+                  {/* TNC-34: where the order is, as the pharmacist last set it */}
+                  <p className="mb-2">
+                    <strong>Order Status:</strong>{" "}
+                    {order.orderStatus === "Cancelled" ? (
+                      <span className="badge bg-secondary">Cancelled</span>
+                    ) : (
+                      <span
+                        className={`badge ${
+                          order.deliveryStatusName === "Delivered"
+                            ? "bg-success"
+                            : order.deliveryStatusName === "Dispatched"
+                            ? "bg-info text-dark"
+                            : "bg-warning text-dark"
+                        }`}
+                      >
+                        {order.deliveryStatusName || "In Process"}
+                      </span>
+                    )}
+                  </p>
                   <p className="mb-2 text-success">
                     <strong>Payment Status:</strong>{" "}
                     <span
