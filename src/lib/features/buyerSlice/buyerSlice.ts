@@ -386,7 +386,7 @@ const buyerSlice = createSlice({
             uhid: buyerData.uhid,
           };
         }
-        toast.success("Profile fetched successfully");
+        // no toast: the profile page refreshes this quietly on every visit
       })
       .addCase(getBuyerProfile.rejected, (state, action) => {
         state.loading = false;

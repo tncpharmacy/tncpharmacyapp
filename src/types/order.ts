@@ -34,6 +34,7 @@ export interface Product {
   instruction?: string;
   status: string;
   manufacturer?: string;
+  image?: string | null;
 }
 
 export interface OrderDetails {
