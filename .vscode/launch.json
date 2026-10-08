@@ -1,0 +1,63 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            // Frontend local, backend local (localhost:8000) — uses
+            // .env.development.local as-is.
+            "name": "Next.js: dev (local API)",
+            "type": "node-terminal",
+            "request": "launch",
+            "command": "npm run dev",
+            "cwd": "${workspaceFolder}",
+            "serverReadyAction": {
+                "pattern": "- Local:.+(https?://.+)",
+                "uriFormat": "%s",
+                "action": "debugWithChrome"
+            }
+        },
+        {
+            // Frontend local, backend = hosted DEV API (api-dev.tncpharmacy.com).
+            // Shell env beats .env.development.local, so no file edits needed.
+            "name": "Next.js: dev (hosted dev API)",
+            "type": "node-terminal",
+            "request": "launch",
+            "command": "npm run dev:api-dev",
+            "cwd": "${workspaceFolder}",
+            "serverReadyAction": {
+                "pattern": "- Local:.+(https?://.+)",
+                "uriFormat": "%s",
+                "action": "debugWithChrome"
+            }
+        },
+        {
+            "name": "Next.js: dev (local API, server-side only)",
+            "type": "node-terminal",
+            "request": "launch",
+            "command": "npm run dev",
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "name": "Next.js: attach to client (Chrome)",
+            "type": "chrome",
+            "request": "launch",
+            "url": "http://localhost:3000",
+            "webRoot": "${workspaceFolder}",
+            "sourceMapPathOverrides": {
+                "webpack://_N_E/*": "${webRoot}/*"
+            }
+        }
+    ],
+    "compounds": [
+        {
+            "name": "Next.js: dev (server + client)",
+            "configurations": [
+                "Next.js: dev (local API, server-side only)",
+                "Next.js: attach to client (Chrome)"
+            ],
+            "stopAll": true
+        }
+    ]
+}

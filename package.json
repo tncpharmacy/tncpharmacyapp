@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "dev:api-dev": "NEXT_PUBLIC_API_BASE_URL=https://api-dev.tncpharmacy.com/api NEXT_PUBLIC_MEDIA_BASE_URL=https://storage.googleapis.com/tnc-pharmacy-product-images-bucket-dev/ NEXT_PUBLIC_PRESCRIPTION_BASE_URL=https://storage.googleapis.com/tnc-pharmacy-ocr-bucket-dev/ NEXT_PUBLIC_DEPLOY_ENV=dev next dev",
     "build": "next build",
     "start": "next start",
     "lint": "next lint"
