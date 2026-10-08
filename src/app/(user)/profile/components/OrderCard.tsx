@@ -2,8 +2,8 @@
 
 import React from "react";
 import type { OrderDetails } from "@/types/order";
+import StatusChip from "./StatusChip";
 import {
-  STAGE_LABEL,
   formatOrderDateTime,
   itemsSummary,
   orderStage,
@@ -61,7 +61,7 @@ export default function OrderCard({ order, onView, onReorder, onCancel, cancelli
           {/* h6 + .badge are what the E2E suite looks for */}
           <h6>
             Order {number}
-            <span className={`badge acct-badge s-${stage}`}>{STAGE_LABEL[stage]}</span>
+            <StatusChip stage={stage} />
           </h6>
           <div className="date">Placed on {formatOrderDateTime(order.orderDate)}</div>
         </div>

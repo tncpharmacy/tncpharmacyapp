@@ -125,12 +125,23 @@
 }
 .acct .acct-chip.active { background: var(--brand-primary); border-color: var(--brand-primary); color: #fff; }
 
-/* ---------- status badge ---------- */
-.acct .badge.acct-badge { font: 500 12px/16px "Poppins", sans-serif; padding: 2px 8px; border-radius: var(--radius-sm); }
-.acct .acct-badge.s-process { background: var(--status-warning); color: var(--text-primary); }
-.acct .acct-badge.s-dispatched { background: var(--status-info); color: var(--text-primary); }
-.acct .acct-badge.s-delivered { background: var(--status-success); color: #fff; }
-.acct .acct-badge.s-cancelled { background: var(--text-secondary); color: #fff; }
+/* ---------- status chip ----------
+ * Icon + label on a soft tint of the stage colour, with a matching border.
+ * Text colours are the dark shade of each hue (>= 4.5:1 on the tint).
+ */
+.acct .badge.acct-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  font: 600 13px/18px "Poppins", sans-serif; letter-spacing: 0.1px;
+  padding: 4px 12px 4px 10px; border-radius: 999px; border: 1px solid transparent;
+  white-space: nowrap;
+}
+.acct .badge.acct-badge i { font-size: 14px; line-height: 1; }
+.acct .badge.acct-badge.lg { font-size: 14px; padding: 6px 14px 6px 12px; }
+.acct .badge.acct-badge.lg i { font-size: 16px; }
+.acct .acct-badge.s-process    { background: #fff4d6; color: #8a5300; border-color: #f5d27a; }
+.acct .acct-badge.s-dispatched { background: #e3edff; color: #1d4ed8; border-color: #a9c4fb; }
+.acct .acct-badge.s-delivered  { background: #e3f4ea; color: #146c43; border-color: #9fd5b6; }
+.acct .acct-badge.s-cancelled  { background: #fdecec; color: #b42318; border-color: #f5b5ae; }
 
 /* ---------- order card ---------- */
 .acct .acct-order { overflow: hidden; }

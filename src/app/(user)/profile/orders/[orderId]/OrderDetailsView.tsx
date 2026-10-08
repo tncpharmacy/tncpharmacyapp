@@ -26,6 +26,7 @@ import { encodeId } from "@/lib/utils/encodeDecode";
 import type { OrderDetail } from "@/types/buyer";
 import AccountSidebar, { AccountTab } from "../../components/AccountSidebar";
 import { OrderStepper } from "../../components/OrderCard";
+import StatusChip from "../../components/StatusChip";
 import { useAccountActions } from "../../useAccountActions";
 import {
   STAGE_LABEL,
@@ -39,6 +40,33 @@ const rupees = (v?: string | number | null) =>
   Number(v || 0).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
 type Line = OrderDetail["products"][number];
+
+/**
+ * The bill the server sends (`order.bill`, tncpharmacyapi e83cb07). An API
+ * without it -- not yet deployed -- would make every figure ₹0.00, so the same
+ * arithmetic is done here from the order lines as a fallback:
+ *   MRP total = sum(mrp x qty), items total = sum(rate x qty),
+ *   delivery fee = amount - items total (the fee is not stored separately).
+ */
+function billOf(order: OrderDetail): NonNullable<OrderDetail["bill"]> {
+  if (order.bill && Number(order.bill.mrp_total) > 0) return order.bill;
+  let mrp = 0;
+  let items = 0;
+  for (const p of order.products || []) {
+    const qty = Number(p.quantity) || 0;
+    mrp += (Number(p.mrp) || 0) * qty;
+    items += (Number(p.rate) || 0) * qty;
+  }
+  const amount = Number(order.amount) || 0;
+  let fee = amount - items;
+  let extra = 0;
+  if (fee < 0) {
+    extra = -fee;
+    fee = 0;
+  }
+  const f = (n: number) => n.toFixed(2);
+  return { mrp_total: f(mrp), discount: f(mrp - items + extra), items_total: f(items), delivery_fee: f(fee), amount: f(amount) };
+}
 
 export default function OrderDetailsView() {
   const params = useParams<{ orderId: string }>();
@@ -110,9 +138,11 @@ export default function OrderDetailsView() {
   }, [load]);
 
   const stage = order ? orderStage(order) : "process";
-  const isCod = /cash/i.test(order?.paymentMode || "");
+  // Payment mode names differ between environments ("Cash on Delivery" on
+  // one, "COD" on another), so match both.
+  const isCod = /cash|\bcod\b/i.test(order?.paymentMode || "");
   const paid = order?.paymentStatus === "Success";
-  const bill = order?.bill;
+  const bill = useMemo(() => (order ? billOf(order) : undefined), [order]);
   const number = order ? `#${order.order_number || order.orderId}` : "";
 
   const timeline = useMemo(() => {
@@ -228,7 +258,7 @@ export default function OrderDetailsView() {
                             <h1 className="acct-title" style={{ fontSize: 20 }}>Order {number}</h1>
                             <div className="acct-sub" style={{ fontSize: 12 }}>Placed on {formatOrderDateTime(order.orderDate)}</div>
                           </div>
-                          <span className={`badge acct-badge s-${stage}`}>{STAGE_LABEL[stage]}</span>
+                          <StatusChip stage={stage} size="lg" />
                         </div>
                         {banner && (
                           <div className={`acct-banner ${banner.tone}`}>
