@@ -2,8 +2,6 @@
 
 import React, { useMemo, useCallback } from "react";
 import { formatPrice } from "@/lib/utils/formatPrice";
-import Image from "next/image";
-import { Button } from "react-bootstrap";
 import ProductCardUI from "@/app/(user)/components/MedicineCard/ProductCardUI";
 
 interface ProductSectionProps {
@@ -23,7 +21,8 @@ interface ProductSectionProps {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   localState: any;
   processingIds: number[];
-  isMobile: boolean;
+  /** no longer used — the card is the same on every screen size */
+  isMobile?: boolean;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   mediaBase: any;
 }
@@ -40,7 +39,6 @@ export default function ProductSection({
   items,
   localState,
   processingIds,
-  isMobile,
   mediaBase,
 }: ProductSectionProps) {
   const itemIds = useMemo(() => {
@@ -55,8 +53,10 @@ export default function ProductSection({
       const mrpRaw = item.MRP ?? item.mrp ?? 0;
       const parsedMrp = Number(mrpRaw);
 
+      // No price means not for sale — never invent one (the card shows
+      // "Price unavailable" and hides ADD).
       const baseMrp =
-        Number.isFinite(parsedMrp) && parsedMrp > 0 ? parsedMrp : 275;
+        Number.isFinite(parsedMrp) && parsedMrp > 0 ? parsedMrp : 0;
 
       const mrp = Number(baseMrp.toFixed(2));
       const formattedMrp = formatPrice(mrp);
@@ -111,107 +111,28 @@ export default function ProductSection({
           </button>
         </div>
 
-        <div className="row">
+        {/* One card for desktop and mobile — Figma "store/Product card v2" */}
+        <div className="pc-grid pc-grid--rail">
           {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-          {processedProducts.map((item: any) => {
-            // const isInBag = items.some(
-            //   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            //   (i: any) => Number(i.product_id) === item.product_id
-            // );
-
-            // const showRemove =
-            //   localState[item.product_id] !== undefined
-            //     ? localState[item.product_id]
-            //     : isInBag;
-
-            // 🔥 MOBILE (CARD UI)
-            if (isMobile) {
-              return (
-                <ProductCardUI
-                  key={item.product_id}
-                  inStock={item.in_stock}
-                  image={item.imageUrl}
-                  name={item.ProductName}
-                  manufacturer={item.Manufacturer}
-                  packSize={item.pack_size}
-                  price={item.formattedDiscountedPrice}
-                  mrp={item.formattedMrp}
-                  discount={item.discount}
-                  showRx={false}
-                  isInCart={item.isInBag}
-                  loading={processingIds.includes(item.product_id)}
-                  onAdd={() => handleAdd(item)}
-                  onRemove={() => handleRemove(item.product_id)}
-                  onClick={() => handleClick(item.product_id)}
-                />
-              );
-            }
-
-            // 🔥 DESKTOP GRID
-            return (
-              <div className="col" key={item.product_id}>
-                <div className="pd_box">
-                  <div className="pd_img">
-                    <Image
-                      src={item.imageUrl}
-                      alt={item.ProductName}
-                      width={200}
-                      height={200}
-                      sizes="(max-width: 768px) 50vw, 200px"
-                      style={{
-                        height: "220px",
-                        objectFit: "contain",
-                        cursor: "pointer",
-                        opacity:
-                          item.imageUrl === "/images/tnc-default.png" ? 0.3 : 1,
-                      }}
-                      onClick={() => handleClick(item.product_id)}
-                    />
-                  </div>
-
-                  <div className="pd_content">
-                    <h3
-                      className="pd-title hover-link fw-bold"
-                      style={{ cursor: "pointer", color: "#264b8c" }}
-                      onClick={() => handleClick(item.product_id)}
-                    >
-                      {item.ProductName || ""}
-                    </h3>
-
-                    <h6 className="pd-title fw-bold">
-                      {item.Manufacturer || ""}
-                    </h6>
-
-                    <div className="pd_price">
-                      <span className="new_price">
-                        ₹{item.formattedDiscountedPrice}
-                      </span>
-
-                      <span className="old_price">
-                        <del>MRP ₹{item.formattedMrp}</del> {item.discount}% off
-                      </span>
-                    </div>
-
-                    <Button
-                      title={(item.in_stock === false && !item.showRemove) ? "Currently out of stock" : undefined} disabled={(item.in_stock === false && !item.showRemove)}
-                      size="sm"
-                      className={`btn-1 btn-HO ${
-                        item.showRemove ? "remove" : "add"
-                      } ${(item.in_stock === false && !item.showRemove) ? "oos" : ""}`}
-                      style={{ borderRadius: "35px" }}
-                      onClick={() =>
-                        item.showRemove
-                          ? handleRemove(item.product_id)
-                          : handleAdd(item)
-                      }
-                    >
-                      {(item.in_stock === false && !item.showRemove) ? "OUT OF STOCK" : (item.showRemove ? "REMOVE" : "ADD")}
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
+          {processedProducts.map((item: any) => (
+            <ProductCardUI
+              key={item.product_id}
+              inStock={item.in_stock}
+              image={item.imageUrl}
+              name={item.ProductName}
+              manufacturer={item.Manufacturer}
+              packSize={item.pack_size}
+              price={item.formattedDiscountedPrice}
+              mrp={item.formattedMrp}
+              discount={item.discount}
+              showRx={Number(item.prescription_required) === 1}
+              isInCart={item.showRemove}
+              loading={processingIds.includes(item.product_id)}
+              onAdd={() => handleAdd(item)}
+              onRemove={() => handleRemove(item.product_id)}
+              onClick={() => handleClick(item.product_id)}
+            />
+          ))}
         </div>
       </div>
     </section>

@@ -4,12 +4,12 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import "../css/site-style.css";
 import "../css/user-style.css";
 import "bootstrap/dist/css/bootstrap.min.css";
-import SiteHeader from "@/app/(user)/components/header/header";
+import "./account.css";
 import Footer from "@/app/(user)/components/footer/footer";
 
-import { Image } from "react-bootstrap";
 import { useAppDispatch, useAppSelector } from "@/lib/hooks";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import Link from "next/link";
 import {
   getAddress,
   makeDefaultAddress,
@@ -19,20 +19,19 @@ import toast from "react-hot-toast";
 import ConfirmLocationModal from "@/app/components/address/ConfirmLocationModal";
 import { LocationDetails } from "@/types/address";
 import {
-  getBuyerOrderDetails,
   getBuyerOrdersList,
-  reOrder,
+  getBuyerProfile,
 } from "@/lib/features/buyerSlice/buyerSlice";
 
 import { BuyerOrderItem, OrderDetails } from "@/types/order";
-import { formatDateOnly } from "@/utils/dateFormatter";
-import { formatAmount } from "@/lib/utils/formatAmount";
-import { BuyerOrderDetail, OrderDetail } from "@/types/buyer";
-import OrderDetailsModal from "@/app/components/BuyerProfileModal/OrderDetailsModal";
 import { Address } from "@/types/address";
 import TncLoader from "@/app/components/TncLoader/TncLoader";
-import { formatPrice } from "@/lib/utils/formatPrice";
-import { buyerCancelOrderApi } from "@/lib/api/buyer";
+import PrescriptionUploadModal from "@/app/(user)/components/PrescriptionUploadModal/PrescriptionUploadModal";
+import AccountSidebar, { AccountTab } from "./components/AccountSidebar";
+import OrderCard from "./components/OrderCard";
+import EditProfileModal from "./components/EditProfileModal";
+import { OrderStage, STAGE_LABEL, orderStage } from "./orderView";
+import { useAccountActions } from "./useAccountActions";
 
 // Mapped interface to fix type errors
 interface BuyerData {
@@ -49,8 +48,7 @@ export default function BuyerProfile() {
   const searchParams = useSearchParams();
   const [activeTab, setActiveTab] = useState("profile");
   const [showModal, setShowModal] = useState(false);
-  const [showOrderModal, setShowOrderModal] = useState(false);
-  const [selectedOrder, setSelectedOrder] = useState<OrderDetail | null>(null);
+  const { logout: handleLogout, reorder: handleReOrder, cancelOrder, cancellingId } = useAccountActions();
   const [selectedAddressId, setSelectedAddressId] = useState<number | null>(
     null
   );
@@ -59,12 +57,12 @@ export default function BuyerProfile() {
 
   const [isClient, setIsClient] = useState(false);
 
-  // scroll / pagination state
-  const [visibleOrders, setVisibleOrders] = useState<OrderDetails[]>([]);
+  // My Orders: status filter + "load more on scroll" (10 at a time)
+  const [orderFilter, setOrderFilter] = useState<"all" | OrderStage>("all");
   const [page, setPage] = useState(1);
-  const [loading, setLoading] = useState(false);
-  const [hasMore, setHasMore] = useState(true);
   const pageSize = 10;
+  const [showEditProfile, setShowEditProfile] = useState(false);
+  const [showRxModal, setShowRxModal] = useState(false);
 
   // Redux state
   const buyer: BuyerData | null =
@@ -76,7 +74,6 @@ export default function BuyerProfile() {
     (state) => state.buyer.list
   ) as unknown as BuyerOrderItem[];
 
-  const { details: buyerOrderDetails } = useAppSelector((state) => state.buyer);
 
   // active addresses
   const activeAddresses =
@@ -100,17 +97,6 @@ export default function BuyerProfile() {
     }
   }, [billingAddresses.length, selectedAddressId, billingAddresses]);
 
-  useEffect(() => {
-    if (showOrderModal) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "auto";
-    }
-
-    return () => {
-      document.body.style.overflow = "auto";
-    };
-  }, [showOrderModal]);
 
   // const formatted: BuyerOrderDetail = {
   //   id: d.orderId,
@@ -180,50 +166,31 @@ export default function BuyerProfile() {
     // only re-run when rawOrderList changes
   }, [rawOrderList]);
 
-  // initial load when allOrders updates: reset pagination
-  useEffect(() => {
-    if (!allOrders || allOrders.length === 0) {
-      setVisibleOrders([]);
-      setPage(1);
-      setHasMore(false);
-      return;
-    }
+  // Orders in the chosen status, newest first (the API already sorts).
+  const filteredOrders = useMemo(
+    () =>
+      orderFilter === "all"
+        ? allOrders
+        : allOrders.filter((o) => orderStage(o) === orderFilter),
+    [allOrders, orderFilter]
+  );
+  const visibleOrders = filteredOrders.slice(0, page * pageSize);
+  const hasMore = visibleOrders.length < filteredOrders.length;
 
-    // reset to first page
-    setVisibleOrders(allOrders.slice(0, pageSize));
-    setPage(1);
-    setHasMore(allOrders.length > pageSize);
+  // A new list or a new filter starts again from the first page.
+  useEffect(() => setPage(1), [allOrders, orderFilter]);
+
+  const loadMoreOrders = useCallback(() => {
+    if (hasMore) setPage((p) => p + 1);
+  }, [hasMore]);
+
+  const stageCounts = useMemo(() => {
+    const c: Record<OrderStage, number> = { process: 0, dispatched: 0, delivered: 0, cancelled: 0 };
+    allOrders.forEach((o) => (c[orderStage(o)] += 1));
+    return c;
   }, [allOrders]);
 
-  // load more function (idempotent)
-  const loadMoreOrders = useCallback(() => {
-    if (loading || !hasMore) return;
-    setLoading(true);
-
-    // calculate next slice
-    const nextPage = page + 1;
-    const end = nextPage * pageSize;
-
-    // if nothing to add, mark hasMore false
-    if (visibleOrders.length >= allOrders.length) {
-      setHasMore(false);
-      setLoading(false);
-      return;
-    }
-
-    // slice up to 'end'
-    const newData = allOrders.slice(0, Math.min(end, allOrders.length));
-    setVisibleOrders(newData);
-    setPage(nextPage);
-
-    // update hasMore
-    setHasMore(newData.length < allOrders.length);
-
-    setLoading(false);
-  }, [allOrders, hasMore, loading, page, visibleOrders.length]);
-
   useEffect(() => {
-    if (showOrderModal) return; // ❌ modal open → no scroll
 
     const handleScroll = () => {
       if (
@@ -237,7 +204,7 @@ export default function BuyerProfile() {
     window.addEventListener("scroll", handleScroll, { passive: true });
 
     return () => window.removeEventListener("scroll", handleScroll);
-  }, [loadMoreOrders, showOrderModal]);
+  }, [loadMoreOrders]);
 
   // Fetch orders & addresses
   useEffect(() => {
@@ -249,8 +216,50 @@ export default function BuyerProfile() {
         .finally(() => setOrdersLoading(false));
 
       dispatch(getAddress(userId));
+      // The token carries the name/email from login time; read the current
+      // values so an edit made earlier shows after a reload.
+      dispatch(getBuyerProfile({ id: userId }));
     }
   }, [dispatch, userId]);
+
+  // The pharmacist moves an order In Process -> Dispatched -> Delivered from
+  // another screen; nothing pushes that change here. Re-read the list (quietly,
+  // no loader) when the customer comes back to this tab or opens My Orders,
+  // and offer a Refresh button, so the status badge is never stale.
+  const [refreshingOrders, setRefreshingOrders] = useState(false);
+  const refreshOrders = useCallback(async () => {
+    if (userId === null) return;
+    setRefreshingOrders(true);
+    try {
+      await dispatch(getBuyerOrdersList(userId)).unwrap();
+    } catch {
+      /* keep showing the last list; the next refresh will retry */
+    } finally {
+      setRefreshingOrders(false);
+    }
+  }, [dispatch, userId]);
+
+  // Opening My Orders later in the visit re-reads it too.
+  const [ordersTabSeen, setOrdersTabSeen] = useState(false);
+  useEffect(() => {
+    if (activeTab !== "order") return;
+    if (ordersTabSeen) refreshOrders();
+    else setOrdersTabSeen(true); // first view: the mount fetch is fresh
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab]);
+
+  useEffect(() => {
+    if (activeTab !== "order") return;
+    const onVisible = () => {
+      if (document.visibilityState === "visible") refreshOrders();
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    window.addEventListener("focus", onVisible);
+    return () => {
+      document.removeEventListener("visibilitychange", onVisible);
+      window.removeEventListener("focus", onVisible);
+    };
+  }, [activeTab, refreshOrders]);
 
   // Client check
   useEffect(() => setIsClient(true), []);
@@ -285,10 +294,12 @@ export default function BuyerProfile() {
     if (tab) setActiveTab(tab);
   }, [searchParams]);
 
-  const handleTabChange = (tab: string) => {
+  const handleTabChange = (tab: AccountTab | string) => {
     setActiveTab(tab);
     router.replace(`?tab=${tab}`, { scroll: false });
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
+
 
   const handleRemove = async (id: number) => {
     if (!window.confirm("Are you sure you want to remove this address?"))
@@ -302,25 +313,8 @@ export default function BuyerProfile() {
       console.error(err);
     }
   };
-  useEffect(() => {
-    if (buyerOrderDetails) {
-      setSelectedOrder(buyerOrderDetails);
-    }
-  }, [buyerOrderDetails]);
-
-  const handleViewOrder = async (orderId: number) => {
-    setSelectedOrder(null); // 🔥 loader state
-    setShowOrderModal(true); // 🔥 modal open FIRST
-
-    try {
-      const result = await dispatch(getBuyerOrderDetails(orderId)).unwrap();
-
-      setSelectedOrder(result);
-    } catch (e) {
-      toast.error("Failed to load order details");
-      setShowOrderModal(false);
-    }
-  };
+  // Track order / View details -> the order-details page.
+  const handleViewOrder = (orderId: number) => router.push(`/profile/orders/${orderId}`);
 
   const handleSetDefaultAddress = async (address: Address) => {
     if (!address.id) return;
@@ -338,39 +332,9 @@ export default function BuyerProfile() {
     }
   };
 
-  // TNC-20: cancel my order (allowed until it is dispatched). Stock goes
-  // back to the pharmacy and a WhatsApp confirmation is sent.
-  const [cancellingId, setCancellingId] = useState<number | null>(null);
   const handleCancelOrder = async (orderId: number) => {
-    if (cancellingId) return;
-    const reason = window.prompt(
-      "Cancel this order? You can tell us why (optional):",
-      ""
-    );
-    if (reason === null) return; // pressed Cancel on the prompt
-    setCancellingId(orderId);
-    try {
-      await buyerCancelOrderApi(orderId, reason);
-      toast.success("Order cancelled.");
+    if (await cancelOrder(orderId)) {
       if (userId !== null) await dispatch(getBuyerOrdersList(userId));
-    } catch (err: unknown) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const e = err as any;
-      toast.error(e?.response?.data?.message || "Could not cancel the order.");
-    } finally {
-      setCancellingId(null);
-    }
-  };
-
-  const handleReOrder = async (orderId: number) => {
-    try {
-      await dispatch(reOrder(orderId)).unwrap();
-      // toast.success("Reorder placed successfully!");
-      router.push("/reorder-bag");
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (err: any) {
-      console.error(err);
-      toast.error(err || "Reorder failed");
     }
   };
 
@@ -404,495 +368,381 @@ export default function BuyerProfile() {
     return null;
   }
 
-  const getFileType = (url?: string) => {
-    if (!url) return "";
-    return url.split(".").pop()?.toLowerCase();
-  };
-
   if (!isClient) return null;
+
+  // ---- derived values for My Profile ----
+  const defaultAddress = billingAddresses.find((a) => a.default_address === 1);
+  const rxCount = allOrders.filter((o) => !!o.prescription_url).length;
+  const activeOrders = stageCounts.process + stageCounts.dispatched;
+  const latestOrder = allOrders[0];
+  const lastReorderable = allOrders.find((o) => orderStage(o) !== "cancelled");
+  const reorderSubtitle = lastReorderable
+    ? (() => {
+        const items = lastReorderable.products || [];
+        const first = items[0]?.productName || "your last order";
+        return items.length > 1 ? `${first} and ${items.length - 1} more` : first;
+      })()
+    : "No past orders yet";
+  const tabTitle =
+    activeTab === "order" ? "My Orders" : activeTab === "address" ? "Saved Addresses" : "My Profile";
+
+  const orderCardProps = {
+    onView: handleViewOrder,
+    onReorder: handleReOrder,
+    onCancel: handleCancelOrder,
+  };
 
   return (
     <>
       <div className="page-wrapper">
-        {/* <SiteHeader /> */}
-        <div className="container-fluid my-2">
-          <div className="row justify-content-center">
-            <div className="col-lg-12">
-              <div
-                className="card"
-                style={{
-                  overflow: "hidden",
-                  background: "#fff",
-                  minHeight: "1000px",
-                }}
-              >
-                {/* Profile Header */}
-                <div
-                  className="text-center p-4"
-                  style={{
-                    background: "linear-gradient(135deg, #264b8c, #ff7b00)",
-                    color: "#fff",
-                  }}
-                >
-                  <div
-                    className="rounded-circle mx-auto mb-3 border border-3 border-white"
-                    style={{
-                      width: "100px",
-                      height: "100px",
-                      backgroundImage: "url('/images/user-avatar.png')",
-                      backgroundSize: "cover",
-                      backgroundPosition: "center",
-                    }}
-                  ></div>
-                  <h4 className="fw-bold mb-1"> {buyer?.name || "Guest"} 👋</h4>
-                  <p className="mb-0 opacity-75">Your personal dashboard</p>
-                </div>
+        <div className="acct">
+          <div className="acct-wrap">
+            <div className="acct-crumb">
+              <Link href="/">Home</Link> &nbsp;›&nbsp; My Account &nbsp;›&nbsp; {tabTitle}
+            </div>
 
-                {/* Tabs */}
-                <div
-                  className="d-flex text-center fw-semibold border"
-                  style={{ borderColor: "#0a214aff" }}
-                >
-                  {["profile", "address", "order"].map((tab) => {
-                    const isActive = activeTab === tab;
-                    return (
+            <div className="row g-4">
+              <div className="col-lg-3">
+                <AccountSidebar
+                  name={buyer?.name}
+                  mobile={buyer?.number}
+                  activeTab={activeTab}
+                  orderCount={allOrders.length}
+                  addressCount={billingAddresses.length}
+                  onTab={handleTabChange}
+                  onUploadPrescription={() => setShowRxModal(true)}
+                  onHelp={() => router.push("/contact-us")}
+                  onLogout={handleLogout}
+                />
+              </div>
+
+              <div className="col-lg-9 d-flex flex-column gap-4">
+                {/* ================= MY PROFILE ================= */}
+                {activeTab === "profile" && (
+                  <>
+                    <div className="d-flex align-items-center gap-3">
+                      <div className="flex-grow-1">
+                        <h1 className="acct-title">My Profile</h1>
+                        <p className="acct-sub">Your details and recent activity</p>
+                      </div>
+                      {userId && (
+                        <button type="button" className="acct-btn" onClick={() => setShowEditProfile(true)}>
+                          <i className="bi bi-pencil" /> Edit profile
+                        </button>
+                      )}
+                    </div>
+
+                    <div className="row g-3">
+                      {[
+                        { v: allOrders.length, l: "Orders placed", i: "bi-receipt" },
+                        { v: billingAddresses.length, l: "Saved addresses", i: "bi-geo-alt" },
+                        { v: rxCount, l: "Orders with a prescription", i: "bi-file-earmark-medical" },
+                      ].map((s) => (
+                        <div className="col-md-4" key={s.l}>
+                          <div className="acct-card acct-stat">
+                            <span className="acct-ic"><i className={`bi ${s.i}`} /></span>
+                            <div>
+                              <div className="acct-stat-value">{s.v}</div>
+                              <div className="acct-stat-label">{s.l}</div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    <section className="acct-card p-4">
+                      <h3 className="acct-h3 mb-3">Personal details</h3>
+                      <div className="row g-3">
+                        <div className="col-md-6">
+                          <div className="acct-field">
+                            <div className="acct-field-label">Full name</div>
+                            <div className={`acct-field-value ${buyer?.name ? "" : "empty"}`}>{buyer?.name || "Add your name"}</div>
+                          </div>
+                        </div>
+                        <div className="col-md-6">
+                          <div className="acct-field">
+                            <div className="acct-field-label">Mobile number</div>
+                            <div className="acct-field-value">
+                              {buyer?.number ? `+91 ${buyer.number}` : "-"}
+                              {buyer?.number && (
+                                <span className="acct-verified"><i className="bi bi-patch-check-fill" /> Verified</span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                        <div className="col-md-6">
+                          <div className="acct-field">
+                            <div className="acct-field-label">Email address</div>
+                            <div className={`acct-field-value ${buyer?.email ? "" : "empty"}`}>{buyer?.email || "Add your email for invoices"}</div>
+                          </div>
+                        </div>
+                        <div className="col-md-6">
+                          <div className="acct-field">
+                            <div className="acct-field-label">Default delivery address</div>
+                            <div className={`acct-field-value ${defaultAddress ? "" : "empty"}`}>
+                              {defaultAddress
+                                ? `${defaultAddress.location || defaultAddress.address}${defaultAddress.pincode ? ` – ${defaultAddress.pincode}` : ""}`
+                                : "No address saved yet"}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </section>
+
+                    <h3 className="acct-h3 mb-n2">Quick actions</h3>
+                    <div className="row g-3">
+                      <div className="col-md-4">
+                        <button type="button" className="acct-quick" onClick={() => setShowRxModal(true)}>
+                          <span className="acct-ic accent"><i className="bi bi-file-earmark-medical" /></span>
+                          <div>
+                            <b>Upload prescription</b>
+                            <span>A pharmacist checks it for you</span>
+                          </div>
+                          <i className="bi bi-chevron-right chev" />
+                        </button>
+                      </div>
+                      <div className="col-md-4">
+                        <button
+                          type="button"
+                          className="acct-quick"
+                          disabled={!lastReorderable}
+                          onClick={() => lastReorderable && handleReOrder(lastReorderable.orderId)}
+                        >
+                          <span className="acct-ic accent"><i className="bi bi-arrow-repeat" /></span>
+                          <div>
+                            <b>Reorder last order</b>
+                            <span>{reorderSubtitle}</span>
+                          </div>
+                          <i className="bi bi-chevron-right chev" />
+                        </button>
+                      </div>
+                      <div className="col-md-4">
+                        <button
+                          type="button"
+                          className="acct-quick"
+                          onClick={() => {
+                            setOrderFilter("all");
+                            handleTabChange("order");
+                          }}
+                        >
+                          <span className="acct-ic accent"><i className="bi bi-truck" /></span>
+                          <div>
+                            <b>Track your order</b>
+                            <span>
+                              {activeOrders === 0
+                                ? "Nothing on the way"
+                                : `${activeOrders} order${activeOrders > 1 ? "s" : ""} on the way`}
+                            </span>
+                          </div>
+                          <i className="bi bi-chevron-right chev" />
+                        </button>
+                      </div>
+                    </div>
+
+                    {latestOrder && (
+                      <>
+                        <div className="d-flex align-items-center mb-n2">
+                          <h3 className="acct-h3 flex-grow-1">Recent order</h3>
+                          <button type="button" className="acct-link" onClick={() => handleTabChange("order")}>
+                            View all orders ›
+                          </button>
+                        </div>
+                        <OrderCard
+                          order={latestOrder}
+                          cancelling={cancellingId === latestOrder.orderId}
+                          {...orderCardProps}
+                        />
+                      </>
+                    )}
+                  </>
+                )}
+
+                {/* ================= SAVED ADDRESSES ================= */}
+                {activeTab === "address" && (
+                  <>
+                    <div className="d-flex align-items-center gap-3">
+                      <div className="flex-grow-1">
+                        <h1 className="acct-title">Saved Addresses</h1>
+                        <p className="acct-sub">Choose where we deliver. The default is used at checkout.</p>
+                      </div>
                       <button
-                        key={tab}
-                        onClick={() => handleTabChange(tab)}
-                        className={`btn py-3 w-100 border-0 ${
-                          isActive ? "text-white" : "text-secondary"
-                        }`}
-                        style={{
-                          borderRadius: 0,
-                          background: isActive
-                            ? "linear-gradient(135deg, #264b8c)"
-                            : "rgb(241 245 249)",
-                          transition: "all 0.3s ease",
-                        }}
+                        type="button"
+                        className="acct-btn primary"
+                        onClick={() => setShowModal(true)}
+                        disabled={billingAddresses.length >= 6}
+                        title={billingAddresses.length >= 6 ? "You can save up to 6 addresses" : undefined}
                       >
-                        {tab === "profile"
-                          ? "My Account"
-                          : tab === "address"
-                          ? "My Address"
-                          : "My Orders"}
+                        + Add new address
                       </button>
-                    );
-                  })}
-                </div>
+                    </div>
+                    {userId && (
+                      <ConfirmLocationModal
+                        show={showModal}
+                        onClose={() => setShowModal(false)}
+                        locationDetails={selectedLocation || {}}
+                        onSubmit={() => userId && dispatch(getAddress(userId))}
+                        userId={userId}
+                      />
+                    )}
 
-                {/* Tab Content */}
-                <div className="p-4">
-                  {activeTab === "profile" && (
-                    <div className="p-3 position-relative border rounded bg-white shadow-sm">
-                      <h5 className="fw-bold mb-3 text-primary">Hi there!</h5>
-                      {buyer?.name && (
-                        <div className="mb-3 d-flex align-items-center">
-                          <Image
-                            src="/images/person-icon.png"
-                            width={45}
-                            height={45}
-                            className="me-4 opacity-75"
-                            alt="person"
-                          />
-                          <div>
-                            <label className="text-muted d-block">
-                              Patient Name
-                            </label>
-                            <strong>{buyer?.name || "Guest"}</strong>
+                    <div className="row g-3">
+                      {billingAddresses.map((addr) => {
+                        const isDefault =
+                          (pendingDefaultId ?? selectedAddressId) === addr.id;
+                        const tag =
+                          addr.address_type_id === 1 ? "Home" : addr.address_type_id === 2 ? "Office" : "Other";
+                        const tagIcon =
+                          addr.address_type_id === 1 ? "bi-house" : addr.address_type_id === 2 ? "bi-briefcase" : "bi-geo-alt";
+                        return (
+                          <div className="col-md-6" key={addr.id}>
+                            <div className={`acct-card acct-addr ${isDefault ? "is-default" : ""}`}>
+                              <div className="d-flex gap-2 align-items-center">
+                                <span className="acct-tag"><i className={`bi ${tagIcon}`} /> {tag}</span>
+                                {isDefault && <span className="acct-default">Default</span>}
+                              </div>
+                              <div className="who">
+                                {addr.name}
+                                {addr.mobile ? `  ·  ${addr.mobile}` : ""}
+                              </div>
+                              <div className="lines">
+                                {addr.address}
+                                {addr.location ? `, ${addr.location}` : ""}
+                                {addr.pincode ? ` – ${addr.pincode}` : ""}
+                              </div>
+                              <div className="actions">
+                                <button
+                                  type="button"
+                                  className="remove"
+                                  disabled={isDefault}
+                                  title={isDefault ? "Set another address as default first" : "Remove address"}
+                                  onClick={() => {
+                                    if (!addr.id) return toast.error("Invalid address ID");
+                                    handleRemove(addr.id);
+                                  }}
+                                >
+                                  <i className="bi bi-trash" /> Remove
+                                </button>
+                                {!isDefault && (
+                                  <button
+                                    type="button"
+                                    className="make-default"
+                                    onClick={() => handleSetDefaultAddress(addr)}
+                                  >
+                                    Set as default
+                                  </button>
+                                )}
+                              </div>
+                            </div>
                           </div>
-                        </div>
-                      )}
-                      {buyer?.number && (
-                        <div className="mb-3 d-flex align-items-center">
-                          <Image
-                            src="/images/mobile-icon.png"
-                            width={45}
-                            height={45}
-                            className="me-4 opacity-75"
-                            alt="phone"
-                          />
-                          <div>
-                            <label className="text-muted d-block">
-                              Mobile Number
-                            </label>
-                            <strong>{buyer?.number || "-"}</strong>
-                          </div>
-                        </div>
-                      )}
-                      {buyer?.email && (
-                        <div className="mb-3 d-flex align-items-center">
-                          <Image
-                            src="/images/email-icon.png"
-                            width={45}
-                            height={45}
-                            className="me-4 opacity-75"
-                            alt="email"
-                          />
-                          <div>
-                            <label className="text-muted d-block">
-                              Primary Email address
-                            </label>
-                            <strong>{buyer?.email || "-"}</strong>
-                          </div>
+                        );
+                      })}
+                      {billingAddresses.length < 6 && (
+                        <div className="col-md-6">
+                          <button type="button" className="acct-add-tile" onClick={() => setShowModal(true)}>
+                            <i className="bi bi-plus-lg" />
+                            <b>Add a new address</b>
+                            <span>Pincode, house no., landmark</span>
+                          </button>
                         </div>
                       )}
                     </div>
-                  )}
+                  </>
+                )}
 
-                  {activeTab === "address" && (
-                    <div>
-                      <div className="d-flex justify-content-between align-items-center mb-3">
-                        <h5 className="fw-bold mb-0 text-primary">
-                          My Address
-                        </h5>
-                        <button
-                          className="btn btn-primary"
-                          onClick={() => setShowModal(true)}
-                          disabled={billingAddresses.length >= 6}
-                        >
-                          + Add New Address
-                        </button>
-                        {userId && (
-                          <ConfirmLocationModal
-                            show={showModal}
-                            onClose={() => setShowModal(false)}
-                            locationDetails={selectedLocation || {}}
-                            onSubmit={() =>
-                              userId && dispatch(getAddress(userId))
-                            }
-                            userId={userId}
+                {/* ================= MY ORDERS ================= */}
+                {activeTab === "order" && (
+                  <>
+                    <div className="d-flex align-items-center gap-3">
+                      <div className="flex-grow-1">
+                        <h1 className="acct-title">My Orders</h1>
+                        <p className="acct-sub">Track, reorder or get help with any order</p>
+                      </div>
+                      <button
+                        type="button"
+                        className="acct-btn"
+                        onClick={refreshOrders}
+                        disabled={refreshingOrders || ordersLoading}
+                        title="Get the latest order status"
+                      >
+                        <i className="bi bi-arrow-clockwise" /> {refreshingOrders ? "Refreshing…" : "Refresh"}
+                      </button>
+                    </div>
+
+                    <div className="acct-chips" role="tablist" aria-label="Filter orders by status">
+                      {(["all", "process", "dispatched", "delivered", "cancelled"] as const).map((k) => {
+                        const n = k === "all" ? allOrders.length : stageCounts[k];
+                        const label = k === "all" ? "All" : STAGE_LABEL[k];
+                        return (
+                          <button
+                            key={k}
+                            type="button"
+                            role="tab"
+                            aria-selected={orderFilter === k}
+                            className={`acct-chip ${orderFilter === k ? "active" : ""}`}
+                            onClick={() => setOrderFilter(k)}
+                          >
+                            {label} ({n})
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    {ordersLoading ? (
+                      <div className="d-flex justify-content-center align-items-center py-5">
+                        <TncLoader />
+                      </div>
+                    ) : visibleOrders.length > 0 ? (
+                      <>
+                        {visibleOrders.map((order) => (
+                          <OrderCard
+                            key={order.orderId}
+                            order={order}
+                            cancelling={cancellingId === order.orderId}
+                            {...orderCardProps}
                           />
+                        ))}
+                        {hasMore && (
+                          <div className="text-center">
+                            <button type="button" className="acct-btn" onClick={loadMoreOrders}>
+                              Show more orders
+                            </button>
+                          </div>
+                        )}
+                      </>
+                    ) : (
+                      <div className="acct-card acct-empty">
+                        <i className="bi bi-receipt" />
+                        {orderFilter === "all" ? (
+                          <>
+                            <p className="mb-3">You haven&apos;t placed any orders yet.</p>
+                            <Link href="/all-medicine" className="acct-btn primary text-decoration-none">
+                              Browse medicines
+                            </Link>
+                          </>
+                        ) : (
+                          <p className="mb-0">No {STAGE_LABEL[orderFilter as OrderStage].toLowerCase()} orders.</p>
                         )}
                       </div>
-                      <div className="row">
-                        {billingAddresses.map((addr, idx) => {
-                          const isSelected =
-                            selectedAddressId === addr.id ||
-                            pendingDefaultId === addr.id;
-                          const isDefault =
-                            selectedAddressId === addr.id ||
-                            pendingDefaultId === addr.id;
-
-                          return (
-                            <div className="col-md-4 mb-4" key={addr.id}>
-                              <div
-                                className={`card ${
-                                  isSelected ? "border-danger" : "border-light"
-                                } shadow-sm`}
-                                style={{
-                                  cursor: "pointer",
-                                  borderWidth: "2px",
-                                  borderRadius: "8px",
-                                  transition: "all 0.2s ease-in-out",
-                                }}
-                              >
-                                <div className="card-body p-3">
-                                  <div className="d-flex align-items-center mb-2">
-                                    <input
-                                      type="radio"
-                                      name="billingAddresses"
-                                      checked={isSelected}
-                                      onChange={() =>
-                                        handleSetDefaultAddress(addr)
-                                      }
-                                      className="form-check-input me-2"
-                                      title="Set Default Address"
-                                    />
-
-                                    <label
-                                      className="fw-semibold mb-0"
-                                      style={{
-                                        fontSize: "15px",
-                                        color: "#212121",
-                                      }}
-                                    >
-                                      {addr.address_type_id === 1
-                                        ? "Home"
-                                        : addr.address_type_id === 2
-                                        ? "Office"
-                                        : "Other"}
-                                    </label>
-                                  </div>
-
-                                  <div className="ps-4">
-                                    <p
-                                      className="mb-1"
-                                      style={{
-                                        fontSize: "13px",
-                                        color: "#555",
-                                        lineHeight: "1",
-                                      }}
-                                    >
-                                      {addr.address}
-                                    </p>
-                                    <p
-                                      className="mb-3"
-                                      style={{
-                                        fontSize: "13px",
-                                        color: "#555",
-                                        lineHeight: "1",
-                                      }}
-                                    >
-                                      {addr.location} ({addr.pincode})
-                                    </p>
-                                    <p
-                                      className="mb-0 fw-semibold"
-                                      style={{
-                                        fontSize: "13.5px",
-                                        color: "#212121",
-                                      }}
-                                    >
-                                      {addr.name}
-                                    </p>
-                                    <p
-                                      className="mb-2"
-                                      style={{
-                                        fontSize: "13px",
-                                        color: "#757575",
-                                      }}
-                                    >
-                                      {addr.mobile}
-                                    </p>
-
-                                    {/* Remove */}
-                                    {/* <button
-                                      className="btn btn-link p-0 fw-semibold text-danger"
-                                      style={{ fontSize: "13px" }}
-                                      onClick={() =>
-                                        addr.id && handleRemove(addr.id)
-                                      }
-                                      title="Remove Address"
-                                    >
-                                      <i className="bi bi-trash"></i>
-                                    </button> */}
-                                    <button
-                                      className="btn btn-link p-0 fw-semibold"
-                                      style={{
-                                        fontSize: "13px",
-                                        color: isDefault ? "#999" : "#e53935",
-                                        textDecoration: "none",
-                                        cursor: isDefault
-                                          ? "not-allowed"
-                                          : "pointer",
-                                      }}
-                                      type="button"
-                                      disabled={isDefault}
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        if (isDefault) return;
-
-                                        if (!addr.id) {
-                                          toast.error("Invalid address ID");
-                                          return;
-                                        }
-                                        handleRemove(addr.id);
-                                      }}
-                                      title="Remove Address"
-                                    >
-                                      <i
-                                        className="bi bi-trash"
-                                        style={{
-                                          fontSize: "16px",
-                                          color: isDefault ? "#999" : "red",
-                                        }}
-                                      ></i>
-                                    </button>
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  )}
-
-                  {activeTab === "order" && (
-                    <div>
-                      <h5 className="fw-bold mb-3 text-primary">My Orders</h5>
-
-                      {ordersLoading ? (
-                        <div className="d-flex justify-content-center align-items-center py-5">
-                          <div className="text-center">
-                            <TncLoader />
-                          </div>
-                        </div>
-                      ) : visibleOrders.length > 0 ? (
-                        <div className="row">
-                          {visibleOrders.map((order) => (
-                            <div key={order.orderId} className="col-md-4 mb-4">
-                              <div
-                                className="card h-100 shadow-sm"
-                                style={{
-                                  borderRadius: "8px",
-                                  border: "1px solid #e0e0e0",
-                                  position: "relative",
-                                }}
-                              >
-                                <div className="card-body d-flex flex-column justify-content-between">
-                                  {order?.prescription_url &&
-                                    (() => {
-                                      const type = order.prescription_url
-                                        .split(".")
-                                        .pop()
-                                        ?.toLowerCase();
-                                      const isImage = [
-                                        "jpg",
-                                        "jpeg",
-                                        "png",
-                                      ].includes(type || "");
-
-                                      return (
-                                        <img
-                                          src={
-                                            isImage
-                                              ? order.prescription_url
-                                              : "/images/pdf-icon.png"
-                                          }
-                                          alt="prescription"
-                                          onClick={(e) => {
-                                            e.stopPropagation(); // ✅ important (card click conflict avoid)
-                                            window.open(
-                                              order.prescription_url,
-                                              "_blank"
-                                            );
-                                          }}
-                                          style={{
-                                            position: "absolute",
-                                            top: "10px",
-                                            right: "10px",
-                                            width: "40px",
-                                            height: "40px",
-                                            objectFit: "cover",
-                                            borderRadius: "6px",
-                                            border: "1px solid #ddd",
-                                            cursor: "pointer",
-                                            background: "#fff",
-                                            padding: "2px",
-                                          }}
-                                        />
-                                      );
-                                    })()}
-                                  <div>
-                                    <h6 className="mb-2 text-primary fw-semibold">
-                                      Order Number:{" "}
-                                      {order.order_number || order.orderId}
-                                      {order.orderStatus === "Cancelled" ? (
-                                        <span className="badge bg-secondary ms-2">
-                                          Cancelled
-                                        </span>
-                                      ) : (
-                                        /* TNC-34: the customer sees where the
-                                           order is, not only whether it is paid */
-                                        order.deliveryStatusName && (
-                                          <span
-                                            className={`badge ms-2 ${
-                                              order.deliveryStatusName === "Delivered"
-                                                ? "bg-success"
-                                                : order.deliveryStatusName === "Dispatched"
-                                                ? "bg-info text-dark"
-                                                : "bg-warning text-dark"
-                                            }`}
-                                          >
-                                            {order.deliveryStatusName}
-                                          </span>
-                                        )
-                                      )}
-                                    </h6>
-
-                                    <p className="mb-0 text-success">
-                                      Payment Status:{" "}
-                                      <span
-                                        className={
-                                          order.paymentStatus === "Buy"
-                                            ? "text-success"
-                                            : "text-warning"
-                                        }
-                                      >
-                                        {order.paymentStatus}
-                                      </span>
-                                    </p>
-
-                                    <p className="mb-0 text-success">
-                                      Payment Mode: {order.paymentMode}
-                                    </p>
-                                    <p className="mb-0">
-                                      Order Date:{" "}
-                                      {formatDateOnly(order.orderDate)}
-                                    </p>
-                                    <p className="mb-0 text-danger">
-                                      Amount: ₹{formatPrice(order.amount)} |
-                                      Type: {order.orderType}
-                                    </p>
-                                    <p className="mb-0 text-muted">
-                                      {order.address}
-                                    </p>
-                                  </div>
-
-                                  <div className="d-flex justify-content-end gap-2">
-                                    {/* 🔹 Details */}
-                                    <button
-                                      className="btn btn-outline-primary btn-sm"
-                                      onClick={() =>
-                                        handleViewOrder(order.orderId)
-                                      }
-                                      title="Order Details"
-                                    >
-                                      <i className="bi bi-eye-fill"></i> Details
-                                    </button>
-
-                                    {/* 🔹 Cancel (TNC-20) — only while it can still be cancelled */}
-                                    {order.buyer_can_cancel && (
-                                      <button
-                                        className="btn btn-outline-danger btn-sm"
-                                        onClick={() =>
-                                          handleCancelOrder(order.orderId)
-                                        }
-                                        disabled={cancellingId === order.orderId}
-                                        title="Cancel order"
-                                      >
-                                        <i className="bi bi-x-circle"></i>{" "}
-                                        {cancellingId === order.orderId
-                                          ? "Cancelling..."
-                                          : "Cancel"}
-                                      </button>
-                                    )}
-
-                                    {/* 🔹 Reorder */}
-                                    <button
-                                      className="btn btn-success btn-sm"
-                                      onClick={() =>
-                                        handleReOrder(order.orderId)
-                                      }
-                                      title="Reorder"
-                                    >
-                                      <i className="bi bi-arrow-repeat"></i>{" "}
-                                      Reorder
-                                    </button>
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      ) : (
-                        <p>No orders found.</p>
-                      )}
-                    </div>
-                  )}
-                </div>
+                    )}
+                  </>
+                )}
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* OrderDetailsModal */}
-      <OrderDetailsModal
-        show={showOrderModal}
-        onClose={() => setShowOrderModal(false)}
-        order={selectedOrder}
-      />
+      <PrescriptionUploadModal show={showRxModal} handleClose={() => setShowRxModal(false)} />
+      {userId && (
+        <EditProfileModal
+          show={showEditProfile}
+          onClose={() => setShowEditProfile(false)}
+          buyerId={userId}
+          name={buyer?.name}
+          email={buyer?.email}
+          mobile={buyer?.number}
+        />
+      )}
       <Footer />
     </>
   );

@@ -1,26 +1,36 @@
 /**
- * Delivery status helpers for the staff order screens (TNC-20).
+ * Delivery status helpers for the staff order screens.
  *
- *   1 In Process  ->  3 Dispatched  ->  2 Delivered
+ *   1 New -> 4 Confirmed -> 5 Packed -> 6 Rider Assigned
+ *         -> 3 Out for Delivery -> 2 Delivered        (7 Delivery Failed)
  *
- * "Dispatched" is what stops a buyer cancelling online; staff can still
- * cancel (with a reason) until the order is delivered.
+ * The codes are the API's MasterTableOrder.delivery_status values; they are
+ * not in journey order because 1-3 existed before the delivery partner.
+ * Confirm and Pack are pharmacist actions; 6, 3 and 2 come from the delivery
+ * partner once a rider is booked (see DeliveryPanel).
  */
 export const DELIVERY_LABEL: Record<string, string> = {
-  "1": "In Process",
-  "3": "Dispatched",
+  "1": "New",
+  "4": "Confirmed",
+  "5": "Packed",
+  "6": "Rider Assigned",
+  "3": "Out for Delivery",
   "2": "Delivered",
+  "7": "Delivery Failed",
 };
 
-export function nextDeliveryStatus(current: string | number): string {
-  const c = String(current);
-  if (c === "1") return "3";
-  if (c === "3") return "2";
-  return "1";
+/** Pill colour for each stage (classes in pharmacy-style.css). */
+export function deliveryPillClass(status: string | number): string {
+  const s = String(status);
+  if (s === "2") return "delivered";
+  if (s === "7") return "failed";
+  if (s === "3" || s === "6") return "on-the-way";
+  if (s === "4" || s === "5") return "ready";
+  return "processing";
 }
 
 export function deliveryLabel(status: string | number): string {
-  return DELIVERY_LABEL[String(status)] || "In Process";
+  return DELIVERY_LABEL[String(status)] || "New";
 }
 
 /** Ask for the (required) cancellation reason. Returns null if the user backs out. */

@@ -32,6 +32,7 @@ import { loadLocalHealthBag } from "@/lib/features/healthBagSlice/healthBagSlice
 import { formatPrice } from "@/lib/utils/formatPrice";
 import ProductCardUI from "../components/MedicineCard/ProductCardUI";
 import { uploadPrescriptionFromBuyerCartThunk } from "@/lib/features/prescriptionSlice/prescriptionSlice";
+import { useDeliveryQuote } from "@/lib/hooks/useDeliveryQuote";
 const mediaBase = process.env.NEXT_PUBLIC_MEDIA_BASE_URL;
 
 export interface Medicine {
@@ -179,6 +180,16 @@ export default function HealthBagClient() {
       setBillingAddress(defaultAddress.id);
     }
   }, [defaultAddress]);
+
+  // Delivery fee for the chosen address, priced by the server: free within
+  // 12 km of the pharmacy, the delivery partner's fare beyond, no delivery
+  // beyond 50 km. (Replaces the old flat ₹40 below ₹599.)
+  const {
+    quote: deliveryQuote,
+    fee: deliveryFee,
+    deliverable,
+    loading: deliveryLoading,
+  } = useDeliveryQuote(buyer?.id ? billingAddress : null);
 
   useEffect(() => {
     if (buyer?.id) {
@@ -490,9 +501,7 @@ export default function HealthBagClient() {
     },
     { totalMrp: 0, totalDiscount: 0, totalPay: 0 }
   );
-  // 🚚 Delivery logic
-  const DELIVERY_THRESHOLD = 599;
-  const DELIVERY_FEE = 40;
+  // 🚚 Delivery fee comes from useDeliveryQuote (above).
 
   // 🔥 formatted values (NO .00 issue)
   const formattedTotalMrp = formatPrice(totals.totalMrp);
@@ -500,8 +509,6 @@ export default function HealthBagClient() {
   const formattedGrandTotal = formatPrice(totals.totalPay);
 
   const grandTotal = Number(totals.totalPay.toFixed(2));
-
-  const deliveryFee = grandTotal >= DELIVERY_THRESHOLD ? 0 : DELIVERY_FEE;
 
   const finalPayable = grandTotal + deliveryFee;
   // const grandTotal = totals.totalPay;
@@ -514,6 +521,10 @@ export default function HealthBagClient() {
 
     if (!billingAddress) {
       toast.error("Please select delivery address!");
+      return;
+    }
+    if (!deliverable) {
+      toast.error(deliveryQuote?.message || "We can't deliver to this address.");
       return;
     }
 
@@ -533,6 +544,8 @@ export default function HealthBagClient() {
       payment_mode: 1, // default UPI/manual
       payment_status: "1",
       amount: formatPrice(finalPayable),
+      // Display only (checkout page); the server prices delivery itself.
+      delivery_fee: deliveryFee,
       order_type: 1, // pharmacy
       address_id: billingAddress,
       status: "1",
@@ -559,6 +572,14 @@ export default function HealthBagClient() {
     }
     if (!billingAddress) {
       toast.error("Please select delivery address!");
+      return;
+    }
+    if (deliveryLoading) {
+      toast("Working out the delivery fee… one moment.");
+      return;
+    }
+    if (!deliverable) {
+      toast.error(deliveryQuote?.message || "We can't deliver to this address.");
       return;
     }
     const hasRxProduct = mergedItems.some(
@@ -909,23 +930,31 @@ export default function HealthBagClient() {
                   <div className="d-flex justify-content-between mb-2 small fw-semibold">
                     <span>Delivery Fee</span>
 
-                    {deliveryFee === 0 ? (
-                      <span className="text-success fw-semibold">
-                        FREE{" "}
-                        <span className="text-muted text-decoration-line-through ms-1">
-                          ₹40
-                        </span>
+                    {deliveryLoading ? (
+                      <span className="text-muted">Calculating…</span>
+                    ) : !deliveryQuote ? (
+                      <span className="text-muted">
+                        {buyer?.id ? "Select address" : "At checkout"}
                       </span>
+                    ) : !deliverable ? (
+                      <span className="text-danger">Not deliverable</span>
+                    ) : deliveryFee === 0 ? (
+                      <span className="text-success fw-semibold">FREE</span>
                     ) : (
-                      <span>₹40</span>
+                      <span>₹{formatPrice(deliveryFee)}</span>
                     )}
                   </div>
 
-                  {/* 🚚 Free delivery banner */}
-                  <div className="delivery-banner mb-2">
+                  {/* 🚚 Delivery note: the server's own explanation */}
+                  <div
+                    className={`delivery-banner mb-2 ${
+                      deliveryQuote && !deliverable ? "text-danger" : ""
+                    }`}
+                  >
                     <i className="bi bi-truck me-2"></i>
                     <span className="delivery-text">
-                      Enjoy FREE delivery on orders above ₹599
+                      {deliveryQuote?.message ||
+                        "FREE delivery within 12 km of our pharmacy"}
                     </span>
                   </div>
 

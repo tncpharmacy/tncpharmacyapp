@@ -5,10 +5,12 @@ import toast from "react-hot-toast";
 import { askCancelReason } from "@/lib/utils/orderStatus";
 import { staffCancelOrderApi } from "@/lib/api/pharmacistOrder";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Button, Modal, OverlayTrigger, Tooltip } from "react-bootstrap";
 import "../css/admin-style.css";
 import SideNav from "@/app/admin/components/SideNav/page";
+import StatusBadge from "@/app/admin/components/ui/StatusBadge";
+import { DELIVERY_LABEL } from "@/lib/utils/orderStatus";
 import Header from "@/app/admin/components/Header/page";
 import { useRouter } from "next/navigation";
 import Input from "@/app/components/Input/Input";
@@ -70,6 +72,25 @@ export default function OrderList() {
   // filtered records by search box
   const [searchTerm, setSearchTerm] = useState("");
   const [filteredData, setFilteredData] = useState<PharmacistOrder[]>([]);
+  // Figma A2: filter chips across the delivery states. "" = All.
+  const [deliveryFilter, setDeliveryFilter] = useState<string>("");
+
+  /**
+   * The chips narrow what is already in filteredData (search + patient +
+   * order type). Everything the render counts or pages through reads this,
+   * not filteredData, so "Showing n of m" and the infinite-scroll hasMore
+   * agree with what is on screen while a chip is active.
+   */
+  const deliveryFiltered = useMemo(() => {
+    if (!deliveryFilter) return filteredData;
+    if (deliveryFilter === "cancelled")
+      return filteredData.filter((o) => o.orderStatus === "Cancelled");
+    return filteredData.filter(
+      (o) =>
+        o.orderStatus !== "Cancelled" &&
+        String(o.delivery_status) === deliveryFilter
+    );
+  }, [filteredData, deliveryFilter]);
   //orderType
   const [orderType, setOrderType] = useState<string>("");
   const [selectedBuyer, setSelectedBuyer] = useState<number | "">("");
@@ -399,7 +420,7 @@ export default function OrderList() {
         <div className="body_right">
           <InfiniteScroll
             loadMore={loadMore}
-            hasMore={visibleCount < filteredData.length}
+            hasMore={visibleCount < deliveryFiltered.length}
             // className="body_content"
           >
             <div style={{ overflowX: "hidden", width: "100%" }}>
@@ -408,7 +429,13 @@ export default function OrderList() {
                 style={{ marginLeft: 0, marginRight: 0, width: "100%" }}
               >
                 <div className="pageTitle col-md-6 col-12 text-start mt-2">
-                  <i className="bi bi-receipt"></i> Order Summary
+                  <i className="bi bi-receipt"></i> Orders
+                  <div className="adm-pagehead__sub">
+                    {deliveryFiltered.length} shown
+                    {filteredData.length !== deliveryFiltered.length
+                      ? ` of ${filteredData.length} matching`
+                      : ""}
+                  </div>
                 </div>
 
                 <div className="col-md-6 col-12 text-end mt-2 mb-2">
@@ -424,6 +451,30 @@ export default function OrderList() {
             </div>
 
             <div className="main_content">
+              {/* Figma A2 toolbar: delivery-state chips + live result count. */}
+              <div className="adm-toolbar" role="group" aria-label="Filter by delivery state">
+                {[
+                  { key: "", label: "All" },
+                  { key: "1", label: DELIVERY_LABEL["1"] },
+                  { key: "3", label: DELIVERY_LABEL["3"] },
+                  { key: "2", label: DELIVERY_LABEL["2"] },
+                  { key: "cancelled", label: "Cancelled" },
+                ].map((c) => (
+                  <button
+                    key={c.key || "all"}
+                    type="button"
+                    className={`adm-chip${deliveryFilter === c.key ? " is-selected" : ""}`}
+                    aria-pressed={deliveryFilter === c.key}
+                    onClick={() => setDeliveryFilter(c.key)}
+                  >
+                    {c.label}
+                  </button>
+                ))}
+                <span className="adm-toolbar__count">
+                  Showing {Math.min(visibleCount, deliveryFiltered.length)} of{" "}
+                  {deliveryFiltered.length}
+                </span>
+              </div>
               <div className="col-sm-12">
                 <div className="row">
                   <div className="col-md-6">
@@ -484,21 +535,21 @@ export default function OrderList() {
                         <th className="fw-bold text-start">Order Id</th>
                         <th className="fw-bold text-start">Name</th>
                         <th className="fw-bold text-start">Mobile</th>
-                        {/* <th className="fw-bold text-start">GST</th> */}
+                        <th className="fw-bold text-start">GST</th>
                         <th className="fw-bold text-start">Amount</th>
                         <th className="fw-bold text-start">Type</th>
                         <th className="fw-bold text-start">Mode</th>
-                        {/* <th className="fw-bold text-start">Status</th> */}
+                        <th className="fw-bold text-start">Status</th>
                         <th className="fw-bold text-start">Date</th>
                         <th className="fw-bold text-center">Action</th>
                       </tr>
                     </thead>
                     <tbody>
                       {listLoading ? (
-                        <TableLoader colSpan={9} text="Loading records..." />
+                        <TableLoader colSpan={11} text="Loading records..." />
                       ) : (
                         <>
-                          {filteredData
+                          {deliveryFiltered
                             .slice()
                             .sort(
                               (a, b) =>
@@ -519,9 +570,9 @@ export default function OrderList() {
                                   <td className="text-start">
                                     {p.buyerNumber ?? ""}
                                   </td>
-                                  {/* <td className="text-start">
-                                {p.gst_number ?? ""}
-                              </td> */}
+                                  <td className="text-start">
+                                    {p.gst_number || "\u2014"}
+                                  </td>
                                   <td className="text-start">
                                     {formatAmount(Number(p.amount))}
                                   </td>
@@ -531,9 +582,13 @@ export default function OrderList() {
                                   <td className="text-start">
                                     {p.paymentMode ?? ""}
                                   </td>
-                                  {/* <td className="text-start">
-                                    {p.paymentStatus ?? ""}
-                                  </td> */}
+                                  <td className="text-start">
+                                    <StatusBadge
+                                      deliveryStatus={p.delivery_status}
+                                      cancelled={p.orderStatus === "Cancelled"}
+                                      title={p.cancel_reason || undefined}
+                                    />
+                                  </td>
                                   <td className="text-start">
                                     {formatDate(p.orderDate ?? "")}
                                   </td>
@@ -582,7 +637,7 @@ export default function OrderList() {
                       {/* No more records */}
                       {!listLoading &&
                         !loadings &&
-                        filteredData.length === 0 && (
+                        deliveryFiltered.length === 0 && (
                           <tr>
                             <td
                               colSpan={9}
@@ -595,8 +650,8 @@ export default function OrderList() {
 
                       {!listLoading &&
                         !loadings &&
-                        filteredData.length > 0 &&
-                        visibleCount >= filteredData.length && (
+                        deliveryFiltered.length > 0 &&
+                        visibleCount >= deliveryFiltered.length && (
                           <tr>
                             <td
                               colSpan={9}

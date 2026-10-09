@@ -18,7 +18,7 @@ import { HealthBag } from "@/types/healthBag";
 import TncLoader from "@/app/components/TncLoader/TncLoader";
 import { loadLocalHealthBag } from "@/lib/features/healthBagSlice/healthBagSlice";
 import Pagination from "@/app/components/Pagination/Pagination";
-import ProductCardUI from "../../components/MedicineCard/ProductCardUI";
+import ProductCardUI, { ProductCardSkeleton } from "../../components/MedicineCard/ProductCardUI";
 import Image from "next/image";
 
 const mediaBase = process.env.NEXT_PUBLIC_MEDIA_BASE_URL;
@@ -341,16 +341,11 @@ export default function AllGroupCareClient() {
                 </div>
               )} */}
               {/* PRODUCT LIST */}
-              <div className="pd_list">
+              <div className="pc-grid">
                 {!hasFetched || isInitialLoading ? (
                   <>
                     {Array.from({ length: 10 }).map((_, i) => (
-                      <div key={i} className="pd_box shadow skeleton-card">
-                        <div className="skeleton-img" />
-                        <div className="skeleton-line w-80" />
-                        <div className="skeleton-line w-60" />
-                        <div className="skeleton-btn" />
-                      </div>
+                      <ProductCardSkeleton key={i} />
                     ))}
                   </>
                 ) : uniqueMedicines.length === 0 ? (
@@ -362,7 +357,7 @@ export default function AllGroupCareClient() {
                     const baseMrp =
                       Number.isFinite(parsedMrp) && parsedMrp > 0
                         ? parsedMrp
-                        : 275;
+                        : 0;
                     // 🔥 FORMAT FUNCTION
                     const formatPrice = (num: number) => {
                       return Number(num.toFixed(2)).toString();
@@ -385,8 +380,7 @@ export default function AllGroupCareClient() {
 
                     const isInBag = localBag.includes(item.medicine_id);
 
-                    return isMobile ? (
-                      // 💻 DESKTOP/TABLET → CARD DESIGN (Reusable Component 🔥)
+                    return (
                       <ProductCardUI
                         key={`${item.id}-${index}`}
                         inStock={item.in_stock}
@@ -397,88 +391,13 @@ export default function AllGroupCareClient() {
                         price={formattedDiscountedPrice}
                         mrp={formattedMrp}
                         discount={discount}
-                        showRx={false}
+                        showRx={Number(item.prescription_required) === 1}
                         isInCart={isInBag}
                         loading={processingIds.includes(item.medicine_id)}
                         onAdd={() => handleAdd(item)}
                         onRemove={() => handleRemove(item.medicine_id)}
                         onClick={() => handleClick(item.medicine_id)}
                       />
-                    ) : (
-                      <div
-                        className="pd_box shadow"
-                        key={`${item.id}-${index}`}
-                        style={{ boxShadow: "0 2px 5px rgba(0, 0, 0, 0.05)" }}
-                      >
-                        <div className="pd_img">
-                          <Image
-                            src={imageUrl}
-                            alt={item.medicine_name}
-                            width={200}
-                            height={200}
-                            sizes="(max-width: 768px) 50vw, 200px"
-                            style={{
-                              height: "220px",
-                              objectFit: "contain",
-                              cursor: "pointer",
-                              opacity:
-                                imageUrl === "/images/tnc-default.png"
-                                  ? 0.3
-                                  : 1,
-                            }}
-                            onClick={() => handleClick(item.medicine_id)}
-                          />
-                        </div>
-
-                        <div className="pd_content">
-                          <div
-                            style={{ cursor: "pointer" }}
-                            onClick={() => handleClick(item.medicine_id)}
-                          >
-                            <h3
-                              className="pd-title hover-link fw-bold"
-                              style={{ color: "#264b8c" }}
-                            >
-                              {item.medicine_name}
-                            </h3>
-
-                            <h6 className="pd-title fw-bold">
-                              {item.manufacturer_name}
-                            </h6>
-
-                            <div className="pd_price">
-                              <span className="new_price">
-                                ₹{formattedDiscountedPrice}
-                              </span>
-                              <span className="old_price">
-                                <del>MRP ₹{formattedMrp}</del> {discount}% off
-                              </span>
-                            </div>
-                          </div>
-                          <div>
-                            <button
-                              title={(item.in_stock === false && !isInBag) ? "Currently out of stock" : undefined}
-                              className={`btn-1 btn-HO ${
-                                isInBag ? "remove" : "add"
-                              } ${(item.in_stock === false && !isInBag) ? "oos" : ""}`}
-                              disabled={processingIds.includes(
-                                item.medicine_id
-                              ) || (item.in_stock === false && !isInBag)}
-                              onClick={() =>
-                                isInBag
-                                  ? handleRemove(item.medicine_id)
-                                  : handleAdd(item)
-                              }
-                            >
-                              {(item.in_stock === false && !isInBag) ? "OUT OF STOCK" : (processingIds.includes(item.medicine_id)
-                                ? "Processing..."
-                                : isInBag
-                                ? "REMOVE"
-                                : "ADD")}
-                            </button>
-                          </div>
-                        </div>
-                      </div>
                     );
                   })
                 )}

@@ -68,9 +68,18 @@ export default function ConfirmLocationModal({
 
   useEffect(() => {
     if (locationDetails) {
+      // The map modal reports lat/lng; the API stores them as
+      // latitude/longitude (used for the delivery distance and fee).
+      const { lat, lng, ...rest } = locationDetails as Partial<Address> & {
+        lat?: number;
+        lng?: number;
+      };
       setFormData((prev) => ({
         ...prev,
-        ...locationDetails,
+        ...rest,
+        ...(lat != null && lng != null
+          ? { latitude: Number(lat.toFixed(6)), longitude: Number(lng.toFixed(6)) }
+          : {}),
       }));
     }
   }, [locationDetails]);

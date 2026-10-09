@@ -4,8 +4,9 @@ import toast from "react-hot-toast";
 import {
   askCancelReason,
   deliveryLabel,
-  nextDeliveryStatus,
+  deliveryPillClass,
 } from "@/lib/utils/orderStatus";
+import DeliveryPanel from "@/app/components/DeliveryPanel/DeliveryPanel";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { Button, Modal, OverlayTrigger, Tooltip } from "react-bootstrap";
@@ -33,11 +34,9 @@ import { formatDate } from "@/lib/utils/dateFormatter";
 import {
   getReportOrderWiseApi,
   getReportProductWiseApi,
-  updateDeliveryStatusApi,
   staffCancelOrderApi,
 } from "@/lib/api/pharmacistOrder";
 import { formatPrice } from "@/lib/utils/formatPrice";
-import StatusConfirmModal from "@/app/components/StatusConfirmModal/StatusConfirmModal";
 
 const mediaPrescriptionBase = process.env.NEXT_PUBLIC_PRESCRIPTION_BASE_URL;
 
@@ -84,11 +83,8 @@ export default function OrderList() {
   const [modalLoading, setModalLoading] = useState(false);
   // export loading
   const [exportLoading, setExportLoading] = useState(false);
-  // order delivery status
-  const [confirmModal, setConfirmModal] = useState(false);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [selectedOrder, setSelectedOrder] = useState<any>(null);
-  const [statusLoading, setStatusLoading] = useState(false);
+  // Delivery panel (stages + rider booking) for one order
+  const [deliveryOrderId, setDeliveryOrderId] = useState<number | null>(null);
   // sales report state
   const [reportType, setReportType] = useState<"order" | "product">("order");
 
@@ -515,50 +511,11 @@ export default function OrderList() {
     }
     setShowPreview(true);
   };
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const handleStatusClick = (order: any) => {
-    setSelectedOrder(order);
-    setConfirmModal(true);
+  // The status pill opens the delivery panel: confirm -> pack -> book a
+  // rider; after that the delivery partner moves the order on.
+  const handleStatusClick = (order: PharmacistOrder) => {
+    setDeliveryOrderId(Number(order.orderId));
   };
-
-  const handleConfirmStatus = async () => {
-    if (!selectedOrder) return;
-
-    try {
-      setStatusLoading(true);
-      // TNC-20: In Process -> Dispatched -> Delivered (-> In Process)
-      const newStatus = nextDeliveryStatus(selectedOrder.delivery_status);
-      const orderId = Number(selectedOrder.orderId);
-      await updateDeliveryStatusApi({
-        orderId,
-        delivery_status: newStatus,
-      });
-      // ✅ UI UPDATE (IMPORTANT)
-      setFilteredData((prev) =>
-        prev.map((item) =>
-          Number(item.orderId) === orderId
-            ? {
-                ...item,
-                delivery_status: newStatus,
-                deliveryStatusName: deliveryLabel(newStatus),
-                staff_can_cancel: newStatus !== "2" && item.status !== "0",
-              }
-            : item
-        )
-      );
-
-      setConfirmModal(false);
-    } catch (err) {
-      console.error(err);
-      alert("Status update failed");
-    } finally {
-      setStatusLoading(false);
-    }
-  };
-
-  const nextStatus = deliveryLabel(
-    nextDeliveryStatus(selectedOrder?.delivery_status ?? "1")
-  );
 
   // TNC-20: cancel with a reason; the API puts the stock back.
   const handleCancelOrder = async (order: PharmacistOrder) => {
@@ -753,12 +710,11 @@ export default function OrderList() {
                                       </span>
                                     ) : (
                                       <button
-                                        className={`status-pill ${
-                                          Number(p.delivery_status) === 2
-                                            ? "delivered"
-                                            : "processing"
-                                        }`}
+                                        className={`status-pill ${deliveryPillClass(
+                                          p.delivery_status
+                                        )}`}
                                         onClick={() => handleStatusClick(p)}
+                                        title="Open delivery: confirm, pack, book rider, track"
                                       >
                                         {deliveryLabel(p.delivery_status)}
                                       </button>
@@ -1293,13 +1249,11 @@ export default function OrderList() {
         referredByDoctor={billPreviewData.referredByDoctor}
         referredByHospital={billPreviewData.referredByHospital}
       />
-      <StatusConfirmModal
-        show={confirmModal}
-        onClose={() => setConfirmModal(false)}
-        onConfirm={handleConfirmStatus}
-        loading={statusLoading}
-        title="Change Order Status"
-        message={`Are you sure you want to mark this order as ${nextStatus}?`}
+      <DeliveryPanel
+        orderId={deliveryOrderId}
+        show={deliveryOrderId !== null}
+        onHide={() => setDeliveryOrderId(null)}
+        onChanged={() => dispatch(getPharmacistOrders())}
       />
     </>
   );

@@ -120,7 +120,7 @@ export const ENDPOINTS = {
 
     // 🔹 Added Order APIs
     POST_ORDER: (buyerId: number) => `/order/create-order/${buyerId}/`,
-    GET_ORDER_LIST: (buyerId: number) => `/order/buyer/list/${buyerId}`,
+    GET_ORDER_LIST: (buyerId: number) => `/order/buyer/list/${buyerId}/`,
     GET_ORDER_DETAIL: (orderId: number) => `/order/buyer/detail/${orderId}`,
     // TNC-20: buyer cancels own order (until dispatched)
     CANCEL_ORDER: (orderId: number) => `/order/${orderId}/cancel/`,
@@ -328,6 +328,21 @@ export const ENDPOINTS = {
       `/masterapp/update/instruction/${productInstructionId}/`,
     DELETE: (productInstructionId: number) =>
       `/masterapp/delete/instruction/${productInstructionId}/`,
+  },
+
+  // Delivery partner (Borzo) — order stages, rider booking, tracking
+  DELIVERY: {
+    ORDER: (orderId: number) => `/delivery/orders/${orderId}/`,
+    CONFIRM: (orderId: number) => `/delivery/orders/${orderId}/confirm/`,
+    PACK: (orderId: number) => `/delivery/orders/${orderId}/pack/`,
+    QUOTE: (orderId: number) => `/delivery/orders/${orderId}/quote/`,
+    BOOK_RIDER: (orderId: number) => `/delivery/orders/${orderId}/book-rider/`,
+    CANCEL_RIDER: (orderId: number) => `/delivery/orders/${orderId}/cancel-rider/`,
+    REFRESH: (orderId: number) => `/delivery/orders/${orderId}/refresh/`,
+    SIMULATE: (orderId: number) => `/delivery/orders/${orderId}/simulate/`,
+    SET_STAGE: (orderId: number) => `/delivery/orders/${orderId}/set-stage/`,
+    BUYER_QUOTE: (addressId: number) => `/delivery/buyer/quote/?address_id=${addressId}`,
+    BUYER_TRACKING: (orderId: number) => `/delivery/buyer/orders/${orderId}/`,
   },
 
   // TNC-19: Razorpay online payment
