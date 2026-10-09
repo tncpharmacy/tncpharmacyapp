@@ -1,0 +1,355 @@
+/* ============================================================
+   TnC admin — Figma design tokens applied to the existing markup.
+
+   WHY A SEPARATE FILE, SCOPED UNDER .admin-layout
+   -----------------------------------------------
+   admin-style.css (795 lines) still owns the structure. This file
+   only restyles. Every selector is prefixed with .admin-layout —
+   the wrapper in admin/layout.tsx — which does two things:
+     1. specificity 0,2,0 beats the base file's 0,1,0, so this wins
+        no matter which order Next puts the stylesheets in;
+     2. nothing here can ever leak onto a customer page.
+   Delete this file and the admin reverts to its old look intact.
+
+   Source of truth: Figma file 9JteXst2gA7buCt7xoBQ7p,
+   collections "Color" and "Spacing & Radius".
+   ============================================================ */
+
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap");
+
+.admin-layout {
+  /* colour — Figma collection "Color", mode Light */
+  --adm-brand:        #264B8C;
+  --adm-brand-hover:  #1E3C72;
+  --adm-accent:       #FF7B00;
+  --adm-text:         #222222;
+  --adm-text-2:       #6B7280;
+  --adm-link:         #0D6EFD;
+  --adm-on-brand:     #FFFFFF;
+  --adm-page:         #EAF0FB;
+  --adm-card:         #FFFFFF;
+  --adm-muted:        #F1F4F9;
+  --adm-border:       #E5E7EB;
+  --adm-input:        #C9D6EE;
+  --adm-ok:           #198754;
+  --adm-info:         #0DCAF0;
+  --adm-warn:         #FFC107;
+  --adm-danger:       #DC3545;
+
+  /* Ink variants: the raw accent and warning hues fail contrast as TEXT
+     on white (#FF7B00 = 2.6:1, #FFC107 = 1.6:1). They are legal as fills,
+     borders and dots only. Anything that is WORDS uses these instead. */
+  --adm-accent-ink:   #A85200;   /* 5.4:1 on white */
+  --adm-warn-ink:     #8A6100;   /* 5.5:1 on white */
+
+  /* spacing & radius — Figma collection "Spacing & Radius" */
+  --adm-s4: 4px;  --adm-s8: 8px;   --adm-s12: 12px;
+  --adm-s16: 16px; --adm-s24: 24px; --adm-s32: 32px; --adm-s48: 48px;
+  --adm-r-sm: 4px; --adm-r-md: 8px; --adm-r-lg: 12px; --adm-r-pill: 999px;
+
+  --adm-font: "Poppins", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --adm-shadow: 0 1px 2px rgba(19, 30, 28, .05), 0 8px 24px -12px rgba(19, 30, 28, .18);
+
+  font-family: var(--adm-font);
+  color: var(--adm-text);
+}
+
+/* ---------- page shell ---------- */
+.admin-layout .body_wrap { background: var(--adm-page); }
+.admin-layout .body_right { background: var(--adm-page); padding: var(--adm-s24) var(--adm-s32); }
+.admin-layout .main_content {
+  background: var(--adm-card);
+  border: 1px solid var(--adm-border);
+  border-radius: var(--adm-r-lg);
+  box-shadow: var(--adm-shadow);
+  padding: var(--adm-s24);
+}
+
+/* ---------- topbar ---------- */
+.admin-layout .header {
+  background: var(--adm-card);
+  border-bottom: 1px solid var(--adm-border);
+  box-shadow: none;
+  /* MUST stay 70px: admin-style.css sets .body_wrap { height: calc(100vh - 70px) }.
+     Changing it here without changing that calc leaves every page 6px over. */
+  height: 70px;
+  display: flex;
+  align-items: center;
+}
+.admin-layout .header .logo img { height: 34px; width: auto; }
+
+/* ---------- sidebar ---------- */
+.admin-layout .side_menu {
+  background: var(--adm-card);
+  border-right: 1px solid var(--adm-border);
+  padding: 0 var(--adm-s16) var(--adm-s24);
+}
+.admin-layout .side_menu-list { list-style: none; margin: 0; padding: 0; }
+.admin-layout .side_menu-list > li { margin-bottom: 2px; }
+.admin-layout .side_menu-list > li::before { content: none !important; }
+.admin-layout .side_menu .link {
+  display: flex;
+  align-items: center;
+  gap: var(--adm-s12);
+  padding: 11px var(--adm-s12);
+  border-radius: var(--adm-r-md);
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 20px;
+  color: var(--adm-text);
+  text-decoration: none;
+  cursor: pointer;
+  transition: background .12s ease, color .12s ease;
+}
+.admin-layout .side_menu .link i { font-size: 16px; width: 18px; text-align: center; }
+.admin-layout .side_menu .link:hover { background: var(--adm-muted); color: var(--adm-brand); }
+.admin-layout .side_menu .link.is-active,
+.admin-layout .side_menu .link[aria-current="page"] {
+  background: var(--adm-brand);
+  color: var(--adm-on-brand);
+}
+.admin-layout .side_menu .link.arrow::after {
+  content: "\F285";                 /* bi-chevron-right */
+  font-family: "bootstrap-icons";
+  margin-left: auto;
+  font-size: 12px;
+  opacity: .6;
+}
+.admin-layout .side_menu .submenu { padding: 2px 0 6px 42px; list-style: none; }
+.admin-layout .side_menu .submenu a {
+  display: block;
+  padding: 7px 0;
+  font-size: 14px;
+  color: var(--adm-text-2);
+  text-decoration: none;
+}
+.admin-layout .side_menu .submenu a:hover { color: var(--adm-brand); }
+
+/* ---------- page title ---------- */
+.admin-layout .pageTitle {
+  font-size: 24px;
+  font-weight: 600;
+  line-height: 32px;
+  color: var(--adm-text);
+  letter-spacing: -.01em;
+}
+.admin-layout .pageTitle i { color: var(--adm-brand); margin-right: var(--adm-s8); }
+
+/* ---------- KPI cards ---------- */
+.admin-layout .cardsmall {
+  background: var(--adm-card);
+  border: 1px solid var(--adm-border);
+  border-radius: var(--adm-r-lg);
+  box-shadow: var(--adm-shadow);
+  padding: 18px 20px;
+}
+
+/* ---------- tables ---------- */
+.admin-layout .cust_table1,
+.admin-layout table.table {
+  border-collapse: separate;
+  border-spacing: 0;
+  width: 100%;
+  font-size: 14px;
+}
+.admin-layout .cust_table1 thead th,
+.admin-layout table.table thead th {
+  background: var(--adm-muted);
+  color: var(--adm-text-2);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  padding: 12px 14px;
+  border: 0;
+  white-space: nowrap;
+}
+.admin-layout .cust_table1 tbody td,
+.admin-layout table.table tbody td {
+  padding: 12px 14px;
+  border: 0;
+  border-top: 1px solid var(--adm-border);
+  color: var(--adm-text-2);
+  vertical-align: middle;
+}
+.admin-layout .cust_table1 tbody td:first-child,
+.admin-layout table.table tbody td:first-child {
+  color: var(--adm-text);
+  font-weight: 500;
+}
+.admin-layout .cust_table1 tbody tr:hover td,
+.admin-layout table.table tbody tr:hover td { background: var(--adm-muted); }
+.admin-layout .scroll_table { border-radius: var(--adm-r-lg); overflow: hidden; }
+
+/* ---------- form controls ---------- */
+.admin-layout .txt_col { display: flex; flex-direction: column; gap: 6px; margin-bottom: var(--adm-s16); }
+.admin-layout .lbl1 {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--adm-text-2);
+  letter-spacing: .01em;
+}
+.admin-layout .txt1,
+.admin-layout input[type="text"],
+.admin-layout input[type="number"],
+.admin-layout input[type="date"],
+.admin-layout select,
+.admin-layout textarea {
+  background: var(--adm-card);
+  border: 1px solid var(--adm-input);
+  border-radius: var(--adm-r-md);
+  padding: 9px var(--adm-s12);
+  font-size: 14px;
+  color: var(--adm-text);
+  outline: none;
+  transition: border-color .12s ease, box-shadow .12s ease;
+}
+.admin-layout .txt1:focus,
+.admin-layout input:focus,
+.admin-layout select:focus,
+.admin-layout textarea:focus {
+  border-color: var(--adm-brand);
+  box-shadow: 0 0 0 3px rgba(38, 75, 140, .14);
+}
+
+/* ---------- buttons ---------- */
+.admin-layout .btn-style1,
+.admin-layout .btn.btn-primary {
+  background: var(--adm-brand);
+  border: 1px solid var(--adm-brand);
+  color: var(--adm-on-brand);
+  border-radius: var(--adm-r-md);
+  padding: 9px var(--adm-s16);
+  font-size: 14px;
+  font-weight: 500;
+}
+.admin-layout .btn-style1:hover,
+.admin-layout .btn.btn-primary:hover {
+  background: var(--adm-brand-hover);
+  border-color: var(--adm-brand-hover);
+  color: var(--adm-on-brand);
+}
+.admin-layout .btn-style2,
+.admin-layout .btn.btn-outline-primary {
+  background: var(--adm-card);
+  border: 1px solid var(--adm-input);
+  color: var(--adm-brand);
+  border-radius: var(--adm-r-md);
+  padding: 9px var(--adm-s16);
+  font-size: 14px;
+  font-weight: 500;
+}
+.admin-layout .btn-style2:hover,
+.admin-layout .btn.btn-outline-primary:hover {
+  background: var(--adm-muted);
+  border-color: var(--adm-brand);
+  color: var(--adm-brand);
+}
+
+/* ---------- status, old classes kept working ---------- */
+.admin-layout .status,
+.admin-layout .status-active,
+.admin-layout .status-inactive {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: var(--adm-r-pill);
+  background: var(--adm-muted);
+  color: var(--adm-text);
+  font-size: 12px;
+  font-weight: 500;
+}
+.admin-layout .status-active::before,
+.admin-layout .status-inactive::before {
+  content: "";
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--adm-text-2);
+}
+.admin-layout .status-active::before { background: var(--adm-ok); }
+
+/* ============================================================
+   Components introduced by the Figma admin design.
+   Prefixed .adm-* so they never collide with admin-style.css.
+   ============================================================ */
+
+/* delivery-state badge — see components/ui/StatusBadge.tsx.
+   Each tone's foreground is picked for >= 4.5:1 on its own tint. */
+.admin-layout .adm-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: var(--adm-r-pill);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 16px;
+  white-space: nowrap;
+}
+.admin-layout .adm-badge i { font-size: 12px; }
+
+/* toolbar: search + filter chips + result count, one row above the table */
+.admin-layout .adm-toolbar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--adm-s12);
+  background: var(--adm-card);
+  border: 1px solid var(--adm-border);
+  border-radius: var(--adm-r-lg);
+  padding: var(--adm-s12) var(--adm-s16);
+  margin-bottom: var(--adm-s16);
+}
+.admin-layout .adm-toolbar__search { flex: 0 1 320px; min-width: 200px; }
+.admin-layout .adm-toolbar__count { margin-left: auto; font-size: 12px; color: var(--adm-text-2); }
+
+.admin-layout .adm-chip {
+  border: 1px solid var(--adm-input);
+  background: var(--adm-card);
+  color: var(--adm-text);
+  border-radius: var(--adm-r-pill);
+  padding: 6px 14px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background .12s ease, border-color .12s ease, color .12s ease;
+}
+.admin-layout .adm-chip:hover { border-color: var(--adm-brand); color: var(--adm-brand); }
+.admin-layout .adm-chip.is-selected {
+  background: var(--adm-brand);
+  border-color: var(--adm-brand);
+  color: var(--adm-on-brand);
+}
+.admin-layout .adm-chip:focus-visible { outline: 2px solid var(--adm-brand); outline-offset: 2px; }
+
+/* page header: title + stat line on the left, actions on the right */
+.admin-layout .adm-pagehead {
+  display: flex;
+  align-items: center;
+  gap: var(--adm-s16);
+  flex-wrap: wrap;
+  margin-bottom: var(--adm-s16);
+}
+.admin-layout .adm-pagehead__title { font-size: 24px; font-weight: 600; line-height: 32px; margin: 0; }
+.admin-layout .adm-pagehead__sub { font-size: 14px; color: var(--adm-text-2); margin: 2px 0 0; }
+.admin-layout .adm-pagehead__actions { margin-left: auto; display: flex; gap: var(--adm-s8); }
+
+/* row actions */
+.admin-layout .adm-rowactions { display: inline-flex; gap: 6px; }
+.admin-layout .adm-rowactions > button {
+  border: 0;
+  background: var(--adm-muted);
+  color: var(--adm-text);
+  border-radius: 6px;
+  width: 30px; height: 30px;
+  display: inline-flex; align-items: center; justify-content: center;
+  cursor: pointer;
+}
+.admin-layout .adm-rowactions > button:hover { background: var(--adm-input); }
+.admin-layout .adm-rowactions > button.is-danger:hover { background: #FDE9E7; color: #B02A37; }
+
+@media screen and (max-width: 767px) {
+  .admin-layout .body_right { padding: var(--adm-s16); }
+  .admin-layout .adm-toolbar__count { margin-left: 0; }
+}
