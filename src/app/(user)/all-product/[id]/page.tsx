@@ -2,14 +2,15 @@ import { fetchCategoryByIdForSeo } from "@/lib/api/category";
 import AllProductClient from "./AllProductClient";
 import { decodeId } from "@/lib/utils/encodeDecode";
 
+// Next.js 15: route params arrive as a Promise and must be awaited.
 type Props = {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 };
 
 export async function generateMetadata({ params }: Props) {
-  const { id } = params;
+  const { id } = await params;
 
   const decodedId = decodeId(id);
   const categoryIdNum = Number(decodedId);
@@ -118,7 +119,7 @@ export async function generateMetadata({ params }: Props) {
 }
 
 export default async function Page({ params }: Props) {
-  const { id } = params;
+  const { id } = await params;
 
   const decodedId = decodeId(id);
   const categoryIdNum = Number(decodedId);

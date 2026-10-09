@@ -1,20 +1,21 @@
 import ClinicForm from "@/app/components/Form/ClinicForm";
 import { IdPageProps } from "./types";
 
-export default function EditClinic({ params }: IdPageProps) {
+export default async function EditClinic({ params }: IdPageProps) {
+  const { id } = await params;
   let decodedId: number;
 
   try {
-    const base64 = decodeURIComponent(params.id);
+    const base64 = decodeURIComponent(id);
     decodedId = parseInt(atob(base64), 10);
 
     if (isNaN(decodedId)) throw new Error("Decoded value is not a number");
   } catch (e) {
-    console.warn("❌ Invalid Base64, using raw id:", params.id);
-    decodedId = parseInt(params.id, 10);
+    console.warn("❌ Invalid Base64, using raw id:", id);
+    decodedId = parseInt(id, 10);
 
     if (isNaN(decodedId)) {
-      console.error("❌ Invalid ID, cannot parse:", params.id);
+      console.error("❌ Invalid ID, cannot parse:", id);
       decodedId = 0; // fallback
     }
   }

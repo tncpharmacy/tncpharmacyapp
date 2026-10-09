@@ -1,12 +1,13 @@
 import PharmacyForm from "@/app/components/Form/PharmacyForm";
 import { IdPageProps } from "./types";
 
-export default function EditPharmacy({ params }: IdPageProps) {
+export default async function EditPharmacy({ params }: IdPageProps) {
+  const { id } = await params;
   let decodedId: number;
 
   try {
     // Decode URI component (handles %3D, etc.)
-    const base64 = decodeURIComponent(params.id);
+    const base64 = decodeURIComponent(id);
 
     // Decode Base64 to number
     decodedId = parseInt(atob(base64), 10);
@@ -15,12 +16,12 @@ export default function EditPharmacy({ params }: IdPageProps) {
       throw new Error("Decoded value is not a number");
     }
   } catch (e) {
-    console.warn("❌ Invalid Base64, using raw id:", params.id);
+    console.warn("❌ Invalid Base64, using raw id:", id);
 
-    decodedId = parseInt(params.id, 10);
+    decodedId = parseInt(id, 10);
 
     if (isNaN(decodedId)) {
-      console.error("❌ Invalid ID, cannot parse:", params.id);
+      console.error("❌ Invalid ID, cannot parse:", id);
       decodedId = 0; // fallback value
     }
   }

@@ -1,13 +1,14 @@
 import MedicineImageForm from "@/app/components/Form/MedicineImageForm";
 import { IdPageProps } from "./types";
 
-export default function EditMedicineImage({ params }: IdPageProps) {
+export default async function EditMedicineImage({ params }: IdPageProps) {
+  const { id } = await params;
   let decodedId = 0;
 
   try {
-    decodedId = parseInt(atob(decodeURIComponent(params.id)), 10);
+    decodedId = parseInt(atob(decodeURIComponent(id)), 10);
   } catch {
-    decodedId = Number(params.id);
+    decodedId = Number(id);
   }
 
   return <MedicineImageForm id={decodedId} />;
