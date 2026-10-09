@@ -2,7 +2,7 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import SiteHeader from "@/app/(user)/components/header/header";
-import { Button, Form, Image, Modal } from "react-bootstrap";
+import { Button, Image } from "react-bootstrap";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "../css/site-style.css";
 import "../css/user-style.css";
@@ -23,7 +23,15 @@ import { HealthBag } from "@/types/healthBag";
 import DoseInstructionSelect from "@/app/components/Input/DoseInstructionSelect";
 import Input from "@/app/components/Input/InputColSm";
 import { getAddress } from "@/lib/features/addressSlice/addressSlice";
-import AddressBar from "../components/AddressBar/AddressBar";
+import {
+  BagRow,
+  BillSummary,
+  CheckoutSteps,
+  DeliverToCard,
+  PrescriptionCard,
+  StickyPayBar,
+} from "./BagSections";
+import type { CompareItem } from "@/types/compare";
 import toast from "react-hot-toast";
 import { formatAmount } from "@/lib/utils/formatAmount";
 import TncLoader from "@/app/components/TncLoader/TncLoader";
@@ -125,13 +133,11 @@ export default function HealthBagClient() {
   const [processingIds, setProcessingIds] = useState<number[]>([]);
   const [isMobile, setIsMobile] = useState(false);
   // for precription upload state
-  const [showPrescriptionModal, setShowPrescriptionModal] = useState(false);
   const [prescriptionFile, setPrescriptionFile] = useState<File | null>(null);
   const dispatch = useAppDispatch();
   const router = useRouter();
   const mergedRef = useRef(false);
   const isSelecting = useRef(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
   // start for increse header count code
   const buyer = useAppSelector((state) => state.buyer.buyer);
   const {
@@ -420,7 +426,8 @@ export default function HealthBagClient() {
     const rawMrp = Number(item.mrp) || 0;
 
     // 🔥 fallback + validation
-    const mrp = Number.isFinite(rawMrp) && rawMrp > 0 ? rawMrp : 275;
+    // No price means not for sale: never invent one (it used to be 275).
+    const mrp = Number.isFinite(rawMrp) && rawMrp > 0 ? rawMrp : 0;
 
     const discount = Number(item.discount) || 0;
 
@@ -585,72 +592,81 @@ export default function HealthBagClient() {
     const hasRxProduct = mergedItems.some(
       (item) => item.prescription_required === 1
     );
-    const shouldOpenModal = !bagPrescriptionId && hasRxProduct;
-    if (shouldOpenModal) {
-      setShowPrescriptionModal(true);
-    } else {
-      checkoutData();
-      router.push("/checkout");
-    }
-  };
-
-  // remove handler
-  const handleRemoveFile = () => {
-    setPrescriptionFile(null);
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
-    }
-  };
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    const allowedTypes = [
-      "image/jpeg",
-      "image/jpg",
-      "image/png",
-      "application/pdf",
-    ];
-
-    if (!allowedTypes.includes(file.type)) {
-      toast.error("Only JPG, JPEG, PNG, PDF allowed!");
+    if (hasRxProduct && !bagPrescriptionId) {
+      toast.error("Upload the prescription to continue.");
+      document.getElementById("bag-rx")?.scrollIntoView({ behavior: "smooth", block: "center" });
       return;
     }
-
-    setPrescriptionFile(file);
+    checkoutData();
+    router.push("/checkout");
   };
 
-  const handleFinalContinue = async () => {
-    if (!prescriptionFile) {
-      toast.error("Please upload prescription to continue!");
-      return;
-    }
-
+  // Prescription upload right in the bag (Figma B2 / B2b state C). It used
+  // to be a pop-up after Continue; uploading here attaches it to the bag
+  // (healthBag.prescription_id) the same way.
+  const [rxUploading, setRxUploading] = useState(false);
+  const uploadPrescriptionNow = async (file: File) => {
     if (!buyer?.id) {
-      toast.error("Login required!");
+      setShowBuyerLogin(true);
       return;
     }
-
+    const allowed = ["image/jpeg", "image/jpg", "image/png", "application/pdf"];
+    if (!allowed.includes(file.type)) {
+      toast.error("Only JPG, PNG or PDF files can be uploaded.");
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("The file is larger than 5 MB.");
+      return;
+    }
     const token = localStorage.getItem("token") || "";
-
+    setRxUploading(true);
     try {
       const formData = new FormData();
-      formData.append("prescription_pic", prescriptionFile);
-
-      await dispatch(
-        uploadPrescriptionFromBuyerCartThunk({
-          formData,
-          token,
-        })
-      ).unwrap();
-      checkoutData();
-      setShowPrescriptionModal(false);
-      router.push("/checkout");
+      formData.append("prescription_pic", file);
+      await dispatch(uploadPrescriptionFromBuyerCartThunk({ formData, token })).unwrap();
+      setPrescriptionFile(file);
+      toast.success("Prescription attached");
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       toast.error(error || "Upload failed!");
+    } finally {
+      setRxUploading(false);
     }
+  };
+
+  // "Same medicine for less" -> replace the bag line with the equivalent,
+  // keeping the quantity. Only after the customer confirms in the row.
+  const handleReplace = async (oldId: number, alt: CompareItem, qty: number) => {
+    await handleRemove(oldId);
+    if (buyer?.id) {
+      await addItem({
+        id: 0,
+        buyer_id: buyer.id,
+        product_id: alt.id,
+        quantity: qty,
+      } as HealthBag);
+    } else {
+      const cart = JSON.parse(localStorage.getItem("healthbag") || "[]");
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const rest = cart.filter((i: any) => i.productid !== alt.id);
+      rest.push({
+        id: 0,
+        productid: alt.id,
+        qty,
+        name: alt.name,
+        manufacturer: alt.manufacturer,
+        pack_size: alt.pack_size,
+        mrp: Number(alt.mrp ?? 0),
+        discount: Number(alt.discount ?? 0),
+        image: alt.image,
+        prescription_required: alt.rx_required ? 1 : 0,
+      });
+      localStorage.setItem("healthbag", JSON.stringify(rest));
+      dispatch(loadLocalHealthBag());
+    }
+    setQuantities((prev) => ({ ...prev, [alt.id]: qty }));
+    toast.success(`Switched to ${alt.name}`);
   };
 
   const handleSelect = (product: Medicine) => {
@@ -704,6 +720,20 @@ export default function HealthBagClient() {
   const prescriptionItems = mergedItems.filter(
     (item) => item.prescription_required === 1
   );
+  // Why Continue is disabled (shown under the button and in the mobile bar).
+  const outOfStockItems = mergedItems.filter((i) => i.in_stock === false);
+  const blockReason: string | null = !buyer?.id
+    ? null
+    : !billingAddress
+    ? "Choose a delivery address"
+    : deliveryQuote && !deliverable
+    ? "Choose an address we can deliver to"
+    : outOfStockItems.length
+    ? `Remove out-of-stock items: ${outOfStockItems.map((i) => i.name).join(", ")}`
+    : prescriptionItems.length > 0 && !bagPrescriptionId
+    ? "Upload the prescription to continue"
+    : null;
+
   const shortenName = (name: string) => {
     if (!name) return "";
 
@@ -716,274 +746,96 @@ export default function HealthBagClient() {
     <>
       {/* <SiteHeader /> */}
 
-      <section className="py-4 bg-light">
+      <section className="bf-page">
         <div className="container">
-          <div className="row g-4">
-            <nav aria-label="breadcrumb">
-              <ol className="breadcrumb">
-                <li className="breadcrumb-item">
-                  <Link href="/" style={{ textDecoration: "none" }}>
-                    Home
-                  </Link>
-                </li>
+          <CheckoutSteps active={0} />
+          {isCartEmpty ? (
+            <div className="bf-card text-center p-5">
+              <i className="bi bi-bag fs-1 bf-muted" aria-hidden="true" />
+              <h1 className="h5 fw-semibold mt-2">Your bag is empty</h1>
+              <p className="bf-muted mb-3">Looks like you haven&apos;t added anything yet.</p>
+              <button type="button" className="bf-btn" onClick={() => router.push("/")}>
+                Continue shopping
+              </button>
+            </div>
+          ) : (
+            <div className="row g-4">
+              <div className="col-lg-8">
+                <div className="bf-title">
+                  <h1>Your bag</h1>
+                  <span className="bf-muted">
+                    {mergedItems.length} {mergedItems.length === 1 ? "item" : "items"}
+                  </span>
+                </div>
 
-                <li className="breadcrumb-item active" aria-current="page">
-                  Health Bag
-                </li>
-              </ol>
-            </nav>
-            {/* Left: Items List */}
-            <div className={isCartEmpty ? "col-12" : "col-lg-8"}>
-              {mounted && buyer?.id ? (
-                <AddressBar
-                  address={
-                    defaultAddress
-                      ? {
-                          id: defaultAddress.id ?? 0,
-                          name: defaultAddress.name ?? "Unknown",
-                          pincode: defaultAddress.pincode ?? "000000",
-                          address_line: `${defaultAddress.address}, ${defaultAddress.location}`,
-                          address_type_id: `${defaultAddress.address_type_id}`,
-                        }
-                      : null
-                  }
+                <DeliverToCard
+                  loggedIn={mounted && !!buyer?.id}
+                  address={defaultAddress ?? null}
+                  quote={deliveryQuote}
+                  loading={deliveryLoading}
+                  onLogin={() => setShowBuyerLogin(true)}
                 />
-              ) : null}
-              {!isCartEmpty && (
-                <h5 className="mb-3 fw-semibold">
-                  {mergedItems.length} items added
-                </h5>
-              )}
-              <div className="border rounded p-3 mb-3 bg-white">
-                {mergedItems.length > 0 ? (
-                  mergedItems.map((item, index) => {
-                    const imageUrl = getImageUrl(item.image);
+
+                <PrescriptionCard
+                  rxItemNames={prescriptionItems.map((i) => i.name)}
+                  attached={!!bagPrescriptionId}
+                  fileName={prescriptionFile?.name ?? null}
+                  uploading={rxUploading}
+                  loggedIn={mounted && !!buyer?.id}
+                  onUpload={uploadPrescriptionNow}
+                  onLogin={() => setShowBuyerLogin(true)}
+                />
+
+                <section className="bf-card bf-items" aria-label="Items">
+                  <h2>Items</h2>
+                  {mergedItems.map((item, index) => {
                     const qty = quantities[item.productid] ?? item.qty ?? 1;
                     return (
-                      <div
+                      <BagRow
                         key={`${item.productid}-${index}`}
-                        className="cart-item border-bottom pb-3 mb-3"
-                      >
-                        <div className="d-flex gap-2">
-                          <span
-                            onClick={() => handleItemSelect(item)}
-                            style={{ cursor: "pointer" }}
-                          >
-                            <Image
-                              src={imageUrl}
-                              alt={""}
-                              className="rounded cart-img"
-                              style={{
-                                width: 90,
-                                height: 90,
-                                objectFit: "contain",
-                                opacity: imageUrl.includes("tnc-default")
-                                  ? 0.3
-                                  : 1,
-                              }}
-                            />
-                          </span>
-
-                          <div className="cart-content position-relative">
-                            <div
-                              className="flex-grow-1 pd-title ms-2"
-                              onClick={() => handleItemSelect(item)}
-                              style={{ cursor: "pointer" }}
-                            >
-                              <h6 className="fw-semibold pd-title mb-1">
-                                {item.name}
-                              </h6>
-
-                              <p className="mb-1 small pd-title">
-                                {item.pack_size}
-                              </p>
-                              <p className="text-success small mb-1 pd-title">
-                                {item.manufacturer}
-                              </p>
-
-                              <div className="price-block">
-                                ₹{item.formattedDiscountMrp}
-                                <small className="text-muted text-decoration-line-through ms-2">
-                                  ₹{item.formattedMrp}
-                                </small>
-                                <small className="text-danger ms-2">
-                                  {item.discount}% off
-                                </small>
-                              </div>
-                            </div>
-
-                            {item.in_stock === false && (
-                              <span
-                                className="badge bg-secondary position-absolute"
-                                style={{ bottom: 0, right: 0 }}
-                                title="This item cannot be ordered right now"
-                              >
-                                Out of stock
-                              </span>
-                            )}
-                            {/* 🔥 RX BADGE OUTSIDE */}
-                            {item.prescription_required === 1 && (
-                              <Image
-                                src="/images/RX-small.png"
-                                alt="Prescription Required"
-                                className="rx-badge"
-                              />
-                            )}
-                          </div>
-                        </div>
-
-                        {/* BOTTOM ROW (QTY + DELETE) */}
-                        <div className="d-flex justify-content-between align-items-center mt-2">
-                          <button
-                            className="text-danger border-0 bg-transparent"
-                            onClick={() => handleRemove(item.productid)}
-                          >
-                            <i className="bi bi-trash"></i>
-                          </button>
-
-                          <div className="qty-box" style={{ gap: "10px" }}>
-                            {(quantities[item.productid] ?? 1) > 1 ? (
-                              // ➖ Minus button (qty > 1)
-                              <Button
-                                variant="link"
-                                className="p-0 text-dark fw-bold"
-                                onClick={() =>
-                                  handleQuantityChange(
-                                    item.productid,
-                                    item.id,
-                                    -1
-                                  )
-                                }
-                              >
-                                <i className="bi bi-dash-lg"></i>
-                              </Button>
-                            ) : (
-                              // 🗑 Delete button (qty === 1)
-                              <Button
-                                variant="link"
-                                className="p-0 text-danger fw-bold"
-                                onClick={() => handleRemove(item.productid)}
-                              >
-                                <i className="bi bi-trash"></i>
-                              </Button>
-                            )}
-                            <span>{quantities[item.productid] ?? 1}</span>
-                            <Button
-                              className="p-0 text-dark fw-bold"
-                              onClick={() =>
-                                handleQuantityChange(
-                                  item.productid,
-                                  item.id,
-                                  +1
-                                )
-                              }
-                            >
-                              +
-                            </Button>
-                          </div>
-                        </div>
-                      </div>
+                        item={item}
+                        qty={qty}
+                        imageUrl={getImageUrl(item.image)}
+                        onOpen={() => handleItemSelect(item)}
+                        onIncrease={() => handleQuantityChange(item.productid, item.id, +1)}
+                        onDecrease={() => handleQuantityChange(item.productid, item.id, -1)}
+                        onRemove={() => handleRemove(item.productid)}
+                        onReplace={(alt) => handleReplace(item.productid, alt, qty)}
+                      />
                     );
-                  })
-                ) : (
-                  <div
-                    className="d-flex flex-column justify-content-center align-items-center bg-white border rounded"
-                    style={{ minHeight: "300px" }}
-                  >
-                    <h5 className="fw-semibold">No items in your cart</h5>
-                    <p className="text-muted mb-3">
-                      Looks like you haven’t added anything yet
-                    </p>
-                    <Button onClick={() => router.push("/")} variant="primary">
-                      Continue To Shopping
-                    </Button>
-                  </div>
-                )}
+                  })}
+                </section>
+                <button type="button" className="bf-link" onClick={() => router.push("/")}>
+                  <i className="bi bi-plus-lg" aria-hidden="true" /> Add more items
+                </button>
+              </div>
+
+              <div className="col-lg-4">
+                <BillSummary
+                  totalMrp={totals.totalMrp}
+                  totalDiscount={totals.totalDiscount}
+                  quote={deliveryQuote}
+                  loading={deliveryLoading}
+                  loggedIn={mounted && !!buyer?.id}
+                  hasAddress={!!billingAddress}
+                  toPay={finalPayable}
+                  blockReason={blockReason}
+                  onContinue={handleContinue}
+                  ctaLabel={buyer?.id ? "Continue to payment" : "Log in to continue"}
+                />
               </div>
             </div>
-
-            {/* Right: Bill Summary */}
-            {!isCartEmpty && (
-              <div className="col-lg-4">
-                <div className="border rounded p-3 bg-white sticky-summary">
-                  <h6 className="fw-bold mb-3 text-primary">Bill summary</h6>
-
-                  {/* Total MRP */}
-                  <div className="d-flex justify-content-between mb-2 small fw-semibold">
-                    <span>Total MRP</span>
-                    <span>₹{formattedTotalMrp}</span>
-                  </div>
-
-                  {/* You Saved */}
-                  <div className="d-flex justify-content-between mb-2 small text-success fw-semibold">
-                    <span>Discount</span>
-                    <span>- ₹{formattedTotalDiscount}</span>
-                  </div>
-
-                  {/* Total Price */}
-                  <div className="d-flex justify-content-between mb-2 small text-success fw-semibold">
-                    <span>Total Price</span>
-                    <span>₹{formatPrice(grandTotal)}</span>
-                  </div>
-
-                  {/* 🚚 Delivery Fee */}
-                  <div className="d-flex justify-content-between mb-2 small fw-semibold">
-                    <span>Delivery Fee</span>
-
-                    {deliveryLoading ? (
-                      <span className="text-muted">Calculating…</span>
-                    ) : !deliveryQuote ? (
-                      <span className="text-muted">
-                        {buyer?.id ? "Select address" : "At checkout"}
-                      </span>
-                    ) : !deliverable ? (
-                      <span className="text-danger">Not deliverable</span>
-                    ) : deliveryFee === 0 ? (
-                      <span className="text-success fw-semibold">FREE</span>
-                    ) : (
-                      <span>₹{formatPrice(deliveryFee)}</span>
-                    )}
-                  </div>
-
-                  {/* 🚚 Delivery note: the server's own explanation */}
-                  <div
-                    className={`delivery-banner mb-2 ${
-                      deliveryQuote && !deliverable ? "text-danger" : ""
-                    }`}
-                  >
-                    <i className="bi bi-truck me-2"></i>
-                    <span className="delivery-text">
-                      {deliveryQuote?.message ||
-                        "FREE delivery within 12 km of our pharmacy"}
-                    </span>
-                  </div>
-
-                  <hr />
-
-                  {/* Final Pay */}
-                  <div className="d-flex justify-content-between mb-1 fw-semibold">
-                    <span>To Pay</span>
-                    <span>₹{formatPrice(finalPayable)}</span>
-                  </div>
-
-                  {/* Extra highlight */}
-                  {totals.totalDiscount > 0 && (
-                    <div className="text-success small mb-3 fw-semibold">
-                      🎉 You saved ₹{formattedTotalDiscount} on this order
-                    </div>
-                  )}
-
-                  <Button
-                    className="w-100 py-2 fw-semibold continue-btn fixed-mobile-btn"
-                    onClick={handleContinue}
-                  >
-                    Continue
-                  </Button>
-                </div>
-              </div>
-            )}
-          </div>
+          )}
         </div>
+        {!isCartEmpty && (
+          <StickyPayBar
+            amount={finalPayable}
+            sub={blockReason && buyer?.id ? blockReason : "View bill above"}
+            cta={buyer?.id ? "Continue" : "Log in to continue"}
+            onClick={handleContinue}
+            disabled={!!blockReason && !!buyer?.id}
+          />
+        )}
       </section>
 
       {/* Product Vitamins, Nutrition & Supplements */}
@@ -1459,121 +1311,6 @@ export default function HealthBagClient() {
         show={showBuyerLogin}
         handleClose={() => setShowBuyerLogin(false)}
       />
-      <Modal
-        show={showPrescriptionModal}
-        onHide={() => setShowPrescriptionModal(false)}
-        centered
-      >
-        <Modal.Header closeButton>
-          <Modal.Title className="fw-semibold text-primary">
-            Upload Prescription
-          </Modal.Title>
-        </Modal.Header>
-
-        <Modal.Body>
-          {/* 🔥 HEADER WITH RX */}
-          <div className="d-flex align-items-center gap-2 mb-2">
-            <Image
-              src="/images/RX-small.png"
-              alt="rx"
-              style={{ width: "24px", height: "24px" }}
-            />
-            <h6 className="mb-0 fw-semibold text-danger">
-              Prescription Required
-            </h6>
-          </div>
-
-          {/* 🔥 MESSAGE */}
-          <p className="text-danger mb-3">
-            A valid prescription is required for the following medicines:
-          </p>
-
-          {/* 🔥 PRODUCT LIST */}
-          <div className="mb-3">
-            <p className="fw-semibold text-success small mb-1 rx-product-list">
-              (
-              {prescriptionItems.map((item, index) => (
-                <span key={index} className="small fw-bold">
-                  {shortenName(item.name)}
-                  {index !== prescriptionItems.length - 1 && ", "}
-                </span>
-              ))}
-              )
-            </p>
-          </div>
-
-          {/* 🔥 UPLOAD SECTION */}
-          <div>
-            <Form.Label className="fw-semibold">Upload Prescription</Form.Label>
-            <Form.Control
-              type="file"
-              accept=".jpg,.jpeg,.png,.pdf"
-              onChange={handleFileChange}
-              ref={fileInputRef}
-            />
-          </div>
-
-          <small className="text-muted" style={{ fontSize: "10px" }}>
-            Accepted formats: JPG, PNG, PDF (Max size recommended: 5MB)
-          </small>
-
-          {/* PREVIEW SAME AS BEFORE */}
-          {prescriptionFile && (
-            <div className="mt-3">
-              <p className="fw-semibold">Preview:</p>
-
-              {prescriptionFile.type.startsWith("image/") && (
-                <Image
-                  src={URL.createObjectURL(prescriptionFile)}
-                  alt="preview"
-                  style={{
-                    width: "100%",
-                    maxHeight: "200px",
-                    objectFit: "contain",
-                    borderRadius: "8px",
-                  }}
-                />
-              )}
-
-              {prescriptionFile.type === "application/pdf" && (
-                <div className="d-flex flex-column gap-2">
-                  <p>{prescriptionFile.name}</p>
-                  <Button
-                    variant="outline-primary"
-                    size="sm"
-                    onClick={() =>
-                      window.open(
-                        URL.createObjectURL(prescriptionFile),
-                        "_blank"
-                      )
-                    }
-                  >
-                    View PDF
-                  </Button>
-                </div>
-              )}
-
-              <div className="mt-2">
-                <Button variant="danger" size="sm" onClick={handleRemoveFile}>
-                  <i className="bi bi-trash me-1"></i> Remove
-                </Button>
-              </div>
-            </div>
-          )}
-        </Modal.Body>
-
-        <Modal.Footer>
-          <Button
-            variant="secondary"
-            onClick={() => setShowPrescriptionModal(false)}
-          >
-            Cancel
-          </Button>
-          <Button variant="primary" onClick={handleFinalContinue}>
-            Continue
-          </Button>
-        </Modal.Footer>
-      </Modal>
       <Footer />
     </>
   );
