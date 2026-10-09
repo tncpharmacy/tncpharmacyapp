@@ -1,0 +1,299 @@
+/*
+ * Storefront product / medicine card — Figma "store/Product card v2"
+ * (Design System page, node 59:313). One card for every listing grid:
+ * home, search, all-medicine, category, manufacturer, generic, group-care.
+ *
+ * Tokens come from the Figma variables:
+ *   brand #264B8C · brand-hover #1E3C72 · text #222222 · text-2 #6B7280
+ *   border #E5E7EB · border-input #C9D6EE · success #198754 · accent-ink #A85200
+ * Classes are prefixed `pc-` so they cannot collide with the older
+ * `.medicine-card` / `.pd_box` rules that other screens still use.
+ */
+
+.pc-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 16px;
+  margin: 16px 0 24px;
+}
+
+/* Home rails show a fixed handful of products: let them share the row. */
+.pc-grid--rail {
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+}
+
+@media (max-width: 575.98px) {
+  .pc-grid,
+  .pc-grid--rail {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+}
+
+.pc-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.pc-card:hover {
+  border-color: #c9d6ee;
+  box-shadow: 0 6px 16px rgba(38, 75, 140, 0.08);
+}
+
+.pc-card:focus-visible {
+  outline: 2px solid #264b8c;
+  outline-offset: 2px;
+}
+
+/* Image area */
+.pc-media {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 140px;
+  padding: 12px;
+  background: #f6f8fc;
+}
+
+.pc-media img {
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+}
+
+.pc-media img.is-placeholder {
+  opacity: 0.3;
+}
+
+.pc-oos {
+  position: absolute;
+  left: 8px;
+  bottom: 8px;
+  padding: 3px 8px;
+  border-radius: 4px;
+  background: #15202b;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 16px;
+}
+
+/* Prescription strip (amber, same as the Figma Rx variant) */
+.pc-rx {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  background: #fff4e5;
+  color: #a85200;
+  font-size: 12px;
+  line-height: 16px;
+}
+
+.pc-rx b {
+  font-weight: 600;
+}
+
+/* Body */
+.pc-body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 3px;
+  padding: 8px 10px 10px;
+}
+
+.pc-name {
+  display: -webkit-box;
+  min-height: 40px;
+  margin: 0;
+  overflow: hidden;
+  color: #222;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 20px;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+}
+
+.pc-card:hover .pc-name {
+  color: #264b8c;
+}
+
+.pc-sub {
+  margin: 0;
+  overflow: hidden;
+  color: #6b7280;
+  font-size: 12px;
+  line-height: 16px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Price + action: price on top, a full-width action under it (as in the
+   1mg reference) so ADD and the in-bag control never squeeze the price. */
+.pc-foot {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+  margin-top: auto;
+  padding-top: 12px;
+}
+
+.pc-price {
+  min-width: 0;
+}
+
+.pc-now {
+  display: block;
+  color: #222;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 24px;
+}
+
+.pc-was {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 5px;
+  font-size: 12px;
+  line-height: 16px;
+}
+
+.pc-was del {
+  color: #6b7280;
+}
+
+/* The offer % is shown once — here, next to the struck MRP. */
+.pc-off {
+  color: #198754;
+  font-weight: 500;
+}
+
+.pc-na {
+  color: #6b7280;
+  font-size: 13px;
+  line-height: 24px;
+}
+
+.pc-btn {
+  width: 100%;
+  padding: 7px 14px;
+  border: 1px solid #264b8c;
+  border-radius: 6px;
+  background: #fff;
+  color: #264b8c;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 16px;
+  letter-spacing: 0.02em;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.pc-btn:hover:not(:disabled),
+.pc-btn:focus-visible {
+  background: #264b8c;
+  color: #fff;
+}
+
+/* In the bag: a green "Added to bag" state plus a separate trash button.
+   One word on a filled button ("REMOVE") read like the main action;
+   this shows the state and the way to undo it as two different things. */
+.pc-inbag {
+  display: flex;
+  align-items: stretch;
+  overflow: hidden;
+  border: 1px solid #198754;
+  border-radius: 6px;
+  background: #e8f3ee;
+}
+
+.pc-inbag-label {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  min-width: 0;
+  padding: 7px 8px;
+  color: #146c43;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 16px;
+  white-space: nowrap;
+}
+
+.pc-inbag-label .bi {
+  font-size: 14px;
+}
+
+.pc-inbag-remove {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  border: 0;
+  border-left: 1px solid #198754;
+  background: #fff;
+  color: #dc3545;
+  font-size: 15px;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.pc-inbag-remove:hover:not(:disabled),
+.pc-inbag-remove:focus-visible {
+  background: #dc3545;
+  color: #fff;
+}
+
+.pc-inbag-remove:disabled {
+  color: #6b7280;
+  cursor: wait;
+}
+
+.pc-btn:disabled {
+  border-color: #d0d5dd;
+  background: #fff;
+  color: #6b7280;
+  cursor: not-allowed;
+}
+
+/* Loading skeleton (same footprint as the card) */
+.pc-skeleton {
+  cursor: default;
+}
+
+.pc-skeleton .pc-media,
+.pc-skeleton .pc-line {
+  background: linear-gradient(90deg, #eef1f6 25%, #f6f8fc 50%, #eef1f6 75%);
+  background-size: 200% 100%;
+  animation: pc-shimmer 1.2s ease-in-out infinite;
+}
+
+.pc-skeleton .pc-line {
+  height: 12px;
+  border-radius: 4px;
+}
+
+@keyframes pc-shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}

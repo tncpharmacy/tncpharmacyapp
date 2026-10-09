@@ -21,7 +21,7 @@ import { encodeId } from "@/lib/utils/encodeDecode";
 import TncLoader from "@/app/components/TncLoader/TncLoader";
 import { loadLocalHealthBag } from "@/lib/features/healthBagSlice/healthBagSlice";
 import Pagination from "@/app/components/Pagination/Pagination";
-import ProductCardUI from "../components/MedicineCard/ProductCardUI";
+import ProductCardUI, { ProductCardSkeleton } from "../components/MedicineCard/ProductCardUI";
 import Image from "next/image";
 
 const mediaBase = process.env.NEXT_PUBLIC_MEDIA_BASE_URL;
@@ -279,16 +279,11 @@ export default function SearchTextClient() {
                   </div>
                 </div> */}
               </div>
-              <div className="pd_list">
+              <div className="pc-grid">
                 {!hasFetched || loading || pageLoading ? (
                   <>
                     {Array.from({ length: 10 }).map((_, i) => (
-                      <div key={i} className="pd_box shadow skeleton-card">
-                        <div className="skeleton-img" />
-                        <div className="skeleton-line w-80" />
-                        <div className="skeleton-line w-60" />
-                        <div className="skeleton-btn" />
-                      </div>
+                      <ProductCardSkeleton key={i} />
                     ))}
                   </>
                 ) : results.length === 0 ? (
@@ -304,7 +299,7 @@ export default function SearchTextClient() {
                     const baseMrp =
                       Number.isFinite(parsedMrp) && parsedMrp > 0
                         ? parsedMrp
-                        : 275;
+                        : 0;
                     // 🔥 FORMAT FUNCTION
                     const formatPrice = (num: number) => {
                       return Number(num.toFixed(2)).toString();
@@ -327,8 +322,7 @@ export default function SearchTextClient() {
 
                     const isInBag = localBag.includes(item.id);
 
-                    return isMobile ? (
-                      // 💻 DESKTOP/TABLET → CARD DESIGN (Reusable Component 🔥)
+                    return (
                       <ProductCardUI
                         key={`${item.id}-${index}`}
                         inStock={item.in_stock}
@@ -339,72 +333,13 @@ export default function SearchTextClient() {
                         price={formattedDiscountedPrice}
                         mrp={formattedMrp}
                         discount={discount}
-                        showRx={false}
+                        showRx={Number(item.prescription_required) === 1}
                         isInCart={isInBag}
                         loading={processingIds.includes(item.id)}
                         onAdd={() => handleAdd(item)}
-                        onRemove={() => handleRemove(item.id)}
+                        onRemove={() => handleRemove(pid)}
                         onClick={() => handleCombinedSelect(item)}
                       />
-                    ) : (
-                      <div
-                        className="pd_box shadow"
-                        key={`${item.id}-${index}`}
-                      >
-                        <div className="pd_img">
-                          <Image
-                            src={img}
-                            alt={item.medicine_name}
-                            width={200}
-                            height={200}
-                            sizes="(max-width: 768px) 50vw, 200px"
-                            style={{
-                              height: "220px",
-                              objectFit: "contain",
-                              opacity:
-                                img === "/images/tnc-default.png" ? 0.3 : 1,
-                            }}
-                            onClick={() => handleCombinedSelect(item)}
-                          />
-                        </div>
-
-                        <div className="pd_content">
-                          <h3
-                            className="pd-title hover-link fw-bold"
-                            style={{ color: "#264b8c" }}
-                            onClick={() => handleCombinedSelect(item)}
-                          >
-                            {item.medicine_name}
-                          </h3>
-                          <h6 className="pd-title fw-bold">
-                            {item.manufacturer_name}
-                          </h6>
-
-                          <div className="pd_price">
-                            <span className="new_price">
-                              ₹{formattedDiscountedPrice}
-                            </span>
-                            {mrp > 0 && (
-                              <span className="old_price">
-                                <del>MRP ₹{formattedMrp}</del> {discount}% off
-                              </span>
-                            )}
-                          </div>
-
-                          <button
-                            title={(item.in_stock === false && !isInBag) ? "Currently out of stock" : undefined}
-                            className={`btn-1 btn-HO ${
-                              isInBag ? "remove" : "add"
-                            } ${(item.in_stock === false && !isInBag) ? "oos" : ""}`}
-                            disabled={processingIds.includes(item.product_id) || (item.in_stock === false && !isInBag)}
-                            onClick={() =>
-                              isInBag ? handleRemove(pid) : handleAdd(item)
-                            }
-                          >
-                            {(item.in_stock === false && !isInBag) ? "OUT OF STOCK" : (isInBag ? "REMOVE" : "ADD")}
-                          </button>
-                        </div>
-                      </div>
                     );
                   })
                 )}

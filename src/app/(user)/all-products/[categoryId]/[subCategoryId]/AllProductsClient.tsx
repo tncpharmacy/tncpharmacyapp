@@ -20,7 +20,7 @@ import { HealthBag } from "@/types/healthBag";
 import TncLoader from "@/app/components/TncLoader/TncLoader";
 import { loadLocalHealthBag } from "@/lib/features/healthBagSlice/healthBagSlice";
 import Pagination from "@/app/components/Pagination/Pagination";
-import ProductCardUI from "@/app/(user)/components/MedicineCard/ProductCardUI";
+import ProductCardUI, { ProductCardSkeleton } from "@/app/(user)/components/MedicineCard/ProductCardUI";
 import { getSubcategories } from "@/lib/features/subCategorySlice/subCategorySlice";
 import Image from "next/image";
 
@@ -388,16 +388,11 @@ export default function AllProductsClient() {
                 </div>
               )} */}
               {/* PRODUCT LIST */}
-              <div className="pd_list">
+              <div className="pc-grid">
                 {!hasFetched || isInitialLoading ? (
                   <>
                     {Array.from({ length: 10 }).map((_, i) => (
-                      <div key={i} className="pd_box shadow skeleton-card">
-                        <div className="skeleton-img" />
-                        <div className="skeleton-line w-80" />
-                        <div className="skeleton-line w-60" />
-                        <div className="skeleton-btn" />
-                      </div>
+                      <ProductCardSkeleton key={i} />
                     ))}
                   </>
                 ) : filteredMedicines.length === 0 ? (
@@ -409,7 +404,7 @@ export default function AllProductsClient() {
                     const baseMrp =
                       Number.isFinite(parsedMrp) && parsedMrp > 0
                         ? parsedMrp
-                        : 275;
+                        : 0;
                     // 🔥 FORMAT FUNCTION
                     const formatPrice = (num: number) => {
                       return Number(num.toFixed(2)).toString();
@@ -434,8 +429,7 @@ export default function AllProductsClient() {
 
                     const isInBag = localBag.includes(item.product_id);
 
-                    return isMobile ? (
-                      // 💻 DESKTOP/TABLET → CARD DESIGN (Reusable Component 🔥)
+                    return (
                       <ProductCardUI
                         key={`${item.product_id}-${index}`}
                         inStock={item.in_stock}
@@ -446,88 +440,13 @@ export default function AllProductsClient() {
                         price={formattedDiscountedPrice}
                         mrp={formattedMrp}
                         discount={discount}
-                        showRx={false}
+                        showRx={Number(item.prescription_required) === 1}
                         isInCart={isInBag}
                         loading={processingIds.includes(item.product_id)}
                         onAdd={() => handleAdd(item)}
                         onRemove={() => handleRemove(item.product_id)}
                         onClick={() => handleClick(item.product_id)}
                       />
-                    ) : (
-                      <div
-                        className="pd_box shadow"
-                        key={`${item.product_id}-${index}`}
-                        style={{ boxShadow: "0 2px 5px rgba(0,0,0,0.05)" }}
-                      >
-                        <div className="pd_img">
-                          <Image
-                            src={imageUrl}
-                            alt={item.ProductName}
-                            width={200}
-                            height={200}
-                            sizes="(max-width: 768px) 50vw, 200px"
-                            style={{
-                              height: "220px",
-                              objectFit: "contain",
-                              cursor: "pointer",
-                              opacity:
-                                imageUrl === "/images/tnc-default.png"
-                                  ? 0.3
-                                  : 1,
-                            }}
-                            onClick={() => handleClick(item.product_id)}
-                          />
-                        </div>
-
-                        <div className="pd_content">
-                          <div
-                            style={{ cursor: "pointer" }}
-                            onClick={() => handleClick(item.product_id)}
-                          >
-                            <h3
-                              className="pd-title hover-link fw-bold"
-                              style={{ color: "#264b8c" }}
-                            >
-                              {item.ProductName}
-                            </h3>
-
-                            <h6 className="pd-title fw-bold">
-                              {item.Manufacturer}
-                            </h6>
-
-                            <div className="pd_price">
-                              <span className="new_price">
-                                ₹{formattedDiscountedPrice}
-                              </span>
-                              {mrp > 0 && (
-                                <span className="old_price">
-                                  <del>MRP ₹{formattedMrp}</del> {discount}% off
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                          <div>
-                            <button
-                              title={(item.in_stock === false && !isInBag) ? "Currently out of stock" : undefined}
-                              className={`btn-1 btn-HO ${
-                                isInBag ? "remove" : "add"
-                              } ${(item.in_stock === false && !isInBag) ? "oos" : ""}`}
-                              disabled={processingIds.includes(item.product_id) || (item.in_stock === false && !isInBag)}
-                              onClick={() =>
-                                isInBag
-                                  ? handleRemove(item.product_id)
-                                  : handleAdd(item)
-                              }
-                            >
-                              {(item.in_stock === false && !isInBag) ? "OUT OF STOCK" : (processingIds.includes(item.product_id)
-                                ? "Processing..."
-                                : isInBag
-                                ? "REMOVE"
-                                : "ADD")}
-                            </button>
-                          </div>
-                        </div>
-                      </div>
                     );
                   })
                 )}

@@ -1,18 +1,16 @@
-import React, { useEffect, useState } from "react";
-import "../../css/medicine.css";
+import React, { useState } from "react";
+import ProductCardUI from "./ProductCardUI";
 import { Medicine } from "@/types/medicine";
 import { useRouter } from "next/navigation";
 import { encodeId } from "@/lib/utils/encodeDecode";
 import { useAppDispatch, useAppSelector } from "@/lib/hooks";
 import { useHealthBag } from "@/lib/hooks/useHealthBag";
 import { HealthBag } from "@/types/healthBag";
-import { formatAmount } from "@/lib/utils/formatAmount";
 import {
   loadLocalHealthBag,
   removeLocalHealthBag,
 } from "@/lib/features/healthBagSlice/healthBagSlice";
 import { formatPrice } from "@/lib/utils/formatPrice";
-import Image from "next/image";
 
 const mediaBase = process.env.NEXT_PUBLIC_MEDIA_BASE_URL;
 
@@ -20,8 +18,6 @@ export default function MedicineCard({
   id,
   medicine_name,
   manufacturer_name,
-  generic_name,
-  dose_form,
   mrp = 0,
   prescription_required,
   discount,
@@ -31,33 +27,15 @@ export default function MedicineCard({
 }: Medicine) {
   const router = useRouter();
   const dispatch = useAppDispatch();
-  // zooming box state
-  const [isHovered, setIsHovered] = useState(false);
-  const [openUpward, setOpenUpward] = useState(false);
   // --- Local states for instant UI ---
-  // const [localBag, setLocalBag] = useState<number[]>([]);
   const [localState, setLocalState] = useState<{ [key: number]: boolean }>({});
   const [processingIds, setProcessingIds] = useState<number[]>([]);
-  const [isMobile, setIsMobile] = useState(false);
-
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth <= 768);
-    checkMobile();
-
-    window.addEventListener("resize", checkMobile);
-    return () => window.removeEventListener("resize", checkMobile);
-  }, []);
 
   // The API sends the MRP of the batch on the shelf (or the catalogue MRP
   // when nothing is in stock). A product with no price at all is not for
   // sale: never invent one for it.
   const originalMrp =
     mrp !== null && mrp !== undefined && Number(mrp) > 0 ? Number(mrp) : 0;
-
-  // TNC-18: the list endpoints say whether a non-expired batch has units
-  // left. `undefined` means an older response without the flag, so only an
-  // explicit false counts as out of stock.
-  const outOfStock = in_stock === false;
 
   const hasValidMrp =
     originalMrp !== null &&
@@ -209,215 +187,22 @@ export default function MedicineCard({
     imageSrc = `${base}/${path}`;
   }
 
-  const handleMouseEnter = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (imageSrc === "/images/tnc-default.png") return;
-
-    const rect = e.currentTarget.getBoundingClientRect();
-    const spaceBelow = window.innerHeight - rect.bottom;
-
-    setOpenUpward(spaceBelow < 320);
-    setIsHovered(true);
-  };
-
   return (
-    <div className="medicine-card">
-      <div className="medicine-content">
-        {/* Top section */}
-        <div
-          className="medicine-top"
-          style={{ cursor: "pointer" }}
-          onClick={() => handleClick(id)}
-        >
-          {/* Image with zoom on hover */}
-          <div className="medicine-imgs" style={{ position: "relative" }}>
-            {/* ✅ Only image hover controls zoom */}
-            <div
-              onMouseEnter={handleMouseEnter}
-              onMouseLeave={() =>
-                imageSrc !== "/images/tnc-default.png" && setIsHovered(false)
-              }
-              style={{
-                width: "80px",
-                height: "80px",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              <Image
-                src={imageSrc}
-                alt={medicine_name}
-                width={80}
-                height={80}
-                loading="lazy"
-                sizes="80px"
-                style={{
-                  objectFit: "contain",
-                  opacity: imageSrc === "/images/tnc-default.png" ? 0.3 : 1,
-                }}
-              />
-            </div>
-
-            {/* ✅ Zoom box */}
-            {imageSrc !== "/images/tnc-default.png" && (
-              <div
-                className={`zoomBox shadow-xl ${isHovered ? "active" : ""}`}
-                style={{
-                  top: openUpward ? "-220px" : "70px",
-                  position: "absolute",
-                  width: "250px",
-                  height: "250px",
-                  padding: "10px",
-                  background: "#fff",
-                  borderRadius: "10px",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  overflow: "hidden",
-                  zIndex: 9999,
-                }}
-              >
-                {isHovered && (
-                  <Image
-                    src={imageSrc}
-                    alt={medicine_name}
-                    width={220}
-                    height={220}
-                    sizes="250px"
-                    style={{
-                      objectFit: "contain",
-                      width: "100%",
-                      height: "100%",
-                    }}
-                  />
-                )}
-              </div>
-            )}
-          </div>
-
-          {/* Medicine Details */}
-          <div className="medicine-details">
-            <div className="medicine-header">
-              <h3
-                className="medicine-name hover-link pd-title"
-                style={
-                  {
-                    // textDecoration: "none",
-                    // color: "inherit",
-                    // cursor: "pointer",
-                  }
-                }
-                //onClick={() => handleClick(id)}
-              >
-                {medicine_name}
-              </h3>
-              {/* `0 && <x/>` renders a literal "0" in React, so compare, don't coerce. */}
-              {Number(prescription_required) === 1 && (
-                <div className="relative medicine-badge">
-                  <Image
-                    src="/images/RX-small.png"
-                    alt="Prescription Required"
-                    title="Prescription Required"
-                    height={25}
-                    width={30}
-                    className="absolute top-0 right-0 cursor-pointer"
-                  />
-                </div>
-              )}
-            </div>
-            {pack_size && <p className="medicine-text">{pack_size}</p>}
-            {manufacturer_name && (
-              <p className="medicine-text pd-title">{manufacturer_name}</p>
-            )}
-            {generic_name && (
-              <p className="medicine-salt pd-title">{generic_name}</p>
-            )}
-          </div>
-        </div>
-
-        {/* Bottom section */}
-        <div className="medicine-bottom">
-          {/* If no valid MRP => OUT OF STOCK */}
-          <div style={{ cursor: "pointer" }} onClick={() => handleClick(id)}>
-            {discountPercent > 0 ? (
-              <div className="d-flex flex-column align-items-start">
-                {/* Discounted Price */}
-                <p className="text-success fw-bold mb-1">
-                  ₹{formattedDiscountedPrice}
-                </p>
-
-                {/* Original MRP + Discount */}
-                <p className="text-muted mb-0">
-                  <span
-                    className="medicine-mrp text-muted mb-0"
-                    style={{
-                      textDecoration: "line-through",
-                      fontSize: "13px",
-                    }}
-                  >
-                    MRP ₹{formattedMrp}
-                  </span>{" "}
-                  <span
-                    className="text-danger fw-bold"
-                    style={{ fontSize: "13px" }}
-                  >
-                    ({discountPercent}% OFF)
-                  </span>
-                </p>
-              </div>
-            ) : hasValidMrp ? (
-              <p className="medicine-mrp">₹{formatAmount(originalMrp)}</p>
-            ) : (
-              <p className="medicine-mrp text-muted">Price unavailable</p>
-            )}
-          </div>
-          {/* <p className="medicine-mrp">MRP ₹{formatCurrency(mrp)}</p>; */}
-          <div className="text-end">
-            {/* <button
-              className={`btn-1 btn-HO ${isInBag ? "remove" : "add"}`}
-              disabled={!hasValidMrp || processingIds.includes(id)}
-              style={{
-                opacity: !hasValidMrp ? 0.5 : 1,
-                cursor: !hasValidMrp ? "not-allowed" : "pointer",
-                pointerEvents: !hasValidMrp ? "none" : "auto",
-              }}
-              onClick={() => (isInBag ? handleRemove(id) : handleAdd(id))}
-            >
-              {processingIds.includes(id)
-                ? "Processing..."
-                : isInBag
-                ? "REMOVE"
-                : "ADD"}
-            </button> */}
-            {/* Out of stock (or no price): no ADD. An item already in the
-                bag can still be removed, same as the detail page. */}
-            {(outOfStock || !hasValidMrp) && !showRemove ? (
-              <span className="medicine-na">
-                {outOfStock ? "Out of stock" : "Unavailable"}
-              </span>
-            ) : (
-              <button
-                className={`btn-1 btn-HO ${showRemove ? "remove" : "add"}`}
-                style={{ borderRadius: "35px" }}
-                disabled={processingIds.includes(id)}
-                onClick={() => (showRemove ? handleRemove(id) : handleAdd(id))}
-              >
-                {processingIds.includes(id)
-                  ? "Processing..."
-                  : showRemove
-                  ? "REMOVE"
-                  : "ADD"}
-              </button>
-            )}
-          </div>
-
-          {/* {availability === "ADD" ? (
-            <button className="medicine-btn">ADD</button>
-          ) : (
-            <span className="medicine-na">{availability}</span>
-          )} */}
-        </div>
-      </div>
-    </div>
+    <ProductCardUI
+      image={imageSrc}
+      name={medicine_name}
+      manufacturer={manufacturer_name}
+      packSize={pack_size}
+      price={formattedDiscountedPrice}
+      mrp={formattedMrp}
+      discount={discountPercent}
+      showRx={Number(prescription_required) === 1}
+      isInCart={showRemove}
+      inStock={in_stock}
+      loading={processingIds.includes(id)}
+      onAdd={() => handleAdd(id)}
+      onRemove={() => handleRemove(id)}
+      onClick={() => handleClick(id)}
+    />
   );
 }
