@@ -5,15 +5,23 @@
  */
 import type { OrderDetails } from "@/types/order";
 
-/** One key per badge colour / tracker step. */
+/** One key per badge colour and order filter ("bucket"). */
 export type OrderStage = "process" | "dispatched" | "delivered" | "cancelled";
+
+type StageInput = Pick<OrderDetails, "orderStatus" | "deliveryStatusName">;
 
 /**
  * The backend sends `orderStatus` ("Buy" | "Cancelled") and
- * `deliveryStatusName` ("In Process" | "Dispatched" | "Delivered"), which come
- * from MasterTableOrder.status and .delivery_status (1 / 3 / 2).
+ * `deliveryStatusName`, from MasterTableOrder.status and .delivery_status:
+ *
+ *   In Process -> Confirmed -> Packed -> Rider Assigned -> Dispatched -> Delivered
+ *   (+ Delivery Failed)
+ *
+ * Confirmed / Packed / Rider Assigned / Delivery Failed all count as "in
+ * process" for the badge colour and the My Orders filter; `stageLabel` gives
+ * the precise wording.
  */
-export function orderStage(o: Pick<OrderDetails, "orderStatus" | "deliveryStatusName">): OrderStage {
+export function orderStage(o: StageInput): OrderStage {
   if (o.orderStatus === "Cancelled") return "cancelled";
   if (o.deliveryStatusName === "Delivered") return "delivered";
   if (o.deliveryStatusName === "Dispatched") return "dispatched";
@@ -22,14 +30,44 @@ export function orderStage(o: Pick<OrderDetails, "orderStatus" | "deliveryStatus
 
 export const STAGE_LABEL: Record<OrderStage, string> = {
   process: "In Process",
-  dispatched: "Dispatched",
+  dispatched: "Out for delivery",
   delivered: "Delivered",
   cancelled: "Cancelled",
 };
 
-/** Tracker progress: 0 = Placed, 1 = Dispatched, 2 = Delivered. */
-export function stageStep(stage: OrderStage): number {
-  return stage === "delivered" ? 2 : stage === "dispatched" ? 1 : 0;
+const DETAIL_LABEL: Record<string, string> = {
+  "In Process": "Order placed",
+  Confirmed: "Confirmed",
+  Packed: "Packed",
+  "Rider Assigned": "Rider assigned",
+  Dispatched: "Out for delivery",
+  Delivered: "Delivered",
+  "Delivery Failed": "Delivery attempt failed",
+};
+
+/** The precise words for the order's stage, for the status chip. */
+export function stageLabel(o: StageInput): string {
+  if (o.orderStatus === "Cancelled") return "Cancelled";
+  return DETAIL_LABEL[o.deliveryStatusName || ""] || STAGE_LABEL[orderStage(o)];
+}
+
+/** The four steps of the tracker on the order card and details page. */
+export const TRACKER_STEPS = ["Placed", "Packed", "Out for delivery", "Delivered"];
+
+/** Tracker progress: 0 Placed, 1 Packed (or rider assigned), 2 Out for delivery, 3 Delivered. */
+export function stageStep(o: StageInput): number {
+  switch (o.deliveryStatusName) {
+    case "Delivered":
+      return 3;
+    case "Dispatched":
+      return 2;
+    case "Packed":
+    case "Rider Assigned":
+    case "Delivery Failed":
+      return 1;
+    default:
+      return 0;
+  }
 }
 
 /**
@@ -59,12 +97,23 @@ export function itemsSummary(o: Pick<OrderDetails, "products">, max = 2): { text
 }
 
 /** The status line under the item names. */
-export function stageNote(o: OrderDetails, stage: OrderStage): { text: string; tone: "ok" | "muted" } {
+export function stageNote(o: Pick<OrderDetails, "deliveryStatusName" | "cancel_reason">, stage: OrderStage): { text: string; tone: "ok" | "muted" } {
   switch (stage) {
     case "process":
-      return { text: "Your pharmacist is preparing this order", tone: "ok" };
+      switch (o.deliveryStatusName) {
+        case "Confirmed":
+          return { text: "Your pharmacist has confirmed this order", tone: "ok" };
+        case "Packed":
+          return { text: "Packed and waiting for a delivery rider", tone: "ok" };
+        case "Rider Assigned":
+          return { text: "A rider is on the way to the pharmacy to collect it", tone: "ok" };
+        case "Delivery Failed":
+          return { text: "The rider couldn't deliver. The pharmacy will contact you", tone: "muted" };
+        default:
+          return { text: "Your pharmacist is preparing this order", tone: "ok" };
+      }
     case "dispatched":
-      return { text: "On the way to you", tone: "ok" };
+      return { text: "Out for delivery — on the way to you", tone: "ok" };
     case "delivered":
       return { text: "Delivered", tone: "ok" };
     default:

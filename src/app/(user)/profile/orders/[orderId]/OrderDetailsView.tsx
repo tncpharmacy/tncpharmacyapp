@@ -29,12 +29,27 @@ import { OrderStepper } from "../../components/OrderCard";
 import StatusChip from "../../components/StatusChip";
 import { useAccountActions } from "../../useAccountActions";
 import {
-  STAGE_LABEL,
   formatOrderDateTime,
   orderStage,
   productImageUrl,
+  stageLabel,
+  stageNote,
   stageStep,
 } from "../../orderView";
+import { getBuyerTrackingApi } from "@/lib/api/delivery";
+import type { BuyerTracking } from "@/types/delivery";
+
+/** ISO date-time from the delivery API -> "08 Oct 2026, 4:40 PM". */
+const isoWhen = (iso?: string | null) =>
+  iso
+    ? new Date(iso).toLocaleString("en-IN", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+        hour: "numeric",
+        minute: "2-digit",
+      })
+    : "";
 
 const rupees = (v?: string | number | null) =>
   Number(v || 0).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -82,6 +97,9 @@ export default function OrderDetailsView() {
   const { logout, reorder, cancelOrder, cancellingId } = useAccountActions();
 
   const [order, setOrder] = useState<OrderDetail | null>(null);
+  // Stages + delivery rider from /api/delivery/buyer/orders/<id>/. Optional:
+  // if it fails the page still works from the order alone.
+  const [tracking, setTracking] = useState<BuyerTracking | null>(null);
   const [state, setState] = useState<"loading" | "ready" | "missing" | "error">("loading");
   const [showRx, setShowRx] = useState(false);
   const [ready, setReady] = useState(false);
@@ -97,7 +115,7 @@ export default function OrderDetailsView() {
     router.replace("/");
   }, [ready, buyer, pathname, router]);
 
-  const load = useCallback(async () => {
+  const load = useCallback(async (background = false) => {
     if (!buyer || !Number.isFinite(orderId)) return;
     try {
       const res = await buyerGetOrderDetailsApi(orderId);
@@ -108,8 +126,13 @@ export default function OrderDetailsView() {
       }
       setOrder(d as OrderDetail);
       setState("ready");
+      getBuyerTrackingApi(orderId)
+        .then(setTracking)
+        .catch(() => setTracking(null));
     } catch {
-      setState("error");
+      // A failed background refresh keeps the page as it is; only the first
+      // load shows the error view.
+      if (!background) setState("error");
     }
   }, [buyer, orderId]);
 
@@ -128,7 +151,7 @@ export default function OrderDetailsView() {
 
   // The pharmacist may move the order on while this page is open.
   useEffect(() => {
-    const onVisible = () => document.visibilityState === "visible" && load();
+    const onVisible = () => document.visibilityState === "visible" && load(true);
     document.addEventListener("visibilitychange", onVisible);
     window.addEventListener("focus", onVisible);
     return () => {
@@ -138,6 +161,16 @@ export default function OrderDetailsView() {
   }, [load]);
 
   const stage = order ? orderStage(order) : "process";
+
+  // While the order is on its way, re-read every 30 seconds so the rider's
+  // progress shows without a refresh.
+  useEffect(() => {
+    if (state !== "ready" || stage === "delivered" || stage === "cancelled") return;
+    const t = window.setInterval(() => load(true), 30000);
+    return () => window.clearInterval(t);
+  }, [state, stage, load]);
+
+  const rider = tracking?.shipment && tracking.shipment.is_active ? tracking.shipment : null;
   // Payment mode names differ between environments ("Cash on Delivery" on
   // one, "COD" on another), so match both.
   const isCod = /cash|\bcod\b/i.test(order?.paymentMode || "");
@@ -147,9 +180,19 @@ export default function OrderDetailsView() {
 
   const timeline = useMemo(() => {
     if (!order) return [];
-    const rows: { label: string; when: string; done: boolean; tone?: "danger" }[] = [
+    type Row = { label: string; when: string; done: boolean; tone?: "danger" };
+    const rows: Row[] = [
       { label: "Order placed", when: formatOrderDateTime(order.orderDate), done: true },
     ];
+    if (stage !== "cancelled" && tracking?.timeline?.length) {
+      // Full journey from the delivery API: placed, confirmed, packed, rider
+      // assigned, out for delivery, delivered.
+      return tracking.timeline.map((t): Row => ({
+        label: t.label,
+        when: t.done ? isoWhen(t.at) : "Pending",
+        done: t.done,
+      }));
+    }
     if (stage === "cancelled") {
       rows.push({
         label: order.cancel_reason ? `Cancelled · ${order.cancel_reason}` : "Cancelled",
@@ -170,16 +213,18 @@ export default function OrderDetailsView() {
       done: stage === "delivered",
     });
     return rows;
-  }, [order, stage]);
+  }, [order, stage, tracking]);
 
   const banner = (() => {
     if (!order) return null;
     const amount = `₹${rupees(order.amount)}`;
     switch (stage) {
-      case "process":
-        return { tone: "ok", icon: "bi-hourglass-split", text: `Your pharmacist is preparing this order${isCod && !paid ? ` · Pay ${amount} on delivery` : ""}` };
+      case "process": {
+        const note = stageNote(order, stage);
+        return { tone: note.tone, icon: order.deliveryStatusName === "Rider Assigned" ? "bi-bicycle" : "bi-hourglass-split", text: `${note.text}${isCod && !paid ? ` · Pay ${amount} on delivery` : ""}` };
+      }
       case "dispatched":
-        return { tone: "ok", icon: "bi-truck", text: `On the way to you${isCod && !paid ? ` · Keep ${amount} ready (Cash on Delivery)` : ""}` };
+        return { tone: "ok", icon: "bi-truck", text: `Out for delivery${isCod && !paid ? ` · Keep ${amount} ready (Cash on Delivery)` : ""}` };
       case "delivered":
         return { tone: "ok", icon: "bi-check-circle", text: `Delivered${order.delivered_on ? ` on ${formatOrderDateTime(order.delivered_on)}` : ""}` };
       default:
@@ -258,15 +303,37 @@ export default function OrderDetailsView() {
                             <h1 className="acct-title" style={{ fontSize: 20 }}>Order {number}</h1>
                             <div className="acct-sub" style={{ fontSize: 12 }}>Placed on {formatOrderDateTime(order.orderDate)}</div>
                           </div>
-                          <StatusChip stage={stage} size="lg" />
+                          <StatusChip stage={stage} size="lg" label={stageLabel(order)} />
                         </div>
                         {banner && (
                           <div className={`acct-banner ${banner.tone}`}>
                             <i className={`bi ${banner.icon}`} /> {banner.text}
                           </div>
                         )}
+                        {rider && (
+                          <div className="acct-rider">
+                            <i className="bi bi-bicycle" aria-hidden />
+                            <div className="flex-grow-1">
+                              <div className="who">
+                                {rider.courier_name ? `${rider.courier_name} · ` : ""}
+                                {rider.partner}
+                              </div>
+                              <div className="what">{rider.status_label}</div>
+                            </div>
+                            {rider.courier_phone && (
+                              <a className="acct-btn" href={`tel:${rider.courier_phone}`}>
+                                <i className="bi bi-telephone" /> Call rider
+                              </a>
+                            )}
+                            {rider.tracking_url && (
+                              <a className="acct-btn primary" href={rider.tracking_url} target="_blank" rel="noreferrer">
+                                <i className="bi bi-geo-alt" /> Track live
+                              </a>
+                            )}
+                          </div>
+                        )}
                         {stage !== "cancelled" && (
-                          <div className="acct-steps-wrap"><OrderStepper step={stageStep(stage)} /></div>
+                          <div className="acct-steps-wrap"><OrderStepper step={stageStep(order)} /></div>
                         )}
                         <ul className="acct-timeline">
                           {timeline.map((t) => (
@@ -413,7 +480,7 @@ export default function OrderDetailsView() {
                 <h2 style={{ fontSize: 20, margin: 0 }}>Order receipt</h2>
                 Order {number}<br />
                 {formatOrderDateTime(order.orderDate)}<br />
-                Status: {STAGE_LABEL[stage]}
+                Status: {stageLabel(order)}
               </div>
             </div>
             <div className="small mb-3">

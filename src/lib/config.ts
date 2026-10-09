@@ -330,6 +330,21 @@ export const ENDPOINTS = {
       `/masterapp/delete/instruction/${productInstructionId}/`,
   },
 
+  // Delivery partner (Borzo) — order stages, rider booking, tracking
+  DELIVERY: {
+    ORDER: (orderId: number) => `/delivery/orders/${orderId}/`,
+    CONFIRM: (orderId: number) => `/delivery/orders/${orderId}/confirm/`,
+    PACK: (orderId: number) => `/delivery/orders/${orderId}/pack/`,
+    QUOTE: (orderId: number) => `/delivery/orders/${orderId}/quote/`,
+    BOOK_RIDER: (orderId: number) => `/delivery/orders/${orderId}/book-rider/`,
+    CANCEL_RIDER: (orderId: number) => `/delivery/orders/${orderId}/cancel-rider/`,
+    REFRESH: (orderId: number) => `/delivery/orders/${orderId}/refresh/`,
+    SIMULATE: (orderId: number) => `/delivery/orders/${orderId}/simulate/`,
+    SET_STAGE: (orderId: number) => `/delivery/orders/${orderId}/set-stage/`,
+    BUYER_QUOTE: (addressId: number) => `/delivery/buyer/quote/?address_id=${addressId}`,
+    BUYER_TRACKING: (orderId: number) => `/delivery/buyer/orders/${orderId}/`,
+  },
+
   // TNC-19: Razorpay online payment
   PAYMENT: {
     CONFIG: "/payment/config/",

@@ -302,6 +302,13 @@ export default function Checkout() {
                 <h6 className="fw-semibold text-success">
                   Pay on delivery: ₹{formatPrice(checkoutData?.amount || 0)}
                 </h6>
+                <p className="small text-muted mb-3">
+                  {Number(checkoutData?.delivery_fee) > 0
+                    ? `Includes delivery ₹${formatPrice(
+                        checkoutData?.delivery_fee || 0
+                      )}. Please pay the delivery partner's rider.`
+                    : "Free delivery. Please pay the delivery partner's rider."}
+                </p>
                 <h6 className="fw-bold mb-3 text-primary">Verify Captcha</h6>
 
                 <div className="bg-light p-3 rounded mb-3 d-flex justify-content-center align-items-center gap-3">

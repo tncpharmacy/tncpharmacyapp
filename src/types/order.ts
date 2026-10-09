@@ -18,6 +18,8 @@ export interface OrderPayload {
   address_id: number;
   status: string;
   products: OrderProduct[];
+  /** Shown on the checkout page only; the server prices delivery itself. */
+  delivery_fee?: number;
 }
 
 // Unified interface for Buyer Profile

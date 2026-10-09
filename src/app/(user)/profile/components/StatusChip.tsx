@@ -18,11 +18,20 @@ const ICON: Record<OrderStage, string> = {
   cancelled: "bi-x-circle-fill",
 };
 
-export default function StatusChip({ stage, size = "md" }: { stage: OrderStage; size?: "md" | "lg" }) {
+export default function StatusChip({
+  stage,
+  size = "md",
+  label,
+}: {
+  stage: OrderStage;
+  size?: "md" | "lg";
+  /** Precise wording (e.g. "Packed", "Rider assigned"); defaults to the bucket name. */
+  label?: string;
+}) {
   return (
     <span className={`badge acct-badge acct-chip-status s-${stage} ${size === "lg" ? "lg" : ""}`} role="status">
       <i className={`bi ${ICON[stage]}`} aria-hidden />
-      {STAGE_LABEL[stage]}
+      {label || STAGE_LABEL[stage]}
     </span>
   );
 }

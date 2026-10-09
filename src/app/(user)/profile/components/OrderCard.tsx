@@ -8,8 +8,10 @@ import {
   itemsSummary,
   orderStage,
   productImageUrl,
+  stageLabel,
   stageNote,
   stageStep,
+  TRACKER_STEPS,
 } from "../orderView";
 
 /** 277.5 -> "277.50", 1234 -> "1,234.00" (Indian grouping). */
@@ -18,15 +20,15 @@ const rupees = (v: string | number) =>
 
 // Plain <div>s, not <header>/<footer>: the site CSS styles those tags as the
 // page header and footer.
-const STEPS = ["Placed", "Dispatched", "Delivered"];
+const STEPS = TRACKER_STEPS;
 
-/** Placed -> Dispatched -> Delivered, filled up to the order's stage. */
+/** Placed -> Packed -> Out for delivery -> Delivered, filled up to the order's stage. */
 export function OrderStepper({ step }: { step: number }) {
   return (
     <div className="acct-steps" aria-label={`Order progress: ${STEPS[step]}`}>
       {STEPS.map((label, i) => (
         <React.Fragment key={label}>
-          <div className={`acct-step ${i === 1 ? "mid" : i === 2 ? "end" : ""} ${i <= step ? "done" : ""}`}>
+          <div className={`acct-step ${i === 0 ? "" : i === STEPS.length - 1 ? "end" : "mid"} ${i <= step ? "done" : ""}`}>
             <span className="acct-dot">{i <= step && <i className="bi bi-check-lg" />}</span>
             {label}
           </div>
@@ -61,7 +63,7 @@ export default function OrderCard({ order, onView, onReorder, onCancel, cancelli
           {/* h6 + .badge are what the E2E suite looks for */}
           <h6>
             Order {number}
-            <StatusChip stage={stage} />
+            <StatusChip stage={stage} label={stageLabel(order)} />
           </h6>
           <div className="date">Placed on {formatOrderDateTime(order.orderDate)}</div>
         </div>
@@ -99,7 +101,7 @@ export default function OrderCard({ order, onView, onReorder, onCancel, cancelli
         </div>
       </div>
 
-      {stage !== "cancelled" && <OrderStepper step={stageStep(stage)} />}
+      {stage !== "cancelled" && <OrderStepper step={stageStep(order)} />}
 
       <div className="acct-order-foot">
         <button

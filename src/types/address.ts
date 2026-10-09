@@ -16,6 +16,11 @@ export interface Address {
   pincode?: string;
   location?: string;
   map?: string;
+  /** From the browser's location, when the buyer used "current location".
+   *  The API uses them for the delivery distance (and looks the address up
+   *  from the pincode when they are missing). */
+  latitude?: number | null;
+  longitude?: number | null;
   set_default: boolean;
   default_address?: number;
   status?: string;
