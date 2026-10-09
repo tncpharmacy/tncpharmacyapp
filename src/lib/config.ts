@@ -162,6 +162,7 @@ export const ENDPOINTS = {
     GET_MEDICINE_LIST_UPDATE: (id: number | string) =>
       `/medicine/update/${id}/`,
     GET_ALL_PRODUCT_LIST: "/medicine/product/list/",
+    COMPARE: (id: number) => `/medicine/${id}/compare/`,
     GET_PRODUCT_LIST_BY_GENERIC: (productId: number) =>
       `/medicine/medicine-by-generic/?product_id=${productId}`,
     GET_MENU_MEDICINE: "/website/medicine/category/1/",
