@@ -120,6 +120,7 @@ export function PrescriptionCard({
   attached,
   fileName,
   uploading,
+  error,
   loggedIn,
   onUpload,
   onLogin,
@@ -128,6 +129,8 @@ export function PrescriptionCard({
   attached: boolean;
   fileName: string | null;
   uploading: boolean;
+  /** Last upload error; Continue stays disabled while no prescription is attached. */
+  error?: string | null;
   loggedIn: boolean;
   onUpload: (file: File) => void;
   onLogin: () => void;
@@ -168,21 +171,41 @@ export function PrescriptionCard({
       />
 
       {attached ? (
-        <div className="bf-rx-ok">
+        <div className="bf-rx-ok" role="status">
           <i className="bi bi-file-earmark-check" aria-hidden="true" />
-          <div className="flex-grow-1">
-            <strong>{fileName || "Prescription uploaded"}</strong>
+          <div className="flex-grow-1 min-w-0">
+            <strong className="text-truncate d-block">{fileName || "Prescription uploaded"}</strong>
             <small className="bf-ok d-block">
-              <i className="bi bi-check2-circle" aria-hidden="true" /> Attached to this order
+              {uploading ? (
+                <><span className="spinner-border spinner-border-sm me-1" aria-hidden="true" /> Uploading the new file…</>
+              ) : (
+                <><i className="bi bi-check2-circle" aria-hidden="true" /> Attached to this order</>
+              )}
             </small>
           </div>
         </div>
       ) : (
-        <button type="button" className="bf-dropzone" onClick={pick} disabled={uploading}>
-          <i className="bi bi-upload" aria-hidden="true" />
+        <button
+          type="button"
+          className={`bf-dropzone ${error ? "bf-dropzone--error" : ""}`}
+          onClick={pick}
+          disabled={uploading}
+          aria-busy={uploading}
+        >
+          {uploading ? (
+            <span className="spinner-border spinner-border-sm" aria-hidden="true" />
+          ) : (
+            <i className="bi bi-upload" aria-hidden="true" />
+          )}
           <strong>{uploading ? "Uploading…" : loggedIn ? "Upload prescription" : "Log in to upload prescription"}</strong>
           <small>Photo or PDF · max 5 MB</small>
         </button>
+      )}
+      {error && (
+        <p className="bf-rx-error" role="alert">
+          <i className="bi bi-exclamation-circle" aria-hidden="true" /> {error}
+          {attached ? " Your earlier prescription is still attached." : ""}
+        </p>
       )}
     </section>
   );

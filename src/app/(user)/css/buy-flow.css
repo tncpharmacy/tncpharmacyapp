@@ -252,6 +252,9 @@
 .bf-dropzone { display: flex; flex-direction: column; align-items: center; gap: 4px; width: 100%; padding: 20px; border: 1px dashed #c9d6ee; border-radius: 8px; background: #f5f8fc; color: #264b8c; }
 .bf-dropzone .bi { font-size: 26px; }
 .bf-dropzone small { color: #6b7280; }
+.bf-dropzone--error { border-color: #dc3545; background: #fdecec; }
+.bf-rx-error { margin: 8px 0 0; font-size: 13px; color: #b42318; display: flex; gap: 6px; align-items: flex-start; }
+.bf-rx-ok .min-w-0 { min-width: 0; }
 
 .bf-items { padding: 8px 20px; margin-bottom: 16px; }
 .bf-items > h2 { font-size: 18px; font-weight: 600; margin: 12px 0 4px; }

@@ -436,7 +436,7 @@ export default function HealthBagClient() {
 
       manufacturer: item.manufacturer || "",
       pack_size: item.pack_size || "",
-      prescription_required: item.prescription_required || 0,
+      prescription_required: Number(item.prescription_required) === 1 ? 1 : 0,
 
       qty: Number(item.qty) || 1,
       in_stock: item.in_stock,
@@ -598,6 +598,7 @@ export default function HealthBagClient() {
   // to be a pop-up after Continue; uploading here attaches it to the bag
   // (healthBag.prescription_id) the same way.
   const [rxUploading, setRxUploading] = useState(false);
+  const [rxError, setRxError] = useState<string | null>(null);
   const uploadPrescriptionNow = async (file: File) => {
     if (!buyer?.id) {
       setShowBuyerLogin(true);
@@ -605,24 +606,36 @@ export default function HealthBagClient() {
     }
     const allowed = ["image/jpeg", "image/jpg", "image/png", "application/pdf"];
     if (!allowed.includes(file.type)) {
+      setRxError("Only JPG, PNG or PDF files can be uploaded.");
       toast.error("Only JPG, PNG or PDF files can be uploaded.");
       return;
     }
     if (file.size > 5 * 1024 * 1024) {
+      setRxError("The file is larger than 5 MB.");
       toast.error("The file is larger than 5 MB.");
       return;
     }
-    const token = localStorage.getItem("token") || "";
+    // Buyers are signed in with "buyerAccessToken" ("token" is not a key the
+    // app sets; the axios interceptor was quietly covering for it).
+    const token = localStorage.getItem("buyerAccessToken") || "";
     setRxUploading(true);
+    setRxError(null);
     try {
       const formData = new FormData();
       formData.append("prescription_pic", file);
+      // The slice stores the returned prescription id (healthBag.prescription_id),
+      // which is what unlocks Continue here and Place order on checkout.
       await dispatch(uploadPrescriptionFromBuyerCartThunk({ formData, token })).unwrap();
       setPrescriptionFile(file);
       toast.success("Prescription attached");
+      // Re-read the bag so the state matches the server (every line now
+      // carries the prescription).
+      fetchCart();
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
-      toast.error(error || "Upload failed!");
+      const msg = typeof error === "string" ? error : error?.message || "Upload failed. Please try again.";
+      setRxError(msg);
+      toast.error(msg);
     } finally {
       setRxUploading(false);
     }
@@ -774,6 +787,7 @@ export default function HealthBagClient() {
                   attached={!!bagPrescriptionId}
                   fileName={prescriptionFile?.name ?? null}
                   uploading={rxUploading}
+                  error={rxError}
                   loggedIn={mounted && !!buyer?.id}
                   onUpload={uploadPrescriptionNow}
                   onLogin={() => setShowBuyerLogin(true)}
