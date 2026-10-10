@@ -2,14 +2,15 @@ import AllManufacturerClient from "./AllManufacturerClient";
 import { decodeId } from "@/lib/utils/encodeDecode";
 import { fetchMedicineByManufacturerIdSeo } from "@/lib/api/medicine";
 
+// Next.js 15: route params arrive as a Promise and must be awaited.
 type Props = {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 };
 
 export async function generateMetadata({ params }: Props) {
-  const { id } = params;
+  const { id } = await params;
 
   const baseUrl = "https://tncpharmacy.com";
   const decodedId = decodeId(id);
@@ -84,7 +85,7 @@ export async function generateMetadata({ params }: Props) {
 }
 
 export default async function Page({ params }: Props) {
-  const { id } = params;
+  const { id } = await params;
 
   const decodedId = decodeId(id);
   const manufacturerId = Number(decodedId);

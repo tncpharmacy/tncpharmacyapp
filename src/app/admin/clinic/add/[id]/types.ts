@@ -1,3 +1,4 @@
 export interface IdPageProps {
-  params: { id: string }; // हमेशा string के रूप में आएगा
+  // Next.js 15: route params arrive as a Promise and must be awaited.
+  params: Promise<{ id: string }>;
 }

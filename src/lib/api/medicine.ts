@@ -1,5 +1,6 @@
 import axiosInstance from "@/lib/axios";
 import { ENDPOINTS } from "@/lib/config";
+import type { MedicineCompare } from "@/types/compare";
 import {
   CareGroupResponse,
   Medicine,
@@ -342,4 +343,14 @@ export const deleteMedicineById = async (
     ENDPOINTS.MEDICINES.DELETE(id)
   );
   return res.data;
+};
+
+// =========================
+// COMPARE BEFORE YOU BUY (strict equivalents, per-unit price)
+// =========================
+export const fetchMedicineCompare = async (
+  id: number
+): Promise<MedicineCompare | null> => {
+  const res = await axiosInstance.get(ENDPOINTS.MEDICINES.COMPARE(id));
+  return res.data?.data ?? null;
 };

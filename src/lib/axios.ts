@@ -75,6 +75,9 @@ api.interceptors.request.use(
       (normalizedUrl.includes("/masterapp/care-group/") ||
         normalizedUrl.includes("/website") ||
         normalizedUrl.includes("search-suggestion") ||
+        // "Compare before you buy" is public: an expired buyer token must not
+        // turn it into a 401 and hide the comparison.
+        /^\/medicine\/\d+\/compare\/$/.test(normalizedUrl) ||
         publicEndpoints.some((endpoint) => normalizedUrl.startsWith(endpoint)));
 
     if (!isPublic && token && config.headers) {

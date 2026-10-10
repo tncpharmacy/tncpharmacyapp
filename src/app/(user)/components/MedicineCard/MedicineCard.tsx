@@ -107,6 +107,7 @@ export default function MedicineCard({
           discount: Number(item?.Discount ?? discount ?? 0),
           category_id: Number(item?.category_id ?? 0),
           image: item?.DefaultImageURL || primary_image || null,
+          prescription_required: Number(prescription_required) === 1 ? 1 : 0,
         };
 
         const exists = current.find((i) => i.productid === id);

@@ -1,10 +1,11 @@
 import { Suspense } from "react";
 import SearchTextClient from "./SearchTextClient";
 
+// Next.js 15: searchParams arrive as a Promise and must be awaited.
 type Props = {
-  searchParams: {
+  searchParams: Promise<{
     text?: string;
-  };
+  }>;
 };
 
 export const dynamic = "force-dynamic";
@@ -26,7 +27,7 @@ async function getSearchProducts(text: string) {
 }
 
 export async function generateMetadata({ searchParams }: Props) {
-  const { text } = searchParams;
+  const { text } = await searchParams;
 
   const baseUrl = "https://tncpharmacy.com";
   const searchText = text || "";
@@ -93,7 +94,7 @@ export async function generateMetadata({ searchParams }: Props) {
 }
 
 export default async function Page({ searchParams }: Props) {
-  const searchText = searchParams?.text || "";
+  const searchText = (await searchParams)?.text || "";
 
   const products = await getSearchProducts(searchText);
 

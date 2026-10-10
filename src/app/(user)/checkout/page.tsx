@@ -1,12 +1,22 @@
 "use client";
 
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import "../css/site-style.css";
 import "../css/user-style.css";
 import "bootstrap/dist/css/bootstrap.min.css";
-import { Modal } from "react-bootstrap";
-import SiteHeader from "@/app/(user)/components/header/header";
 import Footer from "@/app/(user)/components/footer/footer";
+import { CheckoutSteps, StickyPayBar } from "../health-bag/BagSections";
+import {
+  DeliveringToSummary,
+  OrderPlacedView,
+  OrderSummary,
+  PaymentOptions,
+  PrescriptionSummary,
+  type PlacedOrder,
+  type SummaryLine,
+} from "./CheckoutSections";
+import { getAddress } from "@/lib/features/addressSlice/addressSlice";
+import { useDeliveryQuote } from "@/lib/hooks/useDeliveryQuote";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { useAppDispatch, useAppSelector } from "@/lib/hooks";
@@ -14,8 +24,6 @@ import { safeLocalStorage } from "@/lib/utils/safeLocalStorage";
 import { createBuyerOrder } from "@/lib/features/buyerSlice/buyerSlice";
 import type { OrderPayload } from "@/types/order";
 import { useHealthBag } from "@/lib/hooks/useHealthBag";
-import { formatAmount } from "@/lib/utils/formatAmount";
-import { formatPrice } from "@/lib/utils/formatPrice";
 import { newIdempotencyKey } from "@/lib/utils/idempotencyKey";
 import { payWithRazorpay } from "@/lib/utils/razorpayCheckout";
 import {
@@ -28,7 +36,10 @@ export default function Checkout() {
   const router = useRouter();
 
   const [checkoutData, setCheckoutData] = useState<OrderPayload | null>(null);
-  const [showSuccess, setShowSuccess] = useState(false);
+  // Set once the order is placed: swaps the payment form for the
+  // "Order placed" screen (Figma B4). It holds its own copy of the items and
+  // address because the bag is emptied straight after.
+  const [placedOrder, setPlacedOrder] = useState<PlacedOrder | null>(null);
 
   const { buyer, loading, token } = useAppSelector((state) => state.buyer);
   const { removeItem, items: healthBagItems } = useHealthBag({
@@ -97,6 +108,63 @@ export default function Checkout() {
     });
   }, [paymentType]);
 
+  // ---- What the payment screen shows (read-only; the bag decided it) ----
+  // The bag saved only ids, quantities and prices in `checkoutData`; names
+  // and pack sizes come from the bag items, the address from the address
+  // list, and the fee line from the same server quote the bag used.
+  const addresses = useAppSelector((state) => state.address.addresses);
+  // Fetch once if the store is empty (e.g. the page was reloaded). A ref,
+  // not `addresses` in the deps, so an empty answer can't loop.
+  const addressesRequested = useRef(false);
+  useEffect(() => {
+    if (addressesRequested.current || !buyer?.id || addresses?.length) return;
+    addressesRequested.current = true;
+    dispatch(getAddress(buyer.id));
+  }, [buyer?.id, addresses?.length, dispatch]);
+  const address =
+    addresses?.find((a) => a.id === Number(checkoutData?.address_id)) ?? null;
+  const { quote: deliveryQuote, loading: quoteLoading } = useDeliveryQuote(
+    checkoutData?.address_id ?? null
+  );
+  const prescriptionId = useAppSelector((state) => state.healthBag.prescription_id);
+
+  const summary = useMemo(() => {
+    const byId = new Map(
+      (healthBagItems || []).map((i) => [Number(i.productid || i.product_id), i])
+    );
+    let totalMrp = 0;
+    let totalPay = 0;
+    let needsRx = false;
+    const lines: SummaryLine[] = (checkoutData?.products || []).map((p) => {
+      const item = byId.get(Number(p.product_id));
+      const qty = Number(p.quantity) || 1;
+      const mrp = Number(p.mrp) || 0;
+      const rate = Number(p.rate) || 0;
+      totalMrp += mrp * qty;
+      totalPay += rate * qty;
+      if (item?.prescription_required === 1) needsRx = true;
+      return {
+        id: Number(p.product_id),
+        name: item?.productname || "Medicine",
+        qty,
+        pack: item?.pack_size,
+        lineTotal: rate * qty,
+      };
+    });
+    return { lines, totalMrp, totalDiscount: totalMrp - totalPay, needsRx };
+  }, [checkoutData, healthBagItems]);
+
+  const amount = Number(checkoutData?.amount) || 0;
+  const deliveryFee = Number(checkoutData?.delivery_fee) || 0;
+  // Same gates as the bag, re-checked here in case something changed (the
+  // address was edited, or the page was opened directly).
+  const blockReason: string | null =
+    deliveryQuote && !deliveryQuote.deliverable
+      ? "Choose an address we can deliver to"
+      : summary.needsRx && !prescriptionId
+      ? "Upload the prescription in your bag"
+      : null;
+
   if (!isClient || !buyer?.id) return null;
 
   // Back button
@@ -105,8 +173,25 @@ export default function Checkout() {
     router.push("/health-bag");
   };
 
-  // Order placed (and, for online, paid): clear the bag and show success.
-  const finishOrder = async () => {
+  // Order placed (and, for online, paid): remember what was ordered for the
+  // "Order placed" screen, then clear the bag. The snapshot comes first
+  // because clearing the bag empties `healthBagItems`.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const finishOrder = async (orderData: any) => {
+    setPlacedOrder({
+      orderId: Number(orderData?.order_id) || 0,
+      orderNumber: orderData?.order_number ?? null,
+      // The server's own total wins over the figure the bag worked out.
+      amount: Number(orderData?.amount) || amount,
+      saved: summary.totalDiscount,
+      paymentType,
+      lines: summary.lines,
+      address,
+      rxAttached: summary.needsRx && !!prescriptionId,
+      buyerName: buyer?.name,
+      buyerMobile: buyer?.number,
+    });
+    window.scrollTo({ top: 0 });
     safeLocalStorage.removeItem("checkoutData");
     attemptKey.current = null;
     if (healthBagItems?.length > 0) {
@@ -114,12 +199,15 @@ export default function Checkout() {
         await removeItem(item.productid || item.product_id);
       }
     }
-    setShowSuccess(true);
   };
 
   // Continue → Order creation logic
   const handleContinue = async () => {
     if (placing) return; // TNC-22: ignore taps while a request is in flight
+    if (blockReason) {
+      toast.error(blockReason);
+      return;
+    }
     if (!buyer || !token) {
       toast.error("Login required!");
       return;
@@ -181,7 +269,7 @@ export default function Checkout() {
       }
 
       if (paymentType !== "online") {
-        await finishOrder();
+        await finishOrder(res?.data);
         return;
       }
 
@@ -190,12 +278,12 @@ export default function Checkout() {
       const outcome = await payWithRazorpay(orderId, (msg) => toast.error(msg));
 
       if (outcome === "paid") {
-        await finishOrder();
+        await finishOrder(res?.data);
       } else if (outcome === "unverified") {
         // Razorpay took the money but our confirmation call failed; the
         // webhook settles it. Never cancel here.
         toast("Payment received — we are confirming it. Your order will update shortly.");
-        await finishOrder();
+        await finishOrder(res?.data);
       } else {
         // Closed the window or it never opened: release the order and its
         // stock so nothing is held for a payment that isn't coming.
@@ -225,183 +313,85 @@ export default function Checkout() {
     setCaptchaAns(""); // clear input
   };
 
-  const handleModalHide = () => {
-    setShowSuccess(false);
-    router.push("/");
-  };
-
   return (
-    <div className="page-wrapper bg-light min-vh-100 d-flex flex-column">
-      {/* <SiteHeader /> */}
-
-      <div className="container py-5">
-        <h4 className="fw-bold text-center mb-4 text-primary">
-          Select Payment Method
-        </h4>
-
-        {/* Payment Type Selector */}
-        <div className="d-flex justify-content-center gap-4 mb-4">
-          <button
-            className={`btn ${
-              paymentType === "online" ? "btn-primary" : "btn-outline-primary"
-            }`}
-            onClick={() => onlineEnabled && setPaymentType("online")}
-            disabled={!onlineEnabled}
-            title={onlineEnabled ? undefined : "Online payment is coming soon"}
-          >
-            Pay Online
-            {!onlineEnabled && (
-              <span className="badge bg-secondary ms-2">Coming soon</span>
-            )}
-          </button>
-
-          <button
-            className={`btn ${
-              paymentType === "cod" ? "btn-primary" : "btn-outline-primary"
-            }`}
-            onClick={() => setPaymentType("cod")}
-          >
-            Cash on Delivery
-          </button>
-        </div>
-        {!onlineEnabled && (
-          <p className="text-center text-muted small mb-4">
-            Online payment is not available in this environment. Please use
-            Cash on Delivery.
-          </p>
-        )}
-
-        {/* Payment Content */}
-        <div className="d-flex justify-content-center">
-          <div
-            className="border rounded-4 p-4 shadow-sm"
-            style={{ width: "100%", maxWidth: "420px", background: "#fff" }}
-          >
-            {/* =============== ONLINE (RAZORPAY) UI =============== */}
-            {paymentType === "online" && (
-              <div className="text-center">
-                <i
-                  className="bi bi-shield-check text-success"
-                  style={{ fontSize: 48 }}
-                ></i>
-                <p className="text-muted mt-2 mb-1">
-                  UPI, cards, net banking and wallets via Razorpay
-                </p>
-                <h6 className="fw-semibold text-success">
-                  Amount: ₹{formatPrice(checkoutData?.amount || 0)}
-                </h6>
-                <p className="small text-muted mb-0">
-                  The final amount is confirmed by our server before payment.
-                </p>
-              </div>
-            )}
-
-            {/* =============== COD PAYMENT UI =============== */}
-            {paymentType === "cod" && (
-              <div className="text-center">
-                <h6 className="fw-semibold text-success">
-                  Pay on delivery: ₹{formatPrice(checkoutData?.amount || 0)}
-                </h6>
-                <p className="small text-muted mb-3">
-                  {Number(checkoutData?.delivery_fee) > 0
-                    ? `Includes delivery ₹${formatPrice(
-                        checkoutData?.delivery_fee || 0
-                      )}. Please pay the delivery partner's rider.`
-                    : "Free delivery. Please pay the delivery partner's rider."}
-                </p>
-                <h6 className="fw-bold mb-3 text-primary">Verify Captcha</h6>
-
-                <div className="bg-light p-3 rounded mb-3 d-flex justify-content-center align-items-center gap-3">
-                  <span
-                    className="fw-bold text-success"
-                    style={{ fontSize: "20px" }}
-                  >
-                    {captchaQ.a} + {captchaQ.b} = ?
-                  </span>
-
-                  {/* 🔥 Refresh Captcha Button */}
-                  <button
-                    className="btn btn-sm btn-outline-primary rounded-circle"
-                    onClick={regenerateCaptcha}
-                    title="Refresh Captcha"
-                    style={{ width: "36px", height: "36px", padding: 0 }}
-                  >
-                    <i className="bi bi-arrow-clockwise"></i>
+    <div className="page-wrapper d-flex flex-column min-vh-100">
+      <section className="bf-page flex-grow-1">
+        <div className="container">
+          {placedOrder ? (
+            <>
+              {/* Figma B4 / M4: order placed */}
+              <CheckoutSteps active={2} />
+              <OrderPlacedView
+                order={placedOrder}
+                onTrack={() =>
+                  router.push(
+                    placedOrder.orderId
+                      ? `/profile/orders/${placedOrder.orderId}`
+                      : "/profile?tab=order"
+                  )
+                }
+                onShop={() => router.push("/")}
+              />
+            </>
+          ) : (
+            <>
+              {/* Figma B3 / M3: payment */}
+              <CheckoutSteps active={1} />
+              <div className="row g-4">
+                <div className="col-lg-8">
+                  <button type="button" className="bf-link bf-back" onClick={handleBack}>
+                    <i className="bi bi-arrow-left" aria-hidden="true" /> Back to bag
                   </button>
+                  <div className="bf-title">
+                    <h1>Payment</h1>
+                  </div>
+
+                  <PaymentOptions
+                    paymentType={paymentType}
+                    onSelect={setPaymentType}
+                    onlineEnabled={onlineEnabled}
+                    amount={amount}
+                    captcha={captchaQ}
+                    captchaAns={captchaAns}
+                    onCaptchaChange={setCaptchaAns}
+                    onCaptchaRefresh={regenerateCaptcha}
+                  />
+                  <DeliveringToSummary
+                    address={address}
+                    quote={deliveryQuote}
+                    loading={quoteLoading}
+                  />
+                  {summary.needsRx && (
+                    <PrescriptionSummary attached={!!prescriptionId} />
+                  )}
                 </div>
 
-                <input
-                  type="number"
-                  className="form-control text-center"
-                  placeholder="Enter answer"
-                  value={captchaAns}
-                  onChange={(e) => setCaptchaAns(e.target.value)}
-                />
-
-                <p className="text-muted mt-2">
-                  Enter the correct answer to place the order.
-                </p>
+                <div className="col-lg-4">
+                  <OrderSummary
+                    lines={summary.lines}
+                    totalMrp={summary.totalMrp}
+                    totalDiscount={summary.totalDiscount}
+                    deliveryFee={deliveryFee}
+                    quote={deliveryQuote}
+                    toPay={amount}
+                    paymentType={paymentType}
+                    placing={placing || loading}
+                    blockReason={blockReason}
+                    onPlace={handleContinue}
+                  />
+                </div>
               </div>
-            )}
-          </div>
+              <StickyPayBar
+                amount={amount}
+                sub={blockReason || (paymentType === "cod" ? "To pay on delivery" : "To pay now")}
+                cta={placing || loading ? "Placing order…" : "Place order"}
+                onClick={handleContinue}
+                disabled={placing || loading || !!blockReason}
+              />
+            </>
+          )}
         </div>
-
-        {/* Buttons */}
-        <div
-          className="d-flex justify-content-between mt-4"
-          style={{ maxWidth: "420px", margin: "0 auto" }}
-        >
-          <button
-            className="btn btn-outline-secondary px-4"
-            onClick={handleBack}
-          >
-            ← Back
-          </button>
-
-          <button
-            className="btn btn-success px-5"
-            onClick={handleContinue}
-            disabled={placing || loading}
-          >
-            {placing || loading
-              ? "Processing..."
-              : paymentType === "online"
-              ? "Place Order & Pay"
-              : "Place Order"}
-          </button>
-        </div>
-      </div>
-
-      {/* Success Modal */}
-      <Modal
-        show={showSuccess}
-        centered
-        onHide={handleModalHide}
-        backdrop="static"
-      >
-        <div className="text-center p-5">
-          <i
-            className="bi bi-check-circle-fill text-success"
-            style={{ fontSize: 70 }}
-          ></i>
-          <h5 className="fw-bold mt-3">Order Placed Successfully!</h5>
-          <h5 className="fw-bold mt-3">Go To..</h5>
-          <div className="d-flex justify-content-center mt-4 gap-3">
-            <button
-              className="btn btn-outline-primary"
-              onClick={() => router.push("/")}
-            >
-              Home
-            </button>
-            <button
-              className="btn btn-primary"
-              onClick={() => router.push("/profile?tab=order")}
-            >
-              Orders
-            </button>
-          </div>
-        </div>
-      </Modal>
+      </section>
 
       <Footer />
     </div>

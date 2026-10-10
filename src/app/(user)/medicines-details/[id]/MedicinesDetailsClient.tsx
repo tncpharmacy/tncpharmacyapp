@@ -16,11 +16,9 @@ import HorizontalAccordionTabs from "@/app/(user)/product-details/HorizontalAcco
 import { useAppDispatch, useAppSelector } from "@/lib/hooks";
 import {
   getGroupCare,
-  getMedicineByGenericId,
   getMedicinesMenuById,
 } from "@/lib/features/medicineSlice/medicineSlice";
 import {
-  Medicine,
   MedicineSafety,
   SafetyFieldKeys,
   SafetyLabelKeys,
@@ -31,7 +29,8 @@ import { useHealthBag } from "@/lib/hooks/useHealthBag";
 import { HealthBag } from "@/types/healthBag";
 import { formatPrice } from "@/lib/utils/formatPrice";
 import { loadLocalHealthBag } from "@/lib/features/healthBagSlice/healthBagSlice";
-import GenericModalMobileCard from "../../components/MedicineCard/GenericModalMobileCard";
+import CompareBlock, { useMedicineCompare } from "./CompareBlock";
+import BuyBox from "./BuyBox";
 import dynamic from "next/dynamic";
 import { getCategories } from "@/lib/features/categorySlice/categorySlice";
 import { getSubcategories } from "@/lib/features/subCategorySlice/subCategorySlice";
@@ -43,12 +42,6 @@ import { resolveMediaUrl } from "@/lib/media";
 const Footer = dynamic(() => import("@/app/(user)/components/footer/footer"), {
   ssr: false,
 });
-type CompareMedicine = Medicine & {
-  finalPrice: number;
-  isCurrent: boolean;
-  compareType?: "current" | "top-brand" | "tnc-brand" | "cheapest";
-};
-
 const mediaBase = process.env.NEXT_PUBLIC_MEDIA_BASE_URL;
 
 export default function MedicinesDetailsClient({
@@ -164,28 +157,8 @@ export default function MedicinesDetailsClient({
   if (!decodedId) {
     notFound();
   }
-  //new state for top 2 generic
-  // const [topGenerics, setTopGenerics] = useState<Medicine[]>([]);
-  const [showGenericModal, setShowGenericModal] = useState(false);
-  const genericListRaw = useAppSelector(
-    (state) => state.medicine.genericAlternativesMedicines
-  );
-
-  const genericList: Medicine[] = Array.isArray(genericListRaw)
-    ? genericListRaw
-    : genericListRaw
-    ? [genericListRaw]
-    : [];
-
-  const getFinalPrice = (
-    mrp?: number | string | null,
-    discount?: number | string | null
-  ) => {
-    const m = parseFloat(String(mrp ?? 0)) || 0;
-    const d = parseFloat(String(discount ?? 0)) || 0;
-
-    return m - (m * d) / 100;
-  };
+  // "Compare before you buy" (strict equivalents, per-unit prices)
+  const { compare } = useMedicineCompare(decodedId ? Number(decodedId) : null);
 
   useEffect(() => {
     dispatch(getCategories());
@@ -194,27 +167,6 @@ export default function MedicinesDetailsClient({
     dispatch(getManufacturersAllList());
     dispatch(getGroupCare());
   }, [dispatch]);
-
-  // useEffect(() => {
-  //   if (!genericList.length || !mrp) return;
-
-  //   const currentPrice = Number(mrp) - (Number(mrp) * Number(discount)) / 100;
-
-  //   const cheaperGenerics = genericList
-  //     .filter((g) => g.id !== id) // remove same medicine
-  //     .map((g) => {
-  //       const price = Number(g.mrp ?? 0);
-  //       const disc = Number(g.discount ?? 0);
-  //       const finalPrice = price - (price * disc) / 100;
-
-  //       return { ...g, finalPrice };
-  //     })
-  //     .filter((g) => g.finalPrice < currentPrice) // only cheaper
-  //     .sort((a, b) => a.finalPrice - b.finalPrice) // lowest first
-  //     .slice(0, 2); // TOP 2
-
-  //   setTopGenerics(cheaperGenerics);
-  // }, [genericList, mrp, discount, id]);
 
   useEffect(() => {
     const checkScreen = () => setIsMobile(window.innerWidth < 768);
@@ -382,6 +334,8 @@ export default function MedicinesDetailsClient({
 
         // ✅ image fix
         image: item.image || images?.[0]?.document || null,
+        // the bag needs this for its prescription section
+        prescription_required: Number(prescription_required) === 1 ? 1 : 0,
       };
 
       const exists = guestItems.find((i) => i.productid === item.product_id);
@@ -404,23 +358,40 @@ export default function MedicinesDetailsClient({
     }
   };
 
+  // The lowest-priced strict equivalent that is cheaper than this one (the
+  // TnC Trusted card can be it), for the "Same medicine from ₹x" teaser.
+  const cheaperEquivalent =
+    [compare?.cheapest, compare?.tnc_trusted]
+      .filter((c): c is NonNullable<typeof c> => !!c && (c.saving_percent ?? 0) > 0)
+      .sort((a, b) => Number(a.unit_price) - Number(b.unit_price))[0] ?? null;
+
+  // One place for "add this medicine" (buy box, compare card, mobile bar).
+  const addThisMedicine = () =>
+    handleAdd({
+      product_id: id,
+      medicine_name,
+      manufacturer_name,
+      pack_size,
+      mrp,
+      discount,
+      image: images?.[0]?.document || null,
+    });
+
+  // Trash on the quantity stepper (at 1) takes it out of the bag again.
+  const removeThisMedicine = async () => {
+    await removeItem(id);
+    if (!buyer?.id) {
+      setGuestItems((prev) => prev.filter((i) => i.productid !== id));
+    }
+    setQuantity(1);
+  };
+
   // medicine details
   useEffect(() => {
     if (!medicine && decodedId) {
       dispatch(getMedicinesMenuById(decodedId));
     }
   }, [dispatch, medicine, decodedId]);
-
-  // generic medicines
-  useEffect(() => {
-    if (!medicine && decodedId) return;
-
-    const genericId = Number(data.generic_id);
-
-    if (genericId > 0) {
-      dispatch(getMedicineByGenericId({ id: genericId }));
-    }
-  }, [dispatch, data, decodedId, medicine]);
 
   const openModal = (index: React.SetStateAction<number>) => {
     setSelectedIndex(index);
@@ -494,129 +465,6 @@ export default function MedicinesDetailsClient({
 
   // ✅ Final total price (depends on qty)
   // const totalPrice = (discountedPrice * quantity).toFixed(2);
-
-  const currentPrice = getFinalPrice(mrp, discount);
-  // check if any cheaper generic exists
-  const hasCheaper = genericList.some((g) => {
-    if (Number(g.id) === Number(id)) return false;
-
-    const price = getFinalPrice(g.mrp, g.discount);
-    return price > 0 && price < currentPrice;
-  });
-  // STEP 1 — calculate all generics with price
-  const allGenericsWithPrice = (genericList || [])
-    .filter((g) => Number(g.id) !== Number(id))
-    .map((g) => ({
-      ...g,
-      finalPrice: getFinalPrice(g.mrp, g.discount),
-    }))
-    .filter((g) => g.finalPrice > 0);
-
-  // STEP 2 — ONLY those cheaper than current medicine
-  const cheaperThanCurrent = allGenericsWithPrice.filter(
-    (g) => g.finalPrice < currentPrice
-  );
-
-  // STEP 3 — sort cheapest first
-  const sortedCheaper = cheaperThanCurrent.sort(
-    (a, b) => a.finalPrice - b.finalPrice
-  );
-
-  // STEP 4 — take maximum 2 (may be 1 or 0)
-  const topCheaperGenerics: CompareMedicine[] = sortedCheaper
-    .slice(0, 3)
-    .map((g) => ({
-      ...g, // 👈 FULL object rakho
-      finalPrice: getFinalPrice(g.mrp, g.discount),
-      isCurrent: false,
-    }));
-
-  // ---- Inject Current Medicine at Top
-  const currentMedicine: CompareMedicine = {
-    ...data,
-    finalPrice: currentPrice,
-    isCurrent: true,
-    compareType:
-      Number(data.brand_category) === 1
-        ? "top-brand"
-        : Number(data.brand_category) === 2
-        ? "tnc-brand"
-        : "current",
-  };
-
-  // Top Brand
-  const topBrand = allGenericsWithPrice
-    .filter((g) => Number(g.brand_category) === 1)
-    .sort((a, b) => b.finalPrice - a.finalPrice)[0];
-
-  // TnC Trusted Brand
-  const trustedBrand = allGenericsWithPrice
-    .filter((g) => Number(g.brand_category) === 2)
-    .sort((a, b) => b.finalPrice - a.finalPrice)[0];
-
-  // cheapest
-  const cheapest = [...allGenericsWithPrice].sort(
-    (a, b) => a.finalPrice - b.finalPrice
-  )[0];
-
-  // ---- Calculate Saving % vs Current Medicine ----
-  const savingPercents = cheapest
-    ? [Math.round(((currentPrice - cheapest.finalPrice) / currentPrice) * 100)]
-    : [];
-
-  const minSaving = savingPercents.length ? Math.min(...savingPercents) : 0;
-
-  const maxSaving = savingPercents.length ? Math.max(...savingPercents) : 0;
-
-  const compareList: CompareMedicine[] = [];
-
-  compareList.push(currentMedicine);
-
-  // Current Top Brand nahi hai
-  if (Number(currentMedicine.brand_category) !== 1 && topBrand) {
-    compareList.push({
-      ...topBrand,
-      isCurrent: false,
-      compareType: "top-brand",
-    });
-  }
-
-  // Current Trusted Brand nahi hai
-  if (
-    Number(currentMedicine.brand_category) !== 2 &&
-    trustedBrand &&
-    trustedBrand.id !== topBrand?.id
-  ) {
-    compareList.push({
-      ...trustedBrand,
-      isCurrent: false,
-      compareType: "tnc-brand",
-    });
-  }
-
-  // Cheapest duplicate na aaye
-  if (
-    cheapest &&
-    cheapest.id !== topBrand?.id &&
-    cheapest.id !== trustedBrand?.id
-  ) {
-    compareList.push({
-      ...cheapest,
-      isCurrent: false,
-      compareType: "cheapest",
-    });
-  }
-  const finalCompareList = compareList;
-
-  // Show banner only if real cheaper exists
-  const showSavingBanner = finalCompareList.length > 1;
-  // const isScrollable = finalCompareList.length > 3;
-  // const savingPercent =
-  //   sortedGenerics.length > 0
-  //     ? Math.round(
-  //         ((currentPrice - sortedGenerics[0].finalPrice) / currentPrice) * 100
-  //       )
-  //     : 0;
 
   const totalPrice = Number(discountedPrice.toFixed(2));
 
@@ -698,123 +546,6 @@ export default function MedicinesDetailsClient({
     nextArrow: <NextArrow />,
     prevArrow: <PrevArrow />,
   };
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const getMedicineImage = (medicine: any) => {
-    if (medicine.primary_image) return medicine.primary_image;
-
-    if (medicine.images?.length) {
-      const primary =
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        medicine.images.find((i: any) => i.default_image === 1) ||
-        medicine.images[0];
-
-      return `${mediaBase}${primary.document}`;
-    }
-
-    return "/images/tnc-default.png";
-  };
-
-  const renderGenericCompare = () => {
-    if (!hasCheaper) return null;
-
-    return (
-      <>
-        {showSavingBanner && (
-          <div className="generic-saving-banner">
-            {minSaving === maxSaving
-              ? `Save ${maxSaving}% on alternative generics`
-              : `Save ${minSaving}% to ${maxSaving}% on alternative generics`}
-          </div>
-        )}
-        {finalCompareList.map((g, index) => {
-          const imageUrl = getMedicineImage(g);
-
-          const packSize = g.pack_size?.toLowerCase() || "";
-
-          // ✅ ONLY allow tablet/capsule
-          const isUnitBased =
-            packSize.includes("tab") ||
-            packSize.includes("tablet") ||
-            packSize.includes("cap") ||
-            packSize.includes("capsule");
-
-          // ✅ extract quantity
-          const packQty =
-            parseInt(String(g.pack_size).match(/\d+/)?.[0] || "0") || 0;
-
-          // ✅ calculate ONLY if valid
-          const perUnit =
-            isUnitBased && packQty > 0
-              ? (g.finalPrice / packQty).toFixed(2)
-              : null;
-
-          // ✅ unit name
-          let unit: string | null = null;
-
-          if (packSize.includes("tab")) unit = "tablet";
-          else if (packSize.includes("cap")) unit = "capsule";
-
-          return (
-            <div
-              key={`compare-${g.id}-${index}`}
-              className={`generic-row-card ${g.isCurrent ? "current" : ""}`}
-              onClick={() => {
-                if (!g.isCurrent) {
-                  setShowGenericModal(false);
-                  router.push(`/medicines-details/${encodeId(g.id)}`);
-                }
-              }}
-            >
-              <div className="generic-img-wrap">
-                <img
-                  src={imageUrl}
-                  alt={g.medicine_name}
-                  style={{
-                    opacity: imageUrl.includes("tnc-default") ? 0.35 : 1,
-                  }}
-                  onError={(e) => {
-                    e.currentTarget.src = "/images/tnc-default.png";
-                    e.currentTarget.style.opacity = "0.35";
-                  }}
-                />
-              </div>
-
-              <div className="generic-content">
-                <div className="generic-name">{g.medicine_name}</div>
-
-                {g.isCurrent && (
-                  <div className="viewing-badge">Currently Viewing</div>
-                )}
-
-                <div className="generic-composition">{g.generic_name}</div>
-                <div className="generic-company">{g.manufacturer_name}</div>
-
-                <div className="generic-price">
-                  ₹{formatPrice(g.finalPrice)}
-                </div>
-
-                {perUnit && unit && (
-                  <div className="per-tablet">
-                    ₹{perUnit} per {"unit"}
-                  </div>
-                )}
-              </div>
-            </div>
-          );
-        })}
-      </>
-    );
-  };
-
-  const getModalSize = (): "sm" | "lg" | "xl" | undefined => {
-    const count = finalCompareList.length;
-
-    if (count >= 4) return "xl";
-    if (count === 3) return "lg";
-    if (count === 2) return undefined; // 👈 default = md feel
-    return "sm";
-  };
-
   return (
     <>
       {/* <SiteHeader /> */}
@@ -1105,30 +836,15 @@ export default function MedicinesDetailsClient({
                     </div>
                   )}
                 </div>
-                {showSavingBanner && (
-                  <div
-                    className="generic-switch-link clickable"
-                    onClick={() => setShowGenericModal(true)}
-                    role="button"
-                  >
-                    <div className="generic-switch-content">
-                      <span className="generic-icon">
-                        <i className="bi bi-currency-rupee"></i>
-                      </span>
-
-                      <span className="generic-text">
-                        {cheapest && cheapest.id !== id
-                          ? `${maxSaving}% cheaper alternative available with same salt composition`
-                          : "Compare with Top Brand & TnC Trusted Brand"}
-                      </span>
-
-                      <span className="generic-arrow">
-                        <i className="bi bi-chevron-right"></i>
-                      </span>
-                    </div>
-                  </div>
-                )}
                 {!isMobile && <div className="accordian-wrapper"></div>}
+              </div>
+              <div id="compare">
+                <CompareBlock
+                  compare={compare}
+                  isInBag={isInBag}
+                  onAdd={addThisMedicine}
+                  onGoToBag={() => router.push("/health-bag")}
+                />
               </div>
               <HorizontalAccordionTabs id={id} />
               <div className="herotab">
@@ -1291,80 +1007,30 @@ export default function MedicinesDetailsClient({
             <div className="col-md-3 ps-0 d-none d-md-block">
               <div className="right_section">
                 <div className="view_box">
-                  {/* MRP and Discount */}
-                  <div className="pd_price">
-                    {loading ? (
-                      <div className="skeleton price-skeleton" />
-                    ) : (
-                      <>
-                        <span className="old_price">
-                          <del>MRP ₹{formatPrice(mrp ?? 0)}</del> {discount}%
-                          off
-                        </span>
-                        <span className="new_price">
-                          ₹{formatPrice(totalPrice ?? 0)}
-                        </span>
-                      </>
-                    )}
-                  </div>
-                  <small>Inclusive of all taxes</small>
-
-                  {/* Quantity control */}
-                  <div className="d-flex align-items-center my-3">
-                    <button
-                      onClick={decrease}
-                      disabled={quantity <= 1}
-                      className={`btn btn-outline-secondary px-3 ${
-                        quantity <= 1 ? "disabled-btn" : ""
-                      }`}
-                      aria-label="Decrease quantity"
-                    >
-                      −
-                    </button>
-                    <span className="mx-3 fs-5">{quantity}</span>
-                    <button
-                      onClick={increase}
-                      className="btn btn-outline-secondary px-3"
-                      aria-label="Increase quantity"
-                    >
-                      +
-                    </button>
-                  </div>
-
-                  {/* Add to Health Bag */}
-                  <button
-                    className={`btn btn-sm mb-2 py-2 w-100 ${
-                      isInBag ? "btn-primary" : "btn-primary"
-                    }`}
-                    onClick={() => {
-                      if (isInBag) {
-                        router.push("/health-bag"); // redirect page
-                      } else {
-                        handleAdd({
-                          product_id: id,
-                          medicine_name,
-                          manufacturer_name,
-                          pack_size,
-                          mrp,
-                          discount,
-                          image: images?.[0]?.document || null,
-                        });
-                      }
-                    }}
-                    disabled={
-                      processingIds.includes(id) ||
-                      (in_stock === false && !isInBag)
+                  <BuyBox
+                    loading={loading}
+                    rx={prescription_required === 1}
+                    price={totalPrice}
+                    mrp={mrp}
+                    discount={discount}
+                    unitPrice={compare?.selected.unit_price ?? null}
+                    unitLabel={compare?.selected.unit_label ?? null}
+                    inStock={in_stock !== false}
+                    isInBag={isInBag}
+                    quantity={quantity}
+                    busy={processingIds.includes(id)}
+                    onIncrease={increase}
+                    onDecrease={decrease}
+                    onRemove={removeThisMedicine}
+                    onAdd={addThisMedicine}
+                    onGoToBag={() => router.push("/health-bag")}
+                    cheapest={cheaperEquivalent}
+                    onCompare={() =>
+                      document
+                        .getElementById("compare")
+                        ?.scrollIntoView({ behavior: "smooth", block: "start" })
                     }
-                  >
-                    {processingIds.includes(id)
-                      ? "Processing..."
-                      : isInBag
-                      ? "Go To Health Bag"
-                      : in_stock === false
-                      ? "Out of Stock"
-                      : "Add to Health Bag"}
-                  </button>
-                  {renderGenericCompare()}
+                  />
                 </div>
               </div>
             </div>
@@ -1372,9 +1038,6 @@ export default function MedicinesDetailsClient({
         </div>
 
         {/* ===== MOBILE STICKY HEALTH BAG ===== */}
-        {isMobile && (
-          <div className="view_box mx-2 mb-3">{renderGenericCompare()}</div>
-        )}
         {isMobile && (
           <div className="mobile-sticky-cart d-md-none">
             <div className="msc-inner">
@@ -1399,16 +1062,7 @@ export default function MedicinesDetailsClient({
                 className="msc-btn"
                 onClick={() => {
                   if (isInBag) router.push("/health-bag");
-                  else
-                    handleAdd({
-                      product_id: id,
-                      medicine_name,
-                      manufacturer_name,
-                      pack_size,
-                      mrp,
-                      discount,
-                      image: images?.[0]?.document || null,
-                    });
+                  else addThisMedicine();
                 }}
                 disabled={
                   processingIds.includes(id) ||
@@ -1418,7 +1072,7 @@ export default function MedicinesDetailsClient({
                 {processingIds.includes(id)
                   ? "Processing..."
                   : isInBag
-                  ? "Go To Bag"
+                  ? "✓ Go to bag"
                   : in_stock === false
                   ? "Out of Stock"
                   : "Add to Bag"}
@@ -1429,261 +1083,6 @@ export default function MedicinesDetailsClient({
         <Footer />
       </div>
 
-      <Modal
-        show={showGenericModal}
-        onHide={() => setShowGenericModal(false)}
-        centered
-        size={getModalSize()}
-        // scrollable={finalCompareList.length > 3}
-      >
-        <Modal.Header className="generic-modal-header">
-          <div className="generic-header-content">
-            <h5 className="generic-title">
-              {minSaving === maxSaving
-                ? `Save ${maxSaving}% with generic alternative`
-                : `Save ${minSaving}% to ${maxSaving}% with generic alternatives`}
-            </h5>
-          </div>
-
-          <button
-            className="generic-close"
-            onClick={() => setShowGenericModal(false)}
-          >
-            ×
-          </button>
-        </Modal.Header>
-
-        <Modal.Body
-          style={
-            isMobile
-              ? {
-                  maxHeight: "150vh",
-                  overflowY: "auto",
-                  paddingBottom: "80px",
-                }
-              : {}
-          }
-        >
-          <div className="generic-1mg-wrapper">
-            {/* Top Strip */}
-            <div className="generic-1mg-strip">✓ Contains same composition</div>
-
-            {/* Compare Section */}
-            <div className="generic-1mg-compare">
-              {finalCompareList.map((g, index) => {
-                const imageUrl = getMedicineImage(g);
-                const compareSaving =
-                  currentPrice > 0
-                    ? Math.round(
-                        ((currentPrice - g.finalPrice) / currentPrice) * 100
-                      )
-                    : 0;
-
-                const packSize = g.pack_size?.toLowerCase() || "";
-
-                // ✅ ONLY allow tablet/capsule
-                const isUnitBased =
-                  packSize.includes("tab") ||
-                  packSize.includes("tablet") ||
-                  packSize.includes("cap") ||
-                  packSize.includes("capsule");
-
-                // ✅ extract quantity
-                const packQty =
-                  parseInt(String(g.pack_size).match(/\d+/)?.[0] || "0") || 0;
-
-                // ✅ calculate ONLY if valid
-                const perUnit =
-                  isUnitBased && packQty > 0
-                    ? (g.finalPrice / packQty).toFixed(2)
-                    : null;
-
-                // ✅ unit name
-                let unit: string | null = null;
-
-                if (packSize.includes("tab")) unit = "tablet";
-                else if (packSize.includes("cap")) unit = "capsule";
-
-                return (
-                  <div key={g.id}>
-                    {/* ✅ MOBILE VIEW */}
-                    <div className="d-md-none">
-                      <GenericModalMobileCard
-                        image={imageUrl}
-                        name={g.medicine_name}
-                        manufacturer={g.manufacturer_name ?? null}
-                        price={g.finalPrice}
-                        mrp={g.mrp ?? 0}
-                        discount={Number(g.discount ?? 0)}
-                        perUnit={perUnit}
-                        unit={unit}
-                        saving={compareSaving}
-                        isCurrent={g.isCurrent}
-                        onClick={() => {
-                          if (!g.isCurrent) {
-                            setShowGenericModal(false);
-                            router.push(`/medicines-details/${encodeId(g.id)}`);
-                          }
-                        }}
-                      />
-                    </div>
-                    {/* ✅ DESKTOP VIEW */}
-                    <div className="d-none d-md-block">
-                      <div
-                        key={g.id}
-                        className={`generic-1mg-card ${
-                          g.isCurrent ? "current" : "alt"
-                        }`}
-                        onClick={() => {
-                          if (!g.isCurrent) {
-                            setShowGenericModal(false);
-                            router.push(`/medicines-details/${encodeId(g.id)}`);
-                          }
-                        }}
-                        style={{
-                          textAlign: "center",
-                          fontWeight: 700,
-                          fontSize: "14px",
-                          marginBottom: "12px",
-                          minHeight: "22px",
-                          color:
-                            g.compareType === "top-brand"
-                              ? "#0d6efd"
-                              : g.compareType === "tnc-brand"
-                              ? "#198754"
-                              : g.compareType === "cheapest"
-                              ? "#fd7e14"
-                              : "#2563eb",
-                        }}
-                      >
-                        {g.compareType === "top-brand"
-                          ? "Top Brand"
-                          : g.compareType === "tnc-brand"
-                          ? "TnC Trusted Brand"
-                          : g.compareType === "cheapest"
-                          ? "Cheapest"
-                          : "Currently Viewing"}
-                        {/* RADIO INDICATOR */}
-                        <div
-                          className={`radio-indicator ${
-                            index === 0
-                              ? "radio-blue"
-                              : index === 1
-                              ? "radio-green"
-                              : index === 2
-                              ? "radio-orange"
-                              : "radio-yellow"
-                          }`}
-                        ></div>
-                        <div className="img-wrap">
-                          <img
-                            src={imageUrl}
-                            alt={g.medicine_name}
-                            style={{
-                              opacity: imageUrl.includes("tnc-default")
-                                ? 0.35
-                                : 1,
-                            }}
-                            onError={(e) => {
-                              e.currentTarget.src = "/images/tnc-default.png";
-                              e.currentTarget.style.opacity = "0.35";
-                            }}
-                          />
-                        </div>
-
-                        <div className="title pd-title">{g.medicine_name}</div>
-
-                        {g.isCurrent && (
-                          <div className="badge-viewing">Currently viewing</div>
-                        )}
-
-                        <div className="company pd-title">
-                          {g.manufacturer_name}
-                        </div>
-
-                        <div className="price-section">
-                          {/* Final Price */}
-                          <div className="final-price">
-                            ₹{formatPrice(g.finalPrice)}
-                          </div>
-
-                          {/* MRP + Discount */}
-                          {!g.isCurrent && (
-                            <div className="mrp-row">
-                              <span className="mrp">
-                                MRP ₹{formatPrice(g.mrp ?? 0)}
-                              </span>
-
-                              <span className="discount-badge">
-                                <span className="discount-badge">
-                                  {Number(g.discount ?? 0)}% OFF
-                                </span>
-                              </span>
-                            </div>
-                          )}
-
-                          {/* Per Tablet */}
-                          {perUnit && unit && (
-                            <div className="per-tablet">
-                              ₹{perUnit} per {"unit"}
-                            </div>
-                          )}
-                        </div>
-
-                        {/* {!g.isCurrent && compareSaving > 0 && (
-                          <div className="save-badge">
-                            {compareSaving}% lower than current
-                          </div>
-                        )} */}
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-
-            {/* CTA */}
-            <div
-              style={
-                isMobile
-                  ? {
-                      position: "sticky",
-                      bottom: 0,
-                      background: "#fff",
-                      padding: "10px",
-                      borderTop: "1px solid #eee",
-                      zIndex: 20,
-                    }
-                  : {}
-              }
-            >
-              {/* <button
-                style={
-                  isMobile
-                    ? {
-                        width: "100%",
-                        background: "#ff6f61",
-                        color: "#fff",
-                        border: "none",
-                        padding: "12px",
-                        borderRadius: "8px",
-                        fontWeight: 600,
-                      }
-                    : {}
-                }
-                className="switch-btn mt-2"
-                onClick={() => {
-                  if (!cheapest) return;
-
-                  router.push(`/medicines-details/${encodeId(cheapest.id)}`);
-                }}
-              >
-                Switch to cheapest
-              </button> */}
-            </div>
-          </div>
-        </Modal.Body>
-      </Modal>
     </>
   );
 }
