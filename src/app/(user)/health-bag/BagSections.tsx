@@ -6,6 +6,7 @@ import { useMedicineCompare } from "../medicines-details/[id]/CompareBlock";
 import { formatPrice } from "@/lib/utils/formatPrice";
 import type { DeliveryFeeQuote } from "@/types/delivery";
 import type { CompareItem } from "@/types/compare";
+import { rxDetails, type RxPreview, type RxPreviewStatus } from "./PrescriptionPreview";
 import "../css/buy-flow.css";
 
 /**
@@ -120,17 +121,28 @@ export function PrescriptionCard({
   attached,
   fileName,
   uploading,
+  error,
   loggedIn,
   onUpload,
   onLogin,
+  preview = null,
+  previewStatus = "idle",
+  onView,
 }: {
   rxItemNames: string[];
   attached: boolean;
   fileName: string | null;
   uploading: boolean;
+  /** Last upload error; Continue stays disabled while no prescription is attached. */
+  error?: string | null;
   loggedIn: boolean;
   onUpload: (file: File) => void;
   onLogin: () => void;
+  /** What was uploaded, so the buyer can check it (Figma B2 "Uploaded" row). */
+  preview?: RxPreview | null;
+  previewStatus?: RxPreviewStatus;
+  /** Opens the preview (Figma B2c / M2c). */
+  onView?: () => void;
 }) {
   const input = useRef<HTMLInputElement>(null);
   if (!rxItemNames.length) return null;
@@ -142,13 +154,7 @@ export function PrescriptionCard({
     <section className="bf-card bf-section" id="bag-rx" aria-label="Prescription">
       <div className="bf-section-head">
         <h2><i className="bi bi-file-earmark-medical" aria-hidden="true" /> Prescription</h2>
-        {attached ? (
-          <button type="button" className="bf-link" onClick={pick} disabled={uploading}>
-            Replace
-          </button>
-        ) : (
-          <span className="bf-chip bf-chip--rx">Required</span>
-        )}
+        {!attached && <span className="bf-chip bf-chip--rx">Required</span>}
       </div>
       <p className="bf-muted small mb-3">
         Needed for {rxItemNames.length === 1 ? "1 item" : `${rxItemNames.length} items`}: {names}. Our
@@ -168,21 +174,66 @@ export function PrescriptionCard({
       />
 
       {attached ? (
-        <div className="bf-rx-ok">
-          <i className="bi bi-file-earmark-check" aria-hidden="true" />
-          <div className="flex-grow-1">
-            <strong>{fileName || "Prescription uploaded"}</strong>
+        <div className="bf-rx-ok" role="status">
+          {/* Thumbnail: tap to check what was uploaded */}
+          <button
+            type="button"
+            className="bf-rx-thumb"
+            onClick={onView}
+            aria-label="View your prescription"
+          >
+            {preview?.kind === "image" ? (
+              // eslint-disable-next-line @next/next/no-img-element -- local blob: URL
+              <img src={preview.url} alt="" />
+            ) : preview?.kind === "pdf" ? (
+              <i className="bi bi-file-earmark-pdf" aria-hidden="true" />
+            ) : previewStatus === "loading" ? (
+              <span className="spinner-border spinner-border-sm" aria-hidden="true" />
+            ) : (
+              <i className="bi bi-file-earmark-medical" aria-hidden="true" />
+            )}
+            <span className="bf-rx-thumb-badge" aria-hidden="true"><i className="bi bi-eye" /></span>
+          </button>
+          <div className="flex-grow-1 min-w-0">
+            <strong className="text-truncate d-block">{preview?.name || fileName || "Prescription uploaded"}</strong>
             <small className="bf-ok d-block">
-              <i className="bi bi-check2-circle" aria-hidden="true" /> Attached to this order
+              {uploading ? (
+                <><span className="spinner-border spinner-border-sm me-1" aria-hidden="true" /> Uploading the new file…</>
+              ) : (
+                <><i className="bi bi-check2-circle" aria-hidden="true" /> Attached to this order</>
+              )}
             </small>
+            {rxDetails(preview) && <small className="bf-muted d-none d-sm-block">{rxDetails(preview)}</small>}
           </div>
+          <button type="button" className="bf-rx-view" onClick={onView} disabled={uploading}>
+            <i className="bi bi-eye" aria-hidden="true" /> View
+          </button>
+          <button type="button" className="bf-link bf-rx-replace" onClick={pick} disabled={uploading}>
+            Replace
+          </button>
         </div>
       ) : (
-        <button type="button" className="bf-dropzone" onClick={pick} disabled={uploading}>
-          <i className="bi bi-upload" aria-hidden="true" />
+        <button
+          type="button"
+          className={`bf-dropzone ${error ? "bf-dropzone--error" : ""}`}
+          onClick={pick}
+          disabled={uploading}
+          aria-busy={uploading}
+        >
+          {uploading ? (
+            <span className="spinner-border spinner-border-sm" aria-hidden="true" />
+          ) : (
+            <i className="bi bi-upload" aria-hidden="true" />
+          )}
           <strong>{uploading ? "Uploading…" : loggedIn ? "Upload prescription" : "Log in to upload prescription"}</strong>
           <small>Photo or PDF · max 5 MB</small>
         </button>
+      )}
+      {error && (
+        <p className="bf-rx-error" role="alert">
+          <i className="bi bi-exclamation-circle" aria-hidden="true" /> {error}
+          {attached ? " Your earlier prescription is still attached." : ""}
+        </p>
       )}
     </section>
   );

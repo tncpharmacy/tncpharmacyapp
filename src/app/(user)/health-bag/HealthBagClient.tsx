@@ -39,6 +39,7 @@ import { formatPrice } from "@/lib/utils/formatPrice";
 import ProductSection from "../home/components/ProductSection";
 import { uploadPrescriptionFromBuyerCartThunk } from "@/lib/features/prescriptionSlice/prescriptionSlice";
 import { useDeliveryQuote } from "@/lib/hooks/useDeliveryQuote";
+import { PrescriptionPreviewModal, useBagPrescriptionPreview } from "./PrescriptionPreview";
 const mediaBase = process.env.NEXT_PUBLIC_MEDIA_BASE_URL;
 
 export interface Medicine {
@@ -154,6 +155,16 @@ export default function HealthBagClient() {
   const bagPrescriptionId = useAppSelector(
     (state) => state.healthBag.prescription_id
   );
+  const bagPrescriptionMeta = useAppSelector(
+    (state) => state.healthBag.prescription
+  );
+  // What the buyer uploaded, so they can check it (Figma B2 row + B2c/M2c).
+  const rxPreview = useBagPrescriptionPreview(
+    bagPrescriptionId,
+    bagPrescriptionMeta,
+    !!buyer?.id
+  );
+  const [showRxPreview, setShowRxPreview] = useState(false);
 
   useEffect(() => {
     if (!buyer?.id) {
@@ -436,7 +447,7 @@ export default function HealthBagClient() {
 
       manufacturer: item.manufacturer || "",
       pack_size: item.pack_size || "",
-      prescription_required: item.prescription_required || 0,
+      prescription_required: Number(item.prescription_required) === 1 ? 1 : 0,
 
       qty: Number(item.qty) || 1,
       in_stock: item.in_stock,
@@ -598,6 +609,7 @@ export default function HealthBagClient() {
   // to be a pop-up after Continue; uploading here attaches it to the bag
   // (healthBag.prescription_id) the same way.
   const [rxUploading, setRxUploading] = useState(false);
+  const [rxError, setRxError] = useState<string | null>(null);
   const uploadPrescriptionNow = async (file: File) => {
     if (!buyer?.id) {
       setShowBuyerLogin(true);
@@ -605,24 +617,40 @@ export default function HealthBagClient() {
     }
     const allowed = ["image/jpeg", "image/jpg", "image/png", "application/pdf"];
     if (!allowed.includes(file.type)) {
+      setRxError("Only JPG, PNG or PDF files can be uploaded.");
       toast.error("Only JPG, PNG or PDF files can be uploaded.");
       return;
     }
     if (file.size > 5 * 1024 * 1024) {
+      setRxError("The file is larger than 5 MB.");
       toast.error("The file is larger than 5 MB.");
       return;
     }
-    const token = localStorage.getItem("token") || "";
+    // Buyers are signed in with "buyerAccessToken" ("token" is not a key the
+    // app sets; the axios interceptor was quietly covering for it).
+    const token = localStorage.getItem("buyerAccessToken") || "";
     setRxUploading(true);
+    setRxError(null);
+    // Show this file in the preview as soon as the bag gets the new id,
+    // instead of downloading what was just uploaded.
+    rxPreview.expectFile(file);
     try {
       const formData = new FormData();
       formData.append("prescription_pic", file);
+      // The slice stores the returned prescription id (healthBag.prescription_id),
+      // which is what unlocks Continue here and Place order on checkout.
       await dispatch(uploadPrescriptionFromBuyerCartThunk({ formData, token })).unwrap();
       setPrescriptionFile(file);
       toast.success("Prescription attached");
+      // Re-read the bag so the state matches the server (every line now
+      // carries the prescription).
+      fetchCart();
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
-      toast.error(error || "Upload failed!");
+      const msg = typeof error === "string" ? error : error?.message || "Upload failed. Please try again.";
+      rxPreview.expectFile(null);
+      setRxError(msg);
+      toast.error(msg);
     } finally {
       setRxUploading(false);
     }
@@ -774,9 +802,22 @@ export default function HealthBagClient() {
                   attached={!!bagPrescriptionId}
                   fileName={prescriptionFile?.name ?? null}
                   uploading={rxUploading}
+                  error={rxError}
                   loggedIn={mounted && !!buyer?.id}
                   onUpload={uploadPrescriptionNow}
                   onLogin={() => setShowBuyerLogin(true)}
+                  preview={rxPreview.preview}
+                  previewStatus={rxPreview.status}
+                  onView={() => setShowRxPreview(true)}
+                />
+                <PrescriptionPreviewModal
+                  show={showRxPreview && !!bagPrescriptionId}
+                  onClose={() => setShowRxPreview(false)}
+                  preview={rxPreview.preview}
+                  status={rxPreview.status}
+                  onRetry={rxPreview.retry}
+                  onUpload={uploadPrescriptionNow}
+                  uploading={rxUploading}
                 />
 
                 <section className="bf-card bf-items" aria-label="Items">

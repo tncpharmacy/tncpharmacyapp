@@ -14,6 +14,23 @@ export const fetchHealthBag = async (
   return res.data;
 };
 // =========================
+// BAG PRESCRIPTION FILE (BUYER)
+// =========================
+/**
+ * The prescription attached to the signed-in buyer's bag, as a Blob.
+ * It comes through the API (not a public storage link) because a
+ * prescription is a health record; the axios interceptor adds the token.
+ * Show it with URL.createObjectURL(blob) and revoke that URL when done.
+ */
+export const fetchBagPrescriptionFile = async (): Promise<Blob> => {
+  const res = await axiosInstance.get<Blob>(
+    ENDPOINTS.PRESCRIPTION_UPLOAD.BAG_PRESCRIPTION_FILE,
+    { responseType: "blob" }
+  );
+  return res.data;
+};
+
+// =========================
 // CREATE HEALTHBAG (BUYER)
 // =========================
 export interface createHealthBagDTO {

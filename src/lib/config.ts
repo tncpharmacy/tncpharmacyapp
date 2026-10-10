@@ -138,6 +138,8 @@ export const ENDPOINTS = {
   PRESCRIPTION_UPLOAD: {
     LOGIN_UPDATE: "/ocr/prescription/update-buyer/",
     CREATE_PRESCRIPTION_FROM_BUYER_CART: "/cart/buyer/upload-prescription/",
+    // The buyer's own bag prescription file (streamed by the API, token checked)
+    BAG_PRESCRIPTION_FILE: "/cart/buyer/prescription/file/",
     PUBLIC_CREATE: "/ocr/prescription/upload/",
     GET_PRESCRIPTION_LIST_PHARMACIST: "/ocr/prescriptions/active/",
     PRESCRIPTION_RECEIVED_BY_PHARMACIST: (prescriptionId: number) =>

@@ -8,7 +8,8 @@ import {
   increaseQuantity,
   decreaseQuantity,
 } from "@/lib/api/healthBag";
-import { HealthBag, HealthBagResponse } from "@/types/healthBag";
+import { BagPrescriptionMeta, HealthBag, HealthBagResponse } from "@/types/healthBag";
+import { uploadPrescriptionFromBuyerCartThunk } from "@/lib/features/prescriptionSlice/prescriptionSlice";
 
 // ===============================
 // STATE
@@ -16,6 +17,8 @@ import { HealthBag, HealthBagResponse } from "@/types/healthBag";
 interface HealthBagState {
   items: HealthBag[];
   prescription_id: number | null;
+  /** Type and upload time of the bag's prescription (for the preview). */
+  prescription: BagPrescriptionMeta | null;
   loading: boolean;
   error: string | null;
   message: string | null;
@@ -24,6 +27,7 @@ interface HealthBagState {
 const initialState: HealthBagState = {
   items: [],
   prescription_id: null,
+  prescription: null,
   loading: false,
   error: null,
   message: null,
@@ -231,12 +235,24 @@ const healthBagSlice = createSlice({
           state.loading = false;
           state.items = action.payload?.data?.items || [];
           state.prescription_id = action.payload?.data?.prescription_id ?? null;
+          state.prescription = action.payload?.data?.prescription ?? null;
           state.error = null;
         }
       )
       .addCase(getHealthBag.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
+      })
+
+      // ===== PRESCRIPTION UPLOADED FROM THE BAG =====
+      // The upload API links the file to every cart row and returns its id.
+      // The bag only learned about it on the next cart fetch, so after an
+      // upload `prescription_id` stayed null and Continue / Pay stayed
+      // disabled until a page reload. Store it as soon as the upload succeeds.
+      .addCase(uploadPrescriptionFromBuyerCartThunk.fulfilled, (state, action) => {
+        const d = action.payload?.data;
+        const id = Number(d?.prescription_id ?? d?.id);
+        if (id) state.prescription_id = id;
       })
 
       // ===== CREATE =====

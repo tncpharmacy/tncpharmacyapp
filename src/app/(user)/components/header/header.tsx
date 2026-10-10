@@ -22,6 +22,7 @@ import {
   loadLocalHealthBag,
 } from "@/lib/features/healthBagSlice/healthBagSlice";
 import Image from "next/image";
+import { getAddress } from "@/lib/features/addressSlice/addressSlice";
 
 type SearchMatch = {
   _matchType: "medicine" | "generic" | "manufacturer";
@@ -46,6 +47,8 @@ const SiteHeader = ({
   const buyer = useAppSelector((state) => state.buyer.buyer);
   const userId = buyer?.id || null;
   const { items } = useHealthBag({ userId });
+  const addresses = useAppSelector((state) => state.address.addresses);
+  const addressLoading = useAppSelector((state) => state.address.loading);
 
   const [localCount, setLocalCount] = useState(0);
   const [showLogin, setShowLogin] = useState(false);
@@ -166,6 +169,15 @@ const SiteHeader = ({
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  // Load the buyer's addresses once for "Deliver to" (pages like the bag load
+  // them too; we skip the call when they are already in the store).
+  useEffect(() => {
+    if (buyer?.id && !addresses?.length && !addressLoading) {
+      dispatch(getAddress(buyer.id));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [buyer?.id]);
 
   useEffect(() => {
     if (!buyer?.id) {
@@ -403,31 +415,84 @@ const SiteHeader = ({
     (cat) => !topMenuNames.includes(cat.category_name)
   );
 
+  // ---------- DELIVER TO ----------
+  // The buyer's default address ("Noida 201301"); guests see a prompt.
+  const deliverAddress =
+    addresses?.find((a) => a.default_address === 1) || addresses?.[0];
+  const deliverLabel = !mounted || !buyer
+    ? "Select address"
+    : deliverAddress
+    ? [deliverAddress.city, deliverAddress.pincode].filter(Boolean).join(" ") ||
+      deliverAddress.address
+    : "Add address";
+  const deliverTitle = deliverAddress?.address || "Choose a delivery address";
+
+  const bagCount = mounted ? items?.length || 0 : 0;
+
   return (
     <header id="header" role="banner">
-      <div className="mid_header">
-        <div className="container">
-          <div className="header_wrap">
-            <Link href="/" className="logo">
-              <Image
-                src="/images/logo.png"
-                alt="Logo"
-                width={180}
-                height={40}
-                className="logo_img"
-                priority
-              />
-            </Link>
+      {/* ---------- TOP ROW (Figma 69:4541) ----------
+          Desktop: logo · Deliver to · search · Upload Rx · Account · Bag.
+          Below 768px the search drops to its own row (see header-style.css). */}
+      <div className="hd-main">
+        <div className="hd-row">
+          {/* Category drawer: shown when the blue category bar is hidden (< 1200px) */}
+          <button
+            type="button"
+            className="hd-menu-btn"
+            aria-label="Open menu"
+            onClick={() => setShowMobileMenu(true)}
+          >
+            <i className="bi bi-list" aria-hidden />
+          </button>
 
-            {/* ---------- SEARCH ---------- */}
-            <div className="search_query header_search_query" ref={wrapperRef}>
-              <a className="query_search_btn" href="javascript:void(0)">
-                <i className="bi bi-search"></i>
-              </a>
+          <Link href="/" className="hd-logo" aria-label="TnC Pharmacy home">
+            <Image
+              src="/images/logo.png"
+              alt="TnC Pharmacy"
+              width={132}
+              height={36}
+              className="hd-logo-img"
+              priority
+            />
+          </Link>
+
+          {/* ---------- DELIVER TO ---------- */}
+          <button
+            type="button"
+            className="hd-deliver"
+            onClick={() =>
+              buyer ? router.push("/profile?tab=address") : setShowBuyerLogin(true)
+            }
+            title={deliverTitle}
+          >
+            <span className="hd-deliver-label">Deliver to</span>
+            <span className="hd-deliver-value">
+              <span className="hd-ellipsis">{deliverLabel}</span>
+              <i className="bi bi-chevron-right" aria-hidden />
+            </span>
+          </button>
+
+          {/* ---------- SEARCH ---------- */}
+          <div className="hd-search-wrap" ref={wrapperRef}>
+            <form
+              className="hd-search"
+              role="search"
+              onSubmit={(e) => {
+                e.preventDefault();
+                const text = headerSearch.trim();
+                if (!text) return;
+                setShowList(false);
+                setHighlightIndex(-1);
+                router.push(`/search-text?text=${encodeURIComponent(text)}`);
+              }}
+            >
+              <i className="bi bi-search hd-search-icon" aria-hidden />
               <input
                 type="text"
-                className="header_search_input"
-                placeholder="Search for medicines & products..."
+                className="header_search_input hd-search-input"
+                placeholder="Search for medicines, vitamins, baby care and more"
+                aria-label="Search for medicines and products"
                 value={headerSearch}
                 onChange={(e) => {
                   setIsArrowNavigation(false);
@@ -437,6 +502,10 @@ const SiteHeader = ({
                 onFocus={() => headerSearch && setShowList(true)}
                 onKeyDown={handleKeyDown}
               />
+              <button type="submit" className="hd-search-btn">
+                Search
+              </button>
+            </form>
 
               {showList && groupedResults.length > 0 && (
                 <ul ref={listRef} className="header-search-ul">
@@ -518,110 +587,88 @@ const SiteHeader = ({
               )}
             </div>
 
-            {/* ---------- RIGHT SIDE ---------- */}
-            <ul className="user_right">
-              <li>
-                <div className="dropdown-user">
-                  {/* 🔥 TOP BUTTON */}
-                  <span
-                    className="user_p dropdownbtn"
-                    onClick={() => {
-                      if (!buyer) {
-                        setShowBuyerLogin(true); // 👈 login modal open
-                      }
-                    }}
-                    style={{ cursor: "pointer" }}
-                  >
-                    <i>
-                      <Image
-                        className="user_icon"
-                        src="/images/icons/icon-profile.svg"
-                        alt="Profile"
-                        width={24}
-                        height={24}
-                        priority
-                      />
-                    </i>
+          {/* ---------- UPLOAD RX ---------- */}
+          <button
+            type="button"
+            className="hd-rx"
+            aria-label="Upload prescription"
+            onClick={() => setShowModal(true)}
+          >
+            <i className="bi bi-upload" aria-hidden />
+            <span className="hd-rx-text">Upload Rx</span>
+          </button>
 
-                    {/* 🔥 TEXT CHANGE */}
+          {/* ---------- ACCOUNT ---------- */}
+          <div className="dropdown-user hd-account">
+            <button
+              type="button"
+              className="hd-action dropdownbtn"
+              aria-haspopup={mounted && buyer ? "menu" : undefined}
+              onClick={() => {
+                if (!buyer) setShowBuyerLogin(true); // guests: open the login modal
+              }}
+            >
+              <i className="bi bi-person" aria-hidden />
+              <span className="hd-action-label">
+                {!mounted ? "Login" : buyer ? "Account" : "Login"}
+              </span>
+            </button>
 
-                    <span className="user_p">
-                      {!mounted ? "Login" : buyer ? "Account" : "Login"}
-                    </span>
-                  </span>
+            {/* Dropdown only after login (opens on hover, as before) */}
+            {mounted && buyer && (
+              <div className="dropdown-user-content" style={{ zIndex: "9999" }}>
+                <div>
+                  <p>
+                    <b>Welcome</b>
+                    <br />
+                    {buyer?.name || "User"}
+                  </p>
 
-                  {/* 🔥 DROPDOWN ONLY AFTER LOGIN */}
-                  {mounted && buyer && (
-                    <div
-                      className="dropdown-user-content"
-                      style={{ zIndex: "9999" }}
-                    >
-                      <div>
-                        <p>
-                          <b>Welcome</b>
-                          <br />
-                          {buyer?.name || "User"}
-                        </p>
+                  <hr className="border-secondary" />
 
-                        <hr className="border-secondary" />
+                  <Link href="/profile?tab=profile">My Account</Link>
+                  <Link href="/profile?tab=order">My Orders</Link>
+                  <Link href="/profile?tab=address">My Address</Link>
 
-                        <Link href="/profile?tab=profile">My Account</Link>
-                        <Link href="/profile?tab=order">My Orders</Link>
-                        <Link href="/profile?tab=address">My Address</Link>
-
-                        <button className="btn1 mt-2" onClick={handleLogout}>
-                          Logout
-                        </button>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* 🔥 LOGIN MODAL (ONLY WHEN NOT LOGGED IN) */}
-                  {mounted && !buyer && (
-                    <BuyerLoginModal
-                      show={showBuyerLogin}
-                      handleClose={() => setShowBuyerLogin(false)}
-                    />
-                  )}
+                  <button className="btn1 mt-2" onClick={handleLogout}>
+                    Logout
+                  </button>
                 </div>
-              </li>
+              </div>
+            )}
 
-              <li>
-                <Link href="/health-bag">
-                  <span className="user_p">
-                    <i>
-                      <Image
-                        className="user_icon"
-                        src="/images/icons/icon-cart.svg"
-                        alt="Cart"
-                        width={24}
-                        height={24}
-                        priority
-                      />
-                      <span className="count">{items?.length || 0}</span>
-                    </i>
-                    Health Bag
-                  </span>
-                </Link>
-              </li>
-              <li className="mobileMenu">
-                <span className="micon" onClick={() => setShowMobileMenu(true)}>
-                  <i className="bi bi-grid-3x3-gap-fill"></i>
-                </span>
-              </li>
-            </ul>
+            {/* Login modal (only when not logged in) */}
+            {mounted && !buyer && (
+              <BuyerLoginModal
+                show={showBuyerLogin}
+                handleClose={() => setShowBuyerLogin(false)}
+              />
+            )}
           </div>
+
+          {/* ---------- BAG ---------- */}
+          <Link
+            href="/health-bag"
+            className="hd-action hd-bag"
+            aria-label={`Health Bag, ${bagCount} item${bagCount === 1 ? "" : "s"}`}
+          >
+            <span className="hd-bag-icon">
+              <i className="bi bi-bag" aria-hidden />
+              {bagCount > 0 && <span className="count hd-count">{bagCount > 99 ? "99+" : bagCount}</span>}
+            </span>
+            <span className="hd-action-label">Bag</span>
+          </Link>
         </div>
       </div>
 
       {/* ---------- MENU ---------- */}
-      <nav className="menu_header" role="navigation">
-        <div className="container">
+      <nav className="menu_header" role="navigation" aria-label="Categories">
+        <div className="hd-nav-row">
           {categories?.length > 0 && (
             <ul className="main_menu">
               <li>
                 <Link href="/all-medicine" className="link">
-                  All Medicine <i className="bi bi-grid-fill"></i>
+                  All Medicine <i className="bi bi-grid-fill" aria-hidden></i>
                 </Link>
               </li>
 
@@ -678,28 +725,15 @@ const SiteHeader = ({
                 </li>
               )}
 
-              {/* Upload Prescription */}
-              <li className="float-end">
-                <button
-                  className="btn_uoload"
-                  onClick={() => setShowModal(true)}
-                >
-                  <span>
-                    Upload
-                    <br /> Prescription
-                  </span>
-                  <Image
-                    src="/images/icons/icon-upload.svg"
-                    width={20}
-                    height={20}
-                    alt="Upload"
-                    priority
-                  />
+              {/* Upload Prescription (Figma 69:4562, right end of the bar).
+                  Opens the one PrescriptionUploadModal at the bottom of the
+                  header; this <li> used to render a second copy, so both
+                  opened together. */}
+              <li className="hd-nav-rx">
+                <button type="button" className="btn_uoload" onClick={() => setShowModal(true)}>
+                  <span>Upload Prescription</span>
+                  <i className="bi bi-upload" aria-hidden />
                 </button>
-                <PrescriptionUploadModal
-                  show={showModal}
-                  handleClose={() => setShowModal(false)}
-                />
               </li>
             </ul>
           )}
