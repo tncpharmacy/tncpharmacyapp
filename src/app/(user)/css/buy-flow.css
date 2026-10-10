@@ -274,7 +274,7 @@
 .bf-nudge > .bi { color: #198754; font-size: 20px; }
 .bf-nudge strong { font-weight: 500; color: #222; }
 
-.bf-bill { padding: 24px; position: sticky; top: 90px; }
+.bf-bill { padding: 24px; position: sticky; top: calc(var(--hd-h, 117px) + 16px); }
 .bf-bill h2 { font-size: 18px; font-weight: 600; margin: 0 0 14px; }
 .bf-bill-row { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 10px; font-size: 14px; color: #6b7280; }
 .bf-bill-row > span:last-child { color: #222; font-weight: 500; }

@@ -2,6 +2,8 @@
 
 @import url('https://fonts.googleapis.com/css2?family=Merienda:wght@600&display=swap');
 
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap');
+
 .logo {
     display: inline-flex;
     text-decoration: none;
@@ -29,9 +31,14 @@ header {
     /* box-shadow: 0 2px 10px rgba(0,0,0,0.08); */
 }
 
-/* Header ke neeche page content hide na ho isliye padding add */
+/* The header is position: fixed, so the page starts below it.
+   --hd-h is the header's height at each breakpoint (set at the end of this
+   file next to the header layout, so the two stay in sync). */
+:root {
+  --hd-h: 117px;
+}
 body {
-  padding-top: 120px !important;
+  padding-top: var(--hd-h) !important;
 }
 
 
@@ -856,3 +863,456 @@ span.user_p i .count {
     margin-top: 2px;
 }
 
+
+
+/* =====================================================================
+   SITE HEADER — Figma "Header" 69:4541 + "Category nav" 69:4562
+   New classes use the hd- prefix. The old .search_query / .user_p rules
+   above are still used by other search boxes on the site, so they are
+   left alone and the header simply no longer uses them.
+   ===================================================================== */
+
+#header {
+  font-family: "Poppins", system-ui, -apple-system, "Segoe UI", sans-serif;
+  box-shadow: none;
+}
+
+/* ---------- top row ---------- */
+#header .hd-main {
+  background: #ffffff;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+#header .hd-row {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  height: 76px; /* + 1px border = 77px, as in Figma */
+  padding: 14px 80px;
+  max-width: 1600px;
+  margin: 0 auto;
+  box-sizing: border-box;
+}
+
+#header .hd-row button {
+  font-family: inherit;
+}
+
+#header .hd-menu-btn {
+  display: none; /* shown below 1200px, when the category bar is hidden */
+  flex: none;
+  width: 40px;
+  height: 40px;
+  border: 0;
+  border-radius: 8px;
+  background: #f1f4f9;
+  color: #264b8c;
+  font-size: 22px;
+  align-items: center;
+  justify-content: center;
+}
+
+#header .hd-logo {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  outline-offset: 4px;
+}
+
+#header .hd-logo-img {
+  width: 132px;
+  height: 36px;
+  object-fit: contain;
+  object-position: center;
+}
+
+/* Deliver to */
+#header .hd-deliver {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  max-width: 160px;
+  padding: 0;
+  border: 0;
+  background: none;
+  text-align: left;
+  cursor: pointer;
+}
+
+#header .hd-deliver-label {
+  font-size: 12px;
+  line-height: 16px;
+  color: #6b7280;
+}
+
+#header .hd-deliver-value {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  max-width: 100%;
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 500;
+  color: #222222;
+}
+
+#header .hd-deliver-value i {
+  font-size: 10px;
+  flex: none;
+}
+
+#header .hd-ellipsis {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Search */
+#header .hd-search-wrap {
+  position: relative;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+#header .hd-search {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 48px;
+  padding: 6px 6px 6px 14px;
+  border-radius: 10px;
+  background: #f1f4f9;
+  box-sizing: border-box;
+  margin: 0;
+}
+
+#header .hd-search:focus-within {
+  box-shadow: 0 0 0 2px #c9d6ee;
+}
+
+#header .hd-search-icon {
+  font-size: 18px;
+  color: #222222;
+  flex: none;
+}
+
+#header .hd-search-input {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 36px;
+  padding: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  font-family: inherit;
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 400;
+  color: #222222;
+}
+
+#header .hd-search-input::placeholder {
+  color: #6b7280;
+  font-style: normal;
+  font-weight: 400;
+}
+
+#header .hd-search-btn {
+  flex: none;
+  height: 36px;
+  padding: 8px 18px;
+  border: 0;
+  border-radius: 8px;
+  background: #264b8c;
+  color: #ffffff;
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 500;
+}
+
+#header .hd-search-btn:hover {
+  background: #1d3c72;
+}
+
+/* Suggestions open just under the search field */
+#header .hd-search-wrap .header-search-ul {
+  top: calc(100% + 6px);
+  margin-top: 0;
+  max-height: 360px;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgb(16 24 40 / 12%);
+}
+
+/* Upload Rx */
+#header .hd-rx {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 42px;
+  padding: 10px 16px;
+  border: 1px solid #c9d6ee;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #264b8c;
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+#header .hd-rx i {
+  font-size: 16px;
+}
+
+#header .hd-rx:hover {
+  background: #f1f4f9;
+}
+
+/* Account + Bag */
+#header .hd-account {
+  flex: none;
+}
+
+#header .hd-action {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  min-width: 44px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: #222222;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+#header .hd-action i {
+  font-size: 20px;
+  line-height: 20px;
+}
+
+#header .hd-action-label {
+  font-size: 12px;
+  line-height: 16px;
+  color: #6b7280;
+  white-space: nowrap;
+}
+
+#header .hd-action:hover .hd-action-label {
+  color: #264b8c;
+}
+
+#header .hd-bag {
+  flex: none;
+}
+
+#header .hd-bag-icon {
+  position: relative;
+  display: inline-flex;
+}
+
+#header .hd-count {
+  position: absolute;
+  top: -6px;
+  right: -10px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: 8px;
+  background: #dc3545;
+  color: #ffffff;
+  font-size: 10px;
+  line-height: 16px;
+  font-weight: 600;
+  font-style: normal;
+  text-align: center;
+  box-sizing: border-box;
+}
+
+/* Account dropdown sits under the icon */
+#header .hd-account .dropdown-user-content {
+  top: 100%;
+  margin-top: 8px;
+  border-radius: 10px;
+}
+
+#header .hd-account .dropdown-user-content a {
+  text-decoration: none;
+}
+
+#header .hd-account .dropdown-user-content::after {
+  /* invisible bridge so the menu stays open while the pointer moves down */
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: -12px;
+  height: 12px;
+}
+
+#header .hd-row :focus-visible {
+  outline: 2px solid #264b8c;
+  outline-offset: 2px;
+}
+
+/* ---------- category bar ---------- */
+#header .menu_header {
+  background: #264b8c;
+  box-shadow: none;
+}
+
+#header .hd-nav-row {
+  max-width: 1600px;
+  margin: 0 auto;
+  padding: 0 32px 0 24px; /* + 8px link padding = 32px, as in Figma */
+}
+
+#header .main_menu {
+  display: flex;
+  align-items: center;
+  gap: 12px; /* + 8px padding either side = 28px between labels */
+  height: 40px;
+  list-style: none;
+}
+
+#header .main_menu > li > a {
+  padding: 10px 8px;
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 500;
+  letter-spacing: 0;
+  white-space: nowrap;
+}
+
+#header .main_menu > li > a i {
+  color: #ffffff;
+  font-size: 12px;
+  margin-left: 6px;
+}
+
+#header .main_menu > li.hd-nav-rx {
+  margin-left: auto;
+}
+
+#header .btn_uoload {
+  height: 30px;
+  padding: 4px 12px;
+  gap: 8px;
+  border: 1px solid #ffffff;
+  border-radius: 4px;
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+#header .btn_uoload i {
+  font-size: 18px;
+  line-height: 1;
+}
+
+/* ---------- responsive ---------- */
+@media (max-width: 1399px) {
+  #header .hd-row {
+    padding: 14px 32px;
+  }
+  #header .hd-nav-row {
+    padding: 0 16px;
+  }
+  #header .main_menu {
+    gap: 4px;
+  }
+  #header .main_menu > li > a {
+    font-size: 13px;
+  }
+}
+
+/* Under 1200px the category bar no longer fits on one line, so it moves
+   into the side drawer (menu button). */
+@media (max-width: 1199px) {
+  :root {
+    --hd-h: 77px;
+  }
+  #header .menu_header {
+    display: none;
+  }
+  #header .hd-menu-btn {
+    display: inline-flex;
+  }
+  #header .hd-row {
+    gap: 16px;
+    padding: 14px 24px;
+  }
+}
+
+@media (max-width: 991px) {
+  #header .hd-deliver {
+    display: none;
+  }
+  #header .hd-rx {
+    width: 42px;
+    padding: 0;
+    justify-content: center;
+  }
+  #header .hd-rx-text {
+    display: none;
+  }
+}
+
+/* Phones: logo + actions on the first line, search on its own line. */
+@media (max-width: 767px) {
+  :root {
+    --hd-h: 111px;
+  }
+  #header .hd-row {
+    flex-wrap: wrap;
+    row-gap: 8px;
+    column-gap: 12px;
+    height: 110px; /* 8 + 40 + 8 + 44 + 10; + 1px border */
+    padding: 8px 16px 10px;
+  }
+  #header .hd-logo {
+    margin-right: auto;
+  }
+  #header .hd-logo-img {
+    width: 110px;
+    height: 30px;
+  }
+  #header .hd-rx {
+    width: 40px;
+    height: 40px;
+  }
+  #header .hd-action {
+    min-width: 40px;
+  }
+  #header .hd-action-label {
+    font-size: 11px;
+    line-height: 14px;
+  }
+  #header .hd-search-wrap {
+    order: 10;
+    flex-basis: 100%;
+  }
+  #header .hd-search {
+    height: 44px;
+    padding: 4px 4px 4px 12px;
+  }
+  #header .hd-search-input {
+    /* 16px stops iOS Safari zooming in when the field is focused */
+    font-size: 16px !important;
+    font-weight: 400;
+    color: #222222;
+  }
+  #header .hd-search-btn {
+    padding: 8px 14px;
+  }
+  #header .hd-account .dropdown-user-content {
+    left: auto;
+    right: -40px;
+    transform: none;
+  }
+}
