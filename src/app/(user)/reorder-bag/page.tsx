@@ -321,8 +321,9 @@ export default function ReOrderBag() {
   const mergedItems = sourceItems.map((item: any) => {
     const rawMrp = Number(item.mrp) || 0;
 
-    // 🔥 fallback + validation
-    const mrp = Number.isFinite(rawMrp) && rawMrp > 0 ? rawMrp : 275;
+    // No price means unknown: never invent one (it used to be 275), same
+    // rule as the health bag.
+    const mrp = Number.isFinite(rawMrp) && rawMrp > 0 ? rawMrp : 0;
 
     const discount = Number(item.discount) || 0;
 

@@ -2,7 +2,6 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import SiteHeader from "@/app/(user)/components/header/header";
-import { Button, Image } from "react-bootstrap";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "../css/site-style.css";
 import "../css/user-style.css";
@@ -34,11 +33,10 @@ import {
 import type { CompareItem } from "@/types/compare";
 import toast from "react-hot-toast";
 import { formatAmount } from "@/lib/utils/formatAmount";
-import TncLoader from "@/app/components/TncLoader/TncLoader";
 import BuyerLoginModal from "@/app/buyer-login/page";
 import { loadLocalHealthBag } from "@/lib/features/healthBagSlice/healthBagSlice";
 import { formatPrice } from "@/lib/utils/formatPrice";
-import ProductCardUI from "../components/MedicineCard/ProductCardUI";
+import ProductSection from "../home/components/ProductSection";
 import { uploadPrescriptionFromBuyerCartThunk } from "@/lib/features/prescriptionSlice/prescriptionSlice";
 import { useDeliveryQuote } from "@/lib/hooks/useDeliveryQuote";
 const mediaBase = process.env.NEXT_PUBLIC_MEDIA_BASE_URL;
@@ -131,7 +129,6 @@ export default function HealthBagClient() {
 
   const [localState, setLocalState] = useState<{ [key: number]: boolean }>({});
   const [processingIds, setProcessingIds] = useState<number[]>([]);
-  const [isMobile, setIsMobile] = useState(false);
   // for precription upload state
   const [prescriptionFile, setPrescriptionFile] = useState<File | null>(null);
   const dispatch = useAppDispatch();
@@ -248,16 +245,12 @@ export default function HealthBagClient() {
     }
   }, [bagItem, localBag]);
 
-  useEffect(() => {
-    const checkScreen = () => {
-      setIsMobile(window.innerWidth < 768); // mobile breakpoint
-    };
-
-    checkScreen();
-    window.addEventListener("resize", checkScreen);
-
-    return () => window.removeEventListener("resize", checkScreen);
-  }, []);
+  // What the "you may also need" cards check to show "Added to bag".
+  // Logged-in lines carry `product_id`, guest (localStorage) lines only
+  // `productid`, so normalise to one shape.
+  const bagProductIds = (bagItem || []).map((i) => ({
+    product_id: Number(i.product_id ?? i.productid),
+  }));
 
   // Merge guest cart into logged-in cart once
   useEffect(() => {
@@ -838,475 +831,32 @@ export default function HealthBagClient() {
         )}
       </section>
 
-      {/* Product Vitamins, Nutrition & Supplements */}
-      <section className="py-5">
-        <div className="container">
-          <div className="mb-5">
-            <div className="d-flex justify-content-between align-items-center mb-3">
-              <h5 className="fw-semibold">{categoryNamesById[7]}</h5>
-              <button
-                className="btn-outline"
-                onClick={() => router.push(`/all-product/${encodeId(7)}`)}
-              >
-                View All <i className="bi bi-arrow-right"></i>
-              </button>
-            </div>
-
-            <div className="row g-3">
-              {shuffled7 && shuffled7.length > 0 ? (
-                shuffled7.slice(0, 5).map((item, index) => {
-                  const mrpRaw = item.MRP ?? item.mrp ?? 0;
-                  const parsedMrp = Number(mrpRaw);
-                  const baseMrp =
-                    Number.isFinite(parsedMrp) && parsedMrp > 0
-                      ? parsedMrp
-                      : 275;
-                  // 🔥 FORMAT FUNCTION
-                  const formatPrice = (num: number) => {
-                    return Number(num.toFixed(2)).toString();
-                  };
-                  // 👉 formatted MRP
-                  const mrp = Number(baseMrp.toFixed(2));
-                  const formattedMrp = formatPrice(mrp);
-                  // 👉 discount
-                  const discount = parseFloat(item.Discount || "0") || 0;
-                  // 👉 discounted price
-                  const discountedPriceRaw = mrp - (mrp * discount) / 100;
-                  const formattedDiscountedPrice =
-                    formatPrice(discountedPriceRaw);
-
-                  const images = item.DefaultImageURL;
-
-                  const defaultImg = Array.isArray(images)
-                    ? images.find((img) => img.default_image === 1)
-                    : null;
-
-                  const imageUrl = defaultImg?.document
-                    ? `${mediaBase}${defaultImg.document}`
-                    : "/images/tnc-default.png";
-
-                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                  const isInBag = bagItem.some(
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    (i: any) => Number(i.product_id) === item.product_id
-                  );
-                  const showRemove =
-                    localState[item.product_id] !== undefined
-                      ? localState[item.product_id]
-                      : isInBag;
-
-                  return isMobile ? (
-                    // 💻 DESKTOP/TABLET → CARD DESIGN (Reusable Component 🔥)
-                    <ProductCardUI
-                      key={`${item.product_id}-${index}`}
-                      inStock={item.in_stock}
-                      image={imageUrl}
-                      name={item.ProductName}
-                      manufacturer={item.Manufacturer}
-                      packSize={item.pack_size} // generic nahi h → skip
-                      price={formattedDiscountedPrice}
-                      mrp={formattedMrp}
-                      discount={discount}
-                      showRx={false}
-                      isInCart={isInBag}
-                      loading={processingIds.includes(item.product_id)}
-                      onAdd={() => handleAdd(item)}
-                      onRemove={() => handleRemove(item.product_id)}
-                      onClick={() => handleClick(item.product_id)}
-                    />
-                  ) : (
-                    <div
-                      key={item.product_id}
-                      className="col-6 col-md-4 col-lg-5th"
-                    >
-                      <div className="product-card bg-white border rounded p-3 h-100 d-flex flex-column">
-                        <div className="product-image-wrapper mb-2">
-                          <Image
-                            src={imageUrl}
-                            alt={""}
-                            className="img-fluid mx-auto d-block"
-                            style={{
-                              cursor: "pointer",
-                              height: "220px",
-                              objectFit: "contain",
-                              opacity:
-                                imageUrl === "/images/tnc-default.png"
-                                  ? 0.3
-                                  : 1, // ✅ only default image faded
-                            }}
-                            onClick={() => handleClick(item.product_id)}
-                          />
-                        </div>
-
-                        <h3
-                          className="pd-title hover-link"
-                          onClick={() => handleClick(item.product_id)}
-                          style={{ cursor: "pointer" }}
-                        >
-                          {item.ProductName || ""}
-                        </h3>
-                        <h6 className="pd-title fw-bold">
-                          {item.Manufacturer || ""}
-                        </h6>
-
-                        <div className="mt-auto">
-                          <div className="d-flex align-items-center justify-content-between">
-                            <div>
-                              <div className="fw-semibold">
-                                ₹{formattedDiscountedPrice}
-                              </div>
-                              {formattedDiscountedPrice ? (
-                                <div className="text-success small">
-                                  {discount}% off
-                                </div>
-                              ) : null}
-                              {formattedDiscountedPrice ? (
-                                <small className="text-muted text-decoration-line-through">
-                                  MRP ₹{formattedMrp}
-                                </small>
-                              ) : null}
-                            </div>
-                            <Button
-                              title={(item.in_stock === false && !showRemove) ? "Currently out of stock" : undefined} disabled={(item.in_stock === false && !showRemove)}
-                              size="sm"
-                              className={`btn-1 btn-HO ${
-                                isInBag ? "remove" : "add"
-                              } ${(item.in_stock === false && !showRemove) ? "oos" : ""}`}
-                              style={{ borderRadius: "35px" }}
-                              onClick={() =>
-                                showRemove
-                                  ? handleRemove(item.product_id)
-                                  : handleAdd(item)
-                              }
-                            >
-                              {(item.in_stock === false && !showRemove) ? "OUT OF STOCK" : (showRemove ? "REMOVE" : "ADD")}
-                            </Button>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })
-              ) : (
-                <div className="d-flex justify-content-center align-items-center">
-                  <TncLoader />
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      </section>
-      {/* Product Healthcare & Medical Supplies */}
-      <section className="py-5">
-        <div className="container">
-          <div className="mb-5">
-            <div className="d-flex justify-content-between align-items-center mb-3">
-              <h5 className="fw-semibold">{categoryNamesById[5]}</h5>
-              <button
-                className="btn-outline"
-                onClick={() => router.push(`/all-product/${encodeId(7)}`)}
-              >
-                View All <i className="bi bi-arrow-right"></i>
-              </button>
-            </div>
-
-            <div className="row g-3">
-              {shuffled5 && shuffled5.length > 0 ? (
-                shuffled5.slice(0, 5).map((item, index) => {
-                  const mrpRaw = item.MRP ?? item.mrp ?? 0;
-                  const parsedMrp = Number(mrpRaw);
-                  const baseMrp =
-                    Number.isFinite(parsedMrp) && parsedMrp > 0
-                      ? parsedMrp
-                      : 275;
-                  // 🔥 FORMAT FUNCTION
-                  const formatPrice = (num: number) => {
-                    return Number(num.toFixed(2)).toString();
-                  };
-                  // 👉 formatted MRP
-                  const mrp = Number(baseMrp.toFixed(2));
-                  const formattedMrp = formatPrice(mrp);
-                  // 👉 discount
-                  const discount = parseFloat(item.Discount || "0") || 0;
-                  // 👉 discounted price
-                  const discountedPriceRaw = mrp - (mrp * discount) / 100;
-                  const formattedDiscountedPrice =
-                    formatPrice(discountedPriceRaw);
-
-                  const images = item.DefaultImageURL;
-                  const defaultImg = Array.isArray(images)
-                    ? images.find((img) => img.default_image === 1)
-                    : null;
-                  const imageUrl = defaultImg?.document
-                    ? `${mediaBase}${defaultImg.document}`
-                    : "/images/tnc-default.png";
-
-                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                  const isInBag = bagItem.some(
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    (i: any) => Number(i.product_id) === item.product_id
-                  );
-                  const showRemove =
-                    localState[item.product_id] !== undefined
-                      ? localState[item.product_id]
-                      : isInBag;
-                  return isMobile ? (
-                    // 💻 DESKTOP/TABLET → CARD DESIGN (Reusable Component 🔥)
-                    <ProductCardUI
-                      key={`${item.product_id}-${index}`}
-                      inStock={item.in_stock}
-                      image={imageUrl}
-                      name={item.ProductName}
-                      manufacturer={item.Manufacturer}
-                      packSize={item.pack_size} // generic nahi h → skip
-                      price={formattedDiscountedPrice}
-                      mrp={formattedMrp}
-                      discount={discount}
-                      showRx={false}
-                      isInCart={isInBag}
-                      loading={processingIds.includes(item.product_id)}
-                      onAdd={() => handleAdd(item)}
-                      onRemove={() => handleRemove(item.product_id)}
-                      onClick={() => handleClick(item.product_id)}
-                    />
-                  ) : (
-                    <div
-                      key={item.product_id}
-                      className="col-6 col-md-4 col-lg-5th"
-                    >
-                      <div className="product-card bg-white border rounded p-3 h-100 d-flex flex-column">
-                        <div className="product-image-wrapper mb-2">
-                          <Image
-                            src={imageUrl}
-                            alt={""}
-                            className="img-fluid mx-auto d-block"
-                            style={{
-                              cursor: "pointer",
-                              height: "220px",
-                              objectFit: "contain",
-                              opacity:
-                                imageUrl === "/images/tnc-default.png"
-                                  ? 0.3
-                                  : 1, // ✅ only default image faded
-                            }}
-                            onClick={() => handleClick(item.product_id)}
-                          />
-                        </div>
-
-                        <h3
-                          className="pd-title hover-link"
-                          onClick={() => handleClick(item.product_id)}
-                          style={{ cursor: "pointer" }}
-                        >
-                          {item.ProductName || ""}
-                        </h3>
-                        <h6 className="pd-title fw-bold">
-                          {item.Manufacturer || ""}
-                        </h6>
-
-                        <div className="mt-auto">
-                          <div className="d-flex align-items-center justify-content-between">
-                            <div>
-                              <div className="fw-semibold">
-                                ₹{formattedDiscountedPrice}
-                              </div>
-                              {formattedDiscountedPrice ? (
-                                <div className="text-success small">
-                                  {discount}% off
-                                </div>
-                              ) : null}
-                              {formattedDiscountedPrice ? (
-                                <small className="text-muted text-decoration-line-through">
-                                  MRP ₹{formattedMrp}
-                                </small>
-                              ) : null}
-                            </div>
-                            <Button
-                              title={(item.in_stock === false && !showRemove) ? "Currently out of stock" : undefined} disabled={(item.in_stock === false && !showRemove)}
-                              size="sm"
-                              className={`btn-1 btn-HO ${
-                                isInBag ? "remove" : "add"
-                              } ${(item.in_stock === false && !showRemove) ? "oos" : ""}`}
-                              style={{ borderRadius: "35px" }}
-                              onClick={() =>
-                                showRemove
-                                  ? handleRemove(item.product_id)
-                                  : handleAdd(item)
-                              }
-                            >
-                              {(item.in_stock === false && !showRemove) ? "OUT OF STOCK" : (showRemove ? "REMOVE" : "ADD")}
-                            </Button>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })
-              ) : (
-                <div className="d-flex justify-content-center align-items-center">
-                  <TncLoader />
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      </section>
-      {/* Product Ayurveda & Herbal */}
-      <section className="py-5">
-        <div className="container">
-          <div className="mb-5">
-            <div className="d-flex justify-content-between align-items-center mb-3">
-              <h5 className="fw-semibold">{categoryNamesById[9]}</h5>
-              <button
-                className="btn-outline"
-                onClick={() => router.push(`/all-product/${encodeId(7)}`)}
-              >
-                View All <i className="bi bi-arrow-right"></i>
-              </button>
-            </div>
-
-            <div className="row g-3">
-              {shuffled9 && shuffled9.length > 0 ? (
-                shuffled9.slice(0, 5).map((item, index) => {
-                  const mrpRaw = item.MRP ?? item.mrp ?? 0;
-                  const parsedMrp = Number(mrpRaw);
-                  const baseMrp =
-                    Number.isFinite(parsedMrp) && parsedMrp > 0
-                      ? parsedMrp
-                      : 275;
-                  // 🔥 FORMAT FUNCTION
-                  const formatPrice = (num: number) => {
-                    return Number(num.toFixed(2)).toString();
-                  };
-                  // 👉 formatted MRP
-                  const mrp = Number(baseMrp.toFixed(2));
-                  const formattedMrp = formatPrice(mrp);
-                  // 👉 discount
-                  const discount = parseFloat(item.Discount || "0") || 0;
-                  // 👉 discounted price
-                  const discountedPriceRaw = mrp - (mrp * discount) / 100;
-                  const formattedDiscountedPrice =
-                    formatPrice(discountedPriceRaw);
-
-                  const images = item.DefaultImageURL;
-                  const defaultImg = Array.isArray(images)
-                    ? images.find((img) => img.default_image === 1)
-                    : null;
-                  const imageUrl = defaultImg?.document
-                    ? `${mediaBase}${defaultImg.document}`
-                    : "/images/tnc-default.png";
-
-                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                  const isInBag = bagItem.some(
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    (i: any) => Number(i.product_id) === item.product_id
-                  );
-                  const showRemove =
-                    localState[item.product_id] !== undefined
-                      ? localState[item.product_id]
-                      : isInBag;
-
-                  return isMobile ? (
-                    // 💻 DESKTOP/TABLET → CARD DESIGN (Reusable Component 🔥)
-                    <ProductCardUI
-                      key={`${item.product_id}-${index}`}
-                      inStock={item.in_stock}
-                      image={imageUrl}
-                      name={item.ProductName}
-                      manufacturer={item.Manufacturer}
-                      packSize={item.pack_size} // generic nahi h → skip
-                      price={formattedDiscountedPrice}
-                      mrp={formattedMrp}
-                      discount={discount}
-                      showRx={false}
-                      isInCart={isInBag}
-                      loading={processingIds.includes(item.product_id)}
-                      onAdd={() => handleAdd(item)}
-                      onRemove={() => handleRemove(item.product_id)}
-                      onClick={() => handleClick(item.product_id)}
-                    />
-                  ) : (
-                    <div
-                      key={item.product_id}
-                      className="col-6 col-md-4 col-lg-5th"
-                    >
-                      <div className="product-card bg-white border rounded p-3 h-100 d-flex flex-column">
-                        <div className="product-image-wrapper mb-2">
-                          <Image
-                            src={imageUrl}
-                            alt={""}
-                            className="img-fluid mx-auto d-block"
-                            style={{
-                              cursor: "pointer",
-                              height: "220px",
-                              objectFit: "contain",
-                              opacity:
-                                imageUrl === "/images/tnc-default.png"
-                                  ? 0.3
-                                  : 1, // ✅ only default image faded
-                            }}
-                            onClick={() => handleClick(item.product_id)}
-                          />
-                        </div>
-
-                        <h3
-                          className="pd-title hover-link"
-                          onClick={() => handleClick(item.product_id)}
-                          style={{ cursor: "pointer" }}
-                        >
-                          {item.ProductName || ""}
-                        </h3>
-                        <h6 className="pd-title fw-bold">
-                          {item.Manufacturer || ""}
-                        </h6>
-
-                        <div className="mt-auto">
-                          <div className="d-flex align-items-center justify-content-between">
-                            <div>
-                              <div className="fw-semibold">
-                                ₹{formattedDiscountedPrice}
-                              </div>
-                              {formattedDiscountedPrice ? (
-                                <div className="text-success small">
-                                  {discount}% off
-                                </div>
-                              ) : null}
-                              {formattedDiscountedPrice ? (
-                                <small className="text-muted text-decoration-line-through">
-                                  MRP ₹{formattedMrp}
-                                </small>
-                              ) : null}
-                            </div>
-                            <Button
-                              title={(item.in_stock === false && !showRemove) ? "Currently out of stock" : undefined} disabled={(item.in_stock === false && !showRemove)}
-                              size="sm"
-                              className={`btn-1 btn-HO ${
-                                isInBag ? "remove" : "add"
-                              } ${(item.in_stock === false && !showRemove) ? "oos" : ""}`}
-                              style={{ borderRadius: "35px" }}
-                              onClick={() =>
-                                showRemove
-                                  ? handleRemove(item.product_id)
-                                  : handleAdd(item)
-                              }
-                            >
-                              {(item.in_stock === false && !showRemove) ? "OUT OF STOCK" : (showRemove ? "REMOVE" : "ADD")}
-                            </Button>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })
-              ) : (
-                <div className="d-flex justify-content-center align-items-center">
-                  <TncLoader />
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      </section>
+      {/* "You may also need" rows. Same component and card as the home page
+          (Figma store/Product card v2): one card on every screen size, the
+          "Added to bag" + trash state, no invented ₹275 price. */}
+      {[
+        { id: 7, products: shuffled7 },
+        { id: 5, products: shuffled5 },
+        { id: 9, products: shuffled9 },
+      ].map(({ id, products }) =>
+        products && products.length > 0 ? (
+          <ProductSection
+            key={id}
+            categoryId={id}
+            title={categoryNamesById[id]}
+            products={products.slice(0, 5)}
+            router={router}
+            encodeId={encodeId}
+            handleAdd={handleAdd}
+            handleRemove={handleRemove}
+            handleClick={handleClick}
+            items={bagProductIds}
+            localState={localState}
+            processingIds={processingIds}
+            mediaBase={mediaBase}
+          />
+        ) : null
+      )}
       <BuyerLoginModal
         show={showBuyerLogin}
         handleClose={() => setShowBuyerLogin(false)}
