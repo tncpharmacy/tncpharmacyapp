@@ -87,7 +87,7 @@ export async function payWithRazorpay(
       name: data.name,
       description: data.order_number ? `Order ${data.order_number}` : "Order",
       prefill: data.prefill,
-      theme: { color: "#0d6efd" },
+      theme: { color: "#264b8c" }, // brand navy (Figma brand/primary)
       handler: async (resp: RazorpayResponse) => {
         try {
           await verifyRazorpayPaymentApi(resp);
