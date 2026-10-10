@@ -25,7 +25,17 @@ export interface HealthBagResponse {
   data: HealthBagData;
 }
 
+/** The bag's attached prescription, as the cart API describes it. The file
+ *  itself is fetched separately (fetchBagPrescriptionFile), with the token. */
+export interface BagPrescriptionMeta {
+  id: number;
+  file_type: "image" | "pdf";
+  extension: string;
+  uploaded_on: string | null;
+}
+
 interface HealthBagData {
   prescription_id: number | null;
+  prescription?: BagPrescriptionMeta | null;
   items: HealthBag[];
 }

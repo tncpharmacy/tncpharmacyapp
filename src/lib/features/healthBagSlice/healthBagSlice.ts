@@ -8,7 +8,7 @@ import {
   increaseQuantity,
   decreaseQuantity,
 } from "@/lib/api/healthBag";
-import { HealthBag, HealthBagResponse } from "@/types/healthBag";
+import { BagPrescriptionMeta, HealthBag, HealthBagResponse } from "@/types/healthBag";
 import { uploadPrescriptionFromBuyerCartThunk } from "@/lib/features/prescriptionSlice/prescriptionSlice";
 
 // ===============================
@@ -17,6 +17,8 @@ import { uploadPrescriptionFromBuyerCartThunk } from "@/lib/features/prescriptio
 interface HealthBagState {
   items: HealthBag[];
   prescription_id: number | null;
+  /** Type and upload time of the bag's prescription (for the preview). */
+  prescription: BagPrescriptionMeta | null;
   loading: boolean;
   error: string | null;
   message: string | null;
@@ -25,6 +27,7 @@ interface HealthBagState {
 const initialState: HealthBagState = {
   items: [],
   prescription_id: null,
+  prescription: null,
   loading: false,
   error: null,
   message: null,
@@ -232,6 +235,7 @@ const healthBagSlice = createSlice({
           state.loading = false;
           state.items = action.payload?.data?.items || [];
           state.prescription_id = action.payload?.data?.prescription_id ?? null;
+          state.prescription = action.payload?.data?.prescription ?? null;
           state.error = null;
         }
       )
